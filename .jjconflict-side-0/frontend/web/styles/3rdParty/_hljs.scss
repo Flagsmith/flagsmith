@@ -1,0 +1,256 @@
+@import '../mixins/custom-scrollbar';
+.custom-scroll {
+  @include customScroll();
+}
+@mixin transition($transition...) {
+  -moz-transition: $transition;
+  -o-transition: $transition;
+  -webkit-transition: $transition;
+  transition: $transition;
+}
+
+// Recolour customScrollDark's fixed dark thumb with tokens (it reads as a
+// black bar on light surfaces). Include after customScrollDark so these win.
+@mixin hljsScrollbar {
+  &::-webkit-scrollbar-track {
+    background-color: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background-color: var(--color-border-strong);
+    &:hover {
+      background-color: var(--color-text-tertiary);
+    }
+  }
+}
+
+// highlight.js and Pylon's chat widget both use .hljs. We win two ways: feed
+// our tokens into Pylon's --hljs-* vars, and nest our palette under .hljs to
+// out-specify its global rules. Also paints Pylon's chat code, which is fine.
+.hljs {
+  a {
+    color: var(--color-text-action) !important;
+    text-decoration: underline;
+    .hljs-regexp,
+    .hljs-comment {
+      color: var(--color-text-action) !important;
+    }
+  }
+  cursor: text;
+  outline: none;
+  font-size: 17px;
+  display: block;
+  overflow-x: auto;
+  tab-size: 2;
+  @include customScrollDark();
+  @include hljsScrollbar();
+  padding: 0.5em;
+  // Redefine Pylon's --hljs-* vars to our code tokens so its injected rules
+  // paint our theme (belt-and-braces with the palette specificity below).
+  --hljs-bg: var(--color-surface-subtle);
+  --hljs-text: var(--color-code-text);
+  --hljs-comment: var(--color-code-comment);
+  --hljs-keyword: var(--color-code-keyword);
+  --hljs-literal: var(--color-code-literal);
+  --hljs-string: var(--color-code-string);
+  --hljs-attr: var(--color-code-variable);
+  --hljs-section: var(--color-code-name);
+  --hljs-symbol: var(--color-code-title);
+  --hljs-class: var(--color-code-builtin);
+  background: var(--color-surface-subtle);
+  border-radius: $border-radius;
+  border: 1px solid var(--color-border-default);
+  &.no-pad {
+    margin-bottom: 0;
+  }
+  &-switch {
+    font-size: $font-sm;
+    line-height: $line-height-sm;
+    padding-left: 12px;
+    color: var(--color-text-secondary);
+    margin-bottom: 0;
+  }
+}
+.hljs-container {
+  position: relative;
+  &:hover {
+    .hljs-docs {
+      opacity: 1;
+    }
+  }
+}
+
+.hljs-docs {
+  position: absolute;
+  opacity: 0;
+  top: 32px;
+  right: 12px;
+  display: flex;
+  gap: 6px;
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    > div {
+      justify-content: flex-start !important;
+    }
+  }
+}
+
+.hljs-header {
+  user-select: none;
+  font-family: Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
+    monospace;
+  background-color: $code-btn-bg;
+  font-family: $font-family-header;
+  overflow: hidden;
+  @include transition(all 0.2s ease-in-out);
+  color: var(--color-text-default);
+  display: inline-block;
+  line-height: $line-height-xsm;
+  font-weight: bold;
+  font-size: $font-caption-sm;
+  padding: 7px 12px;
+  border-radius: $border-radius-sm;
+  margin-right: 5px;
+  margin-bottom: calc($input-padding-y / 2);
+  .hljs-description {
+    color: $code-btn-description-color;
+  }
+  .hljs-icon {
+    padding-left: 6px;
+    &-left {
+      padding-right: 6px;
+    }
+  }
+  svg {
+    vertical-align: sub;
+    path {
+      fill: currentColor;
+    }
+  }
+}
+
+// Dark CalloutBar variant: white prefix/icon/chevron (via currentColor),
+// gold label. Keeps colours in the design system rather than inline styles.
+.hljs-header.callout-bar--dark {
+  background-color: $primary900;
+  color: white;
+
+  .hljs-description {
+    color: var(--gold-500);
+  }
+}
+
+.hljs {
+  color: var(--color-code-text);
+  padding: 18px;
+
+  // Nested under .hljs (0,2,0) to out-specify Pylon's global token rules
+  // (0,1,0). The catch-all sends unmapped tokens to base; groups re-colour.
+  [class*='hljs-'] {
+    color: inherit;
+  }
+
+  .hljs-comment,
+  .hljs-quote {
+    color: var(--color-code-comment);
+    font-style: italic;
+  }
+
+  .hljs-doctag,
+  .hljs-keyword,
+  .hljs-formula {
+    color: var(--color-code-keyword);
+  }
+
+  .hljs-section,
+  .hljs-deletion,
+  .hljs-subst {
+    color: var(--color-code-name);
+  }
+
+  // Markup tag names are deliberately not red (red reads as an error or a
+  // deletion). The < > punctuation (.hljs-tag) stays base text via the
+  // catch-all above, so tags render like an IDE: grey brackets, blue name.
+  .hljs-name,
+  .hljs-selector-tag {
+    color: var(--color-code-title);
+  }
+
+  .hljs-literal {
+    color: var(--color-code-literal);
+  }
+
+  .hljs-string,
+  .hljs-regexp,
+  .hljs-addition,
+  .hljs-attribute,
+  .hljs-meta .hljs-string {
+    color: var(--color-code-string);
+  }
+
+  .hljs-attr,
+  .hljs-variable,
+  .hljs-template-variable,
+  .hljs-type,
+  .hljs-selector-class,
+  .hljs-selector-attr,
+  .hljs-selector-pseudo,
+  .hljs-number {
+    color: var(--color-code-variable);
+  }
+
+  .hljs-symbol,
+  .hljs-bullet,
+  .hljs-link,
+  .hljs-meta,
+  .hljs-selector-id,
+  .hljs-title {
+    color: var(--color-code-title);
+  }
+
+  .hljs-built_in,
+  .hljs-title.class_,
+  .hljs-class .hljs-title {
+    color: var(--color-code-builtin);
+  }
+
+  .hljs-emphasis {
+    font-style: italic;
+  }
+
+  .hljs-strong {
+    font-weight: bold;
+  }
+
+  .hljs-link {
+    text-decoration: underline;
+  }
+}
+
+
+
+code[contenteditable='false'].hljs {
+  cursor: default;
+  @include customScrollDark();
+  @include hljsScrollbar();
+}
+
+// For code inside a container that already provides the surface: transparent,
+// no border/radius; the container owns the frame.
+.hljs--embedded {
+  --hljs-bg: transparent;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  // Scroll only when the code overflows. When it does, the webkit rule below
+  // forces the bar visible over customScrollDark (which display:none-s it on
+  // hover), so a long snippet's bar doesn't flicker.
+  overflow-x: auto;
+  overflow-y: hidden;
+
+  &::-webkit-scrollbar,
+  &:hover::-webkit-scrollbar {
+    display: block !important;
+  }
+}

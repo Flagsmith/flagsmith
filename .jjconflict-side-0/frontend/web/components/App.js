@@ -1,0 +1,416 @@
+import React, { Component } from 'react'
+import get from 'lodash/get'
+import find from 'lodash/find'
+import { matchPath, withRouter } from 'react-router-dom'
+import * as amplitude from '@amplitude/analytics-browser'
+import { plugin as engagementPlugin } from '@amplitude/engagement-browser'
+import { sessionReplayPlugin } from '@amplitude/plugin-session-replay-browser'
+import TwoFactorPrompt from './SimpleTwoFactor/prompt'
+import Maintenance from './Maintenance'
+import Blocked from './Blocked'
+import AppLoader from './AppLoader'
+import ButterBar from './ButterBar'
+import AccountSettingsPage from './pages/AccountSettingsPage'
+import ProjectStore from 'common/stores/project-store'
+import {
+  decideOnboardingEntry,
+  getStoredOnboardingVariant,
+  persistOnboardingEntry,
+} from 'common/utils/onboardingEntry'
+import { AUTHORISE_PATH } from 'common/utils/pendingAuthorisation'
+import { Provider } from 'react-redux'
+import { getStore } from 'common/store'
+import ConfigProvider from 'common/providers/ConfigProvider'
+import AccountStore from 'common/stores/account-store'
+import OrganisationLimit from './OrganisationLimit'
+import OrganisationStore from 'common/stores/organisation-store'
+import ScrollToTop from './ScrollToTop'
+import AnnouncementPerPage from './AnnouncementPerPage'
+import Announcement from './Announcement'
+import { getBuildVersion } from 'common/services/useBuildVersion'
+import AccountProvider from 'common/providers/AccountProvider'
+import Nav from './navigation/Nav'
+import { isAllowedWhileBlocked, isOrganisationUsage } from 'web/routePaths'
+import 'project/darkMode'
+
+const App = class extends Component {
+  static propTypes = {
+    children: propTypes.element.isRequired,
+  }
+
+  state = {
+    asideIsVisible: !isMobile,
+    pin: '',
+    showAnnouncement: true,
+  }
+
+  constructor(props, context) {
+    super(props, context)
+    ES6Component(this)
+  }
+
+  getProjectId = (props) => {
+    const { location } = props
+    const pathname = location.pathname
+
+    const match = matchPath(pathname, {
+      exact: false,
+      path: '/project/:projectId/environment/:environmentId',
+      strict: false,
+    })
+    const match2 = matchPath(pathname, {
+      exact: false,
+      path: '/project/:projectId',
+      strict: false,
+    })
+    const projectId =
+      get(match, 'params.projectId') || get(match2, 'params.projectId')
+    return !!projectId && parseInt(projectId)
+  }
+  getEnvironmentId = (props) => {
+    const { location } = props
+    const pathname = location.pathname
+
+    const match = matchPath(pathname, {
+      exact: false,
+      path: '/project/:projectId/environment/:environmentId',
+      strict: false,
+    })
+
+    const environmentId = get(match, 'params.environmentId')
+    return environmentId
+  }
+
+  componentDidMount = () => {
+    if (Project.amplitude) {
+      amplitude.init(Project.amplitude, {
+        defaultTracking: true,
+        serverZone: 'EU',
+      })
+      amplitude.add(engagementPlugin())
+      const sessionReplayTracking = sessionReplayPlugin({
+        sampleRate: 0.5,
+        serverZone: 'EU',
+      })
+      amplitude.add(sessionReplayTracking)
+    }
+    getBuildVersion(getStore(), {})
+    this.state.projectId = this.getProjectId(this.props)
+    if (this.state.projectId) {
+      AppActions.getProject(this.state.projectId)
+    }
+    this.listenTo(OrganisationStore, 'change', () => this.forceUpdate())
+    this.listenTo(ProjectStore, 'change', () => this.forceUpdate())
+    if (AccountStore.model) {
+      this.onLogin()
+    }
+    window.addEventListener('scroll', this.handleScroll)
+  }
+
+  componentDidUpdate(prevProps) {
+    if (prevProps.location.pathname !== this.props.location.pathname) {
+      const newProjectId = this.getProjectId(this.props)
+      if (this.state.projectId !== newProjectId && !!newProjectId) {
+        this.state.projectId = newProjectId
+        AppActions.getProject(this.state.projectId)
+      }
+
+      if (isMobile) {
+        this.setState({ asideIsVisible: false })
+      }
+    }
+  }
+
+  toggleAside = () => {
+    this.setState({ asideIsVisible: !this.state.asideIsVisible })
+  }
+
+  onLogin = () => {
+    let redirect = API.getRedirect()
+    const invite = API.getInvite()
+    if (invite) {
+      redirect = `/invite/${invite}`
+    }
+
+    const referrer = API.getReferrer()
+    let query = ''
+    if (referrer) {
+      query = `?${Utils.toParam(referrer)}`
+    }
+
+    if (AccountStore.ephemeral_token) {
+      this.forceUpdate()
+      return
+    }
+
+    // The consent screen is a destination, not a stop on the way to one, so
+    // never redirect away from it. Creating an organisation re-fires this while
+    // the organisation list is still refreshing, and the branch below would
+    // then yank the user off a request they were about to authorise.
+    if (this.props.location.pathname.startsWith(AUTHORISE_PATH)) {
+      return
+    }
+
+    // A signup with a consent request waiting keeps its redirect cookie
+    // through the branch below: onboarding provisions the organisation the
+    // client needs, then answers the request itself.
+    if (!AccountStore.getOrganisation() && !invite) {
+      // New users with no organisation go through the single-page onboarding
+      // flow when it's enabled - it creates the organisation itself, so it
+      // replaces the legacy /create page. Everyone else still gets /create.
+      // The entry decision is made under a server-assigned anonymous
+      // identity whose identifier later becomes the organisation's
+      // targeting key, so bucketing never diverges from this decision.
+      // Capped at 2s: a degraded flags API falls back to the legacy page
+      // instead of blocking the redirect.
+      Promise.race([
+        AccountStore.getUser()?.isGettingStarted
+          ? decideOnboardingEntry(AccountStore.getUser()?.email).catch(
+              () => null,
+            )
+          : Promise.resolve(null),
+        new Promise((resolve) => setTimeout(() => resolve(null), 2000)),
+      ]).then((decision) => {
+        // Only an accepted decision is persisted: a decision losing the
+        // race must not store its assignment after routing has happened.
+        const variant = decision ? persistOnboardingEntry(decision) : 'control'
+        // Restore the logged-in identity for the rest of the app.
+        Promise.resolve(API.flagsmithIdentify()).catch(() => {})
+        if (variant === 'single_page') {
+          this.props.history.replace('/getting-started')
+        } else {
+          this.props.history.replace(`/create${query}`)
+        }
+      })
+      return
+    }
+
+    // Redirect on login
+    if (
+      this.props.location.pathname === '/' ||
+      this.props.location.pathname === '/widget' ||
+      this.props.location.pathname === '/saml' ||
+      (this.props.location.pathname.includes('/oauth') &&
+        !this.props.location.pathname.startsWith('/oauth/authorize')) ||
+      this.props.location.pathname === '/login' ||
+      this.props.location.pathname === '/signup'
+    ) {
+      if (redirect) {
+        API.setRedirect('')
+        this.props.history.replace(redirect)
+      } else {
+        AsyncStorage.getItem('lastEnv').then((res) => {
+          if (this.props.location.search.includes('github-redirect')) {
+            this.props.history.replace(
+              `/github-setup${this.props.location.search}`,
+            )
+            return
+          }
+          if (res) {
+            const lastEnv = JSON.parse(res)
+            const lastOrg = find(AccountStore.getUser().organisations, {
+              id: lastEnv.orgId,
+            })
+            if (!lastOrg) {
+              this.props.history.replace('/organisations')
+              return
+            }
+
+            const org = AccountStore.getOrganisation()
+            if (
+              !org ||
+              (org.id !== lastOrg.id && this.getEnvironmentId(this.props))
+            ) {
+              AppActions.selectOrganisation(lastOrg.id)
+              AppActions.getOrganisation(lastOrg.id)
+            }
+
+            this.props.history.replace(
+              `/project/${lastEnv.projectId}/environment/${lastEnv.environmentId}/features`,
+            )
+            return
+          }
+
+          if (AccountStore.getUser()?.isGettingStarted) {
+            this.props.history.replace('/getting-started')
+          } else {
+            this.props.history.replace(Utils.getOrganisationHomePage())
+          }
+        })
+      }
+    }
+  }
+
+  handleScroll = () => {
+    if (this.scrollPos < 768 && $(document).scrollTop() >= 768) {
+      this.setState({ myClassName: 'scrolled' })
+    } else if (this.scrollPos >= 768 && $(document).scrollTop() < 768) {
+      this.setState({ myClassName: '' })
+    }
+    this.scrollPos = $(document).scrollTop()
+  }
+
+  onLogout = () => {
+    if (document.location.href.includes('saml?')) {
+      return
+    }
+    this.props.history.replace('/')
+  }
+
+  closeAnnouncement = (announcementId) => {
+    this.setState({ showAnnouncement: false })
+    flagsmith.setTrait(`dismissed_announcement`, announcementId)
+  }
+
+  render() {
+    const { location } = this.props
+    const pathname = location.pathname
+    const isOnboardingFlow =
+      pathname === '/getting-started' &&
+      getStoredOnboardingVariant() === 'single_page'
+
+    // The usage dashboard says the same thing in its own banner, with the
+    // detail this one cannot reach.
+    const hasOwnQuotaBanner =
+      isOrganisationUsage(pathname) &&
+      Utils.getFlagsmithHasFeature('usage_dashboard')
+
+    const projectId = this.getProjectId(this.props)
+    const environmentId = this.getEnvironmentId(this.props)
+
+    if (
+      AccountStore.getOrganisation()?.block_access_to_admin &&
+      !isAllowedWhileBlocked(pathname)
+    ) {
+      return <Blocked />
+    }
+    if (
+      Project.maintenance ||
+      Utils.getFlagsmithHasFeature('maintenance_mode') ||
+      this.props.error ||
+      !window.projectOverrides
+    ) {
+      return <Maintenance />
+    }
+    const activeProject = OrganisationStore.getProject(projectId)
+    const projectNotLoaded =
+      !activeProject && document.location.href.includes('project/')
+
+    if (this.props.isLoading) {
+      return (
+        <AccountProvider
+          onNoUser={this.onNoUser}
+          onLogout={this.onLogout}
+          onLogin={this.onLogin}
+        >
+          {() => (
+            <div id='login-page'>
+              <AppLoader />
+            </div>
+          )}
+        </AccountProvider>
+      )
+    }
+    if (AccountStore.forced2Factor()) {
+      return <AccountSettingsPage isLoginPage={true} />
+    }
+    if (document.location.pathname.includes('widget')) {
+      return <div>{this.props.children}</div>
+    }
+    return (
+      <Provider store={getStore()}>
+        <AccountProvider
+          onNoUser={this.onNoUser}
+          onLogout={this.onLogout}
+          onLogin={this.onLogin}
+        >
+          {({ isSaving, user }, { twoFactorLogin }) => {
+            if (user && user.twoFactorPrompt) {
+              return (
+                <div className='col-md-6 push-md-3 mt-5'>
+                  <TwoFactorPrompt
+                    pin={this.state.pin}
+                    error={this.state.error}
+                    onSubmit={() => {
+                      this.setState({ error: false })
+                      twoFactorLogin(this.state.pin, () => {
+                        this.setState({ error: true })
+                      })
+                    }}
+                    isLoading={isSaving}
+                    onChange={(e) =>
+                      this.setState({ pin: Utils.safeParseEventValue(e) })
+                    }
+                  />
+                </div>
+              )
+            }
+
+            // Chromeless onboarding: render only the flow - no nav, sidebar or
+            // header links - so the user can't navigate away mid-flow. The flow
+            // provides its own Skip escape.
+            if (isOnboardingFlow) {
+              return <div>{this.props.children}</div>
+            }
+
+            return (
+              <Nav
+                header={
+                  <>
+                    <ButterBar
+                      projectId={projectId}
+                      billingStatus={
+                        AccountStore.getOrganisation()?.subscription
+                          .billing_status
+                      }
+                    />
+                    {user && (
+                      <>
+                        {!hasOwnQuotaBanner && (
+                          <OrganisationLimit
+                            id={AccountStore.getOrganisation()?.id}
+                            organisationPlan={
+                              AccountStore.getOrganisation()?.subscription.plan
+                            }
+                          />
+                        )}
+                        <div className='container announcement-container'>
+                          <div>
+                            <Announcement />
+                            <AnnouncementPerPage pathname={pathname} />
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </>
+                }
+                activeProject={activeProject}
+                projectId={projectId}
+                environmentId={environmentId}
+              >
+                <div>
+                  {projectNotLoaded ? (
+                    <div className='text-center'>
+                      <Loader />
+                    </div>
+                  ) : (
+                    this.props.children
+                  )}
+                </div>
+              </Nav>
+            )
+          }}
+        </AccountProvider>
+        <ScrollToTop />
+      </Provider>
+    )
+  }
+}
+
+App.propTypes = {
+  history: RequiredObject,
+  location: RequiredObject,
+  match: RequiredObject,
+}
+
+export default withRouter(ConfigProvider(App))

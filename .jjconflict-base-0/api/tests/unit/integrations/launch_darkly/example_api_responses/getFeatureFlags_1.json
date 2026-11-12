@@ -1,0 +1,542 @@
+{
+    "_links": {
+        "last": {
+            "href": "/api/v2/flags/test-project-key?limit=3\u0026offset=3\u0026summary=true",
+            "type": "application/json"
+        },
+        "next": {
+            "href": "/api/v2/flags/test-project-key?limit=3\u0026offset=3\u0026summary=true",
+            "type": "application/json"
+        },
+        "self": {
+            "href": "/api/v2/flags/test-project-key?limit=3\u0026summary=true",
+            "type": "application/json"
+        }
+    },
+    "items": [
+        {
+            "_links": {
+                "parent": {
+                    "href": "/api/v2/flags/test-project-key",
+                    "type": "application/json"
+                },
+                "self": {
+                    "href": "/api/v2/flags/test-project-key/flag1",
+                    "type": "application/json"
+                }
+            },
+            "_maintainer": {
+                "_id": "64f6f21653c76f12626d142a",
+                "_links": {
+                    "self": {
+                        "href": "/api/v2/members/64f6f21653c76f12626d142a",
+                        "type": "application/json"
+                    }
+                },
+                "email": "test@test.com",
+                "firstName": "John",
+                "lastName": "Doe",
+                "role": "owner"
+            },
+            "_version": 1,
+            "archived": false,
+            "clientSideAvailability": {
+                "usingEnvironmentId": false,
+                "usingMobileKey": false
+            },
+            "creationDate": 1693905528781,
+            "customProperties": {},
+            "defaults": {
+                "offVariation": 1,
+                "onVariation": 0
+            },
+            "description": "",
+            "environments": {
+                "production": {
+                    "_environmentName": "Production",
+                    "_site": {
+                        "href": "/default/production/features/flag1",
+                        "type": "text/html"
+                    },
+                    "_summary": {
+                        "prerequisites": 0,
+                        "variations": {
+                            "0": {
+                                "isFallthrough": true,
+                                "nullRules": 0,
+                                "rules": 0,
+                                "targets": 0
+                            },
+                            "1": {
+                                "isOff": true,
+                                "nullRules": 0,
+                                "rules": 0,
+                                "targets": 0
+                            }
+                        }
+                    },
+                    "archived": false,
+                    "lastModified": 1693905528795,
+                    "on": false,
+                    "salt": "ac3a69d89de94c109ed9538893418a96",
+                    "sel": "7eaf26e6d74244229ad8b010216824bc",
+                    "trackEvents": false,
+                    "trackEventsFallthrough": false,
+                    "version": 1
+                },
+                "test": {
+                    "_environmentName": "Test",
+                    "_site": {
+                        "href": "/default/test/features/flag1",
+                        "type": "text/html"
+                    },
+                    "_summary": {
+                        "prerequisites": 0,
+                        "variations": {
+                            "0": {
+                                "isFallthrough": true,
+                                "nullRules": 0,
+                                "rules": 0,
+                                "targets": 0
+                            },
+                            "1": {
+                                "isOff": true,
+                                "nullRules": 0,
+                                "rules": 0,
+                                "targets": 0
+                            }
+                        }
+                    },
+                    "archived": false,
+                    "lastModified": 1693905528795,
+                    "on": true,
+                    "salt": "14ebfdad4b3c4d499ed6bcf7b426065b",
+                    "sel": "20a254c86f1f4d358871566a2bfb3efe",
+                    "trackEvents": false,
+                    "trackEventsFallthrough": false,
+                    "version": 1
+                }
+            },
+            "experiments": {
+                "baselineIdx": 0,
+                "items": []
+            },
+            "goalIds": [],
+            "includeInSnippet": false,
+            "key": "flag1",
+            "kind": "boolean",
+            "maintainerId": "64f6f21653c76f12626d142a",
+            "name": "flag1",
+            "tags": [],
+            "temporary": true,
+            "variationJsonSchema": null,
+            "variations": [
+                {
+                    "_id": "c85b3e69-7c56-4b82-90d2-0b8440199236",
+                    "value": true
+                },
+                {
+                    "_id": "1f09e182-2b54-43e1-9e7a-ee024ea01b0d",
+                    "value": false
+                }
+            ]
+        },
+        {
+            "_links": {
+                "parent": {
+                    "href": "/api/v2/flags/test-project-key",
+                    "type": "application/json"
+                },
+                "self": {
+                    "href": "/api/v2/flags/test-project-key/flag2_value",
+                    "type": "application/json"
+                }
+            },
+            "_maintainer": {
+                "_id": "64f6f21653c76f12626d142a",
+                "_links": {
+                    "self": {
+                        "href": "/api/v2/members/64f6f21653c76f12626d142a",
+                        "type": "application/json"
+                    }
+                },
+                "email": "test@test.com",
+                "firstName": "John",
+                "lastName": "Doe",
+                "role": "owner"
+            },
+            "_version": 1,
+            "archived": false,
+            "clientSideAvailability": {
+                "usingEnvironmentId": false,
+                "usingMobileKey": false
+            },
+            "creationDate": 1693905545779,
+            "customProperties": {},
+            "defaults": {
+                "offVariation": 1,
+                "onVariation": 0
+            },
+            "description": "",
+            "environments": {
+                "production": {
+                    "_environmentName": "Production",
+                    "_site": {
+                        "href": "/default/production/features/flag2_value",
+                        "type": "text/html"
+                    },
+                    "_summary": {
+                        "prerequisites": 0,
+                        "variations": {
+                            "0": {
+                                "isFallthrough": true,
+                                "nullRules": 0,
+                                "rules": 0,
+                                "targets": 0
+                            },
+                            "1": {
+                                "isOff": true,
+                                "nullRules": 0,
+                                "rules": 0,
+                                "targets": 0
+                            }
+                        }
+                    },
+                    "archived": false,
+                    "lastModified": 1693905545793,
+                    "on": false,
+                    "salt": "639f7591720c4c31a61289009baca9c4",
+                    "sel": "b33c28a01d624e6b8b0d2e74fecb40b4",
+                    "trackEvents": false,
+                    "trackEventsFallthrough": false,
+                    "version": 1
+                },
+                "test": {
+                    "_environmentName": "Test",
+                    "_site": {
+                        "href": "/default/test/features/flag2_value",
+                        "type": "text/html"
+                    },
+                    "_summary": {
+                        "prerequisites": 0,
+                        "variations": {
+                            "0": {
+                                "isFallthrough": true,
+                                "nullRules": 0,
+                                "rules": 0,
+                                "targets": 0
+                            },
+                            "1": {
+                                "isOff": true,
+                                "nullRules": 0,
+                                "rules": 0,
+                                "targets": 0
+                            }
+                        }
+                    },
+                    "archived": false,
+                    "lastModified": 1693905545793,
+                    "on": false,
+                    "salt": "86273b7da4a0430580c21a1ab2943477",
+                    "sel": "91a48251e10c43ba91282443ae938c8d",
+                    "trackEvents": false,
+                    "trackEventsFallthrough": false,
+                    "version": 1
+                }
+            },
+            "experiments": {
+                "baselineIdx": 0,
+                "items": []
+            },
+            "goalIds": [],
+            "includeInSnippet": false,
+            "key": "flag2_value",
+            "kind": "multivariate",
+            "maintainerId": "64f6f21653c76f12626d142a",
+            "name": "flag2_value",
+            "tags": [],
+            "temporary": true,
+            "variationJsonSchema": null,
+            "variations": [
+                {
+                    "_id": "9a411e4d-a7c8-4469-bce3-8e1a41cadc45",
+                    "value": "123123"
+                },
+                {
+                    "_id": "b2874b64-767d-4a73-9914-4588063e73b3",
+                    "value": ""
+                }
+            ]
+        },
+        {
+            "_links": {
+                "parent": {
+                    "href": "/api/v2/flags/test-project-key",
+                    "type": "application/json"
+                },
+                "self": {
+                    "href": "/api/v2/flags/test-project-key/flag3_multivalue",
+                    "type": "application/json"
+                }
+            },
+            "_maintainer": {
+                "_id": "64f6f21653c76f12626d142a",
+                "_links": {
+                    "self": {
+                        "href": "/api/v2/members/64f6f21653c76f12626d142a",
+                        "type": "application/json"
+                    }
+                },
+                "email": "test@test.com",
+                "firstName": "John",
+                "lastName": "Doe",
+                "role": "owner"
+            },
+            "_version": 1,
+            "archived": false,
+            "clientSideAvailability": {
+                "usingEnvironmentId": false,
+                "usingMobileKey": false
+            },
+            "creationDate": 1693905575815,
+            "customProperties": {},
+            "defaults": {
+                "offVariation": 1,
+                "onVariation": 0
+            },
+            "description": "",
+            "environments": {
+                "production": {
+                    "_environmentName": "Production",
+                    "_site": {
+                        "href": "/default/production/features/flag3_multivalue",
+                        "type": "text/html"
+                    },
+                    "_summary": {
+                        "prerequisites": 0,
+                        "variations": {
+                            "0": {
+                                "isFallthrough": true,
+                                "nullRules": 0,
+                                "rules": 0,
+                                "targets": 0
+                            },
+                            "1": {
+                                "isOff": true,
+                                "nullRules": 0,
+                                "rules": 0,
+                                "targets": 0
+                            }
+                        }
+                    },
+                    "archived": false,
+                    "lastModified": 1693940309041,
+                    "on": true,
+                    "salt": "c9e240cf83a149d8a69d6d413504d7de",
+                    "sel": "faa802c193ef43c9a6b328880a55f4a6",
+                    "trackEvents": false,
+                    "trackEventsFallthrough": false,
+                    "version": 2
+                },
+                "test": {
+                    "_environmentName": "Test",
+                    "_site": {
+                        "href": "/default/test/features/flag3_multivalue",
+                        "type": "text/html"
+                    },
+                    "_summary": {
+                        "prerequisites": 0,
+                        "variations": {
+                            "0": {
+                                "isFallthrough": true,
+                                "nullRules": 0,
+                                "rules": 0,
+                                "targets": 0
+                            },
+                            "1": {
+                                "isOff": true,
+                                "nullRules": 0,
+                                "rules": 0,
+                                "targets": 0
+                            }
+                        }
+                    },
+                    "archived": false,
+                    "lastModified": 1693905575829,
+                    "on": false,
+                    "salt": "b0bdf137f1be476d8d6fa0c4145fb168",
+                    "sel": "6edd1d7d37804d2eb236a3a7857080ec",
+                    "trackEvents": false,
+                    "trackEventsFallthrough": false,
+                    "version": 1
+                }
+            },
+            "experiments": {
+                "baselineIdx": 0,
+                "items": []
+            },
+            "goalIds": [],
+            "includeInSnippet": false,
+            "key": "flag3_multivalue",
+            "kind": "multivariate",
+            "maintainerId": "64f6f21653c76f12626d142a",
+            "name": "flag3_multivalue",
+            "tags": [],
+            "temporary": true,
+            "variationJsonSchema": null,
+            "variations": [
+                {
+                    "_id": "f3b2bb69-9ddc-4ce1-a10b-40bb8bbfb6e4",
+                    "value": "variation1"
+                },
+                {
+                    "_id": "473a40f1-8ded-44d4-bffc-8da4817af471",
+                    "value": "variation2"
+                },
+                {
+                    "_id": "b55d9b88-5bce-4677-860b-0967592bec66",
+                    "value": "variation3"
+                }
+            ]
+        },
+        {
+            "_links": {
+                "parent": {
+                    "href": "/api/v2/flags/default",
+                    "type": "application/json"
+                },
+                "self": {
+                    "href": "/api/v2/flags/default/flag4_multivalue",
+                    "type": "application/json"
+                }
+            },
+            "_maintainer": {
+                "_id": "64f6f21653c76f12626d142a",
+                "_links": {
+                    "self": {
+                        "href": "/api/v2/members/64f6f21653c76f12626d142a",
+                        "type": "application/json"
+                    }
+                },
+                "email": "test@test.com",
+                "firstName": "John",
+                "lastName": "Doe",
+                "role": "owner"
+            },
+            "_version": 1,
+            "archived": false,
+            "clientSideAvailability": {
+                "usingEnvironmentId": false,
+                "usingMobileKey": false
+            },
+            "creationDate": 1693905575623,
+            "customProperties": {},
+            "defaults": {
+                "offVariation": 1,
+                "onVariation": 0
+            },
+            "description": "",
+            "environments": {
+                "production": {
+                    "_environmentName": "Production",
+                    "_site": {
+                        "href": "/default/production/features/flag4_multivalue",
+                        "type": "text/html"
+                    },
+                    "_summary": {
+                        "prerequisites": 0,
+                        "variations": {
+                            "0": {
+                                "nullRules": 0,
+                                "rollout": 23995,
+                                "rules": 0,
+                                "targets": 0
+                            },
+                            "1": {
+                                "nullRules": 0,
+                                "rollout": 25000,
+                                "rules": 0,
+                                "targets": 0
+                            },
+                            "2": {
+                                "isOff": true,
+                                "nullRules": 0,
+                                "rollout": 51005,
+                                "rules": 0,
+                                "targets": 0
+                            }
+                        }
+                    },
+                    "archived": false,
+                    "lastModified": 1693905575623,
+                    "on": true,
+                    "salt": "c9e240cf83a149d8a69d6d413504d7de",
+                    "sel": "faa802c193ef43c9a6b328880a55f4a6",
+                    "trackEvents": false,
+                    "trackEventsFallthrough": false,
+                    "version": 9
+                },
+                "test": {
+                    "_environmentName": "Test",
+                    "_site": {
+                        "href": "/default/test/features/flag4_multivalue",
+                        "type": "text/html"
+                    },
+                    "_summary": {
+                        "prerequisites": 0,
+                        "variations": {
+                            "0": {
+                                "isFallthrough": true,
+                                "nullRules": 0,
+                                "rules": 0,
+                                "targets": 0
+                            },
+                            "1": {
+                                "isOff": true,
+                                "nullRules": 0,
+                                "rules": 0,
+                                "targets": 0
+                            }
+                        }
+                    },
+                    "archived": false,
+                    "lastModified": 1693905575623,
+                    "on": false,
+                    "salt": "d6501721ba17406d823511401ae1beb8",
+                    "sel": "75963315efd34bfdb8499ec25deeabe6",
+                    "trackEvents": false,
+                    "trackEventsFallthrough": false,
+                    "version": 1
+                }
+            },
+            "experiments": {
+                "baselineIdx": 0,
+                "items": []
+            },
+            "goalIds": [],
+            "includeInSnippet": false,
+            "key": "flag4_multivalue",
+            "kind": "multivariate",
+            "maintainerId": "64f6f21653c76f12626d142a",
+            "name": "flag4_multivalue",
+            "tags": [],
+            "temporary": true,
+            "variationJsonSchema": null,
+            "variations": [
+                {
+                    "_id": "ce3f951b-971c-465f-8252-6b15d5c65414",
+                    "value": "variation1"
+                },
+                {
+                    "_id": "748ee024-6eb7-4d45-8d53-0c5e7caa70f9",
+                    "value": "variation2"
+                },
+                {
+                    "_id": "bd94ec24-d43d-43d2-919c-6fb78da6eed1",
+                    "value": "variation3"
+                }
+            ]
+        }
+    ],
+    "totalCount": 5
+}

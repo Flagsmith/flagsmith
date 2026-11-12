@@ -1,0 +1,21 @@
+// Same token as btn-link since #8181, so call sites do not shift when they move
+// over. `body.dark a` in styles.scss colours every anchor and outranks a bare
+// .link, so dark is repeated to beat it. That goes away if the global rule moves
+// to a token too.
+.link,
+.dark .link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  vertical-align: baseline;
+  color: var(--color-text-action);
+  font-weight: var(--font-weight-medium);
+  text-decoration: none;
+  transition: all 200ms;
+
+  &:hover,
+  &:focus-visible {
+    color: var(--color-text-action);
+    text-decoration: underline;
+  }
+}

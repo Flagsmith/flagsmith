@@ -1,0 +1,16 @@
+import Constants from 'common/constants'
+
+export default (envId, { TRAIT_NAME }, userId) => `require "flagsmith"
+
+$flagsmith = Flagsmith::Client.new(
+    environment_key="${envId}"${
+  Constants.isCustomFlagsmithUrl()
+    ? `,\n    api_url="${Constants.getFlagsmithSDKUrl()}"\n`
+    : ''
+})
+
+traits = {"${TRAIT_NAME}": 42}
+
+// Identify a user, set their traits and retrieve the flags
+identity_flags = $flagsmith.get_identity_flags("${userId}", traits)
+`

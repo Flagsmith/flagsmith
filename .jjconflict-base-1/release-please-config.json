@@ -1,0 +1,58 @@
+{
+    "bootstrap-sha": "374e83b797fbc644ce1e5e3d14ac7acce3a9b44f",
+    "packages": {
+        ".": {
+            "release-type": "simple",
+            "changelog-path": "CHANGELOG.md",
+            "bump-minor-pre-major": false,
+            "bump-patch-for-minor-pre-major": false,
+            "draft": false,
+            "prerelease": false,
+            "include-component-in-tag": false
+        }
+    },
+    "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+    "changelog-sections": [
+        {
+            "type": "feat",
+            "section": "Features"
+        },
+        {
+            "type": "fix",
+            "section": "Bug Fixes"
+        },
+        {
+            "type": "infra",
+            "section": "Infrastructure (Flagsmith SaaS Only)"
+        },
+        {
+            "type": "deps",
+            "section": "Dependency Updates"
+        },
+        {
+            "type": "ci",
+            "section": "CI"
+        },
+        {
+            "type": "docs",
+            "section": "Docs"
+        },
+        {
+            "type": "perf",
+            "section": "Performance Improvements"
+        },
+        {
+            "type": "refactor",
+            "section": "Refactoring"
+        },
+        {
+            "type": "test",
+            "section": "Tests"
+        },
+        {
+            "type": "chore",
+            "section": "Other",
+            "hidden": true
+        }
+    ]
+}

@@ -1,0 +1,14 @@
+LAUNCH_DARKLY_API_BASE_URL = "https://app.launchdarkly.com"
+LAUNCH_DARKLY_API_VERSION = "20240415"
+# Maximum limit for /api/v2/projects/ and other endpoints
+LAUNCH_DARKLY_API_ITEM_COUNT_LIMIT_PER_PAGE = 1000
+# Maximum limit for /api/v2/flags/ is now 100 by launchdarkly API design
+LAUNCH_DARKLY_API_FLAGS_LIMIT_PER_PAGE = 100
+# Maximum limit for env query parameter values in /api/v2/flags/
+LAUNCH_DARKLY_API_MAX_ENVIRONMENTS_PER_REQUEST = 3
+
+LAUNCH_DARKLY_IMPORTED_TAG_COLOR = "#3d4db6"
+LAUNCH_DARKLY_IMPORTED_DEFAULT_TAG_LABEL = "Imported"
+
+BACKOFF_MAX_RETRIES = 5
+BACKOFF_DEFAULT_RETRY_AFTER_SECONDS = 10

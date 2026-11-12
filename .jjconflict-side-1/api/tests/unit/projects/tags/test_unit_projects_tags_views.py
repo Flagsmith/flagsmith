@@ -1,0 +1,123 @@
+import json
+
+import pytest
+from common.projects.permissions import VIEW_PROJECT
+from django.urls import reverse
+from pytest_lazy_fixtures import lf as lazy_fixture
+from rest_framework import status
+from rest_framework.test import APIClient
+
+from projects.models import Project
+from projects.tags.models import Tag
+from tests.types import WithProjectPermissionsCallable
+
+
+@pytest.mark.parametrize(
+    "client",
+    [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
+)
+def test_get_tag_by_uuid__valid_client__returns_tag(  # type: ignore[no-untyped-def]
+    client: APIClient, project: Project, tag: Tag
+):  # noqa: E501
+    # Given
+    url = reverse("api-v1:projects:tags-get-by-uuid", args=[project.id, str(tag.uuid)])
+
+    # When
+    response = client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["uuid"] == str(tag.uuid)
+
+
+def test_get_tag_by_uuid__user_without_permission__returns_403(  # type: ignore[no-untyped-def]
+    staff_client: APIClient,
+    organisation_one_project_two: Project,
+    project: Project,
+    tag: Tag,
+    with_project_permissions: WithProjectPermissionsCallable,
+):
+    # Given
+    # user with view permission for a different project
+    with_project_permissions([VIEW_PROJECT], organisation_one_project_two.id)  # type: ignore[call-arg]
+
+    url = reverse(
+        "api-v1:projects:tags-get-by-uuid",
+        args=[project.id, str(tag.uuid)],
+    )
+
+    # When
+    response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+def test_get_tag_by_uuid__user_with_view_project_permission__returns_200(  # type: ignore[no-untyped-def]
+    staff_client: APIClient,
+    project: Project,
+    tag: Tag,
+    with_project_permissions: WithProjectPermissionsCallable,
+):
+    # Given
+    with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
+
+    url = reverse(
+        "api-v1:projects:tags-get-by-uuid",
+        args=[project.id, str(tag.uuid)],
+    )
+
+    # When
+    response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["uuid"] == str(tag.uuid)
+
+
+def test_delete_tag__system_tag__returns_400(
+    staff_client: APIClient,
+    with_project_permissions: WithProjectPermissionsCallable,
+    project: Project,
+    system_tag: Tag,
+) -> None:
+    # Given
+    url = reverse("api-v1:projects:tags-detail", args=(project.id, system_tag.id))
+
+    with_project_permissions(admin=True)  # type: ignore[call-arg]
+
+    # When
+    response = staff_client.delete(url)
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json() == {"message": "Cannot delete a system tag."}
+
+
+def test_update_tag__system_tag__returns_400(  # type: ignore[no-untyped-def]
+    staff_client: APIClient,
+    with_project_permissions: WithProjectPermissionsCallable,
+    project: Project,
+    system_tag: Tag,
+):
+    # Given
+    url = reverse("api-v1:projects:tags-detail", args=(project.id, system_tag.id))
+
+    with_project_permissions(admin=True)  # type: ignore[call-arg]
+
+    updated_label = f"{system_tag.label} updated"
+
+    data = {
+        "id": system_tag.id,
+        "color": system_tag.color,
+        "label": updated_label,
+        "project": system_tag.project_id,
+        "description": "",
+    }
+
+    # When
+    response = staff_client.put(url, json.dumps(data), content_type="application/json")
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json() == {"non_field_errors": ["Cannot update a system tag."]}

@@ -1,0 +1,1055 @@
+import json
+import typing
+from datetime import datetime
+
+import pytest
+from dateutil.relativedelta import relativedelta
+from django.conf import settings
+from django.contrib.auth import login
+from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.tokens import default_token_generator
+from django.core import mail
+from django.urls import reverse
+from django.utils import timezone
+from djoser import utils  # type: ignore[import-untyped]
+from djoser.email import PasswordResetEmail  # type: ignore[import-untyped]
+from freezegun import freeze_time
+from pytest_django import DjangoAssertNumQueries
+from pytest_django.fixtures import SettingsWrapper
+from rest_framework import status
+from rest_framework.test import APIClient
+
+from organisations.invites.models import Invite, InviteLink
+from organisations.models import Organisation, OrganisationRole
+from users.models import (
+    FFAdminUser,
+    UserPermissionGroup,
+    UserPermissionGroupMembership,
+)
+
+
+def test_join_organisation__valid_invite__user_added_to_organisation(
+    staff_user: FFAdminUser,
+    staff_client: APIClient,
+) -> None:
+    # Given
+    organisation = Organisation.objects.create(name="test org")
+    invite = Invite.objects.create(email=staff_user.email, organisation=organisation)
+    url = reverse("api-v1:users:user-join-organisation", args=[invite.hash])
+    # When
+    response = staff_client.post(url)
+    staff_user.refresh_from_db()
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert organisation in staff_user.organisations.all()
+
+
+def test_join_organisation__valid_invite_link__user_added_to_organisation(
+    staff_user: FFAdminUser,
+    staff_client: APIClient,
+) -> None:
+    # Given
+    organisation = Organisation.objects.create(name="test org")
+    invite = InviteLink.objects.create(organisation=organisation)
+    url = reverse("api-v1:users:user-join-organisation-link", args=[invite.hash])
+
+    # When
+    response = staff_client.post(url)
+    staff_user.refresh_from_db()
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert organisation in staff_user.organisations.all()
+
+
+def test_join_organisation__expired_invite_link__returns_400(
+    staff_user: FFAdminUser,
+    staff_client: APIClient,
+) -> None:
+    # Given
+    organisation = Organisation.objects.create(name="test org")
+    invite = InviteLink.objects.create(
+        organisation=organisation,
+        expires_at=timezone.now() - relativedelta(days=2),
+    )
+    url = reverse("api-v1:users:user-join-organisation-link", args=[invite.hash])
+
+    # When
+    response = staff_client.post(url)
+    staff_user.refresh_from_db()
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert organisation not in staff_user.organisations.all()
+
+
+def test_join_organisation__user_already_in_one_org__user_added_to_both(  # type: ignore[no-untyped-def]
+    organisation: Organisation,
+    staff_user: FFAdminUser,
+    staff_client: APIClient,
+):
+    # Given
+    new_organisation = Organisation.objects.create(name="New org")
+    invite = Invite.objects.create(
+        email=staff_user.email, organisation=new_organisation
+    )
+    url = reverse("api-v1:users:user-join-organisation", args=[invite.hash])
+
+    # When
+    response = staff_client.post(url)
+    staff_user.refresh_from_db()
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert (
+        new_organisation in staff_user.organisations.all()
+        and organisation in staff_user.organisations.all()
+    )
+
+
+def test_join_organisation__different_email_than_invite__returns_400(
+    staff_user: FFAdminUser,
+    staff_client: APIClient,
+) -> None:
+    # Given
+    organisation = Organisation.objects.create(name="test org")
+    invite = Invite.objects.create(
+        email="some-other-email@test.com", organisation=organisation
+    )
+    url = reverse("api-v1:users:user-join-organisation", args=[invite.hash])
+
+    # When
+    response = staff_client.post(url)
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert organisation not in staff_user.organisations.all()
+
+
+def test_join_organisation__invite_role_is_admin__user_becomes_org_admin(
+    staff_user: FFAdminUser,
+    staff_client: APIClient,
+) -> None:
+    # Given
+    organisation = Organisation.objects.create(name="test org")
+    invite = Invite.objects.create(
+        email=staff_user.email,
+        organisation=organisation,
+        role=OrganisationRole.ADMIN.name,
+    )
+    url = reverse("api-v1:users:user-join-organisation", args=[invite.hash])
+
+    # When
+    staff_client.post(url)
+
+    # Then
+    assert staff_user.is_organisation_admin(organisation)
+
+
+def test_update_user_role__admin_sets_user_to_admin__role_updated(  # type: ignore[no-untyped-def]
+    admin_client_new: APIClient,
+    organisation: Organisation,
+):
+    # Given
+    organisation_user = FFAdminUser.objects.create(email="org_user@org.com")
+    organisation_user.add_organisation(organisation)
+    url = reverse(
+        "api-v1:organisations:organisation-users-update-role",
+        args=[organisation.pk, organisation_user.pk],
+    )
+    data = {"role": OrganisationRole.ADMIN.name}
+
+    # When
+    response = admin_client_new.post(url, data=data)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    # and
+    assert (
+        organisation_user.get_organisation_role(organisation)
+        == OrganisationRole.ADMIN.name
+    )
+
+
+def test_list_organisation_users__as_admin__returns_all_users(
+    admin_user: FFAdminUser,
+    admin_client_new: APIClient,
+    staff_user: FFAdminUser,
+    organisation: Organisation,
+    django_assert_num_queries: DjangoAssertNumQueries,
+) -> None:
+    # Given
+    organisation_user = FFAdminUser.objects.create(email="org_user@org.com")
+    organisation_user.add_organisation(organisation)
+    url = reverse(
+        "api-v1:organisations:organisation-users-list", args=[organisation.pk]
+    )
+
+    # add some more users to test for N+1 issues
+    additional_user1 = FFAdminUser.objects.create(email="additional_user_1@org.com")
+    additional_user1.add_organisation(organisation)
+    additional_user2 = FFAdminUser.objects.create(email="additional_user_2@org.com")
+    additional_user2.add_organisation(organisation)
+
+    # When
+    with django_assert_num_queries(5):
+        response = admin_client_new.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.data[0]["email"] == admin_user.email
+    assert response.data[1]["email"] == staff_user.email
+    assert response.data[2]["email"] == organisation_user.email
+    assert response.data[3]["email"] == additional_user1.email
+    assert response.data[4]["email"] == additional_user2.email
+
+
+def test_list_organisation_users__as_org_user__returns_all_users(
+    staff_user: FFAdminUser,
+    staff_client: APIClient,
+    organisation: Organisation,
+    admin_user: FFAdminUser,
+) -> None:
+    # Given
+    organisation_user = FFAdminUser.objects.create(email="org_user@org.com")
+    organisation_user.add_organisation(organisation)
+    url = reverse(
+        "api-v1:organisations:organisation-users-list", args=[organisation.pk]
+    )
+
+    # When
+    response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.data[0]["email"] == staff_user.email
+    assert response.data[1]["email"] == admin_user.email
+    assert response.data[2]["email"] == organisation_user.email
+
+
+def test_list_organisation_users__exclude_current_user__returns_other_users(  # type: ignore[no-untyped-def]
+    staff_client: APIClient,
+    staff_user: FFAdminUser,
+    organisation: Organisation,
+    admin_user: FFAdminUser,
+):
+    # Given
+    organisation_user = FFAdminUser.objects.create(email="org_user@org.com")
+    organisation_user.add_organisation(organisation)
+    base_url = reverse(
+        "api-v1:organisations:organisation-users-list", args=[organisation.pk]
+    )
+    url = f"{base_url}?exclude_current=true"
+
+    # When
+    response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert len(response.data) == 2
+    assert response.data[0]["id"] == admin_user.id
+    assert response.data[1]["id"] == organisation_user.id
+
+
+def test_list_organisation_users__deactivated_membership__exposes_membership_status(
+    admin_client_new: APIClient,
+    admin_user: FFAdminUser,
+    staff_user: FFAdminUser,
+    organisation: Organisation,
+) -> None:
+    # Given
+    staff_user.set_organisation_membership_active(organisation, is_active=False)
+
+    # When
+    response = admin_client_new.get(f"/api/v1/organisations/{organisation.pk}/users/")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert {
+        user["id"]: user["is_organisation_membership_active"]
+        for user in response.json()
+    } == {
+        admin_user.id: True,
+        staff_user.id: False,
+    }
+
+
+def test_update_user_role__deactivated_membership__exposes_membership_status(
+    admin_client_new: APIClient,
+    staff_user: FFAdminUser,
+    organisation: Organisation,
+) -> None:
+    # Given
+    staff_user.set_organisation_membership_active(organisation, is_active=False)
+
+    # When
+    response = admin_client_new.post(
+        f"/api/v1/organisations/{organisation.pk}/users/{staff_user.pk}/update-role/",
+        data={"role": OrganisationRole.ADMIN.name},
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["role"] == OrganisationRole.ADMIN.name
+    assert response.json()["is_organisation_membership_active"] is False
+
+
+def test_permission_groups__admin_crud_operations__succeeds(
+    organisation: Organisation,
+    admin_client_new: APIClient,
+) -> None:
+    # Given
+    # Create a group
+    create_data = {"name": "Test Group"}
+    url = reverse(
+        "api-v1:organisations:organisation-groups-list", args=[organisation.id]
+    )
+
+    # When / Then
+    response = admin_client_new.post(url, data=create_data)
+    assert response.status_code == status.HTTP_201_CREATED
+    assert UserPermissionGroup.objects.filter(name=create_data["name"]).exists()
+    group_id = response.json()["id"]
+
+    # Group appears in the groups list
+    response = admin_client_new.get(url)
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["results"][0]["name"] == "Test Group"
+
+    # Update the group
+    update_data = {"name": "New Group Name"}
+    url = reverse(
+        "api-v1:organisations:organisation-groups-detail",
+        args=[organisation.id, group_id],
+    )
+
+    response = admin_client_new.patch(url, data=update_data)
+    assert response.status_code == status.HTTP_200_OK
+
+    # Update is reflected when getting the group
+    response = admin_client_new.get(url)
+    assert response.status_code == status.HTTP_200_OK
+    assert response.data["name"] == update_data["name"]
+
+    # Delete the group
+    response = admin_client_new.delete(url)
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert not UserPermissionGroup.objects.filter(name=update_data["name"]).exists()
+
+
+def test_create_permission_group__as_staff_user__returns_403(
+    staff_client: APIClient,
+    organisation: Organisation,
+) -> None:
+    # Given
+    group_name = "Test Group"
+    UserPermissionGroup.objects.create(name=group_name, organisation=organisation)
+    data = {"name": "New Test Group"}
+    url = reverse(
+        "api-v1:organisations:organisation-groups-list", args=[organisation.id]
+    )
+
+    # When
+    response = staff_client.post(url, data=data)
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+def test_update_permission_group__as_staff_user__returns_404(
+    staff_client: APIClient,
+    organisation: Organisation,
+) -> None:
+    # Given
+    group_name = "Test Group"
+    group = UserPermissionGroup.objects.create(
+        name=group_name, organisation=organisation
+    )
+    url = reverse(
+        "api-v1:organisations:organisation-groups-detail",
+        args=[organisation.id, group.id],
+    )
+
+    # When
+    response = staff_client.put(url)
+
+    # Then
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
+def test_retrieve_permission_group__as_staff_user__returns_404(
+    staff_client: APIClient,
+    organisation: Organisation,
+) -> None:
+    # Given
+    group_name = "Test Group"
+    group = UserPermissionGroup.objects.create(
+        name=group_name, organisation=organisation
+    )
+    url = reverse(
+        "api-v1:organisations:organisation-groups-detail",
+        args=[organisation.id, group.id],
+    )
+
+    # When
+    response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
+def test_delete_permission_group__as_staff_user__returns_404(
+    staff_client: APIClient,
+    organisation: Organisation,
+) -> None:
+    # Given
+    group_name = "Test Group"
+    group = UserPermissionGroup.objects.create(
+        name=group_name, organisation=organisation
+    )
+    url = reverse(
+        "api-v1:organisations:organisation-groups-detail",
+        args=[organisation.id, group.id],
+    )
+
+    # When
+    response = staff_client.delete(url)
+
+    # Then
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert UserPermissionGroup.objects.filter(name=group_name).exists()
+
+
+def test_add_users_to_group__multiple_users_including_current__all_added(
+    staff_user: FFAdminUser,
+    organisation: Organisation,
+    admin_user: FFAdminUser,
+    admin_client_new: APIClient,
+) -> None:
+    # Given
+    group = UserPermissionGroup.objects.create(
+        name="Test Group", organisation=organisation
+    )
+    url = reverse(
+        "api-v1:organisations:organisation-groups-add-users",
+        args=[organisation.id, group.id],
+    )
+    data = {"user_ids": [admin_user.id, staff_user.id]}
+
+    # When
+    response = admin_client_new.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert all(user in group.users.all() for user in [admin_user, staff_user])
+
+
+def test_add_users_to_group__with_master_api_key__all_added(
+    staff_user: FFAdminUser,
+    organisation: Organisation,
+    admin_user: FFAdminUser,
+    admin_master_api_key_client: APIClient,
+) -> None:
+    # Given
+    group = UserPermissionGroup.objects.create(
+        name="Test Group", organisation=organisation
+    )
+    url = reverse(
+        "api-v1:organisations:organisation-groups-add-users",
+        args=[organisation.id, group.id],
+    )
+    data = {"user_ids": [admin_user.id, staff_user.id]}
+
+    # When
+    response = admin_master_api_key_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert all(user in group.users.all() for user in [admin_user, staff_user])
+
+
+def test_add_users_to_group__user_from_another_org__returns_400(  # type: ignore[no-untyped-def]
+    admin_client_new: APIClient,
+    organisation: Organisation,
+):
+    # Given
+    another_organisation = Organisation.objects.create(name="Another organisation")
+    another_user = FFAdminUser.objects.create(email="anotheruser@anotherorg.com")
+    another_user.add_organisation(another_organisation, role=OrganisationRole.USER)
+    group = UserPermissionGroup.objects.create(
+        name="Test Group", organisation=organisation
+    )
+    url = reverse(
+        "api-v1:organisations:organisation-groups-add-users",
+        args=[organisation.id, group.id],
+    )
+    data = {"user_ids": [another_user.id]}
+
+    # When
+    response = admin_client_new.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+def test_add_users_to_group__user_already_in_group__not_duplicated(
+    staff_user: FFAdminUser,
+    organisation: Organisation,
+    admin_client_new: APIClient,
+) -> None:
+    # Given
+    group = UserPermissionGroup.objects.create(
+        name="Test Group", organisation=organisation
+    )
+    group.users.add(staff_user)
+    url = reverse(
+        "api-v1:organisations:organisation-groups-add-users",
+        args=[organisation.id, group.id],
+    )
+    data = {"user_ids": [staff_user.id]}
+
+    # When
+    admin_client_new.post(url, data=json.dumps(data), content_type="application/json")
+
+    # Then
+    assert staff_user in group.users.all() and group.users.count() == 1
+
+
+def test_remove_users_from_group__one_of_two_users__only_specified_user_removed(
+    staff_user: FFAdminUser,
+    organisation: Organisation,
+    admin_user: FFAdminUser,
+    admin_client_new: APIClient,
+) -> None:
+    # Given
+    group = UserPermissionGroup.objects.create(
+        name="Test Group", organisation=organisation
+    )
+    group.users.add(staff_user, admin_user)
+    url = reverse(
+        "api-v1:organisations:organisation-groups-remove-users",
+        args=[organisation.id, group.id],
+    )
+
+    data = {"user_ids": [staff_user.id]}
+
+    # When
+    admin_client_new.post(url, data=json.dumps(data), content_type="application/json")
+
+    # Then
+    # staff user has been removed
+    assert staff_user not in group.users.all()
+
+    # but admin user still remains
+    assert admin_user in group.users.all()
+
+
+def test_remove_users_from_group__user_not_in_group__succeeds_silently(
+    staff_user: FFAdminUser,
+    organisation: Organisation,
+    admin_client_new: APIClient,
+    admin_user: FFAdminUser,
+) -> None:
+    # Given
+    group = UserPermissionGroup.objects.create(
+        name="Test Group", organisation=organisation
+    )
+    group.users.add(admin_user)
+    url = reverse(
+        "api-v1:organisations:organisation-groups-remove-users",
+        args=[organisation.id, group.id],
+    )
+    data = {"user_ids": [staff_user.id]}
+
+    # When
+    response = admin_client_new.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    # request was successful
+    assert response.status_code == status.HTTP_200_OK
+    # and admin user is still in the group
+    assert admin_user in group.users.all()
+
+
+def test_update_permission_group__set_is_default_true__updates_successfully(  # type: ignore[no-untyped-def]
+    admin_client_new, organisation, user_permission_group
+):
+    # Given
+    args = [organisation.id, user_permission_group.id]
+    url = reverse("api-v1:organisations:organisation-groups-detail", args=args)
+
+    data = {"is_default": True, "name": user_permission_group.name}
+
+    # When
+    response = admin_client_new.put(url, data=data)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["is_default"] is True
+
+    # and
+    user_permission_group.refresh_from_db()
+    assert user_permission_group.is_default is True
+
+
+def test_update_permission_group__set_external_id__updates_successfully(  # type: ignore[no-untyped-def]
+    admin_client_new, organisation, user_permission_group
+):
+    # Given
+    args = [organisation.id, user_permission_group.id]
+    url = reverse("api-v1:organisations:organisation-groups-detail", args=args)
+    external_id = "some_external_id"
+
+    data = {"external_id": external_id, "name": user_permission_group.name}
+
+    # When
+    response = admin_client_new.put(url, data=data)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["external_id"] == external_id
+
+
+def test_list_organisation_users__user_has_logged_in__includes_last_login(  # type: ignore[no-untyped-def]
+    admin_client_new, organisation, rf, mocker, admin_user
+):
+    # Given
+    req = rf.get("/")
+    req.session = mocker.MagicMock()
+
+    # let's log the user in to generate `last_login`
+    login(req, admin_user, backend="django.contrib.auth.backends.ModelBackend")
+    url = reverse(
+        "api-v1:organisations:organisation-users-list", args=[organisation.id]
+    )
+
+    # When
+    res = admin_client_new.get(url)
+
+    # Then
+    assert res.json()[0]["last_login"] is not None
+    assert res.status_code == status.HTTP_200_OK
+
+
+def test_retrieve_permission_group__with_group_admin__includes_group_admin_flag(  # type: ignore[no-untyped-def]
+    admin_client_new, admin_user, organisation, user_permission_group
+):
+    # Given
+    group_admin_user = FFAdminUser.objects.create(email="groupadminuser@example.com")
+    group_admin_user.permission_groups.add(user_permission_group)
+    group_admin_user.make_group_admin(user_permission_group.id)
+
+    url = reverse(
+        "api-v1:organisations:organisation-groups-detail",
+        args=[organisation.id, user_permission_group.id],
+    )
+
+    # When
+    response = admin_client_new.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    response_json = response.json()
+
+    users = response_json["users"]
+
+    assert (
+        next(filter(lambda u: u["id"] == admin_user.id, users))["group_admin"] is False
+    )
+    assert (
+        next(filter(lambda u: u["id"] == group_admin_user.id, users))["group_admin"]
+        is True
+    )
+
+
+def test_retrieve_permission_group__as_group_admin__returns_200(  # type: ignore[no-untyped-def]
+    organisation: Organisation,
+    django_user_model: typing.Type[AbstractUser],
+    api_client: APIClient,
+):
+    # Given
+    user = django_user_model.objects.create(email="test@example.com")
+    user.add_organisation(organisation)  # type: ignore[attr-defined]
+    group = UserPermissionGroup.objects.create(
+        organisation=organisation, name="Test group"
+    )
+    user.add_to_group(group, group_admin=True)  # type: ignore[attr-defined]
+
+    api_client.force_authenticate(user)
+    url = reverse(
+        "api-v1:organisations:organisation-groups-detail",
+        args=[organisation.id, group.id],
+    )
+
+    # When
+    response = api_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+
+def delete_user(  # type: ignore[no-untyped-def]
+    user: FFAdminUser,
+    password: str = None,  # type: ignore[assignment]
+    delete_orphan_organisations: bool = True,
+):
+    client = APIClient()
+    client.force_authenticate(user)
+    data = {
+        "delete_orphan_organisations": delete_orphan_organisations,
+    }
+    if password:
+        data["password"] = password  # type: ignore[assignment]
+
+    url = "/api/v1/auth/users/me/"
+    return client.delete(url, data=json.dumps(data), content_type="application/json")
+
+
+@pytest.mark.django_db
+def test_delete_user__multiple_users_in_multiple_orgs__orphan_orgs_deleted():  # type: ignore[no-untyped-def]
+    # Given
+    email1 = "test1@example.com"
+    email2 = "test2@example.com"
+    email3 = "test3@example.com"
+    password = "password"
+    user1 = FFAdminUser.objects.create_user(email=email1, password=password)  # type: ignore[no-untyped-call]
+    user2 = FFAdminUser.objects.create_user(email=email2, password=password)  # type: ignore[no-untyped-call]
+    user3 = FFAdminUser.objects.create_user(email=email3, password=password)  # type: ignore[no-untyped-call]
+
+    # create some organizations
+    org1 = Organisation.objects.create(name="org1")
+    org2 = Organisation.objects.create(name="org2")
+    org3 = Organisation.objects.create(name="org3")
+
+    # add the test user 1 to all the organizations
+    org1.users.add(user1)
+    org2.users.add(user1)
+    org3.users.add(user1)
+
+    # add test user 2 to org2 and user 3 to to org1
+    org2.users.add(user2)
+    org1.users.add(user3)
+
+    # Configuration: org1: [user1, user3], org2: [user1, user2], org3: [user1]
+
+    # When / Then
+    # Delete user2
+    response = delete_user(user2, password)
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert not FFAdminUser.objects.filter(email=email2).exists()
+
+    # All organisations remain since user 2 has org2 as only organization and it has 2 users
+    assert Organisation.objects.filter(name="org3").count() == 1
+    assert Organisation.objects.filter(name="org1").count() == 1
+    assert Organisation.objects.filter(name="org2").count() == 1
+
+    # Delete user1
+    response = delete_user(user1, password)
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert not FFAdminUser.objects.filter(email=email1).exists()
+
+    # organization org3 and org2 are deleted since its only user is user1
+    assert Organisation.objects.filter(name="org3").count() == 0
+    assert Organisation.objects.filter(name="org2").count() == 0
+
+    # org1 remain
+    assert Organisation.objects.filter(name="org1").count() == 1
+
+    # user3 remain
+    assert FFAdminUser.objects.filter(email=email3).exists()
+
+    # Delete user3
+    response = delete_user(user3, password, False)
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert not FFAdminUser.objects.filter(email=email3).exists()
+    assert Organisation.objects.filter(name="org1").count() == 1
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("password", [None, "", "random"])
+def test_delete_user__social_auth_with_no_password__deletes_user_and_orphan_org(  # type: ignore[no-untyped-def]
+    password,
+):
+    # Given
+    google_auth_user_email = "google@example.com"
+    github_auth_user_email = "github@example.com"
+
+    # We have given each social auth test user their own org since all the other org
+    # logic has been checked in the email/password users tests and we're just doing a
+    # sanity check here to make sure that the related org is deleted.
+    google_auth_user_org = Organisation.objects.create(name="google_auth_user_org")
+    github_auth_user_org = Organisation.objects.create(name="github_auth_user_org")
+
+    google_auth_user = FFAdminUser.objects.create_user(  # type: ignore[no-untyped-call]
+        email=google_auth_user_email, google_user_id=123456
+    )
+    github_auth_user = FFAdminUser.objects.create_user(  # type: ignore[no-untyped-call]
+        email=github_auth_user_email, github_user_id=123456
+    )
+
+    # Add social auth users to their orgs
+    google_auth_user_org.users.add(google_auth_user)
+    github_auth_user_org.users.add(github_auth_user)
+
+    # When / Then
+    # Delete google_auth_user
+    response = delete_user(google_auth_user, password, delete_orphan_organisations=True)
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert not FFAdminUser.objects.filter(email=google_auth_user_email).exists()
+    assert Organisation.objects.filter(name="google_auth_user_org").count() == 0
+
+    # Delete github_auth_user
+    response = delete_user(github_auth_user, password, delete_orphan_organisations=True)
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert not FFAdminUser.objects.filter(email=github_auth_user_email).exists()
+    assert Organisation.objects.filter(name="github_auth_user_org").count() == 0
+
+
+@pytest.mark.django_db
+def test_change_email__valid_password__updates_email_and_sends_notification(mocker):  # type: ignore[no-untyped-def]
+    # Given
+    mocked_task = mocker.patch("users.tasks.send_email_changed_notification_email")
+    # create an user
+    old_email = "test_user@test.com"
+    first_name = "firstname"
+    user = FFAdminUser.objects.create_user(  # type: ignore[no-untyped-call]
+        username="test_user",
+        email=old_email,
+        first_name=first_name,
+        last_name="user",
+        password="password",
+    )
+
+    client = APIClient()
+    client.force_authenticate(user)
+    new_email = "test_user1@test.com"
+    data = {"new_email": new_email, "current_password": "password"}
+
+    url = reverse("api-v1:custom_auth:ffadminuser-set-username")
+
+    # When
+    response = client.post(url, data=json.dumps(data), content_type="application/json")
+
+    # Then
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert user.email == new_email
+
+    args, kwargs = mocked_task.delay.call_args
+
+    assert len(args) == 0
+    assert len(kwargs) == 1
+    assert kwargs["args"] == (first_name, settings.DEFAULT_FROM_EMAIL, old_email)
+
+
+@pytest.mark.django_db
+def test_reset_password__exceeds_rate_limit__stops_sending_emails(
+    settings: SettingsWrapper,
+    client: APIClient,
+    staff_user: FFAdminUser,
+) -> None:
+    # Given
+    settings.MAX_PASSWORD_RESET_EMAILS = 2
+    settings.PASSWORD_RESET_EMAIL_COOLDOWN = 60
+
+    url = reverse("api-v1:custom_auth:ffadminuser-reset-password")
+    data = {"email": staff_user.email}
+
+    # When
+    for _ in range(5):
+        response = client.post(
+            url, data=json.dumps(data), content_type="application/json"
+        )
+        assert response.status_code == status.HTTP_204_NO_CONTENT
+
+    # Then - we should only have two emails
+    assert len(mail.outbox) == 2
+    isinstance(mail.outbox[0], PasswordResetEmail)
+    isinstance(mail.outbox[1], PasswordResetEmail)
+
+    # clear the outbox
+    mail.outbox.clear()
+
+    # Next, let's reduce the cooldown to 1 second and try again
+    settings.PASSWORD_RESET_EMAIL_COOLDOWN = 0.001
+    response = client.post(url, data=json.dumps(data), content_type="application/json")
+
+    # Then - we should receive another email
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+
+    assert len(mail.outbox) == 1
+    isinstance(mail.outbox[0], PasswordResetEmail)
+
+
+@pytest.mark.django_db
+def test_reset_password__rate_limit_resets_after_password_change__sends_email_again(  # type: ignore[no-untyped-def]
+    settings: SettingsWrapper,
+    client: APIClient,
+    staff_user: FFAdminUser,
+):
+    # Given
+    settings.MAX_PASSWORD_RESET_EMAILS = 2
+    settings.PASSWORD_RESET_EMAIL_COOLDOWN = 60 * 60 * 24
+
+    url = reverse("api-v1:custom_auth:ffadminuser-reset-password")
+    data = {"email": staff_user.email}
+
+    # When
+    # First, let's hit the limit of emails we can send
+    for _ in range(5):
+        response = client.post(
+            url, data=json.dumps(data), content_type="application/json"
+        )
+        assert response.status_code == status.HTTP_204_NO_CONTENT
+
+    # Then - we should only have two emails
+    assert len(mail.outbox) == 2
+    mail.outbox.clear()
+
+    # Next, let's reset the password
+    reset_password_data = {
+        "new_password": "new_password",
+        "re_new_password": "new_password",
+        "uid": utils.encode_uid(staff_user.pk),
+        "token": default_token_generator.make_token(staff_user),
+    }
+    reset_password_confirm_url = reverse(
+        "api-v1:custom_auth:ffadminuser-reset-password-confirm"
+    )
+    response = client.post(
+        reset_password_confirm_url,
+        data=json.dumps(reset_password_data),
+        content_type="application/json",
+    )
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+
+    # Finally, let's try to send another email
+    client.post(url, data=json.dumps(data), content_type="application/json")
+
+    # Then - we should receive another email
+    assert len(mail.outbox) == 1
+
+
+def test_list_permission_groups__multiple_groups_with_users__returns_correct_data(
+    organisation: Organisation,
+    admin_client: APIClient,
+    django_assert_num_queries: DjangoAssertNumQueries,
+) -> None:
+    # Given
+    user1 = FFAdminUser.objects.create(email="user1@example.com")
+    user2 = FFAdminUser.objects.create(email="user2@example.com")
+
+    user1.add_organisation(organisation)
+    user2.add_organisation(organisation)
+
+    user_permission_group_1 = UserPermissionGroup.objects.create(
+        organisation=organisation, name="group1"
+    )
+    user_permission_group_2 = UserPermissionGroup.objects.create(
+        organisation=organisation, name="group2"
+    )
+
+    UserPermissionGroupMembership.objects.create(
+        ffadminuser=user1, userpermissiongroup=user_permission_group_1, group_admin=True
+    )
+    UserPermissionGroupMembership.objects.create(
+        ffadminuser=user2, userpermissiongroup=user_permission_group_2, group_admin=True
+    )
+    UserPermissionGroupMembership.objects.create(
+        ffadminuser=user1, userpermissiongroup=user_permission_group_2
+    )
+
+    url = reverse(
+        "api-v1:organisations:organisation-groups-list", args=[organisation.id]
+    )
+
+    # When
+    with django_assert_num_queries(7):
+        response = admin_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    response_json = response.json()
+    assert response_json["count"] == 2
+
+    group_1 = response_json["results"][0]
+    group_1_users = group_1["users"]
+    assert len(group_1_users) == 1
+    assert group_1_users[0]["id"] == user1.pk
+    assert group_1_users[0]["group_admin"] is True
+
+    group_2 = response_json["results"][1]
+    group_2_users = group_2["users"]
+    assert len(group_2_users) == 2
+    assert set((user["id"], user["group_admin"]) for user in group_2_users) == {
+        (user1.pk, False),
+        (user2.pk, True),
+    }
+
+
+@freeze_time("2024-01-01T10:00:00Z")
+@pytest.mark.parametrize(
+    "last_login,expected_last_login",
+    [
+        (None, datetime.fromisoformat("2024-01-01T10:00:00Z")),
+        (
+            datetime.fromisoformat("2023-01-01T10:00:00Z"),
+            datetime.fromisoformat("2024-01-01T10:00:00Z"),
+        ),
+        (
+            datetime.fromisoformat("2024-01-01T09:59:00Z"),
+            datetime.fromisoformat("2024-01-01T09:59:00Z"),
+        ),
+    ],
+)
+def test_get_me__various_last_login_values__updates_last_login_correctly(
+    api_client: APIClient,
+    staff_user: FFAdminUser,
+    last_login: datetime | None,
+    expected_last_login: datetime,
+) -> None:
+    # Given
+    staff_user.last_login = last_login
+    staff_user.save(update_fields=["last_login"])
+    staff_user.refresh_from_db()
+
+    api_client.force_authenticate(staff_user)
+    assert staff_user.last_login is None or staff_user.last_login < timezone.now()
+
+    url = reverse("api-v1:custom_auth:ffadminuser-me")
+
+    # When
+    response = api_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    staff_user.refresh_from_db()
+
+    assert staff_user.last_login == expected_last_login
+
+
+@pytest.mark.django_db
+def test_admin_init__no_users__creates_superuser(
+    api_client: APIClient,
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    settings.ADMIN_EMAIL = "admin@example.com"
+
+    # When
+    response = api_client.get("/api/v1/users/init/")
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.json()["adminUserCreated"] is True
+    assert FFAdminUser.objects.get(email="admin@example.com").is_superuser

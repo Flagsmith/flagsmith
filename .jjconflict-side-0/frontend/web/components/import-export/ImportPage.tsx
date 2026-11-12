@@ -1,0 +1,252 @@
+import React, { FC, useEffect, useState } from 'react'
+import _data from 'common/data/base/_data'
+import {
+  useCreateLaunchDarklyProjectImportMutation,
+  useGetLaunchDarklyProjectImportQuery,
+} from 'common/services/useLaunchDarklyProjectImport'
+import AppLoader from 'components/AppLoader'
+import InfoMessage from 'components/InfoMessage'
+import Tabs from 'components/navigation/TabMenu/Tabs'
+import Input from 'components/base/forms/Input'
+import Utils from 'common/utils/utils'
+import Button from 'components/base/forms/Button'
+import PanelSearch from 'components/PanelSearch'
+import TabItem from 'components/navigation/TabMenu/TabItem'
+import FeatureImport from './FeatureImport'
+import Constants from 'common/constants'
+import { useHistory } from 'react-router-dom'
+import { ProjectPermission } from 'common/types/permissions.types'
+import { useHasPermission } from 'common/providers/Permission'
+
+type ImportPageType = {
+  projectId: string
+  projectName: string
+}
+
+const ImportPage: FC<ImportPageType> = ({ projectId, projectName }) => {
+  const history = useHistory()
+  const { isLoading: isLoadingPermission, permission: isProjectAdmin } =
+    useHasPermission({
+      id: projectId,
+      level: 'project',
+      permission: ProjectPermission.ADMIN,
+    })
+  const [LDKey, setLDKey] = useState<string>('')
+  const [importId, setImportId] = useState<number>()
+  const [isLoading, setIsLoading] = useState<boolean>(false)
+  const [projects, setProjects] = useState<{ key: string; name: string }[]>([])
+  const [createLaunchDarklyProjectImport, { data, isSuccess }] =
+    useCreateLaunchDarklyProjectImportMutation()
+
+  const { data: status } = useGetLaunchDarklyProjectImportQuery(
+    {
+      import_id: `${importId}`,
+      project_id: projectId,
+    },
+    {
+      pollingInterval: importId ? 1000 : 0,
+      skip: !importId,
+    },
+  )
+
+  useEffect(() => {
+    if (isSuccess && data?.id) {
+      setImportId(data.id)
+    }
+  }, [isSuccess, data])
+
+  useEffect(() => {
+    if (status?.status?.result === 'success') {
+      const count = status.status.requested_flag_count
+      const deprecated = status.status.deprecated_flag_count ?? 0
+      let message = `Imported ${count} flag${
+        count !== 1 ? 's' : ''
+      } from LaunchDarkly.`
+      if (deprecated > 0) {
+        message += ` ${deprecated} deprecated flag${
+          deprecated !== 1 ? 's were' : ' was'
+        } archived.`
+      }
+      toast(message, 'success', 20000)
+      history.push(`/project/${projectId}`)
+    } else if (status?.status?.result === 'failure') {
+      const errors = status.status.error_messages.join('; ')
+      toast(`Importing from LaunchDarkly failed: ${errors}`, 'danger', 20000)
+      setImportId(undefined)
+    }
+  }, [status, projectId, history])
+
+  const getProjectList = (LDKey: string) => {
+    setIsLoading(true)
+    _data
+      .get(`https://app.launchdarkly.com/api/v2/projects`, '', {
+        'Authorization': LDKey,
+      })
+      .then((res: { items: { key: string; name: string }[] }) => {
+        setIsLoading(false)
+        setProjects(res.items)
+      })
+  }
+
+  const createImportLDProjects = (
+    LDKey: string,
+    key: string,
+    projectId: string,
+  ) => {
+    createLaunchDarklyProjectImport({
+      body: { project_key: key, token: LDKey },
+      project_id: projectId,
+    })
+  }
+
+  if (isLoadingPermission) {
+    return (
+      <div className='text-center mt-4'>
+        <Loader />
+      </div>
+    )
+  }
+
+  if (!isProjectAdmin) {
+    return (
+      <div
+        dangerouslySetInnerHTML={{
+          __html: Constants.projectPermissions(ProjectPermission.ADMIN),
+        }}
+        className='mt-4'
+      />
+    )
+  }
+
+  const launchDarklyImport = (
+    <>
+      <InfoMessage>
+        Import operations will overwrite existing environments and flags in your
+        project.{' '}
+        <a
+          target='_blank'
+          href='https://docs.flagsmith.com/system-administration/importing-and-exporting/launchdarkly'
+          rel='noreferrer'
+          onClick={(e) => e.stopPropagation()}
+        >
+          <strong>Visit the documentation for more details.</strong>
+        </a>
+      </InfoMessage>
+      <h5>Import LaunchDarkly Projects</h5>
+      <label>Set LaunchDarkly key</label>
+      <FormGroup>
+        <Row className='align-items-start col-md-8'>
+          <Flex className='ml-0'>
+            <Input
+              value={LDKey}
+              name='ldkey'
+              onChange={(e) => setLDKey(Utils.safeParseEventValue(e))}
+              type='text'
+              placeholder='My LaunchDarkly key'
+            />
+          </Flex>
+          <Button
+            id='save-proj-btn'
+            disabled={!LDKey}
+            className='ml-3'
+            onClick={() => getProjectList(LDKey)}
+          >
+            {'Next'}
+          </Button>
+        </Row>
+      </FormGroup>
+      {isLoading ? (
+        <div className='text-center'>
+          <Loader />
+        </div>
+      ) : (
+        projects.length > 0 && (
+          <div>
+            <FormGroup>
+              <PanelSearch
+                id='projects-list'
+                className='no-pad panel-projects'
+                listClassName='row mt-n2 gy-3'
+                title='LaunchDarkly Projects'
+                items={projects}
+                renderRow={({ key, name }, i) => {
+                  return (
+                    <>
+                      <Button
+                        className='btn-project'
+                        onClick={() =>
+                          openConfirm({
+                            body: (
+                              <span>
+                                Flagsmith will import {<strong>{name}</strong>}{' '}
+                                to {<strong>{projectName}</strong>}. Are you
+                                sure?
+                              </span>
+                            ),
+                            onNo: () => {
+                              return
+                            },
+                            onYes: () => {
+                              createImportLDProjects(LDKey, key, projectId)
+                            },
+                            title: 'Import LaunchDarkly project',
+                          })
+                        }
+                      >
+                        <Row className='flex-nowrap'>
+                          <h2
+                            style={{
+                              backgroundColor: Utils.getProjectColour(i),
+                            }}
+                            className='btn-project-letter mb-0'
+                          >
+                            {name[0]}
+                          </h2>
+                          <div className='font-weight-medium btn-project-title'>
+                            {name}
+                          </div>
+                        </Row>
+                      </Button>
+                    </>
+                  )
+                }}
+                renderNoResults={
+                  <div>
+                    <Row>
+                      <div className='font-weight-medium'>No Projects</div>
+                    </Row>
+                  </div>
+                }
+              />
+            </FormGroup>
+          </div>
+        )
+      )}
+    </>
+  )
+
+  const isImporting = !!importId && status?.status?.result !== 'success'
+
+  return (
+    <>
+      {isImporting && (
+        <div className='overlay'>
+          <AppLoader />
+        </div>
+      )}
+      <div className='mt-4'>
+        <Tabs urlParam={'import'} theme='pill' history={history}>
+          <TabItem tabLabel={'Flagsmith'}>
+            <div className='mt-4'>
+              <FeatureImport projectId={projectId} />
+            </div>
+          </TabItem>
+          <TabItem tabLabel={'LaunchDarkly'}>
+            <div className='mt-4'>{launchDarklyImport}</div>
+          </TabItem>
+        </Tabs>
+      </div>
+    </>
+  )
+}
+export default ImportPage

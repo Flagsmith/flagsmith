@@ -1,0 +1,49 @@
+from django.db import models
+
+from core.models import AbstractBaseExportableModel
+from projects.models import Project
+
+
+class TagType(models.TextChoices):
+    NONE = "NONE"
+    STALE = "STALE"
+    GITHUB = "GITHUB"
+    UNHEALTHY = "UNHEALTHY"
+    GITLAB = "GITLAB"
+
+
+class Tag(AbstractBaseExportableModel):
+    label = models.CharField(max_length=100)
+    color = models.CharField(
+        max_length=10, help_text="Hexadecimal value of the tag color", default="#6837FC"
+    )
+    description = models.CharField(max_length=512, blank=True, null=True)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="tags")
+
+    is_system_tag = models.BooleanField(
+        default=False,
+        help_text="Indicates that a tag was created by the system, not the user.",
+    )
+    is_permanent = models.BooleanField(
+        default=False,
+        help_text="When applied to a feature, it means this feature should be excluded from stale flags logic.",
+    )
+    type = models.CharField(
+        default=TagType.NONE,
+        choices=TagType.choices,
+        help_text="Field used to provide a consistent identifier for the FE and API to use for business logic.",
+        max_length=100,
+    )
+
+    class Meta:
+        ordering = ("id",)  # explicit ordering to prevent pagination warnings
+        constraints = [
+            models.UniqueConstraint(
+                fields=["project", "label", "type"],
+                condition=models.Q(is_system_tag=True),
+                name="unique_project_label_type_system_tag",
+            )
+        ]
+
+    def __str__(self):  # type: ignore[no-untyped-def]
+        return "Tag %s" % self.label

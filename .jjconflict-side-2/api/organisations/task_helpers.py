@@ -1,0 +1,208 @@
+from datetime import timedelta
+
+import structlog
+from dateutil.relativedelta import relativedelta
+from django.conf import settings
+from django.core.mail import EmailMultiAlternatives
+from django.template.loader import render_to_string
+from django.utils import timezone
+
+from app_analytics.analytics_db_service import get_total_events_count
+from app_analytics.influxdb_wrapper import get_current_api_usage
+from core.helpers import get_current_site_url
+from integrations.flagsmith.client import get_openfeature_client
+from organisations.models import (
+    Organisation,
+    OrganisationAPIUsageNotification,
+    OrganisationRole,
+)
+from organisations.subscriptions.constants import MAX_API_CALLS_IN_FREE_PLAN
+from users.models import FFAdminUser
+
+from .constants import API_USAGE_ALERT_THRESHOLDS
+
+logger = structlog.get_logger("api_usage")
+
+
+def _send_email(msg: EmailMultiAlternatives, organisation: Organisation) -> None:
+    """
+    This exists because `fail_silently` doesn't work properly.
+    Added here to avoid too many changes in a single PR, but the real solution is
+    to replace django-sendgrid.
+
+    TODO: https://github.com/Flagsmith/flagsmith/issues/8754
+    """
+    try:
+        msg.send(fail_silently=True)
+    except Exception:
+        logger.exception(
+            "email.send_failed",
+            organisation__id=organisation.id,
+            email__subject=msg.subject,
+        )
+
+
+def send_api_flags_blocked_notification(organisation: Organisation) -> None:
+    recipient_list = FFAdminUser.objects.filter(
+        userorganisation__organisation=organisation,
+        userorganisation__is_active=True,
+    )
+
+    url = get_current_site_url()
+    context = {
+        "organisation": organisation,
+        "grace_period": not hasattr(organisation, "breached_grace_period"),
+        "usage_url": f"{url}/organisation/{organisation.id}/usage",
+        "url": url,
+    }
+    message = "organisations/api_flags_blocked_notification.txt"
+    html_message = "organisations/api_flags_blocked_notification.html"
+
+    msg = EmailMultiAlternatives(
+        subject="Flagsmith API use has been blocked due to overuse",
+        body=render_to_string(message, context),
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        to=list(recipient_list.values_list("email", flat=True)),
+        cc=settings.API_USAGE_ALERT_CC_RECIPIENT_LIST,
+    )
+    msg.attach_alternative(render_to_string(html_message, context), "text/html")
+    _send_email(msg, organisation)
+
+
+def _send_api_usage_notification(
+    organisation: Organisation, matched_threshold: int
+) -> None:
+    """
+    Send notification to users that the API has breached a threshold.
+
+    Only admins are included if the matched threshold is under
+    100% of the API usage limits.
+    """
+
+    recipient_list = FFAdminUser.objects.filter(
+        userorganisation__organisation=organisation,
+        userorganisation__is_active=True,
+    )
+
+    if matched_threshold < 100:
+        message = "organisations/api_usage_notification.txt"
+        html_message = "organisations/api_usage_notification.html"
+
+        # Since threshold < 100 only include admins.
+        recipient_list = recipient_list.filter(
+            userorganisation__role=OrganisationRole.ADMIN,
+        )
+    else:
+        message = "organisations/api_usage_notification_limit.txt"
+        html_message = "organisations/api_usage_notification_limit.html"
+
+    url = get_current_site_url()
+    context = {
+        "organisation": organisation,
+        "matched_threshold": matched_threshold,
+        "grace_period": not hasattr(organisation, "breached_grace_period"),
+        "usage_url": f"{url}/organisation/{organisation.id}/usage",
+    }
+
+    msg = EmailMultiAlternatives(
+        subject=f"Flagsmith API use has reached {matched_threshold}%",
+        body=render_to_string(message, context),
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        to=list(recipient_list.values_list("email", flat=True)),
+        cc=settings.API_USAGE_ALERT_CC_RECIPIENT_LIST,
+    )
+    msg.attach_alternative(render_to_string(html_message, context), "text/html")
+    _send_email(msg, organisation)
+
+    OrganisationAPIUsageNotification.objects.create(
+        organisation=organisation,
+        percent_usage=matched_threshold,
+        notified_at=timezone.now(),
+    )
+
+
+def handle_api_usage_notification_for_organisation(organisation: Organisation) -> None:
+    now = timezone.now()
+    subscription_cache = organisation.subscription_information_cache
+
+    if (
+        organisation.subscription.is_free_plan
+        or organisation.subscription.cancellation_date is not None
+    ):
+        allowed_api_calls = organisation.subscription.max_api_calls
+        # Default to a rolling month for free accounts or canceled subscriptions.
+        days = 30
+        period_starts_at = now - timedelta(days)
+    else:
+        billing_starts_at = subscription_cache.current_billing_term_starts_at
+
+        if billing_starts_at is None:
+            logger.error(
+                "notification.missing_billing_starts_at",
+                organisation__id=organisation.id,
+            )
+            return
+
+        # Truncate to the closest active month to get start of current period.
+        month_delta = _get_total_months(relativedelta(now, billing_starts_at))
+        period_starts_at = relativedelta(months=month_delta) + billing_starts_at
+
+        allowed_api_calls = subscription_cache.allowed_30d_api_calls
+
+    openfeature_client = get_openfeature_client()
+    # TODO: Default to get_total_events_count — https://github.com/Flagsmith/flagsmith/issues/6985
+    if openfeature_client.get_boolean_value(
+        "get_current_api_usage_deprecated",
+        default_value=False,
+        evaluation_context=organisation.openfeature_evaluation_context,
+    ):  # pragma: no cover
+        api_usage = get_total_events_count(organisation, period_starts_at)
+    else:
+        api_usage = get_current_api_usage(organisation.id, period_starts_at)
+
+    # For some reason the allowed API calls is set to 0 so default to the max free plan.
+    allowed_api_calls = allowed_api_calls or MAX_API_CALLS_IN_FREE_PLAN
+
+    api_usage_percent = int(100 * api_usage / allowed_api_calls)
+
+    matched_threshold = None
+    for threshold in API_USAGE_ALERT_THRESHOLDS:
+        if threshold > api_usage_percent:
+            break
+
+        matched_threshold = threshold
+
+    logger.info(
+        "notification.evaluated",
+        organisation__id=organisation.id,
+        api_usage=api_usage,
+        allowed_api_calls=allowed_api_calls,
+        api_usage_percent=api_usage_percent,
+        period_starts_at=period_starts_at.isoformat(),
+        period_ends_at=now.isoformat(),
+        matched_threshold=matched_threshold,
+    )
+
+    # Didn't match even the lowest threshold, so no notification.
+    if matched_threshold is None:
+        return
+
+    if OrganisationAPIUsageNotification.objects.filter(
+        organisation_id=organisation.id,
+        notified_at__gt=period_starts_at,
+        percent_usage__gte=matched_threshold,
+    ).exists():
+        # Already sent the max notification level so don't resend.
+        return
+
+    logger.info(
+        "notification.sent",
+        organisation__id=organisation.id,
+        matched_threshold=matched_threshold,
+    )
+
+    _send_api_usage_notification(organisation, matched_threshold)
+
+
+def _get_total_months(rd: relativedelta) -> int:
+    return rd.months + rd.years * 12

@@ -1,0 +1,92 @@
+<mxfile host="app.diagrams.net" modified="2024-03-06T16:08:23.273Z" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36" etag="I2EpUU_qzKBtUBQ65YTW" version="22.1.17" type="device" pages="2">
+  <diagram id="ISpOIMGy8R80dUi6ap8d" name="Existing">
+    <mxGraphModel dx="751" dy="1121" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="3MKbWF8Xd-oT-NNU25lU-8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.989;exitY=0.496;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeColor=default;startArrow=classic;startFill=1;" parent="1" target="3MKbWF8Xd-oT-NNU25lU-6" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="179.56000000000006" y="119.68000000000006" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="3MKbWF8Xd-oT-NNU25lU-6" value="Flagsmith API" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="380" y="200" width="120" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="3MKbWF8Xd-oT-NNU25lU-15" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;startArrow=classic;startFill=1;" parent="1" source="3MKbWF8Xd-oT-NNU25lU-17" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="380" y="240" as="targetPoint" />
+            <mxPoint x="192.5" y="240" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="3MKbWF8Xd-oT-NNU25lU-16" value="" style="points=[];aspect=fixed;html=1;align=center;shadow=0;dashed=0;image;image=img/lib/allied_telesis/computer_and_terminals/Personal_Computer_with_Server.svg;" parent="1" vertex="1">
+          <mxGeometry x="120" y="90" width="62.400000000000006" height="62.400000000000006" as="geometry" />
+        </mxCell>
+        <mxCell id="3MKbWF8Xd-oT-NNU25lU-17" value="" style="points=[];aspect=fixed;html=1;align=center;shadow=0;dashed=0;image;image=img/lib/allied_telesis/storage/Datacenter_Server_Rack_EoR.svg;" parent="1" vertex="1">
+          <mxGeometry x="131.23" y="188.3" width="51.17" height="103.4" as="geometry" />
+        </mxCell>
+        <mxCell id="3MKbWF8Xd-oT-NNU25lU-20" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;startArrow=classic;startFill=1;strokeColor=default;" parent="1" source="3MKbWF8Xd-oT-NNU25lU-19" target="3MKbWF8Xd-oT-NNU25lU-6" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="3MKbWF8Xd-oT-NNU25lU-19" value="" style="points=[];aspect=fixed;html=1;align=center;shadow=0;dashed=0;image;image=img/lib/allied_telesis/computer_and_terminals/Tablet.svg;" parent="1" vertex="1">
+          <mxGeometry x="132.23000000000002" y="330" width="47.66" height="100.64" as="geometry" />
+        </mxCell>
+        <mxCell id="3MKbWF8Xd-oT-NNU25lU-22" value="Internet" style="ellipse;shape=cloud;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="230" y="209" width="100" height="62" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="4F2eeXg3nnAspQv_Qqhc" name="Edge Proxy">
+    <mxGraphModel dx="751" dy="1121" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="A5PcEBhpfp66MTZaE0Wf-0" />
+        <mxCell id="A5PcEBhpfp66MTZaE0Wf-1" parent="A5PcEBhpfp66MTZaE0Wf-0" />
+        <mxCell id="bkfmGJFURncegrEjgZYT-1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;startArrow=classic;startFill=1;strokeColor=default;" parent="A5PcEBhpfp66MTZaE0Wf-1" source="bkfmGJFURncegrEjgZYT-3" target="bkfmGJFURncegrEjgZYT-6" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="bkfmGJFURncegrEjgZYT-3" value="Edge Proxy" style="rounded=1;whiteSpace=wrap;html=1;" parent="A5PcEBhpfp66MTZaE0Wf-1" vertex="1">
+          <mxGeometry x="250" y="200" width="120" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="bkfmGJFURncegrEjgZYT-4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;startArrow=classic;startFill=1;" parent="A5PcEBhpfp66MTZaE0Wf-1" source="bkfmGJFURncegrEjgZYT-6" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="250" y="240" as="targetPoint" />
+            <mxPoint x="152.5" y="240" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="bkfmGJFURncegrEjgZYT-5" value="" style="points=[];aspect=fixed;html=1;align=center;shadow=0;dashed=0;image;image=img/lib/allied_telesis/computer_and_terminals/Personal_Computer_with_Server.svg;" parent="A5PcEBhpfp66MTZaE0Wf-1" vertex="1">
+          <mxGeometry x="80" y="90" width="62.400000000000006" height="62.400000000000006" as="geometry" />
+        </mxCell>
+        <mxCell id="bkfmGJFURncegrEjgZYT-6" value="" style="points=[];aspect=fixed;html=1;align=center;shadow=0;dashed=0;image;image=img/lib/allied_telesis/storage/Datacenter_Server_Rack_EoR.svg;" parent="A5PcEBhpfp66MTZaE0Wf-1" vertex="1">
+          <mxGeometry x="91.23000000000002" y="188.29999999999995" width="51.17" height="103.4" as="geometry" />
+        </mxCell>
+        <mxCell id="bkfmGJFURncegrEjgZYT-8" value="" style="points=[];aspect=fixed;html=1;align=center;shadow=0;dashed=0;image;image=img/lib/allied_telesis/computer_and_terminals/Tablet.svg;" parent="A5PcEBhpfp66MTZaE0Wf-1" vertex="1">
+          <mxGeometry x="92.98000000000002" y="309.68" width="47.66" height="100.64" as="geometry" />
+        </mxCell>
+        <mxCell id="tH6FMpBx119MqadFKcil-1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="A5PcEBhpfp66MTZaE0Wf-1" source="bkfmGJFURncegrEjgZYT-9" target="bkfmGJFURncegrEjgZYT-3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="tH6FMpBx119MqadFKcil-2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="A5PcEBhpfp66MTZaE0Wf-1" source="bkfmGJFURncegrEjgZYT-9" target="tH6FMpBx119MqadFKcil-0">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="tH6FMpBx119MqadFKcil-6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="A5PcEBhpfp66MTZaE0Wf-1" source="bkfmGJFURncegrEjgZYT-9" target="tH6FMpBx119MqadFKcil-5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="bkfmGJFURncegrEjgZYT-9" value="Flagsmith API" style="rounded=1;whiteSpace=wrap;html=1;" parent="A5PcEBhpfp66MTZaE0Wf-1" vertex="1">
+          <mxGeometry x="530" y="200" width="120" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="tH6FMpBx119MqadFKcil-4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;startArrow=classic;startFill=1;" edge="1" parent="A5PcEBhpfp66MTZaE0Wf-1" source="tH6FMpBx119MqadFKcil-0" target="bkfmGJFURncegrEjgZYT-8">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="tH6FMpBx119MqadFKcil-0" value="Edge Proxy" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="A5PcEBhpfp66MTZaE0Wf-1">
+          <mxGeometry x="250" y="320" width="120" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="tH6FMpBx119MqadFKcil-9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;startArrow=classic;startFill=1;" edge="1" parent="A5PcEBhpfp66MTZaE0Wf-1" source="tH6FMpBx119MqadFKcil-5" target="bkfmGJFURncegrEjgZYT-5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="tH6FMpBx119MqadFKcil-5" value="Edge Proxy" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="A5PcEBhpfp66MTZaE0Wf-1">
+          <mxGeometry x="250" y="81.19999999999999" width="120" height="80" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

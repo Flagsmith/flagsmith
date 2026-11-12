@@ -1,0 +1,62 @@
+.oauth-authorize {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 24px;
+
+  &__card {
+    max-width: 530px;
+    width: 100%;
+  }
+
+  &__title {
+    font-weight: 400;
+  }
+
+  &__warning {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(229, 160, 13, 0.1);
+    border: 1px solid rgba(229, 160, 13, 0.3);
+    border-radius: 4px;
+    padding: 8px 12px;
+    margin-bottom: 12px;
+    color: #e5a00d;
+    font-size: 13px;
+  }
+
+  &__scope-box {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 4px;
+    padding: 12px 16px;
+    margin-bottom: 24px;
+  }
+
+  &__scope-header {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+  }
+
+  &__scope-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  &__redirect-text {
+    font-size: 13px;
+  }
+
+  &__redirect-uri {
+    font-size: 12px;
+    word-break: break-all;
+  }
+
+  &__error {
+    font-size: 14px;
+  }
+}

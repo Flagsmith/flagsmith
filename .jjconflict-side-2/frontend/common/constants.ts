@@ -1,0 +1,731 @@
+import { OAuthType } from './types/requests'
+import { SegmentCondition } from './types/responses'
+import Utils from './utils/utils'
+import { TAG_COLOURS } from './theme/tagColours'
+import Project from './project'
+import { integrationCategories } from 'components/pages/IntegrationsPage'
+import {
+  EnvironmentPermission,
+  EnvironmentPermissionDescriptions,
+  OrganisationPermission,
+  OrganisationPermissionDescriptions,
+  ProjectPermission,
+  ProjectPermissionDescriptions,
+} from './types/permissions.types'
+import createUserCurl from './code-help/create-user/create-user-curl'
+import createUserDotnet from './code-help/create-user/create-user-dotnet'
+import createUserFlutter from './code-help/create-user/create-user-flutter'
+import createUserGo from './code-help/create-user/create-user-go'
+import createUserIos from './code-help/create-user/create-user-ios'
+import createUserJava from './code-help/create-user/create-user-java'
+import createUserJs from './code-help/create-user/create-user-js'
+import createUserNext from './code-help/create-user/create-user-next'
+import createUserNode from './code-help/create-user/create-user-node'
+import createUserPhp from './code-help/create-user/create-user-php'
+import createUserPython from './code-help/create-user/create-user-python'
+import createUserReact from './code-help/create-user/create-user-react'
+import createUserRuby from './code-help/create-user/create-user-ruby'
+import createUserRust from './code-help/create-user/create-user-rust'
+import initCurl from './code-help/init/init-curl'
+import initDotnet from './code-help/init/init-dotnet'
+import initFlutter from './code-help/init/init-flutter'
+import initGo from './code-help/init/init-go'
+import initIos from './code-help/init/init-ios'
+import initJava from './code-help/init/init-java'
+import initJs from './code-help/init/init-js'
+import initNextAppRouter from './code-help/init/init-next-app-router'
+import initNextPagesRouter from './code-help/init/init-next-pages-router'
+import initNode from './code-help/init/init-node'
+import initPhp from './code-help/init/init-php'
+import initPython from './code-help/init/init-python'
+import initReact from './code-help/init/init-react'
+import initReactNative from './code-help/init/init-react-native'
+import initRuby from './code-help/init/init-ruby'
+import initRust from './code-help/init/init-rust'
+import installCurl from './code-help/install/install-curl'
+import installDotnet from './code-help/install/install-dotnet'
+import installFlutter from './code-help/install/install-flutter'
+import installGo from './code-help/install/install-go'
+import installIos from './code-help/install/install-ios'
+import installJava from './code-help/install/install-java'
+import installJs from './code-help/install/install-js'
+import installNode from './code-help/install/install-node'
+import installPhp from './code-help/install/install-php'
+import installPython from './code-help/install/install-python'
+import installRuby from './code-help/install/install-ruby'
+import installRust from './code-help/install/install-rust'
+import traitsCurl from './code-help/traits/traits-curl'
+import traitsDotnet from './code-help/traits/traits-dotnet'
+import traitsFlutter from './code-help/traits/traits-flutter'
+import traitsGo from './code-help/traits/traits-go'
+import traitsIos from './code-help/traits/traits-ios'
+import traitsJava from './code-help/traits/traits-java'
+import traitsJs from './code-help/traits/traits-js'
+import traitsNext from './code-help/traits/traits-next'
+import traitsNode from './code-help/traits/traits-node'
+import traitsPhp from './code-help/traits/traits-php'
+import traitsPython from './code-help/traits/traits-python'
+import traitsReact from './code-help/traits/traits-react'
+import traitsRuby from './code-help/traits/traits-ruby'
+import traitsRust from './code-help/traits/traits-rust'
+import offlineServerCli from './code-help/offline_server/offline-server-cli'
+import offlineServerCurl from './code-help/offline_server/offline-server-curl'
+import offlineClientCli from './code-help/offline_client/offline-client-cli'
+import offlineClientCurl from './code-help/offline_client/offline-client-curl'
+
+const keywords = {
+  FEATURE_FUNCTION: 'myCoolFeature',
+  FEATURE_NAME: 'my_cool_feature',
+  FEATURE_NAME_ALT: 'banner_size',
+  FEATURE_NAME_ALT_VALUE: 'big',
+  LIB_NAME: 'flagsmith',
+  LIB_NAME_JAVA: 'FlagsmithClient',
+  NPM_CLIENT: '@flagsmith/flagsmith',
+  NPM_NODE_CLIENT: '@flagsmith/nodejs',
+  SEGMENT_NAME: 'superUsers',
+  TRAIT_NAME: 'age',
+  USER_FEATURE_FUNCTION: 'myEvenCoolerFeature',
+  USER_FEATURE_NAME: 'my_even_cooler_feature',
+  USER_ID: 'user_123456',
+}
+const keywordsReactNative = {
+  ...keywords,
+  NPM_CLIENT: '@flagsmith/react-native',
+}
+// Set before logging out after a password change, so the login page can say why.
+export const PASSWORD_CHANGED_SESSION_KEY = 'password_changed'
+
+const Constants = {
+  archivedTag: { color: '#8f8f8f', label: 'Archived' },
+  codeHelp: {
+    'CREATE_USER': (envId: string, userId: string = keywords.USER_ID) => ({
+      '.NET': createUserDotnet(envId, keywords, userId),
+      'Flutter': createUserFlutter(envId, keywords, userId),
+      'Go': createUserGo(envId, keywords, userId),
+      'Java': createUserJava(envId, keywords, userId),
+      'JavaScript': createUserJs(envId, keywords, userId),
+      'Next.js': createUserNext(envId, keywords, userId),
+      'Node JS': createUserNode(envId, keywords, userId),
+      'PHP': createUserPhp(envId, keywords, userId),
+      'Python': createUserPython(envId, keywords, userId),
+      'React': createUserReact(envId, keywords, userId),
+      'React Native': createUserReact(envId, keywordsReactNative, userId),
+      'Ruby': createUserRuby(envId, keywords, userId),
+      'Rust': createUserRust(envId, keywords, userId),
+      'curl': createUserCurl(envId, keywords, userId),
+      'iOS': createUserIos(envId, keywords, userId),
+    }),
+
+    // Pass `featureName` to build the snippets around one real flag, as the
+    // onboarding does. Without it the snippets illustrate two placeholder flags:
+    // one for the enabled check, one for the value.
+    'INIT': (envId: string, featureName?: string) => {
+      const kw = featureName
+        ? { ...keywords, FEATURE_NAME: featureName, FEATURE_NAME_ALT: '' }
+        : keywords
+      const kwNative = featureName
+        ? {
+            ...keywordsReactNative,
+            FEATURE_NAME: featureName,
+            FEATURE_NAME_ALT: '',
+          }
+        : keywordsReactNative
+      return {
+        '.NET': initDotnet(envId, kw),
+        'Flutter': initFlutter(envId, kw),
+        'Go': initGo(envId, kw),
+        'Java': initJava(envId, kw),
+        'JavaScript': initJs(envId, kw),
+        'Next.js (app router)': initNextAppRouter(envId, kw),
+        'Next.js (pages router)': initNextPagesRouter(envId, kw),
+        'Node JS': initNode(envId, kw),
+        'PHP': initPhp(envId, kw),
+        'Python': initPython(envId, kw),
+        'React': initReact(envId, kw),
+        'React Native': initReactNative(envId, kwNative),
+        'Ruby': initRuby(envId, kw),
+        'Rust': initRust(envId, kw),
+        'curl': initCurl(envId),
+        'iOS': initIos(envId, kw),
+      }
+    },
+
+    'INSTALL': {
+      '.NET': installDotnet(),
+      'Flutter': installFlutter(),
+      'Go': installGo(),
+      'Java': installJava(),
+      'JavaScript': installJs(keywords),
+      'Next.js': installJs(keywords),
+      'Node JS': installNode(keywords),
+      'PHP': installPhp(),
+      'Python': installPython(),
+      'React': installJs(keywords),
+      'React Native': installJs(keywordsReactNative),
+      'Ruby': installRuby(),
+      'Rust': installRust(),
+      'curl': installCurl(),
+      'iOS': installIos(),
+    },
+
+    'OFFLINE_LOCAL': (envId: string) => ({
+      'cli': offlineServerCli(envId),
+      'curl': offlineServerCurl(envId),
+    }),
+
+    'OFFLINE_REMOTE': (envId: string) => ({
+      'cli': offlineClientCli(envId),
+      'curl': offlineClientCurl(envId),
+    }),
+
+    'USER_TRAITS': (envId: string, userId = keywords.USER_ID) => ({
+      '.NET': traitsDotnet(envId, keywords, userId),
+      'Flutter': traitsFlutter(envId, keywords, userId),
+      'Go': traitsGo(envId, keywords, userId),
+      'Java': traitsJava(envId, keywords, userId),
+      'JavaScript': traitsJs(envId, keywords, userId),
+      'Next.js': traitsNext(envId, keywords, userId),
+      'Node JS': traitsNode(envId, keywords, userId),
+      'PHP': traitsPhp(envId, keywords, userId),
+      'Python': traitsPython(envId, keywords, userId),
+      'React': traitsReact(envId, keywords, userId),
+      'React Native': traitsReact(envId, keywordsReactNative, userId),
+      'Ruby': traitsRuby(envId, keywords, userId),
+      'Rust': traitsRust(envId, keywords, userId),
+      'curl': traitsCurl(envId, keywords, userId),
+      'iOS': traitsIos(envId, keywords, userId),
+    }),
+    keys: {
+      'Java': 'java',
+      'JavaScript': 'javascript',
+      'Node JS': 'javascript',
+      'React Native': 'javascript',
+    },
+  },
+  cohortSyncKeyPermissions:
+    'To manage cohort synchronisation keys you need the <i>Manage segment overrides</i> permission for this environment and the <i>Manage segments</i> permission for this project.<br/>Please contact an administrator.',
+  colours: {
+    primary: '#6837fc',
+    white: '#ffffff',
+  },
+  defaultRule: {
+    operator: 'EQUAL',
+    property: '',
+    value: '',
+  } as SegmentCondition,
+  defaultTagColor: '#3d4db6',
+  environmentPermissions: (perm: EnvironmentPermission) => {
+    return `To manage this feature you need the <i>${EnvironmentPermissionDescriptions[perm]}</i> permission for this environment.<br/>Please contact a member of this environment who has administrator privileges.`
+  },
+  events: {
+    'ACCEPT_INVITE': (org: any) => ({
+      'category': 'Invite',
+      'event': 'Invite accepted',
+      extra: org,
+    }),
+    'CREATE_ENVIRONMENT': {
+      'category': 'Environment',
+      'event': 'Environment created',
+    },
+    'CREATE_FEATURE': { 'category': 'Features', 'event': 'Feature created' },
+    'CREATE_FIRST_FEATURE': {
+      'category': 'First',
+      'event': 'First Feature created',
+    },
+    'CREATE_FIRST_ORGANISATION': {
+      'category': 'First',
+      'event': 'First Organisation created',
+    },
+    'CREATE_FIRST_PROJECT': {
+      'category': 'First',
+      'event': 'First Project created',
+    },
+    'CREATE_FIRST_SEGMENT': {
+      'category': 'First',
+      'event': 'First Segment created',
+    },
+    'CREATE_GROUP': { 'category': 'Group', 'event': 'Group created' },
+    'CREATE_ORGANISATION': {
+      'category': 'Organisation',
+      'event': 'Organisation created',
+    },
+    'CREATE_PROJECT': { 'category': 'Project', 'event': 'Project created' },
+    'CREATE_SEGMENT': { 'category': 'Segments', 'event': 'Segment created' },
+    'CREATE_USER_FEATURE': {
+      'category': 'User Features',
+      'event': 'User feature created',
+    },
+    'DELETE_GROUP': { 'category': 'Group', 'event': 'Group deleted' },
+    'DELETE_INVITE': { 'category': 'Invite', 'event': 'Invite deleted' },
+    'DELETE_ORGANISATION': {
+      'category': 'Organisation',
+      'event': 'Organisation deleted',
+    },
+    'DELETE_USER': { 'category': 'Organisation', 'event': 'User deleted' },
+    'EDIT_ENVIRONMENT': {
+      'category': 'Environment',
+      'event': 'Environment edited',
+    },
+    'EDIT_FEATURE': { 'category': 'Features', 'event': 'Feature edited' },
+    'EDIT_ORGANISATION': {
+      'category': 'Organisation',
+      'event': 'Organisation edited',
+    },
+    'EDIT_PROJECT': { 'category': 'Project', 'event': 'Project edited' },
+    'EDIT_USER_FEATURE': {
+      'category': 'Features',
+      'event': 'User feature edited',
+    },
+    'INVITE': { 'category': 'Invite', 'event': 'Invite sent' },
+    'LOGIN': { 'category': 'User', 'event': 'User login' },
+    'OAUTH': (type: OAuthType) => ({
+      'category': 'User',
+      'event': `User oauth ${type}`,
+    }),
+    'ONBOARDING_AI_CONNECT': {
+      'category': 'Onboarding',
+      'event': 'Onboarding AI connect used',
+    },
+    'ONBOARDING_FLAG_TOGGLED': {
+      'category': 'Onboarding',
+      'event': 'Onboarding flag toggled',
+    },
+    'ONBOARDING_ROLLOUT_CONTINUED': {
+      'category': 'Onboarding',
+      'event': 'Onboarding rollout quest continued',
+    },
+    // Only "Maybe later". Closing the modal from its chrome is not tracked, so
+    // abandonment is viewed minus continued minus this.
+    'ONBOARDING_ROLLOUT_DISMISSED': {
+      'category': 'Onboarding',
+      'event': 'Onboarding rollout quest dismissed',
+    },
+    'ONBOARDING_ROLLOUT_FEEDBACK': {
+      'category': 'Onboarding',
+      'event': 'Onboarding rollout feedback opened',
+    },
+    // The fake door's only real signal: demand for one-click rollouts.
+    'ONBOARDING_ROLLOUT_NOTIFY_ME': {
+      'category': 'Onboarding',
+      'event': 'Onboarding rollout notify me',
+    },
+    'ONBOARDING_ROLLOUT_VIEWED': {
+      'category': 'Onboarding',
+      'event': 'Onboarding rollout quest viewed',
+    },
+    'ONBOARDING_SNIPPET_COPIED': {
+      'category': 'Onboarding',
+      'event': 'Onboarding snippet copied',
+    },
+    'REFERRER_CONVERSION': (referrer: string) => ({
+      'category': 'Referrer',
+      'event': `${referrer} converted`,
+    }),
+    'REFERRER_REGISTERED': (referrer: string) => ({
+      'category': 'Referrer',
+      'event': `${referrer} registered`,
+    }),
+    'REGISTER': { 'category': 'User', 'event': 'User register' },
+    'REMOVE_ENVIRONMENT': {
+      'category': 'Environment',
+      'event': 'Environment edited',
+    },
+    'REMOVE_FEATURE': { 'category': 'Features', 'event': 'Feature removed' },
+    'REMOVE_PROJECT': { 'category': 'Project', 'event': 'Project removed' },
+    'REMOVE_USER_FEATURE': {
+      'category': 'User Features',
+      'event': 'User feature removed',
+    },
+    'RESEND_INVITE': { 'category': 'Invite', 'event': 'Invite resent' },
+    'TRY_IT': { 'category': 'TryIt', 'event': 'Try it clicked' },
+    'UPDATE_USER_ROLE': {
+      'category': 'Organisation',
+      'event': 'Updated user role',
+    },
+    UPGRADE: (plan: string) => {
+      return {
+        'category': 'Upgrade',
+        'event': `Upgrade ${plan}`,
+      }
+    },
+    'VIEW_FEATURE': { 'category': 'Features', 'event': 'Feature viewed' },
+    VIEW_INTEGRATION: (integration: string) => {
+      return {
+        category: 'Integrations',
+        event: 'View Integration',
+        extra: { integration },
+      }
+    },
+    VIEW_LOCKED_FEATURE: (feature: string) => {
+      return {
+        'category': 'Locked Feature',
+        'event': `View Locked Feature ${feature}`,
+      }
+    },
+    'VIEW_SEGMENT': { 'category': 'Segment', 'event': 'Segment viewed' },
+    'VIEW_USER_FEATURE': {
+      'category': 'User Features',
+      'event': 'User feature viewed',
+    },
+  },
+  exampleAuditWebhook: `{
+    "created_date": "2020-02-23T17:30:57.006318Z",
+ "log": "New Flag / Remote Config created: my_feature",
+ "author": {
+  "id": 3,
+  "email": "user@domain.com",
+  "first_name": "Kyle",
+  "last_name": "Johnson"
+ },
+ "environment": null,
+ "project": {
+  "id": 6,
+  "name": "Project name",
+  "organisation": 1
+ },
+ "related_object_id": 6,
+ "related_object_type": "FEATURE"
+}`,
+  exampleWebhook: `{
+ "data": {
+  "changed_by": "Ben Rometsch",
+  "new_state": {
+   "enabled": true,
+   "environment": {
+    "id": 23,
+    "name": "Development"
+   },
+   "feature": {
+    "created_date": "2021-02-10T20:03:43.348556Z",
+    "default_enabled": false,
+    "description": "Show html in a butter bar for certain users",
+    "id": 7168,
+    "initial_value": null,
+    "name": "butter_bar",
+    "project": {
+     "id": 12,
+     "name": "Flagsmith Website"
+    },
+    "type": "CONFIG"
+   },
+   "feature_segment": null,
+   "feature_state_value": "<strong>\\nYou are using the develop environment.\\n</strong>",
+   "identity": null,
+   "identity_identifier": null
+  },
+  "previous_state": {
+   "enabled": false,
+   "environment": {
+    "id": 23,
+    "name": "Development"
+   },
+   "feature": {
+    "created_date": "2021-02-10T20:03:43.348556Z",
+    "default_enabled": false,
+    "description": "Show html in a butter bar for certain users",
+    "id": 7168,
+    "initial_value": null,
+    "name": "butter_bar",
+    "project": {
+     "id": 12,
+     "name": "Flagsmith Website"
+    },
+    "type": "CONFIG"
+   },
+   "feature_segment": null,
+   "feature_state_value": "<strong>\\nYou are using the develop environment.\\n</strong>",
+   "identity": null,
+   "identity_identifier": null
+  },
+  "timestamp": "2021-06-18T07:50:26.595298Z"
+ },
+ "event_type": "FLAG_UPDATED"
+}`,
+  featureHealth: {
+    healthyColor: '#60bd4e',
+    unhealthyColor: '#D35400',
+  },
+  featurePanelTabs: {
+    FEATURE_HEALTH: 'feature-health',
+    HISTORY: 'history',
+    IDENTITY_OVERRIDES: 'identity-overrides',
+    LINKS: 'links',
+    SEGMENT_OVERRIDES: 'segment-overrides',
+    SETTINGS: 'settings',
+    USAGE: 'usage',
+    VALUE: 'value',
+  },
+  forms: {
+    maxLength: {
+      'FEATURE_ID': 150,
+      'SEGMENT_ID': 150,
+      'TRAITS_ID': 150,
+      'VARIANT_KEY': 255,
+    },
+  },
+
+  getFlagsmithSDKUrl: () => {
+    const apiUrl = Project.api.startsWith('/')
+      ? `${document.location.origin}${Project.api}`
+      : Project.api
+
+    const parsedUrl = new URL(apiUrl)
+    const allowedHosts = ['api.flagsmith.com']
+    return Utils.isSaas() || allowedHosts.includes(parsedUrl.host)
+      ? Project.flagsmithClientEdgeAPI
+      : apiUrl
+  },
+  getUpgradeUrl: (feature?: string) => {
+    // TODO: deprecate usages of this helper function without
+    //  providing feature since the billing page self hosted
+    //  has links to the pricing page anyway.
+    return Utils.isSaas()
+      ? '/organisation-settings?tab=billing'
+      : `https://www.flagsmith.com/pricing${
+          feature ? `?utm_source=${feature}` : ''
+        }`
+  },
+  githubType: {
+    githubIssue: 'GitHub Issue',
+    githubPR: 'Github PR',
+  },
+  integrationCategoryDescriptions: {
+    'All': 'Send data on what flags served to each identity.',
+    'Analytics': 'Send data on what flags served to each identity.',
+    'Authentication':
+      'Use the Flagsmith Dashboard with your authentication provider.',
+    'CI/CD': 'View your Flagsmith Flags inside your Issues and Pull Request.',
+    'Developer tools': 'Interact with feature flags from your developer tools.',
+    'Infrastructure':
+      'Manage and evaluate your features within your infrastructure tooling.',
+    'Messaging':
+      'Send messages when features are created, updated and removed. Logs are tagged with the environment they came from e.g. production.',
+    'Monitoring':
+      'Send events when features are created, updated and removed. Logs are tagged with the environment they came from e.g. production.',
+    'Webhooks':
+      'Receive webhooks when your features change or when audit logs occur.',
+  } as Record<(typeof integrationCategories)[number], string>,
+  integrationSummaries: [
+    {
+      categories: ['Analytics'],
+      image: '/static/images/integrations/hubspot.svg',
+      title: 'HubSpot',
+    },
+    {
+      categories: ['Analytics'],
+      image: '/static/images/integrations/pendo.svg',
+      title: 'Pendo',
+    },
+    {
+      categories: ['Analytics'],
+      image: '/static/images/integrations/adobe-analytics.png',
+      title: 'Adobe Analytics',
+    },
+    {
+      categories: ['Analytics'],
+      image: '/static/images/integrations/google-analytics.svg',
+      title: 'Google Analytics',
+    },
+    {
+      categories: ['Authentication'],
+      image: '/static/images/integrations/okta.svg',
+      title: 'Okta',
+    },
+    {
+      categories: ['Developer tools'],
+      image: '/static/images/integrations/vs-code.svg',
+      title: 'VS Code',
+    },
+    {
+      categories: ['Infrastructure'],
+      image: '/static/images/integrations/terraform.svg',
+      title: 'Terraform',
+    },
+    {
+      categories: ['Infrastructure'],
+      image: '/static/images/integrations/vercel.svg',
+      title: 'Vercel',
+    },
+    {
+      categories: ['Messaging'],
+      image: '/static/images/integrations/microsoft-teams.svg',
+      title: 'Microsoft Teams',
+    },
+    {
+      categories: ['Developer tools'],
+      image: '/static/images/integrations/intellij.svg',
+      title: 'Intellij',
+    },
+    {
+      categories: ['Authentication'],
+      image: '/static/images/integrations/ldap.png',
+      title: 'LDAP',
+    },
+    {
+      categories: ['Authentication'],
+      image: '/static/images/integrations/saml.png',
+      title: 'SAML',
+    },
+    {
+      categories: ['CI/CD'],
+      image: '/static/images/integrations/bitbucket.svg',
+      title: 'Bitbucket',
+    },
+    {
+      categories: ['CI/CD'],
+      image: '/static/images/integrations/azure-devops.svg',
+      title: 'Azure DevOps',
+    },
+    {
+      categories: ['CI/CD'],
+      image: '/static/images/integrations/jenkins.svg',
+      title: 'Jenkins',
+    },
+    {
+      categories: ['Authentication'],
+      image: '/static/images/integrations/adfs.svg',
+      title: 'Microsoft Active Directory',
+    },
+    {
+      categories: ['Monitoring'],
+      image: '/static/images/integrations/appdynamics.svg',
+      title: 'AppDynamics',
+    },
+    {
+      categories: ['Monitoring'],
+      image: '/static/images/integrations/aws_cloudtrail.svg',
+      title: 'AWS CloudTrail',
+    },
+    {
+      categories: ['Monitoring'],
+      image: '/static/images/integrations/aws_cloudwatch.svg',
+      title: 'AWS CloudWatch',
+    },
+    {
+      categories: ['Monitoring'],
+      image: '/static/images/integrations/elastic.svg',
+      title: 'Elastic (ELK) Stack',
+    },
+    {
+      categories: ['Monitoring'],
+      image: '/static/images/integrations/opentelemetry.svg',
+      title: 'OpenTelemetry',
+    },
+    {
+      categories: ['Monitoring'],
+      image: '/static/images/integrations/prometheus.svg',
+      title: 'Prometheus',
+    },
+    {
+      categories: ['Monitoring'],
+      image: '/static/images/integrations/sumologic.svg',
+      title: 'SumoLogic',
+    },
+  ],
+  isCustomFlagsmithUrl: () =>
+    Constants.getFlagsmithSDKUrl() !== 'https://edge.api.flagsmith.com/api/v1/',
+  modals: {
+    'PAYMENT': 'Payment Modal',
+  },
+  organisationPermissions: (perm: OrganisationPermission) => {
+    return `To manage this feature you need the <i>${OrganisationPermissionDescriptions[perm]}</i> permission for this organisation.<br/>Please contact a member of this organisation who has administrator privileges.`
+  },
+  pages: {
+    'ACCOUNT': 'Account Page',
+    'AUDIT_LOG': 'Audit Log Page',
+    'CHECK_EMAIL': 'Check Email Page',
+    'COMING_SOON': 'Coming Soon Page',
+    'CREATE_ENVIRONMENT': 'Create Environment Page',
+    'CREATE_ORGANISATION': 'Create Organisation Page',
+    'DOCUMENTATION': 'Documentation Page',
+    'EMAIL_ACTIVATION': 'Email Activation Page',
+    'ENVIRONMENT_SETTINGS': 'Environment Settings Page',
+    'FEATURES': 'Features Page',
+    'HOME': 'Home Page',
+    'INTEGRATIONS': 'Integrations Page',
+    'INVITE': 'User Invited Page',
+    'NOT_FOUND': '404 Page',
+    'ORGANISATION_SETTINGS': 'Organisation Settings Page',
+    'POLICIES': 'Terms & Policies Page',
+    'PRICING': 'Pricing Page',
+    'PROJECT_SELECT': 'Project Select Page',
+    'PROJECT_SETTINGS': 'Project Settings Page',
+    'RESET_PASSWORD': 'Reset Password Page',
+    'USER': 'User Page',
+    'USERS': 'Users Page',
+    'WHAT_ARE_FEATURE_FLAGS': 'What are feature flags Page',
+  },
+  projectPermissions: (perm: ProjectPermission) => {
+    return `To use this feature you need the <i>${ProjectPermissionDescriptions[perm]}</i> permission for this project.<br/>Please contact a member of this project who has administrator privileges.`
+  },
+  resourceTypes: {
+    GITHUB_ISSUE: {
+      id: 1,
+      label: 'Issue',
+      resourceType: 'issues',
+      type: 'GITHUB',
+    },
+    GITHUB_PR: {
+      id: 2,
+      label: 'Pull Request',
+      resourceType: 'pulls',
+      type: 'GITHUB',
+    },
+    GITLAB_ISSUE: {
+      id: 3,
+      label: 'Issue',
+      resourceType: 'issue',
+      type: 'GITLAB',
+    },
+    GITLAB_MR: {
+      id: 4,
+      label: 'Merge Request',
+      resourceType: 'merge_request',
+      type: 'GITLAB',
+    },
+  },
+  roles: {
+    'ADMIN': 'Organisation Administrator',
+    'USER': 'User',
+  },
+  simulate: {},
+  strings: {
+    AUDIT_WEBHOOKS_DESCRIPTION:
+      'Receive a webhook for when an audit log is received.',
+    ENVIRONMENT_DESCRIPTION:
+      'Environments are versions of your projects, environments within a project all share the same features but can be individually turned on/off or have different values.',
+    ENVIRONMENT_OVERRIDE_DESCRIPTION: (name: string) =>
+      `Features are created once per project<br/>but their <strong>value</strong> and <strong>enabled state</strong> are set per environment.<br/>Saving this feature will override the <strong>${name}</strong> environment.`,
+    FEATURE_DEPENDENCIES_DESCRIPTION:
+      'Gate this feature behind other features. A dependency applies to this environment only. It beats segment overrides, and an identity override beats it.',
+    FEATURE_FLAG_DESCRIPTION:
+      'A feature that you can turn on or off per environment or user, e.g. instant messaging for a mobile app or an endpoint for an API.',
+    HIDE_FROM_SDKS_DESCRIPTION:
+      "Enable this if you want to prevent the Flagsmith API from returning this feature regardless of if it is enabled. Use this if you don't want users to see that a feature name whilst it is in development.",
+    IDENTITY_OVERRIDES_DESCRIPTION:
+      'See which identities have specific overridden values for this feature.<br/>Identity overrides take priority over segment overrides and environment values.',
+    ORGANISATION_DESCRIPTION:
+      'This is used to create a default organisation for team members to create and manage projects.',
+    PERCENTAGE_SPLIT_DEFAULT_TO_IDENTITY_KEY:
+      'If no value is provided, the identity key will be used as the default value for split operator.',
+    REMOTE_CONFIG_DESCRIPTION:
+      'Features can have values as well as being simply on or off, e.g. a font size for a banner or an environment variable for a server.',
+    REMOTE_CONFIG_DESCRIPTION_VARIATION:
+      'Features can have values as well as being simply on or off, e.g. a font size for a banner or an environment variable for a server.<br/>Variation values are set per project, the environment weight is per environment.',
+    RESERVED_VARIANT_KEY: 'control',
+    SEGMENT_OVERRIDES_DESCRIPTION:
+      'Set different values for your feature based on what segments users are in. Identity overrides will take priority over any segment override.',
+    TAGS_DESCRIPTION:
+      'Organise your flags with tags, tagging your features as "<strong>protected</strong>" will prevent them from accidentally being deleted.',
+    TOOLTIP_METADATA_DESCRIPTION: (entity: string) =>
+      `Add Custom fields in your <strong>${entity}</strong>, you can define the custom fields in the project settings.`,
+    USER_PROPERTY_DESCRIPTION:
+      'The name of the user trait or custom property belonging to the user, e.g. firstName',
+    WEBHOOKS_DESCRIPTION:
+      'Receive a webhook for when feature values are changed.',
+  },
+  tagColors: TAG_COLOURS,
+  untaggedTag: { color: '#dedede', label: 'Untagged' },
+}
+
+export default Constants

@@ -1,0 +1,884 @@
+import React, {
+  FC,
+  FormEvent,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react'
+
+import Constants from 'common/constants'
+import AccountStore from 'common/stores/account-store'
+import {
+  EdgePagedResponse,
+  Identity,
+  Metadata,
+  Operator,
+  Segment,
+  SegmentRule,
+  SegmentConditionsError,
+} from 'common/types/responses'
+import { Req } from 'common/types/requests'
+import { useGetIdentitiesQuery } from 'common/services/useIdentity'
+import {
+  useCreateSegmentMutation,
+  useGetSegmentQuery,
+  useGetSegmentsQuery,
+  useUpdateSegmentMutation,
+} from 'common/services/useSegment'
+import { useUpdateCohortMutation } from 'common/services/useCohort'
+import Utils from 'common/utils/utils'
+import AssociatedSegmentOverrides from 'components/segments/AssociatedSegmentOverrides'
+import CohortSegmentDetail from 'components/segments/CohortSegmentDetail'
+import { SegmentMembershipTotalBadge } from 'components/segments/SegmentMembershipBadge'
+import Button from 'components/base/forms/Button'
+import InfoMessage from 'components/InfoMessage'
+import Rule from 'components/segments/Rule/Rule'
+import TabItem from 'components/navigation/TabMenu/TabItem'
+import Tabs from 'components/navigation/TabMenu/Tabs'
+import ConfigProvider from 'common/providers/ConfigProvider'
+import { cloneDeep } from 'lodash'
+import ProjectStore from 'common/stores/project-store'
+import AddMetadataToEntity from 'components/metadata/AddMetadataToEntity'
+import { useGetSupportedContentTypeQuery } from 'common/services/useSupportedContentType'
+import { setInterceptClose } from './base/ModalDefault'
+import SegmentRuleDivider from 'components/SegmentRuleDivider'
+import { useGetProjectQuery } from 'common/services/useProject'
+import { useCreateProjectChangeRequestMutation } from 'common/services/useProjectChangeRequest'
+import ExistingProjectChangeRequestAlert from 'components/ExistingProjectChangeRequestAlert'
+import CreateSegmentRulesTabForm from './CreateSegmentRulesTabForm'
+import CreateSegmentUsersTabContent from './CreateSegmentUsersTabContent'
+import useDebouncedSearch from 'common/useDebouncedSearch'
+import API from 'project/api'
+
+type PageType = {
+  number: number
+  pageType: Req['getIdentities']['pageType']
+  pages: Req['getIdentities']['pages']
+}
+
+type CreateSegmentType = {
+  className?: string
+  projectId: number | string
+  searchInput: string
+  environmentId: string
+  identitiesLoading: boolean
+  setEnvironmentId: (env: string) => void
+  setSearchInput: (search: string) => void
+  page: PageType
+  setPage: (page: PageType) => void
+  feature?: number
+  identities?: EdgePagedResponse<Identity>
+  identity?: boolean
+  condensed?: boolean
+  isEdit?: boolean
+  onCancel?: () => void
+  onComplete?: (segment: Segment) => void
+  readOnly?: boolean
+  segment?: Segment
+  membersEnabled: boolean
+}
+type CreateSegmentError = {
+  status: number
+  data: {
+    rules: Array<{
+      rules: Array<{
+        conditions: SegmentConditionsError[]
+      }>
+    }>
+  }
+}
+
+enum UserTabs {
+  RULES = 0,
+  FEATURES = 1,
+  USERS = 2,
+}
+
+let _operators: Operator[] | null = null
+
+const CreateSegment: FC<CreateSegmentType> = ({
+  className,
+  condensed,
+  environmentId,
+  feature,
+  identities,
+  identitiesLoading,
+  identity,
+  membersEnabled,
+  onCancel,
+  onComplete,
+  page,
+  projectId,
+  readOnly,
+  searchInput,
+  segment: _segment,
+  setEnvironmentId,
+  setPage,
+  setSearchInput,
+}) => {
+  const defaultSegment: Omit<Segment, 'id' | 'uuid' | 'project'> & {
+    id?: number
+    uuid?: string
+    project?: number
+  } = {
+    description: '',
+    metadata: [],
+    name: '',
+    rules: [
+      {
+        conditions: [],
+        rules: [
+          {
+            conditions: [{ ...Constants.defaultRule }],
+            rules: [],
+            type: 'ANY',
+          },
+        ],
+        type: 'ALL',
+      },
+    ],
+  }
+  const { data: segments } = useGetSegmentsQuery({
+    include_feature_specific: true,
+    projectId,
+  })
+  const [segment, setSegment] = useState(_segment || defaultSegment)
+  // A cohort owns its segment's rules, and the API rejects updating one.
+  const isCohortManaged = !!_segment?.cohort
+  // CSV cohorts swap the rules form for the synchronisation detail view.
+  const isCsvCohort = _segment?.cohort?.source_type === 'csv'
+  const isReadOnly = readOnly || isCohortManaged
+  const readOnlyMessage = isCohortManaged
+    ? 'This segment is managed by a cohort. Its rules follow the cohort membership and cannot be edited.'
+    : undefined
+  const [description, setDescription] = useState(segment.description)
+  const [name, setName] = useState<Segment['name']>(segment.name)
+  const [rules, setRules] = useState<Segment['rules']>(segment.rules)
+  useEffect(() => {
+    if (_segment) {
+      setSegment(_segment)
+    }
+  }, [_segment])
+  useEffect(() => {
+    if (segment) {
+      setRules(segment.rules)
+      setDescription(segment.description)
+      setName(segment.name)
+    }
+  }, [segment])
+  const isEdit = !!segment.id
+  const { data: project } = useGetProjectQuery(
+    { id: `${projectId}` },
+    { skip: !projectId },
+  )
+  const is4Eyes =
+    isEdit &&
+    Utils.changeRequestsEnabled(project?.minimum_change_request_approvals)
+
+  const [
+    createSegment,
+    {
+      data: createSegmentData,
+      error: createError,
+      isLoading: creating,
+      isSuccess: createSuccess,
+    },
+  ] = useCreateSegmentMutation()
+  const [
+    editSegment,
+    {
+      data: updateSegmentData,
+      error: updateError,
+      isLoading: updating,
+      isSuccess: updateSuccess,
+    },
+  ] = useUpdateSegmentMutation()
+  const [createChangeRequest] = useCreateProjectChangeRequestMutation({})
+  const [updateCohort, { isLoading: isSavingCohortMetadata }] =
+    useUpdateCohortMutation()
+  const isSaving = creating || updating
+  const [showDescriptions, setShowDescriptions] = useState(false)
+  const [tab, setTab] = useState(UserTabs.RULES)
+  const [metadata, setMetadata] = useState<Metadata[]>(segment.metadata)
+  const metadataEnable = Utils.getPlansPermission('METADATA')
+  const error: CreateSegmentError = createError || updateError
+  const totalSegments = ProjectStore.getTotalSegments() ?? 0
+  const maxSegmentsAllowed = ProjectStore.getMaxSegmentsAllowed() ?? 0
+  const isLimitReached = totalSegments >= maxSegmentsAllowed
+
+  const THRESHOLD = 90
+  const segmentsLimitAlert = Utils.calculateRemainingLimitsPercentage(
+    totalSegments,
+    maxSegmentsAllowed,
+    THRESHOLD,
+  )
+  const { data: supportedContentTypes } = useGetSupportedContentTypeQuery({
+    organisation_id: AccountStore.getOrganisation().id,
+  })
+
+  const segmentContentType = useMemo(() => {
+    if (supportedContentTypes) {
+      return Utils.getContentType(supportedContentTypes, 'model', 'segment')
+    }
+  }, [supportedContentTypes])
+
+  const addRule = (type = 'ANY') => {
+    const newRules = cloneDeep(rules)
+    newRules[0].rules = newRules[0].rules.concat({
+      conditions: [{ ...Constants.defaultRule }],
+      rules: [],
+      type,
+    })
+    setRules(newRules)
+  }
+
+  const updateRule = (
+    rulesIndex: number,
+    elementNumber: number,
+    newValue: SegmentRule,
+  ) => {
+    const newRules = cloneDeep(rules)
+    newRules[rulesIndex].rules[elementNumber] = newValue
+    setRules(newRules)
+  }
+
+  const topLevelRuleType: 'ALL' | 'ANY' =
+    rules[0]?.type === 'ANY' ? 'ANY' : 'ALL'
+  const hasMixedTopLevelRuleTypes =
+    rules.length > 1 && rules.some((r) => r.type !== rules[0]?.type)
+
+  const setTopLevelRuleType = (newType: 'ALL' | 'ANY') => {
+    const subRuleType = newType === 'ANY' ? 'ALL' : 'ANY'
+    const newRules = cloneDeep(rules)
+    for (const topRule of newRules) {
+      topRule.type = newType
+      topRule.rules = topRule.rules.map((subRule) => {
+        if (subRule.delete || subRule.type === 'NONE') return subRule
+        return { ...subRule, type: subRuleType as SegmentRule['type'] }
+      })
+    }
+    setRules(newRules)
+    setValueChanged(true)
+  }
+
+  const save = async (e: FormEvent) => {
+    try {
+      Utils.preventDefault(e)
+      if (isReadOnly) return
+      setValueChanged(false)
+      setMetadataValueChanged(false)
+      const segmentData: Omit<Segment, 'id' | 'uuid'> = {
+        description,
+        feature: feature,
+        metadata: metadata as Metadata[],
+        name,
+        project: projectId,
+        rules,
+      }
+      if (name) {
+        if (segment.id) {
+          await editSegment({
+            projectId,
+            segment: {
+              ...segmentData,
+              id: segment.id,
+              project: segment.project as number,
+              uuid: segment.uuid as string,
+            },
+          }).unwrap()
+        } else {
+          await createSegment({
+            projectId,
+            segment: segmentData,
+          }).unwrap()
+          if (!segments?.results?.length) {
+            API.trackEvent(Constants.events.CREATE_FIRST_SEGMENT)
+          }
+        }
+      }
+    } catch (error: any) {
+      toast(error?.data?.metadata?.[0] || 'Error creating segment', 'danger')
+    }
+  }
+
+  const [valueChanged, setValueChanged] = useState(false)
+  const [metadataValueChanged, setMetadataValueChanged] = useState(false)
+
+  // A managed segment rejects direct updates; its metadata is saved through
+  // the cohort instead.
+  const saveCohortMetadata = async () => {
+    if (!_segment?.cohort) {
+      return
+    }
+    try {
+      await updateCohort({
+        cohortId: _segment.cohort.id,
+        environmentApiKey: _segment.cohort.environment_api_key,
+        metadata,
+        projectId: Number(projectId),
+        segmentId: _segment.id,
+      }).unwrap()
+      setMetadataValueChanged(false)
+      toast('Updated segment')
+    } catch (error: any) {
+      toast(error?.data?.metadata?.[0] || 'Error updating segment', 'danger')
+    }
+  }
+  const onClosing = useCallback(() => {
+    return new Promise<boolean>((resolve) => {
+      if (valueChanged) {
+        openConfirm({
+          body: 'Closing this will discard your unsaved changes.',
+          noText: 'Cancel',
+          onNo: () => resolve(false),
+          onYes: () => resolve(true),
+          title: 'Discard changes',
+          yesText: 'Ok',
+        })
+      } else {
+        resolve(true)
+      }
+    })
+  }, [valueChanged])
+  // The condensed/inline drawer (e.g. creating a feature-specific segment) is
+  // closed via the `onCancel` prop, which bypasses the modal's intercept-close
+  // handler above. Guard it so unsaved changes prompt the same confirmation (#5368).
+  const handleCancel = useCallback(() => {
+    if (!onCancel) {
+      return
+    }
+    onClosing().then((shouldClose) => {
+      if (shouldClose) {
+        onCancel()
+      }
+    })
+  }, [onCancel, onClosing])
+  const onCreateChangeRequest = async (changeRequestData: {
+    approvals: []
+    description: string
+    title: string
+  }) => {
+    closeModal2()
+    setValueChanged(false)
+
+    try {
+      await createChangeRequest({
+        data: {
+          approvals: (changeRequestData.approvals || []).filter(
+            (v) => !!v.user,
+          ),
+          committed_by: null,
+          conflicts: [],
+          description: changeRequestData.description,
+          group_assignments: (changeRequestData.approvals || []).filter(
+            (v) => !!v.group,
+          ),
+          is_approved: false,
+          is_committed: false,
+          segments: [
+            {
+              description,
+              feature,
+              metadata: metadata as Metadata[],
+              name,
+              project: projectId,
+              rules,
+              version_of: segment.id,
+            },
+          ],
+          title: changeRequestData.title,
+        },
+        project_id: `${projectId}`,
+      })
+
+      toast('Created change request')
+    } catch (error) {
+      toast('Failed to create change request')
+    }
+  }
+  useEffect(() => {
+    setInterceptClose(onClosing)
+    return () => setInterceptClose(null)
+  }, [onClosing])
+  const isValid = useMemo(() => {
+    const allSubRules = rules.flatMap((r) => r.rules)
+    if (!allSubRules.find((v) => !v.delete)) {
+      return false
+    }
+    const res = allSubRules.find((v) =>
+      v.conditions.find((c) => !Utils.validateRule(c)),
+    )
+    return !res
+  }, [rules])
+
+  useEffect(() => {
+    setTimeout(() => {
+      if (!E2E) {
+        document.getElementById('segmentID')?.focus()
+      }
+    }, 500)
+  }, [])
+  useEffect(() => {
+    if (createSuccess && createSegmentData) {
+      setSegment(createSegmentData)
+      toast('Created segment')
+      onComplete?.(createSegmentData)
+    }
+    //eslint-disable-next-line
+  }, [createSuccess])
+  useEffect(() => {
+    if (updateSuccess && updateSegmentData) {
+      setSegment(updateSegmentData)
+      toast('Updated segment')
+      onComplete?.(updateSegmentData)
+    }
+    //eslint-disable-next-line
+  }, [updateSuccess])
+
+  const operators: Operator[] | null = _operators || Utils.getSegmentOperators()
+  if (operators) {
+    _operators = operators
+  }
+
+  const allWarnings = useMemo(() => {
+    const warnings: string[] = []
+    const parseRules = (
+      rules: SegmentRule[] | null,
+      _operators: Operator[],
+    ) => {
+      rules?.map((v) => {
+        v?.conditions?.map((condition) => {
+          const operatorObj = operators?.find(
+            (op) => op.value === condition.operator,
+          )
+          if (
+            operatorObj?.warning &&
+            !warnings?.includes(operatorObj.warning)
+          ) {
+            warnings.push(operatorObj.warning)
+          }
+        })
+        parseRules(v.rules, operators || [])
+      })
+    }
+    if (operators) {
+      parseRules(rules, operators)
+    }
+    return warnings
+  }, [operators, rules])
+  const allSubRules = rules.flatMap((r) => r.rules)
+  const hasNoRules = !allSubRules.find((v) => !v.delete)
+  const rulesToShow = allSubRules.filter((v) => !v.delete)
+  const rulesEl = (
+    <div className='overflow-visible'>
+      <div>
+        {hasMixedTopLevelRuleTypes && (
+          <InfoMessage className='mb-4'>
+            This segment has top-level rules with mixed types. Changing the rule
+            type will normalise all top-level rules to the same type.
+          </InfoMessage>
+        )}
+        <div className='mb-4'>
+          {rules.map((topRule, rulesIndex) =>
+            topRule.rules.map((rule, i) => {
+              if (rule.delete || !operators) {
+                return null
+              }
+              const displayIndex = rulesToShow.indexOf(rule)
+              return (
+                <div key={`${rulesIndex}-${i}`}>
+                  <SegmentRuleDivider
+                    rule={rule}
+                    index={displayIndex}
+                    topLevelRuleType={topLevelRuleType}
+                  />
+                  <Rule
+                    showDescription={showDescriptions}
+                    readOnly={isReadOnly}
+                    data-test={`rule-${displayIndex}`}
+                    rule={rule}
+                    index={i}
+                    operators={operators}
+                    conditionLabel={rule.type === 'ALL' ? 'And' : 'Or'}
+                    onChange={(v: SegmentRule) => {
+                      setValueChanged(true)
+                      updateRule(rulesIndex, i, v)
+                    }}
+                    errors={
+                      error?.data?.rules?.[rulesIndex]?.rules?.[i]?.conditions
+                    }
+                    projectId={projectId}
+                  />
+                </div>
+              )
+            }),
+          )}
+        </div>
+        {hasNoRules && (
+          <InfoMessage>
+            {topLevelRuleType === 'ANY'
+              ? 'Add at least one OR rule to create a segment.'
+              : 'Add at least one AND/NOT rule to create a segment.'}
+          </InfoMessage>
+        )}
+        <Row className='justify-content-end'>
+          {!isReadOnly && (
+            <div
+              onClick={() =>
+                addRule(topLevelRuleType === 'ANY' ? 'ALL' : 'ANY')
+              }
+              className='text-center'
+            >
+              <Button theme='outline' data-test='add-rule' type='button'>
+                {topLevelRuleType === 'ANY'
+                  ? 'Add OR Condition'
+                  : 'Add AND Condition'}
+              </Button>
+            </div>
+          )}
+          {!isReadOnly && topLevelRuleType !== 'ANY' && (
+            <div onClick={() => addRule('NONE')} className='text-center'>
+              <Button
+                theme='outline'
+                className='ml-2 btn--outline-danger'
+                data-test='add-rule'
+                type='button'
+              >
+                Add AND NOT Condition
+              </Button>
+            </div>
+          )}
+        </Row>
+      </div>
+    </div>
+  )
+
+  const MetadataTab = (
+    <FormGroup className='mt-5 setting'>
+      <AddMetadataToEntity
+        organisationId={AccountStore.getOrganisation().id}
+        projectId={projectId}
+        entityId={segment.id}
+        entityContentType={segmentContentType?.id}
+        entity={segmentContentType?.model}
+        onChange={(m) => {
+          setMetadata(m as Metadata[])
+          // Need to fix this to be more robust and handle post save
+          if (isEdit) {
+            setMetadataValueChanged(true)
+          }
+        }}
+      />
+      {isCsvCohort && metadataValueChanged && !readOnly && (
+        <div className='text-right'>
+          <Button
+            disabled={isSavingCohortMetadata}
+            onClick={saveCohortMetadata}
+          >
+            {isSavingCohortMetadata ? 'Saving...' : 'Save Changes'}
+          </Button>
+        </div>
+      )}
+    </FormGroup>
+  )
+
+  return (
+    <>
+      {segment.id && (
+        <ExistingProjectChangeRequestAlert
+          className='m-2'
+          projectId={`${projectId}`}
+          segmentId={`${segment.id}`}
+        />
+      )}
+      {isEdit && !condensed && (
+        <Tabs
+          value={tab}
+          theme='pill'
+          urlParam='segmentTab'
+          onChange={(tab: UserTabs) => setTab(tab)}
+        >
+          <TabItem tabLabel='General' isDirty={valueChanged}>
+            <div className='my-4'>
+              {isCsvCohort && _segment ? (
+                <CohortSegmentDetail
+                  hideHeader
+                  projectId={projectId}
+                  segment={_segment}
+                  readOnly={readOnly}
+                  onDirtyChange={setValueChanged}
+                />
+              ) : (
+                <CreateSegmentRulesTabForm
+                  is4Eyes={is4Eyes}
+                  onCreateChangeRequest={onCreateChangeRequest}
+                  save={save}
+                  condensed={condensed}
+                  segmentsLimitAlert={segmentsLimitAlert}
+                  name={name}
+                  setName={setName}
+                  setValueChanged={setValueChanged}
+                  description={description}
+                  setDescription={setDescription}
+                  identity={identity}
+                  readOnly={isReadOnly}
+                  readOnlyMessage={readOnlyMessage}
+                  showDescriptions={showDescriptions}
+                  setShowDescriptions={setShowDescriptions}
+                  allWarnings={allWarnings}
+                  rulesEl={rulesEl}
+                  isEdit={isEdit}
+                  segment={segment}
+                  isSaving={isSaving}
+                  isValid={isValid}
+                  isLimitReached={isLimitReached}
+                  onCancel={handleCancel}
+                  topLevelRuleType={topLevelRuleType}
+                  setTopLevelRuleType={setTopLevelRuleType}
+                />
+              )}
+            </div>
+          </TabItem>
+          <TabItem tabLabel={segment.feature ? 'Feature' : 'Features'}>
+            <div className='my-4'>
+              <AssociatedSegmentOverrides
+                projectId={projectId as number}
+                segmentId={segment.id}
+              />
+            </div>
+          </TabItem>
+          <TabItem
+            tabLabelString='Identities'
+            tabLabel={
+              <>
+                Identities
+                <SegmentMembershipTotalBadge
+                  memberships={segment.membership_counts}
+                />
+              </>
+            }
+          >
+            <div className='my-4'>
+              <CreateSegmentUsersTabContent
+                projectId={projectId}
+                segmentId={segment.id}
+                environmentId={environmentId}
+                setEnvironmentId={setEnvironmentId}
+                identitiesLoading={identitiesLoading}
+                identities={identities}
+                page={page}
+                setPage={setPage}
+                name={name}
+                searchInput={searchInput}
+                setSearchInput={setSearchInput}
+                memberships={segment.membership_counts}
+                membersEnabled={membersEnabled}
+              />
+            </div>
+          </TabItem>
+          {metadataEnable && segmentContentType?.id && (
+            <TabItem tabLabel='Custom Fields' isDirty={metadataValueChanged}>
+              <div className='my-4'>{MetadataTab}</div>
+            </TabItem>
+          )}
+        </Tabs>
+      )}
+      {!(isEdit && !condensed) && metadataEnable && segmentContentType?.id && (
+        <Tabs value={tab} onChange={(tab: UserTabs) => setTab(tab)}>
+          <TabItem
+            tabLabelString='Basic configuration'
+            tabLabel={'Basic configuration'}
+          >
+            {/* Horizontal padding comes from the surrounding tab-item. */}
+            <div className={className || 'my-3'}>
+              {isCsvCohort && _segment ? (
+                <CohortSegmentDetail
+                  projectId={projectId}
+                  segment={_segment}
+                  readOnly={readOnly}
+                  onDirtyChange={setValueChanged}
+                />
+              ) : (
+                <CreateSegmentRulesTabForm
+                  save={save}
+                  is4Eyes={is4Eyes}
+                  onCreateChangeRequest={onCreateChangeRequest}
+                  condensed={condensed}
+                  segmentsLimitAlert={segmentsLimitAlert}
+                  name={name}
+                  setName={setName}
+                  setValueChanged={setValueChanged}
+                  description={description}
+                  setDescription={setDescription}
+                  identity={identity}
+                  readOnly={isReadOnly}
+                  readOnlyMessage={readOnlyMessage}
+                  showDescriptions={showDescriptions}
+                  setShowDescriptions={setShowDescriptions}
+                  allWarnings={allWarnings}
+                  rulesEl={rulesEl}
+                  isEdit={isEdit}
+                  segment={segment}
+                  isSaving={isSaving}
+                  isValid={isValid}
+                  isLimitReached={isLimitReached}
+                  onCancel={handleCancel}
+                  topLevelRuleType={topLevelRuleType}
+                  setTopLevelRuleType={setTopLevelRuleType}
+                />
+              )}
+            </div>
+          </TabItem>
+          <TabItem
+            tabLabelString='Custom Fields'
+            tabLabel={
+              <Row className='justify-content-center'>Custom Fields</Row>
+            }
+          >
+            <div className={className || 'my-3'}>{MetadataTab}</div>
+          </TabItem>
+        </Tabs>
+      )}
+      {!(isEdit && !condensed) &&
+        !(metadataEnable && segmentContentType?.id) && (
+          <div className={className || 'my-3 mx-4'}>
+            {isCsvCohort && _segment ? (
+              <CohortSegmentDetail
+                projectId={projectId}
+                segment={_segment}
+                readOnly={readOnly}
+                onDirtyChange={setValueChanged}
+              />
+            ) : (
+              <CreateSegmentRulesTabForm
+                save={save}
+                condensed={condensed}
+                segmentsLimitAlert={segmentsLimitAlert}
+                name={name}
+                setName={setName}
+                setValueChanged={setValueChanged}
+                description={description}
+                setDescription={setDescription}
+                identity={identity}
+                readOnly={isReadOnly}
+                readOnlyMessage={readOnlyMessage}
+                showDescriptions={showDescriptions}
+                setShowDescriptions={setShowDescriptions}
+                allWarnings={allWarnings}
+                rulesEl={rulesEl}
+                isEdit={isEdit}
+                segment={segment}
+                isSaving={isSaving}
+                isValid={isValid}
+                isLimitReached={isLimitReached}
+                onCancel={handleCancel}
+                topLevelRuleType={topLevelRuleType}
+                setTopLevelRuleType={setTopLevelRuleType}
+              />
+            )}
+          </div>
+        )}
+    </>
+  )
+}
+
+type LoadingCreateSegmentType = {
+  condensed?: boolean
+  environmentId: string
+  isEdit?: boolean
+  readOnly?: boolean
+  onSegmentRetrieved?: (segment: Segment) => void
+  onComplete?: (segment: Segment) => void
+  projectId: string | number
+  segment?: number
+}
+
+const LoadingCreateSegment: FC<LoadingCreateSegmentType> = (props) => {
+  const [environmentId, setEnvironmentId] = useState(props.environmentId)
+  const { data: segmentData, isLoading: segmentLoading } = useGetSegmentQuery(
+    {
+      id: `${props.segment}`,
+      projectId: `${props.projectId}`,
+    },
+    { skip: !props.segment },
+  )
+  const { isLoading: projectLoading } = useGetProjectQuery(
+    { id: `${props.projectId}` },
+    { skip: !props.projectId },
+  )
+  const { isLoading: contentTypesLoading } = useGetSupportedContentTypeQuery({
+    organisation_id: AccountStore.getOrganisation().id,
+  })
+  const isLoading = projectLoading || segmentLoading || contentTypesLoading
+  const [page, setPage] = useState<PageType>({
+    number: 1,
+    pageType: undefined,
+    pages: undefined,
+  })
+
+  const { search, searchInput, setSearchInput } = useDebouncedSearch('')
+
+  useEffect(() => {
+    if (segmentData) {
+      props.onSegmentRetrieved?.(segmentData)
+      if (segmentData.cohort?.environment_api_key) {
+        setEnvironmentId(segmentData.cohort.environment_api_key)
+      }
+    }
+    //eslint-disable-next-line
+  }, [segmentData])
+
+  const isEdge = Utils.getIsEdge()
+
+  // Availability is derived strictly from the backend: membership counts are
+  // only present for membership-enabled orgs (see `is_membership_enabled`), so
+  // their presence gates the UI without a separate frontend flag. When enabled
+  // and the project uses edge, the Identities tab uses the dedicated segment
+  // members endpoint, so the legacy identities list (and its request) is not
+  // needed.
+  const membersEnabled =
+    (segmentData?.membership_counts?.length ?? 0) > 0 && isEdge
+
+  const { data: identities, isLoading: identitiesLoading } =
+    useGetIdentitiesQuery(
+      {
+        environmentId,
+        isEdge,
+        page: page.number,
+        pageType: page.pageType,
+        page_size: 10,
+        pages: page.pages,
+        q: search,
+      },
+      {
+        skip: !environmentId || membersEnabled,
+      },
+    )
+
+  if (isLoading) {
+    return (
+      <div className='text-center'>
+        <Loader />
+      </div>
+    )
+  }
+
+  return (
+    <CreateSegment
+      {...props}
+      segment={segmentData || undefined}
+      identities={identities}
+      setPage={setPage}
+      searchInput={searchInput}
+      setSearchInput={setSearchInput}
+      identitiesLoading={identitiesLoading}
+      page={page}
+      environmentId={environmentId}
+      setEnvironmentId={setEnvironmentId}
+      membersEnabled={membersEnabled}
+    />
+  )
+}
+
+export default ConfigProvider(LoadingCreateSegment)

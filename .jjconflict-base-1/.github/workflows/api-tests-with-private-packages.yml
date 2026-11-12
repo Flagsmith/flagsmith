@@ -1,0 +1,76 @@
+name: API Pull Request with Private Packages
+
+permissions:
+  contents: read # For actions/checkout
+  id-token: write # For Codecov + CodeArtifact OIDC
+
+on:
+  pull_request:
+    paths:
+      - api/**
+      - docker/api/**
+      - .github/**
+      - .release-please-manifest.json
+    types: [opened, synchronize, reopened, ready_for_review]
+  push:
+    paths:
+      - api/**
+      - docker/api/**
+      - .github/**
+      - .release-please-manifest.json
+    branches:
+      - main
+
+defaults:
+  run:
+    working-directory: api
+
+jobs:
+  test:
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.fork != true
+    runs-on: depot-ubuntu-latest-16
+    name: API Unit Tests
+
+    strategy:
+      max-parallel: 3
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+
+    steps:
+      - name: Cloning repo
+        uses: actions/checkout@v5
+
+      - uses: ./.github/actions/install-uv
+        with:
+          working-directory: api
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install SAML Dependencies
+        run: sudo apt-get install -y xmlsec1
+
+      - name: Authenticate with CodeArtifact
+        uses: ./.github/actions/codeartifact-login
+
+      - name: Install packages and Tests
+        shell: bash
+        run: |
+          echo "https://${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}:@github.com" > ${HOME}/.git-credentials
+          git config --global credential.helper store
+          make install-packages opts="--extra dev --extra private"
+          make integrate-private-tests
+          rm -rf ${HOME}/.git-credentials
+
+      - name: Run Tests
+        env:
+          DOTENV_OVERRIDE_FILE: .env-ci
+          format: xml
+        run: make test-coverage
+
+      - name: Upload Coverage
+        uses: codecov/codecov-action@v5
+        env:
+          PRIVATE_PACKAGES: "true"
+          PYTHON: ${{ matrix.python-version }}
+        with:
+          env_vars: PRIVATE_PACKAGES,PYTHON
+          use_oidc: true

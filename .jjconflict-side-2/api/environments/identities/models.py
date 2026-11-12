@@ -1,0 +1,239 @@
+from itertools import chain
+
+from django.db import models
+from django.utils import timezone
+from flag_engine.engine import get_evaluation_result
+
+from environments.identities.constants import IDENTITY_IDENTIFIER_MAX_LENGTH
+from environments.identities.managers import IdentityManager
+from environments.identities.traits.models import Trait
+from environments.models import Environment
+from environments.sdk.types import SDKTraitData
+from evaluation.mappers import map_environment_to_evaluation_context
+from features.models import FeatureState
+from segments.models import Segment
+
+
+class Identity(models.Model):
+    identifier = models.CharField(max_length=IDENTITY_IDENTIFIER_MAX_LENGTH)
+    created_date = models.DateTimeField("DateCreated", auto_now_add=True)
+    environment = models.ForeignKey(
+        Environment, related_name="identities", on_delete=models.CASCADE
+    )
+    # System-owned (e.g. cohort membership); unreachable by SDK and admin trait writes.
+    system_traits = models.JSONField(default=dict)
+
+    objects = IdentityManager()
+
+    class Meta:
+        verbose_name_plural = "Identities"
+        ordering = ["id"]
+        unique_together = ("environment", "identifier")
+        # hard code the table name after moving from the environments app to prevent
+        # issues with production deployment due to multi server configuration.
+        db_table = "environments_identity"
+        # Note that the environment / created_date index is added only to postgres, so we can add it concurrently to
+        # avoid any downtime. If people using MySQL / Oracle have issues with poor performance on the identities table,
+        # we can provide them the SQL to add it manually in a small window of downtime.
+        indexes = [models.Index(fields=["environment", "created_date"])]
+
+    def natural_key(self):  # type: ignore[no-untyped-def]
+        return self.identifier, self.environment.api_key
+
+    @property
+    def composite_key(self):  # type: ignore[no-untyped-def]
+        return f"{self.environment.api_key}_{self.identifier}"
+
+    def get_hash_key(self, use_identity_composite_key_for_hashing: bool = False) -> str:
+        if use_identity_composite_key_for_hashing:
+            return self.composite_key  # type: ignore[no-any-return]
+        if self.id is not None:
+            return str(self.id)
+        return self.identifier
+
+    def get_overridden_feature_states(self) -> dict[int, FeatureState]:
+        """
+        Get all overridden feature states for an identity.
+
+        :return: dict[int, FeatureState] - Key: feature ID. Value: Overridden feature_state.
+        """
+
+        return {fs.feature_id: fs for fs in self.identity_features.all()}
+
+    def get_segments(
+        self,
+        traits: list[Trait] | None = None,
+        overrides_only: bool = False,
+    ) -> list[Segment]:
+        """
+        Get the list of segments this identity is a part of.
+
+        :param traits: override the identity's traits when evaluating segments
+        :param overrides_only: only retrieve the segments which have a valid override in the environment
+        :return: List of matching segments
+        """
+        db_traits = (
+            self.identity_traits.all() if (traits is None and self.id) else traits or []
+        )
+
+        if overrides_only:
+            all_segments = self.environment.get_segments_from_cache()
+        else:
+            all_segments = self.environment.project.get_segments_from_cache()
+
+        segments_by_pk = {segment.pk: segment for segment in all_segments}
+        context = map_environment_to_evaluation_context(
+            identity=self,
+            environment=self.environment,
+            traits=db_traits,
+            segments=all_segments,
+        )
+        result = get_evaluation_result(context)
+        return [
+            segments_by_pk[metadata["pk"]]
+            for segment_result in result["segments"]
+            if (metadata := segment_result.get("metadata")) is not None
+        ]
+
+    def get_all_user_traits(self):  # type: ignore[no-untyped-def]
+        # this is pointless, we should probably replace all uses with the below code
+        return self.identity_traits.all()
+
+    def __str__(self):  # type: ignore[no-untyped-def]
+        return "Account %s" % self.identifier
+
+    def generate_traits(
+        self,
+        trait_data_items: list[SDKTraitData],
+        persist: bool = False,
+    ) -> list[Trait]:
+        """
+        Given a list of trait data items, validated by TraitSerializerFull, generate
+        a list of TraitModel objects for the given identity.
+
+        :param trait_data_items: list of dictionaries validated by TraitSerializerFull
+        :param persist: determines whether the traits should be persisted to db
+        :return: list of TraitModels
+        """
+        trait_models = []
+        trait_models_to_persist = []
+
+        for trait_data_item in trait_data_items:
+            # exclude traits with null values
+            if (trait_value := trait_data_item["trait_value"]) is None:
+                continue
+
+            trait_key = trait_data_item["trait_key"]
+            trait = Trait(
+                trait_key=trait_key,
+                identity=self,
+                **Trait.generate_trait_value_data(trait_value),
+            )
+            if trait_data_item.get("transient"):
+                trait.transient = True
+            else:
+                trait_models_to_persist.append(trait)
+            trait_models.append(trait)
+
+        if persist:
+            Trait.objects.bulk_create(trait_models_to_persist)
+
+        return trait_models
+
+    def update_traits(
+        self,
+        trait_data_items: list[SDKTraitData],
+    ) -> list[Trait]:
+        """
+        Given a list of traits, update any that already exist and create any new ones.
+        Return the full list of traits for the given identity after these changes.
+
+        :param trait_data_items: list of dictionaries validated by TraitSerializerFull
+        :return: queryset of updated trait models
+        """
+        current_traits = {t.trait_key: t for t in self.identity_traits.all()}
+
+        keys_to_delete = set()
+        new_traits = []
+        updated_traits = []
+        transient_traits = []
+
+        for trait_data_item in trait_data_items:
+            trait_key = trait_data_item["trait_key"]
+            trait_value = trait_data_item["trait_value"]
+            transient = trait_data_item.get("transient")
+
+            if transient:
+                trait = Trait(
+                    **Trait.generate_trait_value_data(trait_value),
+                    trait_key=trait_key,
+                    identity=self,
+                )
+                trait.transient = True
+                transient_traits.append(trait)
+                continue
+
+            if trait_value is None:
+                # build a list of trait keys to delete having been nulled by the
+                # input data
+                keys_to_delete.add(trait_key)
+                continue
+
+            if trait_key in current_traits:
+                current_trait = current_traits[trait_key]
+                trait_value_data = Trait.generate_trait_value_data(trait_value)
+                # Don't update the trait if the value hasn't changed. Note that the
+                # incoming value may be raw or in `SDKTraitValueData` form, so compare
+                # the stored fields rather than the values directly.
+                if all(
+                    getattr(current_trait, attr) == value
+                    for attr, value in trait_value_data.items()
+                ):
+                    continue
+
+                for attr, value in trait_value_data.items():
+                    setattr(current_trait, attr, value)
+                # bulk_update() skips auto_now
+                current_trait.updated_at = timezone.now()
+                updated_traits.append(current_trait)
+                continue
+
+            new_traits.append(
+                Trait(
+                    **Trait.generate_trait_value_data(trait_value),
+                    trait_key=trait_key,
+                    identity=self,
+                )
+            )
+
+        # delete the traits that had their keys set to None
+        # (except the transient ones)
+        if keys_to_delete:
+            current_traits = {
+                trait_key: trait
+                for trait_key, trait in current_traits.items()
+                if trait_key not in keys_to_delete
+            }
+            self.identity_traits.filter(trait_key__in=keys_to_delete).delete()
+
+        Trait.objects.bulk_update(updated_traits, fields=Trait.BULK_UPDATE_FIELDS)
+
+        # use ignore_conflicts to handle race conditions which result in IntegrityError if another request
+        # has added a particular trait_key for the identity while this method has been determining what to
+        # update or create.
+        # See: https://github.com/Flagsmith/flagsmith/issues/370
+        Trait.objects.bulk_create(new_traits, ignore_conflicts=True)
+
+        # return the full list of traits for this identity
+        # override persisted traits by transient traits in case of key collisions
+        return [
+            *{
+                trait.trait_key: trait
+                for trait in chain(
+                    current_traits.values(),
+                    updated_traits,
+                    new_traits,
+                    transient_traits,
+                )
+            }.values()
+        ]

@@ -1,0 +1,1169 @@
+from datetime import datetime, timedelta
+from unittest import mock
+from unittest.mock import MagicMock
+
+import pytest
+from django.conf import settings
+from django.utils import timezone
+from pytest_django.fixtures import SettingsWrapper
+from pytest_mock import MockerFixture
+from pytest_structlog import StructuredLogCapture
+
+from environments.models import Environment
+from organisations.chargebee.metadata import ChargebeeObjMetadata
+from organisations.models import (
+    BillingPeriod,
+    Organisation,
+    OrganisationAPIUsageNotification,
+    OrganisationSubscriptionInformationCache,
+    Subscription,
+)
+from organisations.subscriptions.constants import (
+    CHARGEBEE,
+    FREE_PLAN_ID,
+    FREE_PLAN_SUBSCRIPTION_METADATA,
+    MAX_API_CALLS_IN_FREE_PLAN,
+    MAX_SEATS_IN_FREE_PLAN,
+    TRIAL_SUBSCRIPTION_ID,
+    XERO,
+    SubscriptionPlanFamily,
+)
+from organisations.subscriptions.exceptions import (
+    SubscriptionDoesNotSupportSeatUpgrade,
+)
+from organisations.subscriptions.metadata import BaseSubscriptionMetadata
+from organisations.subscriptions.xero.metadata import XeroSubscriptionMetadata
+from users.models import FFAdminUser
+
+
+def test_has_paid_subscription__subscription_id_exists__returns_true(db: None) -> None:
+    # Given
+    organisation = Organisation.objects.create(name="Test org")
+    Subscription.objects.filter(organisation=organisation).update(
+        subscription_id="subscription_id"
+    )
+
+    # When
+    organisation.refresh_from_db()
+
+    # Then
+    assert organisation.has_paid_subscription()
+
+
+@pytest.mark.parametrize(
+    "plan_id, expected_has_enterprise",
+    (
+        ("free", False),
+        ("enterprise", True),
+        ("enterprise-semiannual", True),
+        ("scale-up", False),
+        ("scaleup", False),
+        ("scale-up-v2", False),
+        ("scale-up-v2-annual", False),
+        ("startup", False),
+        ("start-up", False),
+        ("start-up-v2", False),
+        ("start-up-v2-annual", False),
+    ),
+)
+def test_has_enterprise_subscription__given_plan_id__returns_expected_result(
+    plan_id: str, expected_has_enterprise: bool, organisation: Organisation
+) -> None:
+    # Given
+    Subscription.objects.filter(organisation=organisation).update(
+        plan=plan_id, subscription_id="subscription_id"
+    )
+
+    # When
+    organisation.refresh_from_db()
+
+    # Then
+    assert organisation.has_enterprise_subscription() is expected_has_enterprise
+
+
+def test_has_paid_subscription__missing_subscription_id__returns_false(
+    db: None,
+) -> None:
+    # Given
+    organisation = Organisation.objects.create(name="Test org")
+    assert (
+        Subscription.objects.filter(organisation=organisation).first().subscription_id
+        is None
+    )
+
+    # When / Then
+    assert not organisation.has_paid_subscription()
+
+
+@mock.patch("organisations.models.cancel_chargebee_subscription")
+def test_cancel_subscription__chargebee_payment__cancels_and_resets_to_free(  # type: ignore[no-untyped-def]
+    mocked_cancel_chargebee_subscription,
+    organisation: Organisation,
+):
+    # Given
+    Subscription.objects.filter(organisation=organisation).update(
+        subscription_id="subscription_id", payment_method=CHARGEBEE
+    )
+    subscription = Subscription.objects.get(organisation=organisation)
+
+    # refresh organisation to load subscription
+    organisation.refresh_from_db()
+
+    # When
+    organisation.cancel_subscription()
+
+    # Then
+    mocked_cancel_chargebee_subscription.assert_called_once_with(
+        subscription.subscription_id
+    )
+    # refresh subscription object
+    subscription.refresh_from_db()
+    # Subscription has been immediately transformed to free.
+    assert subscription.cancellation_date is None
+    assert subscription.subscription_id is None
+    assert subscription.billing_status is None
+    assert subscription.payment_method is None
+    assert subscription.plan == FREE_PLAN_ID
+
+
+def test_save__stop_serving_flags_changed__rebuilds_environment_document(  # type: ignore[no-untyped-def]
+    environment: Environment, organisation: Organisation, mocker: MockerFixture
+):
+    # Given
+    mocked_rebuild_environment_document = mocker.patch(
+        "environments.tasks.rebuild_environment_document"
+    )
+    assert organisation.stop_serving_flags is False
+
+    # When
+    organisation.stop_serving_flags = True
+    organisation.save()
+
+    # Then
+    mocked_rebuild_environment_document.delay.assert_called_once_with(
+        args=(environment.id,)
+    )
+
+
+def test_save__stop_serving_flags_unchanged__does_not_rebuild_environment_document(  # type: ignore[no-untyped-def]
+    environment: Environment, organisation: Organisation, mocker: MockerFixture
+):
+    # Given
+    mocked_rebuild_environment_document = mocker.patch(
+        "environments.tasks.rebuild_environment_document"
+    )
+
+    # When saving something irrelevant
+    organisation.alerted_over_plan_limit = True
+    organisation.save()
+
+    # Then the task should not be called
+    mocked_rebuild_environment_document.delay.assert_not_called()
+
+
+def test_over_plan_seats_limit__under_limit__returns_false(  # type: ignore[no-untyped-def]
+    organisation, chargebee_subscription, mocker
+):
+    # Given
+    seats = 200
+    mocked_get_subscription_metadata = mocker.patch(
+        "organisations.models.Subscription.get_subscription_metadata",
+        autospec=True,
+        return_value=BaseSubscriptionMetadata(seats=seats),
+    )
+
+    # When / Then
+    assert organisation.over_plan_seats_limit() is False
+    mocked_get_subscription_metadata.assert_called_once_with(chargebee_subscription)
+
+
+def test_over_plan_seats_limit__over_limit__returns_true(  # type: ignore[no-untyped-def]
+    organisation, chargebee_subscription, mocker, admin_user
+):
+    # Given
+    seats = 0
+    mocked_get_subscription_metadata = mocker.patch(
+        "organisations.models.Subscription.get_subscription_metadata",
+        autospec=True,
+        return_value=BaseSubscriptionMetadata(seats=seats),
+    )
+
+    # When / Then
+    assert organisation.over_plan_seats_limit() is True
+    mocked_get_subscription_metadata.assert_called_once_with(chargebee_subscription)
+
+
+def test_over_plan_seats_limit__free_plan_default__returns_true(
+    organisation: Organisation,
+) -> None:
+    # Given
+    # The `organisation` fixture links an admin and a staff user, so num_seats
+    # is 2 while the default free plan grants a single seat.
+
+    # When / Then
+    assert organisation.over_plan_seats_limit() is True
+
+
+def test_over_plan_seats_limit__licence_seats_exceeded__returns_true(
+    organisation: Organisation,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    organisation.subscription.plan = "enterprise"
+    organisation.subscription.save()
+
+    licence = mocker.Mock()
+    licence.get_licence_information.return_value = mocker.Mock(
+        num_seats=1,
+        num_projects=None,
+    )
+    mocker.patch.object(
+        Organisation,
+        "licence",
+        new_callable=mocker.PropertyMock,
+        return_value=licence,
+        create=True,
+    )
+    mocker.patch("organisations.models.is_enterprise", return_value=True)
+    mocker.patch("organisations.models.is_saas", return_value=False)
+
+    # When / Then
+    assert organisation.over_plan_seats_limit() is True
+
+
+def test_over_plan_seats_limit__licence_seats_available__returns_false(
+    organisation: Organisation,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    organisation.subscription.plan = "enterprise"
+    organisation.subscription.save()
+
+    licence = mocker.Mock()
+    licence.get_licence_information.return_value = mocker.Mock(
+        num_seats=5,
+        num_projects=None,
+    )
+    mocker.patch.object(
+        Organisation,
+        "licence",
+        new_callable=mocker.PropertyMock,
+        return_value=licence,
+        create=True,
+    )
+    mocker.patch("organisations.models.is_enterprise", return_value=True)
+    mocker.patch("organisations.models.is_saas", return_value=False)
+
+    # When / Then
+    assert organisation.over_plan_seats_limit() is False
+
+
+@pytest.mark.saas_mode
+@pytest.mark.parametrize(
+    "plan, num_seats, expected",
+    [
+        ("scale-up-v2", 19, True),
+        ("scale-up-v2", 20, False),
+        ("scale-up-v2", 21, False),
+        ("startup-v2", 1, False),
+    ],
+)
+def test_is_auto_seat_upgrade_available__given_plan_and_seat_count__returns_expected(
+    organisation: Organisation,
+    plan: str,
+    num_seats: int,
+    expected: bool,
+) -> None:
+    # Given
+    subscription = organisation.subscription
+    subscription.plan = plan
+    subscription.subscription_id = "subscription-id"
+    subscription.save()
+
+    organisation.users.all().delete()
+    for i in range(num_seats):
+        user = FFAdminUser.objects.create(email=f"seat-{i}@test.com")
+        user.add_organisation(organisation)
+
+    # When
+    result = organisation.is_auto_seat_upgrade_available()
+
+    # Then
+    assert result is expected
+
+
+@pytest.mark.parametrize(
+    "plan, expected_version",
+    [
+        ("scale-up-v4-monthly", 4),
+        ("scale-up-v4", 4),
+        ("scale-up-v2", 2),
+        ("scale-up-v10-annual", 10),
+        ("scale-up", 1),
+        ("startup-v2", 1),
+        (None, 1),
+        ("Scale-Up-v4-USD-Yearly", 4),
+        ("Scale-Up-v4-USD-Monthly", 4),
+    ],
+)
+def test_get_scaleup_plan_version__given_plan__returns_expected(
+    organisation: Organisation,
+    plan: str | None,
+    expected_version: int,
+) -> None:
+    # Given
+    subscription = organisation.subscription
+    subscription.plan = plan
+    subscription.save()
+
+    # When
+    version = subscription.get_scaleup_plan_version()
+
+    # Then
+    assert version == expected_version
+
+
+def test_is_auto_seat_upgrade_available__not_saas__returns_false(
+    organisation: Organisation,
+) -> None:
+    # Given
+    subscription = organisation.subscription
+    subscription.plan = "scale-up-v2"
+    subscription.subscription_id = "subscription-id"
+    subscription.save()
+
+    # When
+    result = organisation.is_auto_seat_upgrade_available()
+
+    # Then
+    assert result is False
+
+
+def test_subscription__default_for_new_organisation__has_one_max_seat(
+    organisation: Organisation,
+) -> None:
+    # Given
+    subscription = Subscription.objects.get(organisation=organisation)
+
+    # When / Then
+    assert subscription.max_seats == 1
+
+
+def test_is_paid__no_active_subscription__returns_false(db):  # type: ignore[no-untyped-def]
+    # Given
+    organisation = Organisation.objects.create(name="Test org")
+
+    # When / Then
+    assert organisation.is_paid is False
+
+
+def test_is_paid__active_chargebee_subscription__returns_true(  # type: ignore[no-untyped-def]
+    organisation, chargebee_subscription
+):
+    # Given / When
+    # Then
+    assert organisation.is_paid is True
+
+
+def test_is_paid__cancelled_subscription__returns_false(  # type: ignore[no-untyped-def]
+    organisation, chargebee_subscription
+):
+    # Given
+    organisation = Organisation.objects.create(name="Test org")
+    chargebee_subscription.cancellation_date = datetime.now()
+    chargebee_subscription.save()
+
+    # When / Then
+    assert organisation.is_paid is False
+
+
+@pytest.fixture
+def self_hosted_licenced_organisation(
+    organisation: Organisation,
+    mocker: MockerFixture,
+) -> Organisation:
+    # A self-hosted enterprise licence: enterprise plan, no billing provider
+    # (so no subscription_id), and entitlements sourced from the licence.
+    organisation.subscription.plan = "enterprise"
+    organisation.subscription.save()
+
+    licence = mocker.Mock()
+    licence.get_licence_information.return_value = mocker.Mock(
+        num_seats=3,
+        num_projects=5,
+    )
+    mocker.patch.object(
+        Organisation,
+        "licence",
+        new_callable=mocker.PropertyMock,
+        return_value=licence,
+        create=True,
+    )
+    mocker.patch("organisations.models.is_enterprise", return_value=True)
+    mocker.patch("organisations.models.is_saas", return_value=False)
+    return organisation
+
+
+def test_is_paid__self_hosted_licence__returns_true(
+    self_hosted_licenced_organisation: Organisation,
+) -> None:
+    # Given a self-hosted licenced organisation
+    # When we read its paid status
+    # Then it is paid despite having no billing subscription_id
+    assert self_hosted_licenced_organisation.subscription.subscription_id is None
+    assert self_hosted_licenced_organisation.is_paid is True
+
+
+def test_has_enterprise_subscription__self_hosted_licence__returns_true(
+    self_hosted_licenced_organisation: Organisation,
+) -> None:
+    # Given a self-hosted licenced organisation
+    # When we check the enterprise entitlement gate
+    # Then it is granted
+    assert self_hosted_licenced_organisation.has_enterprise_subscription() is True
+
+
+def test_get_subscription_metadata__self_hosted_licence__uses_licence_limits(
+    self_hosted_licenced_organisation: Organisation,
+) -> None:
+    # Given a self-hosted licenced organisation
+    # When we read its subscription metadata
+    metadata = (
+        self_hosted_licenced_organisation.subscription.get_subscription_metadata()
+    )
+
+    # Then the limits come from the licence, not a billing subscription
+    assert metadata.seats == 3
+    assert metadata.projects == 5
+
+
+def test_get_subscription_metadata__chargebee_subscription__returns_chargebee_metadata(  # type: ignore[no-untyped-def]
+    organisation: Organisation,
+    mocker: MockerFixture,
+):
+    # Given
+    seats = 10
+    api_calls = 50000000
+    projects = 10
+
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        allowed_seats=seats,
+        allowed_30d_api_calls=api_calls,
+        allowed_projects=projects,
+    )
+    expected_metadata = ChargebeeObjMetadata(
+        seats=seats, api_calls=api_calls, projects=projects
+    )
+    mocker.patch("organisations.models.is_saas", return_value=True)
+    Subscription.objects.filter(organisation=organisation).update(
+        plan="scale-up-v4-monthly",
+        subscription_id="subscription-id",
+        payment_method=CHARGEBEE,
+    )
+    organisation.subscription.refresh_from_db()
+
+    # When
+    subscription_metadata = organisation.subscription.get_subscription_metadata()
+
+    # Then
+    assert subscription_metadata == expected_metadata
+
+
+def test_get_subscription_metadata__scale_up_v2_plan__keeps_unlimited_audit_log_only(  # type: ignore[no-untyped-def]  # noqa: E501
+    organisation: Organisation,
+    mocker: MockerFixture,
+):
+    # Given
+    seats = 10
+    api_calls = 50000000
+    projects = 10
+    feature_history_visibility_days = 14
+
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        allowed_seats=seats,
+        allowed_30d_api_calls=api_calls,
+        allowed_projects=projects,
+        audit_log_visibility_days=30,
+        feature_history_visibility_days=feature_history_visibility_days,
+    )
+    expected_metadata = ChargebeeObjMetadata(
+        seats=seats,
+        api_calls=api_calls,
+        projects=projects,
+        audit_log_visibility_days=None,
+        feature_history_visibility_days=feature_history_visibility_days,
+    )
+    mocker.patch("organisations.models.is_saas", return_value=True)
+    Subscription.objects.filter(organisation=organisation).update(
+        plan="scale-up-v2",
+        subscription_id="subscription-id",
+        payment_method=CHARGEBEE,
+    )
+    organisation.subscription.refresh_from_db()
+
+    # When
+    subscription_metadata = organisation.subscription.get_subscription_metadata()
+
+    # Then
+    assert subscription_metadata == expected_metadata
+
+
+def test_get_subscription_metadata__scale_up_v4_plan__returns_cache_visibility_values(  # type: ignore[no-untyped-def]
+    organisation: Organisation,
+    mocker: MockerFixture,
+):
+    # Given
+    seats = 10
+    api_calls = 50000000
+    projects = 10
+    audit_log_visibility_days = 14
+    feature_history_visibility_days = 14
+
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        allowed_seats=seats,
+        allowed_30d_api_calls=api_calls,
+        allowed_projects=projects,
+        audit_log_visibility_days=audit_log_visibility_days,
+        feature_history_visibility_days=feature_history_visibility_days,
+    )
+    expected_metadata = ChargebeeObjMetadata(
+        seats=seats,
+        api_calls=api_calls,
+        projects=projects,
+        audit_log_visibility_days=audit_log_visibility_days,
+        feature_history_visibility_days=feature_history_visibility_days,
+    )
+    mocker.patch("organisations.models.is_saas", return_value=True)
+    Subscription.objects.filter(organisation=organisation).update(
+        plan="scale-up-v4-monthly",
+        subscription_id="subscription-id",
+        payment_method=CHARGEBEE,
+    )
+    organisation.subscription.refresh_from_db()
+
+    # When
+    subscription_metadata = organisation.subscription.get_subscription_metadata()
+
+    # Then
+    assert subscription_metadata == expected_metadata
+
+
+def test_get_subscription_metadata__xero_subscription__returns_xero_metadata(  # type: ignore[no-untyped-def]
+    mocker: MockerFixture,
+):
+    # Given
+    subscription = Subscription(
+        payment_method=XERO, subscription_id="xero-subscription", plan="enterprise"
+    )
+    expected_metadata = XeroSubscriptionMetadata(
+        seats=subscription.max_seats, api_calls=subscription.max_api_calls
+    )
+    mocker.patch("organisations.models.is_saas", return_value=True)
+
+    # When
+    subscription_metadata = subscription.get_subscription_metadata()
+
+    # Then
+    assert subscription_metadata == expected_metadata
+
+
+def test_get_subscription_metadata__no_plan__returns_free_plan_metadata():  # type: ignore[no-untyped-def]
+    # Given
+    subscription = Subscription()
+
+    # When
+    subscription_metadata = subscription.get_subscription_metadata()
+
+    # Then
+    assert subscription_metadata == FREE_PLAN_SUBSCRIPTION_METADATA
+
+
+@pytest.mark.parametrize(
+    "subscription_id, plan, max_seats, max_api_calls, expected_seats, "
+    "expected_api_calls, expected_projects",
+    (
+        (
+            None,
+            "free",
+            10,
+            5000000,
+            MAX_SEATS_IN_FREE_PLAN,
+            MAX_API_CALLS_IN_FREE_PLAN,
+            settings.MAX_PROJECTS_IN_FREE_PLAN,
+        ),
+        ("anything", "enterprise", 20, 5000000, 20, 5000000, None),
+        (TRIAL_SUBSCRIPTION_ID, "enterprise", 20, 5000000, 20, 5000000, None),
+    ),
+)
+def test_get_subscription_metadata__manually_added_saas_licence__returns_correct_metadata(
+    organisation: Organisation,
+    subscription_id: str | None,
+    plan: str,
+    max_seats: int,
+    max_api_calls: int,
+    expected_seats: int,
+    expected_api_calls: int,
+    expected_projects: int | None,
+    mocker: MockerFixture,
+) -> None:
+    """
+    Specific test to make sure that we can manually add subscriptions to
+    the SaaS platform and the values stored in the Django database will
+    be correctly used.
+    """
+    # Given
+    Subscription.objects.filter(organisation=organisation).update(
+        subscription_id=subscription_id,
+        plan=plan,
+        max_seats=max_seats,
+        max_api_calls=max_api_calls,
+    )
+    organisation.subscription.refresh_from_db()
+    mocker.patch("organisations.models.is_saas", return_value=True)
+
+    # When
+    subscription_metadata = organisation.subscription.get_subscription_metadata()
+
+    # Then
+    assert subscription_metadata.projects == expected_projects
+    assert subscription_metadata.seats == expected_seats
+    assert subscription_metadata.api_calls == expected_api_calls
+
+
+def test_get_subscription_metadata__self_hosted_open_source__returns_free_plan_metadata(
+    organisation: Organisation, mocker: MockerFixture
+) -> None:
+    """
+    Open source should ignore the details provided in the
+    subscription and always return the free plan metadata.
+    """
+    # Given
+    Subscription.objects.filter(organisation=organisation).update(
+        max_seats=100,
+        max_api_calls=10000000000,
+        plan="enterprise",
+        subscription_id="subscription-id",
+    )
+    organisation.subscription.refresh_from_db()
+    mocker.patch("organisations.models.is_enterprise", return_value=False)
+    mocker.patch("organisations.models.is_saas", return_value=False)
+
+    # When
+    subscription_metadata = organisation.subscription.get_subscription_metadata()
+
+    # Then
+    assert subscription_metadata == FREE_PLAN_SUBSCRIPTION_METADATA
+
+
+@pytest.mark.saas_mode
+def test_add_single_seat__upgradable_plan__calls_chargebee_add_single_seat(
+    organisation: Organisation,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    subscription_id = "subscription-id"
+    subscription = Subscription(subscription_id=subscription_id, plan="scale-up")
+    mocker.patch.object(Subscription, "can_auto_upgrade_seats", new=True)
+    mocked_add_single_seat = mocker.patch("organisations.models.add_single_seat")
+
+    # When
+    subscription.add_single_seat()  # type: ignore[no-untyped-call]
+
+    # Then
+    mocked_add_single_seat.assert_called_once_with(
+        subscription_id, organisation_id=subscription.organisation_id
+    )
+
+
+def test_add_single_seat__non_upgradable_plan__raises_error(
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    subscription_id = "subscription-id"
+    subscription = Subscription(
+        subscription_id=subscription_id, plan="not-a-scale-up-plan"
+    )
+
+    mocked_add_single_seat = mocker.patch(
+        "organisations.models.add_single_seat", autospec=True
+    )
+
+    # When
+    with pytest.raises(SubscriptionDoesNotSupportSeatUpgrade):
+        subscription.add_single_seat()  # type: ignore[no-untyped-call]
+
+    # Then
+    mocked_add_single_seat.assert_not_called()
+
+
+def test_save__organisation_updated__clears_environment_caches(  # type: ignore[no-untyped-def]
+    mocker, organisation, environment
+):
+    # Given
+    mock_environment_cache = mocker.patch("organisations.models.environment_cache")
+
+    # When
+    organisation.name += "update"
+    organisation.save()
+
+    # Then
+    mock_environment_cache.delete_many.assert_called_once_with([environment.api_key])
+
+
+def test_save__api_calls_limit_changed__resets_api_notifications(
+    organisation: Organisation,
+) -> None:
+    # Given
+    now = timezone.now()
+    osic = OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        allowed_seats=10,
+        allowed_projects=3,
+        allowed_30d_api_calls=100,
+        chargebee_email="test@example.com",
+        current_billing_term_starts_at=now - timedelta(days=45),
+        current_billing_term_ends_at=now + timedelta(days=320),
+    )
+
+    # Create a notification which should be deleted shortly.
+    OrganisationAPIUsageNotification.objects.create(
+        organisation=organisation,
+        percent_usage=90,
+        notified_at=now,
+    )
+
+    # Keep a notification which should not be deleted.
+    organisation2 = Organisation.objects.create(name="Test org2")
+    oapiun = OrganisationAPIUsageNotification.objects.create(
+        organisation=organisation2,
+        percent_usage=90,
+        notified_at=now,
+    )
+
+    # When
+    osic.allowed_30d_api_calls *= 2
+    osic.save()
+
+    # Then
+    assert OrganisationAPIUsageNotification.objects.count() == 1
+    assert OrganisationAPIUsageNotification.objects.first() == oapiun
+
+
+def test_create__saas_mode__creates_subscription_cache(
+    db: None, mocker: MockerFixture
+) -> None:
+    # Given
+    mocker.patch("organisations.models.is_saas", return_value=True)
+
+    # When
+    organisation = Organisation.objects.create(name="Test org")
+
+    # Then
+    assert organisation.subscription_information_cache
+    assert (
+        organisation.subscription_information_cache.allowed_seats
+        == MAX_SEATS_IN_FREE_PLAN
+    )
+    assert (
+        organisation.subscription_information_cache.allowed_30d_api_calls
+        == MAX_API_CALLS_IN_FREE_PLAN
+    )
+
+
+@pytest.mark.parametrize(
+    "plan_id, expected_plan_family",
+    (
+        ("free", SubscriptionPlanFamily.FREE),
+        ("enterprise", SubscriptionPlanFamily.ENTERPRISE),
+        ("enterprise-semiannual", SubscriptionPlanFamily.ENTERPRISE),
+        ("scale-up", SubscriptionPlanFamily.SCALE_UP),
+        ("scaleup", SubscriptionPlanFamily.SCALE_UP),
+        ("scale-up-v2", SubscriptionPlanFamily.SCALE_UP),
+        ("scale-up-v2-annual", SubscriptionPlanFamily.SCALE_UP),
+        ("startup", SubscriptionPlanFamily.START_UP),
+        ("start-up", SubscriptionPlanFamily.START_UP),
+        ("start-up-v2", SubscriptionPlanFamily.START_UP),
+        ("start-up-v2-annual", SubscriptionPlanFamily.START_UP),
+    ),
+)
+def test_subscription_plan_family__given_plan_id__returns_expected_family(
+    plan_id: str, expected_plan_family: SubscriptionPlanFamily
+) -> None:
+    # Given / When
+    # Then
+    assert Subscription(plan=plan_id).subscription_plan_family == expected_plan_family
+
+
+@pytest.mark.parametrize(
+    "plan_id, expected_is_enterprise",
+    (
+        ("free", False),
+        ("enterprise", True),
+        ("enterprise-semiannual", True),
+        ("scale-up", False),
+        ("scaleup", False),
+        ("scale-up-v2", False),
+        ("scale-up-v2-annual", False),
+        ("startup", False),
+        ("start-up", False),
+        ("start-up-v2", False),
+        ("start-up-v2-annual", False),
+    ),
+)
+def test_is_enterprise__given_plan_id__returns_expected_result(
+    plan_id: str, expected_is_enterprise: bool, organisation: Organisation
+) -> None:
+    # Given
+    subscription = Subscription.objects.get(organisation=organisation)
+    subscription.plan = plan_id
+    subscription.save()
+
+    # When / Then
+    assert subscription.is_enterprise is expected_is_enterprise
+
+
+@pytest.mark.parametrize(
+    "billing_term_starts_at, billing_term_ends_at, expected_result",
+    [
+        (None, None, False),
+        (
+            timezone.now() - timedelta(hours=1),
+            timezone.now() + timedelta(days=30),
+            True,
+        ),
+        (
+            timezone.now() - timedelta(days=30),
+            timezone.now() + timedelta(hours=1),
+            True,
+        ),
+        (
+            timezone.now() - timedelta(days=30),
+            timezone.now() - timedelta(days=5),
+            False,
+        ),
+    ],
+)
+def test_has_active_billing_periods__given_billing_dates__returns_expected_result(
+    organisation: Organisation,
+    billing_term_starts_at: datetime,
+    billing_term_ends_at: datetime,
+    expected_result: bool,
+) -> None:
+    # Given
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        current_billing_term_starts_at=billing_term_starts_at,
+        current_billing_term_ends_at=billing_term_ends_at,
+    )
+
+    organisation.refresh_from_db()
+    # When
+    result = organisation.subscription.has_active_billing_periods
+
+    # Then
+    assert result == expected_result
+
+
+@pytest.mark.freeze_time("2023-01-19T09:09:47+00:00")
+def test_add_organisation__hubspot_enabled__calls_lead_tracking(
+    mocker: MagicMock, db: None, settings: SettingsWrapper, organisation: Organisation
+) -> None:
+    # Given
+    settings.ENABLE_HUBSPOT_LEAD_TRACKING = True
+    track_hubspot_lead_v2 = mocker.patch("organisations.models.track_hubspot_lead_v2")
+
+    user = FFAdminUser.objects.create(
+        email="test@example.com", first_name="John", last_name="Doe"
+    )
+
+    # When
+    user.add_organisation(organisation)
+
+    # Then
+    track_hubspot_lead_v2.delay.assert_called_once_with(
+        args=(user.id, organisation.id),
+        delay_until=timezone.now() + timedelta(minutes=3),
+    )
+
+
+def test_subscription_get_portal_url__customer_id_not_found__returns_none(
+    organisation: Organisation,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    subscription = organisation.subscription
+    subscription.subscription_id = "sub-123"
+    subscription.customer_id = ""
+    subscription.save()
+
+    mocker.patch(
+        "organisations.models.get_customer_id_from_subscription_id",
+        return_value=None,
+    )
+
+    # When
+    result = subscription.get_portal_url("https://example.com")
+
+    # Then
+    assert result is None
+
+
+def test_subscription_get_portal_url__customer_id_exists__returns_url(
+    organisation: Organisation,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    subscription = organisation.subscription
+    subscription.subscription_id = "sub-123"
+    subscription.customer_id = "cust-123"
+    subscription.save()
+
+    expected_url = "https://portal.chargebee.com/session"
+    mocker.patch(
+        "organisations.models.get_portal_url",
+        return_value=expected_url,
+    )
+
+    # When
+    result = subscription.get_portal_url("https://example.com")
+
+    # Then
+    assert result == expected_url
+
+
+def test_update_plan__valid_plan_id__updates_fields_from_chargebee(
+    organisation: Organisation,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    subscription = organisation.subscription
+    plan_id = "startup-v2"
+    expected_metadata = {"seats": 5, "api_calls": 500000}
+
+    mocker.patch(
+        "organisations.models.get_plan_meta_data",
+        return_value=expected_metadata,
+    )
+
+    # When
+    subscription.update_plan(plan_id)  # type: ignore[no-untyped-call]
+
+    # Then
+    subscription.refresh_from_db()
+    assert subscription.plan == plan_id
+    assert subscription.max_seats == 5
+    assert subscription.max_api_calls == 500000
+    assert subscription.cancellation_date is None
+
+
+def test_organisation_openfeature_evaluation_context__no_targeting_key__uses_org_id(
+    organisation: Organisation,
+) -> None:
+    # Given / When
+    context = organisation.openfeature_evaluation_context
+
+    # Then
+    assert context.targeting_key == f"org.{organisation.id}"
+
+
+def test_organisation_openfeature_evaluation_context__targeting_key_set__uses_it(
+    organisation: Organisation,
+) -> None:
+    # Given
+    organisation.targeting_key = "a" * 32
+    organisation.save(update_fields=["targeting_key"])
+
+    # When
+    context = organisation.openfeature_evaluation_context
+
+    # Then
+    assert context.targeting_key == "a" * 32
+
+
+@pytest.mark.freeze_time("2026-09-10T12:00:00+00:00")
+@pytest.mark.parametrize(
+    "term_starts_at, term_ends_at, expected_starts_at, expected_ends_at",
+    [
+        # Monthly term.
+        (
+            "2026-09-01T00:00:00+00:00",
+            "2026-10-01T00:00:00+00:00",
+            "2026-09-01T00:00:00+00:00",
+            "2026-10-01T00:00:00+00:00",
+        ),
+        # Annual term, first year.
+        (
+            "2026-01-05T00:00:00+00:00",
+            "2027-01-05T00:00:00+00:00",
+            "2026-09-05T00:00:00+00:00",
+            "2026-10-05T00:00:00+00:00",
+        ),
+        # Over a year old. Ignoring the year would land in 2025 (#6099).
+        (
+            "2024-09-03T00:00:00+00:00",
+            "2027-04-03T00:00:00+00:00",
+            "2026-09-03T00:00:00+00:00",
+            "2026-10-03T00:00:00+00:00",
+        ),
+        # Exactly on an anniversary.
+        (
+            "2025-09-10T12:00:00+00:00",
+            "2027-09-10T12:00:00+00:00",
+            "2026-09-10T12:00:00+00:00",
+            "2026-10-10T12:00:00+00:00",
+        ),
+    ],
+)
+def test_get_current_billing_period__within_term__returns_monthly_window(
+    organisation: Organisation,
+    term_starts_at: str,
+    term_ends_at: str,
+    expected_starts_at: str,
+    expected_ends_at: str,
+) -> None:
+    # Given
+    cache = OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        current_billing_term_starts_at=datetime.fromisoformat(term_starts_at),
+        current_billing_term_ends_at=datetime.fromisoformat(term_ends_at),
+    )
+
+    # When
+    period = cache.get_current_billing_period()
+
+    # Then
+    assert period == BillingPeriod(
+        start=datetime.fromisoformat(expected_starts_at),
+        end=datetime.fromisoformat(expected_ends_at),
+    )
+
+
+# February clamps a 31st term start to the 28th. Counting the end from that
+# clamped date rather than the term start would close the window on 28 March.
+@pytest.mark.freeze_time("2026-03-01T00:00:00+00:00")
+def test_get_current_billing_period__term_starts_on_the_31st__ends_on_the_anniversary(
+    organisation: Organisation,
+) -> None:
+    # Given
+    cache = OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        current_billing_term_starts_at=datetime.fromisoformat(
+            "2026-01-31T00:00:00+00:00"
+        ),
+        current_billing_term_ends_at=datetime.fromisoformat(
+            "2027-01-31T00:00:00+00:00"
+        ),
+    )
+
+    # When
+    period = cache.get_current_billing_period()
+
+    # Then
+    assert period == BillingPeriod(
+        start=datetime.fromisoformat("2026-02-28T00:00:00+00:00"),
+        end=datetime.fromisoformat("2026-03-31T00:00:00+00:00"),
+    )
+
+
+@pytest.mark.freeze_time("2026-09-10T12:00:00+00:00")
+@pytest.mark.parametrize(
+    "term_starts_at, term_ends_at",
+    [
+        # No term, ie every free plan.
+        (None, None),
+        # Half a term.
+        ("2026-09-01T00:00:00+00:00", None),
+        (None, "2026-10-01T00:00:00+00:00"),
+        # Term ended, cache not caught up.
+        ("2026-07-01T00:00:00+00:00", "2026-08-01T00:00:00+00:00"),
+        # The term's final instant. A window opened here would run past the
+        # end of the term.
+        ("2026-08-10T12:00:00+00:00", "2026-09-10T12:00:00+00:00"),
+        # Term not started.
+        ("2026-10-01T00:00:00+00:00", "2026-11-01T00:00:00+00:00"),
+    ],
+)
+def test_get_current_billing_period__no_active_term__returns_none(
+    organisation: Organisation,
+    term_starts_at: str | None,
+    term_ends_at: str | None,
+) -> None:
+    # Given
+    cache = OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        current_billing_term_starts_at=(
+            datetime.fromisoformat(term_starts_at) if term_starts_at else None
+        ),
+        current_billing_term_ends_at=(
+            datetime.fromisoformat(term_ends_at) if term_ends_at else None
+        ),
+    )
+
+    # When / Then
+    assert cache.get_current_billing_period() is None
+
+
+@pytest.mark.freeze_time("2026-09-10T12:00:00+00:00")
+def test_get_current_billing_period__term_ended__logs_stale_term(
+    organisation: Organisation,
+    log: StructuredLogCapture,
+) -> None:
+    # Given
+    cache = OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        current_billing_term_starts_at=datetime.fromisoformat(
+            "2026-07-01T00:00:00+00:00"
+        ),
+        current_billing_term_ends_at=datetime.fromisoformat(
+            "2026-08-01T00:00:00+00:00"
+        ),
+    )
+
+    # When
+    cache.get_current_billing_period()
+
+    # Then
+    assert log.events == [
+        {
+            "level": "warning",
+            "event": "billing_term.stale",
+            "organisation__id": organisation.id,
+            "billing_term__starts_at": "2026-07-01T00:00:00+00:00",
+            "billing_term__ends_at": "2026-08-01T00:00:00+00:00",
+        }
+    ]
+
+
+@pytest.mark.freeze_time("2026-09-10T12:00:00+00:00")
+def test_subscription_get_current_billing_period__with_cache__reads_through(
+    organisation: Organisation,
+) -> None:
+    # Given
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        current_billing_term_starts_at=datetime.fromisoformat(
+            "2026-09-01T00:00:00+00:00"
+        ),
+        current_billing_term_ends_at=datetime.fromisoformat(
+            "2026-10-01T00:00:00+00:00"
+        ),
+    )
+
+    # When / Then
+    assert organisation.subscription.get_current_billing_period() == BillingPeriod(
+        start=datetime.fromisoformat("2026-09-01T00:00:00+00:00"),
+        end=datetime.fromisoformat("2026-10-01T00:00:00+00:00"),
+    )
+
+
+def test_subscription_get_current_billing_period__no_cache__returns_none(
+    organisation: Organisation,
+) -> None:
+    # Given
+    assert not organisation.has_subscription_information_cache()
+
+    # When / Then
+    assert organisation.subscription.get_current_billing_period() is None

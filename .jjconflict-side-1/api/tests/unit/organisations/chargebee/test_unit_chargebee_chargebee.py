@@ -1,0 +1,833 @@
+from datetime import datetime
+
+import pytest
+from chargebee import APIError  # type: ignore[import-untyped]
+from chargebee.api_error import (  # type: ignore[import-untyped]
+    APIError as ChargebeeAPIError,
+)
+from chargebee.models.hosted_page.operations import (  # type: ignore[import-untyped]
+    HostedPage as HostedPageOps,
+)
+from chargebee.models.subscription.operations import (  # type: ignore[import-untyped]
+    Subscription as SubscriptionOps,
+)
+from pytest_mock import MockerFixture
+from pytz import UTC
+
+from organisations.chargebee import (  # type: ignore[attr-defined]
+    add_100k_api_calls,
+    add_single_seat,
+    extract_subscription_metadata,
+    get_customer_id_from_subscription_id,
+    get_hosted_page_url_for_subscription_upgrade,
+    get_max_api_calls_for_plan,
+    get_max_seats_for_plan,
+    get_plan_meta_data,
+    get_portal_url,
+    get_subscription_data_from_hosted_page,
+    get_subscription_metadata_from_id,
+)
+from organisations.chargebee.chargebee import (
+    cancel_subscription,
+    get_customer_id_from_hosted_page,
+    get_plan_details,
+    get_subscription_from_hosted_page,
+)
+from organisations.chargebee.constants import (
+    ADDITIONAL_API_SCALE_UP_ADDON_ID,
+)
+from organisations.chargebee.metadata import ChargebeeObjMetadata
+from organisations.subscriptions.exceptions import (
+    CannotCancelChargebeeSubscription,
+    UpgradeAPIUsageError,
+    UpgradeAPIUsagePaymentFailure,
+    UpgradeSeatsError,
+)
+
+
+class MockChargeBeePlanResponse:
+    def __init__(self, max_seats=0, max_api_calls=50000):  # type: ignore[no-untyped-def]
+        self.max_seats = max_seats
+        self.max_api_calls = 50000
+        self.plan = MockChargeBeePlan(max_seats, max_api_calls)  # type: ignore[no-untyped-call]
+
+
+class MockChargeBeePlan:
+    def __init__(self, max_seats=0, max_api_calls=50000):  # type: ignore[no-untyped-def]
+        self.meta_data = {"seats": max_seats, "api_calls": max_api_calls}
+
+
+class MockChargeBeeHostedPageResponse:
+    def __init__(  # type: ignore[no-untyped-def]
+        self,
+        subscription_id="subscription-id",
+        plan_id="plan-id",
+        created_at=datetime.utcnow(),
+        customer_id="customer-id",
+        customer_email="test@example.com",
+    ):
+        self.hosted_page = MockChargeBeeHostedPage(  # type: ignore[no-untyped-call]
+            subscription_id=subscription_id,
+            plan_id=plan_id,
+            created_at=created_at,
+            customer_id=customer_id,
+            customer_email=customer_email,
+        )
+
+
+class MockChargeBeeHostedPage:
+    def __init__(  # type: ignore[no-untyped-def]
+        self,
+        subscription_id,
+        plan_id,
+        created_at,
+        customer_id,
+        customer_email,
+        hosted_page_id="some-id",
+    ):
+        self.id = hosted_page_id
+        self.content = {
+            "subscription": {
+                "id": subscription_id,
+                "plan_id": plan_id,
+                "created_at": datetime.timestamp(created_at),
+            },
+            "customer": {
+                "id": customer_id,
+                "email": customer_email,
+            },
+        }
+
+
+class MockChargeBeeAddOn:
+    def __init__(self, addon_id: str, quantity: int):
+        self.id = addon_id
+        self.quantity = quantity
+        self.raw_data = {"id": addon_id, "quantity": quantity}
+
+
+class MockChargeBeeSubscriptionResponse:
+    def __init__(
+        self,
+        subscription_id: str = "subscription-id",
+        plan_id: str = "plan-id",
+        created_at: datetime = None,  # type: ignore[assignment]
+        customer_id: str = "customer-id",
+        customer_email: str = "test@example.com",
+        addons: list[MockChargeBeeAddOn] = None,  # type: ignore[assignment]
+    ):
+        self.subscription = MockChargeBeeSubscription(
+            subscription_id, plan_id, created_at or datetime.now(), addons
+        )
+        self.customer = MockChargeBeeCustomer(customer_id, customer_email)  # type: ignore[no-untyped-call]
+
+
+class MockChargeBeeSubscription:
+    def __init__(
+        self,
+        subscription_id: str,
+        plan_id: str,
+        created_at: datetime,
+        addons: list[MockChargeBeeAddOn] = None,  # type: ignore[assignment]
+    ):
+        self.id = subscription_id
+        self.plan_id = plan_id
+        self.created_at = datetime.timestamp(created_at)
+        self.addons = addons or []
+        self.raw_data = {
+            "id": subscription_id,
+            "plan_id": plan_id,
+            "created_at": self.created_at,
+        }
+
+
+class MockChargeBeeCustomer:
+    def __init__(self, customer_id, customer_email):  # type: ignore[no-untyped-def]
+        self.id = customer_id
+        self.email = customer_email
+
+
+class MockChargeBeePortalSessionResponse:
+    def __init__(self, access_url="https://test.portal.url"):  # type: ignore[no-untyped-def]
+        self.portal_session = MockChargeBeePortalSession(access_url)  # type: ignore[no-untyped-call]
+
+
+class MockChargeBeePortalSession:
+    def __init__(self, access_url):  # type: ignore[no-untyped-def]
+        self.access_url = access_url
+
+
+def test_get_max_seats_for_plan__valid_metadata__returns_seat_count(
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mocker.patch("organisations.chargebee.chargebee.chargebee_client", autospec=True)
+
+    meta_data = {"seats": 3, "api_calls": 50000}
+
+    # When
+    max_seats = get_max_seats_for_plan(meta_data)
+
+    # Then
+    assert max_seats == meta_data["seats"]
+
+
+def test_get_max_api_calls_for_plan__valid_metadata__returns_api_call_count(
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mocker.patch("organisations.chargebee.chargebee.chargebee_client", autospec=True)
+    meta_data = {"seats": 3, "api_calls": 50000}
+
+    # When
+    max_api_calls = get_max_api_calls_for_plan(meta_data)
+
+    # Then
+    assert max_api_calls == meta_data["api_calls"]
+
+
+def test_get_plan_meta_data__valid_plan_id__returns_correct_metadata(
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    plan_id = "startup"
+    expected_max_seats = 3
+    expected_max_api_calls = 50
+    mock_cb = mocker.patch(
+        "organisations.chargebee.chargebee.chargebee_client", autospec=True
+    )
+
+    mock_cb.Plan.retrieve.return_value = MockChargeBeePlanResponse(  # type: ignore[no-untyped-call]
+        expected_max_seats, expected_max_api_calls
+    )
+
+    # When
+    plan_meta_data = get_plan_meta_data(plan_id)
+
+    # Then
+    assert plan_meta_data == {
+        "api_calls": expected_max_api_calls,
+        "seats": expected_max_seats,
+    }
+    mock_cb.Plan.retrieve.assert_called_with(plan_id)
+
+
+def test_get_subscription_data_from_hosted_page__valid_hosted_page__returns_subscription_data(
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    subscription_id = "abc123"
+    plan_id = "startup"
+    expected_max_seats = 3
+    created_at = datetime.now(tz=UTC)
+    customer_id = "customer-id"
+    mock_cb = mocker.patch(
+        "organisations.chargebee.chargebee.chargebee_client", autospec=True
+    )
+
+    mock_cb.HostedPage.retrieve.return_value = MockChargeBeeHostedPageResponse(  # type: ignore[no-untyped-call]
+        subscription_id=subscription_id,
+        plan_id=plan_id,
+        created_at=created_at,
+        customer_id=customer_id,
+    )
+    mock_cb.Plan.retrieve.return_value = MockChargeBeePlanResponse(expected_max_seats)  # type: ignore[no-untyped-call]  # noqa: E501
+
+    # When
+    subscription_data = get_subscription_data_from_hosted_page("hosted_page_id")
+
+    # Then
+    assert subscription_data["subscription_id"] == subscription_id
+    assert subscription_data["plan"] == plan_id
+    assert subscription_data["max_seats"] == expected_max_seats
+    assert subscription_data["subscription_date"] == created_at
+    assert subscription_data["customer_id"] == customer_id
+
+
+def test_get_portal_url__valid_customer_id__returns_access_url(
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    access_url = "https://test.url.com"
+    mock_cb = mocker.patch(
+        "organisations.chargebee.chargebee.chargebee_client", autospec=True
+    )
+
+    mock_cb.PortalSession.create.return_value = MockChargeBeePortalSessionResponse(  # type: ignore[no-untyped-call]
+        access_url
+    )
+
+    # When
+    portal_url = get_portal_url("some-customer-id", "https://redirect.url.com")
+
+    # Then
+    assert portal_url == access_url
+
+
+def test_get_customer_id_from_subscription_id__valid_subscription__returns_customer_id(
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    expected_customer_id = "customer-id"
+    mock_cb = mocker.patch(
+        "organisations.chargebee.chargebee.chargebee_client", autospec=True
+    )
+    mock_cb.Subscription.retrieve.return_value = MockChargeBeeSubscriptionResponse(
+        customer_id=expected_customer_id
+    )
+
+    # When
+    customer_id = get_customer_id_from_subscription_id("subscription-id")
+
+    # Then
+    assert customer_id == expected_customer_id
+
+
+def test_get_hosted_page_url_for_subscription_upgrade__valid_params__returns_url(
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    subscription_id = "test-id"
+    plan_id = "plan-id"
+    url = "https://some.url.com/some/page/"
+    mock_cb = mocker.patch(
+        "organisations.chargebee.chargebee.chargebee_client", autospec=True
+    )
+    mock_cb.HostedPage.checkout_existing.return_value = mocker.MagicMock(
+        hosted_page=mocker.MagicMock(url=url)
+    )
+
+    # When
+    response = get_hosted_page_url_for_subscription_upgrade(subscription_id, plan_id)
+
+    # Then
+    assert response == url
+    mock_cb.HostedPage.checkout_existing.assert_called_once_with(
+        HostedPageOps.CheckoutExistingParams(
+            subscription=HostedPageOps.CheckoutExistingSubscriptionParams(
+                id=subscription_id,
+                plan_id=plan_id,
+            ),
+        )
+    )
+
+
+def test_extract_subscription_metadata__subscription_with_addons__returns_combined_metadata(
+    mock_subscription_response_with_addons: MockChargeBeeSubscriptionResponse,
+    chargebee_object_metadata: ChargebeeObjMetadata,
+) -> None:
+    # Given
+    status = "status"
+    plan_id = "plan-id"
+    addon_id = "addon-id"
+    subscription_id = "subscription-id"
+    customer_email = "test@example.com"
+
+    subscription = {
+        "status": status,
+        "id": subscription_id,
+        "plan_id": plan_id,
+        "addons": [
+            {
+                "id": addon_id,
+                "quantity": 2,
+                "unit_price": 0,
+                "amount": 0,
+            }
+        ],
+    }
+
+    # When
+    subscription_metadata = extract_subscription_metadata(
+        subscription,
+        customer_email,
+    )
+
+    # Then
+    # Note that we multiply by 3 since the plan and the addons carry the same limits,
+    # so we have 1 plan + 2 addons.
+    assert subscription_metadata.seats == chargebee_object_metadata.seats * 3
+    assert subscription_metadata.api_calls == chargebee_object_metadata.api_calls * 3
+    assert subscription_metadata.projects == chargebee_object_metadata.projects * 3  # type: ignore[operator]
+    assert subscription_metadata.chargebee_email == customer_email
+
+
+def test_extract_subscription_metadata__empty_addon_list__returns_plan_metadata_only(
+    mock_subscription_response_with_addons: MockChargeBeeSubscriptionResponse,
+    chargebee_object_metadata: ChargebeeObjMetadata,
+) -> None:
+    # Given
+    status = "status"
+    plan_id = "plan-id"
+    subscription_id = "subscription-id"
+    customer_email = "test@example.com"
+
+    subscription = {
+        "status": status,
+        "id": subscription_id,
+        "plan_id": plan_id,
+        "addons": [],
+    }
+
+    # When
+    subscription_metadata = extract_subscription_metadata(
+        subscription,
+        customer_email,
+    )
+
+    # Then
+    assert subscription_metadata.seats == chargebee_object_metadata.seats
+    assert subscription_metadata.api_calls == chargebee_object_metadata.api_calls
+    assert subscription_metadata.projects == chargebee_object_metadata.projects
+    assert subscription_metadata.chargebee_email == customer_email
+
+
+def test_get_subscription_metadata_from_id__valid_subscription_with_addons__returns_metadata(
+    mock_subscription_response_with_addons: MockChargeBeeSubscriptionResponse,
+    chargebee_object_metadata: ChargebeeObjMetadata,
+) -> None:
+    # Given
+    customer_email = "test@example.com"
+    subscription_id = mock_subscription_response_with_addons.subscription.id
+
+    # When
+    subscription_metadata = get_subscription_metadata_from_id(subscription_id)
+
+    # Then
+    # Values here are multiplied by 2 because the both the plan and the addon included in
+    # the mock_subscription_response_with_addons fixture contain the same values.
+    assert subscription_metadata.seats == chargebee_object_metadata.seats * 2  # type: ignore[union-attr]
+    assert subscription_metadata.api_calls == chargebee_object_metadata.api_calls * 2  # type: ignore[union-attr]
+    assert subscription_metadata.projects == chargebee_object_metadata.projects * 2  # type: ignore[union-attr,operator]  # noqa: E501
+    assert subscription_metadata.chargebee_email == customer_email  # type: ignore[union-attr]
+
+
+def test_cancel_subscription__valid_subscription_id__calls_chargebee_cancel(  # type: ignore[no-untyped-def]
+    mocker,
+) -> None:
+    # Given
+    mocked_chargebee = mocker.patch(
+        "organisations.chargebee.chargebee.chargebee_client", autospec=True
+    )
+    subscription_id = "sub-id"
+
+    # When
+    cancel_subscription(subscription_id)
+
+    # Then
+    mocked_chargebee.Subscription.cancel.assert_called_once_with(
+        subscription_id,
+        SubscriptionOps.CancelParams(end_of_term=True),
+    )
+
+
+def test_cancel_subscription__api_error__raises_cannot_cancel_error(  # type: ignore[no-untyped-def]
+    mocker, caplog
+) -> None:
+    # Given
+    mocked_chargebee = mocker.patch(
+        "organisations.chargebee.chargebee.chargebee_client", autospec=True
+    )
+    subscription_id = "sub-id"
+
+    # Chargebee's APIError requires additional arguments to instantiate it so instead
+    # we mock it with our own exception here to test that it is caught correctly
+    class MockException(Exception):
+        pass
+
+    mocker.patch("organisations.chargebee.chargebee.ChargebeeAPIError", MockException)
+
+    mocked_chargebee.Subscription.cancel.side_effect = MockException
+
+    # When
+    with pytest.raises(CannotCancelChargebeeSubscription):
+        cancel_subscription(subscription_id)
+
+    # Then
+    mocked_chargebee.Subscription.cancel.assert_called_once()
+    assert len(caplog.records) == 1
+    assert caplog.records[0].levelname == "ERROR"
+    assert (
+        caplog.records[0].message
+        == "Cannot cancel CB subscription for subscription id: %s" % subscription_id
+    )
+
+
+def test_get_subscription_metadata_from_id__chargebee_api_error__returns_none(  # type: ignore[no-untyped-def]
+    mocker, chargebee_object_metadata
+) -> None:
+    # Given
+    mocked_chargebee = mocker.patch(
+        "organisations.chargebee.chargebee.chargebee_client", autospec=True
+    )
+    mocked_chargebee.Subscription.retrieve.side_effect = APIError(
+        http_code=200, json_obj=mocker.MagicMock()
+    )
+
+    subscription_id = "foo"  # arbitrary subscription id
+
+    # When
+    subscription_metadata = get_subscription_metadata_from_id(subscription_id)
+
+    # Then
+    assert subscription_metadata is None
+
+
+@pytest.mark.parametrize(
+    "subscription_id",
+    [None, "", " "],
+)
+def test_get_subscription_metadata_from_id__invalid_subscription_id__returns_none(  # type: ignore[no-untyped-def]
+    mocker, chargebee_object_metadata, subscription_id
+) -> None:
+    # Given
+    mocked_chargebee = mocker.patch(
+        "organisations.chargebee.chargebee.chargebee_client", autospec=True
+    )
+
+    # When
+    subscription_metadata = get_subscription_metadata_from_id(subscription_id)
+
+    # Then
+    mocked_chargebee.Subscription.retrieve.assert_not_called()
+    assert subscription_metadata is None
+
+
+def test_get_subscription_metadata_from_id__addons_is_none__returns_plan_metadata(
+    mock_subscription_response: MockChargeBeeSubscriptionResponse,
+    chargebee_object_metadata: ChargebeeObjMetadata,
+) -> None:
+    # Given
+    mock_subscription_response.addons = None  # type: ignore[attr-defined]
+    subscription_id = mock_subscription_response.subscription.id
+
+    # When
+    subscription_metadata = get_subscription_metadata_from_id(subscription_id)
+
+    # Then
+    assert subscription_metadata.seats == chargebee_object_metadata.seats  # type: ignore[union-attr]
+    assert subscription_metadata.api_calls == chargebee_object_metadata.api_calls  # type: ignore[union-attr]
+    assert subscription_metadata.projects == chargebee_object_metadata.projects  # type: ignore[union-attr]
+
+
+def test_add_single_seat__existing_addon__increments_quantity(  # type: ignore[no-untyped-def]
+    mocker, log
+) -> None:
+    # Given
+    plan_id = "plan-id"
+    addon_id = "additional-team-members-scale-up-v2-monthly"
+    subscription_id = "subscription-id"
+    organisation_id = 42
+    addon_quantity = 1
+
+    # Let's create a (mocked) subscription object
+    mocked_subscription = mocker.MagicMock(
+        id=subscription_id,
+        plan_id=plan_id,
+        addons=[mocker.MagicMock(id=addon_id, quantity=addon_quantity)],
+        billing_period=1,
+        billing_period_unit="month",
+    )
+    mocked_chargebee = mocker.patch(
+        "organisations.chargebee.chargebee.chargebee_client", autospec=True
+    )
+
+    # tie that subscription object to the mocked chargebee object
+    mocked_chargebee.Subscription.retrieve.return_value.subscription = (
+        mocked_subscription
+    )
+
+    # When
+    add_single_seat(subscription_id, organisation_id=organisation_id)
+
+    # Then
+    mocked_chargebee.Subscription.update.assert_called_once_with(
+        subscription_id,
+        SubscriptionOps.UpdateParams(
+            addons=[
+                SubscriptionOps.UpdateAddonParams(
+                    id=addon_id, quantity=addon_quantity + 1
+                )
+            ],
+            prorate=True,
+            invoice_immediately=True,
+        ),
+    )
+    assert log.events == [
+        {
+            "level": "info",
+            "event": "seat.added",
+            "organisation__id": organisation_id,
+            "subscription__id": subscription_id,
+            "addon__id": addon_id,
+            "seats__previous": addon_quantity,
+            "seats__new": addon_quantity + 1,
+        }
+    ]
+
+
+@pytest.mark.parametrize(
+    "billing_period,billing_period_unit,expected_add_on_id",
+    (
+        (1, "month", "additional-team-members-scale-up-v2-monthly"),
+        (6, "month", "additional-team-members-scale-up-v2-semiannual"),
+        (12, "month", "additional-team-members-scale-up-v2-annual"),
+        (1, "year", "additional-team-members-scale-up-v2-annual"),
+        # unexpected or missing billing period should default to monthly
+        (None, "month", "additional-team-members-scale-up-v2-monthly"),
+        (7, "month", "additional-team-members-scale-up-v2-monthly"),
+    ),
+)
+def test_add_single_seat__no_existing_addon__creates_addon_with_quantity_one(
+    mocker: MockerFixture,
+    billing_period: int,
+    billing_period_unit: str,
+    expected_add_on_id: str,
+) -> None:
+    # Given
+    subscription_id = "subscription-id"
+
+    # Let's create a (mocked) subscription object
+    mocked_subscription = mocker.MagicMock(
+        id=subscription_id,
+        plan_id="plan_id",
+        addons=[],
+        billing_period=billing_period,
+        billing_period_unit=billing_period_unit,
+    )
+    mocked_chargebee = mocker.patch(
+        "organisations.chargebee.chargebee.chargebee_client", autospec=True
+    )
+
+    # tie that subscription object to the mocked chargebee object
+    mocked_chargebee.Subscription.retrieve.return_value.subscription = (
+        mocked_subscription
+    )
+
+    # When
+    add_single_seat(subscription_id, organisation_id=1)
+
+    # Then
+    mocked_chargebee.Subscription.update.assert_called_once_with(
+        subscription_id,
+        SubscriptionOps.UpdateParams(
+            addons=[
+                SubscriptionOps.UpdateAddonParams(id=expected_add_on_id, quantity=1)
+            ],
+            prorate=True,
+            invoice_immediately=True,
+        ),
+    )
+
+
+def test_add_single_seat__api_error__raises_upgrade_seats_error(  # type: ignore[no-untyped-def]
+    mocker, caplog
+) -> None:
+    # Given
+    mocked_chargebee = mocker.patch(
+        "organisations.chargebee.chargebee.chargebee_client", autospec=True
+    )
+
+    # Typical non-payment related error from Chargebee.
+    chargebee_response_data = {
+        "message": "82sa2Sqa5 not found",
+        "type": "invalid_request",
+        "api_error_code": "resource_not_found",
+        "param": "item_id",
+        "error_code": "DeprecatedField",
+    }
+    mocked_chargebee.Subscription.update.side_effect = APIError(
+        http_code=404, json_obj=chargebee_response_data
+    )
+
+    # Let's create a (mocked) subscription object
+    subscription_id = "sub-id"
+    mocked_subscription = mocker.MagicMock(
+        id=subscription_id,
+        plan_id="plan-id",
+        addons=[],
+        billing_period=1,
+        billing_period_unit="month",
+    )
+
+    # tie that subscription object to the mocked chargebee object
+    mocked_chargebee.Subscription.retrieve.return_value.subscription = (
+        mocked_subscription
+    )
+
+    # When
+    with pytest.raises(UpgradeSeatsError):
+        add_single_seat(subscription_id, organisation_id=1)
+
+    # Then
+    mocked_chargebee.Subscription.update.assert_called_once_with(
+        subscription_id,
+        SubscriptionOps.UpdateParams(
+            addons=[
+                SubscriptionOps.UpdateAddonParams(
+                    id="additional-team-members-scale-up-v2-monthly", quantity=1
+                )
+            ],
+            prorate=True,
+            invoice_immediately=True,
+        ),
+    )
+    assert len(caplog.records) == 1
+    assert caplog.records[0].levelname == "ERROR"
+    assert (
+        caplog.records[0].message
+        == "Failed to add additional seat to CB subscription for subscription id: %s"
+        % subscription_id
+    )
+
+
+def test_add_100k_api_calls__zero_count__returns_none_without_update(
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    subscription_mock = mocker.patch(
+        "organisations.chargebee.chargebee.chargebee_client", autospec=True
+    )
+
+    # When
+    result = add_100k_api_calls(  # type: ignore[func-returns-value]
+        addon_id=ADDITIONAL_API_SCALE_UP_ADDON_ID,
+        subscription_id="subscription23",
+        count=0,
+        invoice_immediately=True,
+    )
+
+    # Then
+    assert result is None
+    subscription_mock.Subscription.update.assert_not_called()
+
+
+def test_add_100k_api_calls__payment_processing_error__raises_payment_failure(
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    chargebee_mock = mocker.patch(
+        "organisations.chargebee.chargebee.chargebee_client", autospec=True
+    )
+    chargebee_response_data = {
+        "message": "Subscription cannot be created as the payment collection failed. Gateway Error: Card declined.",
+        "type": "payment",
+        "api_error_code": "payment_processing_failed",
+        "param": "item_id",
+        "error_code": "DeprecatedField",
+    }
+
+    chargebee_mock.Subscription.update.side_effect = ChargebeeAPIError(
+        http_code=400, json_obj=chargebee_response_data
+    )
+
+    # When / Then
+    with pytest.raises(UpgradeAPIUsagePaymentFailure):
+        add_100k_api_calls(
+            addon_id=ADDITIONAL_API_SCALE_UP_ADDON_ID,
+            subscription_id="subscription23",
+            count=1,
+            invoice_immediately=True,
+        )
+
+
+def test_add_100k_api_calls__non_payment_api_error__raises_upgrade_api_usage_error(
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    chargebee_mock = mocker.patch(
+        "organisations.chargebee.chargebee.chargebee_client", autospec=True
+    )
+    chargebee_response_data = {
+        "message": "Some massive data failure",
+        "api_error_code": "halt_and_catch_fire",
+        "type": "failure",
+        "param": "item_id",
+        "error_code": "DeprecatedField",
+    }
+
+    chargebee_mock.Subscription.update.side_effect = ChargebeeAPIError(
+        http_code=400, json_obj=chargebee_response_data
+    )
+
+    # When / Then
+    with pytest.raises(UpgradeAPIUsageError):
+        add_100k_api_calls(
+            addon_id=ADDITIONAL_API_SCALE_UP_ADDON_ID,
+            subscription_id="subscription23",
+            count=1,
+            invoice_immediately=True,
+        )
+
+
+def test_get_subscription_from_hosted_page__no_subscription__returns_none(
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    hosted_page = mocker.MagicMock(content={"customer": {"id": "cust-1"}})
+
+    # When
+    result = get_subscription_from_hosted_page(hosted_page)
+
+    # Then
+    assert result is None
+
+
+def test_get_customer_id_from_hosted_page__no_customer__returns_none(
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    hosted_page = mocker.MagicMock(
+        content={"subscription": {"id": "sub-1", "plan_id": "plan-1"}}
+    )
+
+    # When
+    result = get_customer_id_from_hosted_page(hosted_page)
+
+    # Then
+    assert result is None
+
+
+def test_get_plan_details__empty_plan_id__returns_none() -> None:
+    # Given
+    plan_id = ""
+
+    # When
+    result = get_plan_details(plan_id)
+
+    # Then
+    assert result is None
+
+
+def test_get_portal_url__no_portal_session__returns_none(
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mock_cb = mocker.patch(
+        "organisations.chargebee.chargebee.chargebee_client", autospec=True
+    )
+    mock_result = mocker.MagicMock(spec=[])  # no attributes at all
+    mock_cb.PortalSession.create.return_value = mock_result
+
+    # When
+    result = get_portal_url("customer-id", "https://redirect.url.com")
+
+    # Then
+    assert result is None
+
+
+def test_get_customer_id_from_subscription_id__no_customer__returns_none(
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mock_cb = mocker.patch(
+        "organisations.chargebee.chargebee.chargebee_client", autospec=True
+    )
+    mock_response = mocker.MagicMock(spec=[])  # no customer attribute
+    mock_cb.Subscription.retrieve.return_value = mock_response
+
+    # When
+    result = get_customer_id_from_subscription_id("sub-123")
+
+    # Then
+    assert result is None

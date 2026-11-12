@@ -1,0 +1,101 @@
+{
+    "$defs": {
+        "FlagResult": {
+            "properties": {
+                "name": {
+                    "description": "Feature name.",
+                    "title": "Name",
+                    "type": "string"
+                },
+                "enabled": {
+                    "description": "Indicates if the feature flag is enabled.",
+                    "title": "Enabled",
+                    "type": "boolean"
+                },
+                "value": {
+                    "description": "Feature flag value.",
+                    "title": "Value",
+                    "type": [
+                        "string",
+                        "number",
+                        "boolean",
+                        "null"
+                    ]
+                },
+                "reason": {
+                    "description": "Reason for the feature flag evaluation.",
+                    "title": "Reason",
+                    "type": "string"
+                },
+                "variant": {
+                    "description": "A stable identifier of the multivariate variant the identity was bucketed into: the variant's key, \"control\" for the control bucket, or null when no multivariate split applied (a standard feature, an unkeyed variant, or evaluation without an identity).",
+                    "title": "Variant",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "metadata": {
+                    "existingJavaType": "java.util.Map<String,Object>",
+                    "description": "Additional metadata associated with the feature.",
+                    "title": "FeatureMetadata",
+                    "type": "object"
+                }
+            },
+            "required": [
+                "name",
+                "enabled",
+                "value",
+                "reason",
+                "variant"
+            ],
+            "title": "FlagResult",
+            "type": "object"
+        },
+        "SegmentResult": {
+            "properties": {
+                "name": {
+                    "description": "Segment name.",
+                    "title": "Name",
+                    "type": "string"
+                },
+                "metadata": {
+                    "existingJavaType": "java.util.Map<String,Object>",
+                    "description": "Additional metadata associated with the segment.",
+                    "title": "SegmentMetadata",
+                    "type": "object"
+                }
+            },
+            "required": [
+                "name"
+            ],
+            "title": "SegmentResult",
+            "type": "object"
+        }
+    },
+    "description": "Evaluation result object containing the used context, flag evaluation results, and segments used in the evaluation.",
+    "properties": {
+        "flags": {
+            "description": "Feature flags evaluated for the context, mapped by feature names.",
+            "additionalProperties": {
+                "$ref": "#/$defs/FlagResult"
+            },
+            "title": "Flags",
+            "type": "object"
+        },
+        "segments": {
+            "description": "List of segments which the provided context belongs to.",
+            "items": {
+                "$ref": "#/$defs/SegmentResult"
+            },
+            "title": "Segments",
+            "type": "array"
+        }
+    },
+    "required": [
+        "flags",
+        "segments"
+    ],
+    "title": "EvaluationResult",
+    "type": "object"
+}

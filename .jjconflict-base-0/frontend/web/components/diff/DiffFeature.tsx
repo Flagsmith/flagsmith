@@ -1,0 +1,308 @@
+import React, { FC, useEffect, useState } from 'react'
+import {
+  FeatureConflict,
+  FeatureStateWithConflict,
+  StagedDependencyChange,
+} from 'common/types/responses'
+import Tabs from 'components/navigation/TabMenu/Tabs'
+import TabItem from 'components/navigation/TabMenu/TabItem'
+import { useGetProjectFlagQuery } from 'common/services/useProjectFlag'
+import { useGetSegmentsQuery } from 'common/services/useSegment'
+import {
+  getFeatureStateDiff,
+  getSegmentOverrideDiff,
+  getVariationDiff,
+} from './diff-utils'
+import DiffFeatureStateValues from './DiffFeatureStateValues'
+import DiffSegmentOverrides from './DiffSegmentOverrides'
+import DiffVariations from './DiffVariations'
+import './DiffFeature.scss'
+import InfoMessage from 'components/InfoMessage'
+import Icon from 'components/icons/Icon'
+import WarningMessage from 'components/WarningMessage'
+import { Link } from 'react-router-dom'
+import Banner from 'components/base/Banner'
+import DependencyChangesTable from 'components/feature-dependencies/DependencyChangesTable'
+
+type FeatureDiffType = {
+  oldState: FeatureStateWithConflict[]
+  newState: FeatureStateWithConflict[]
+  noChangesMessage?: string
+  featureId: number
+  projectId: string
+  environmentId: string
+  tabTheme?: string
+  conflicts?: FeatureConflict[] | undefined
+  disableSegments?: boolean
+  oldEnvName?: string
+  newEnvName?: string
+  dependencies?: {
+    changes?: StagedDependencyChange[]
+    isError: boolean
+    isEnabled?: (prerequisiteId: number) => boolean
+  }
+}
+type ViewMode = 'combined' | 'new' | 'old'
+const DiffFeature: FC<FeatureDiffType> = ({
+  conflicts,
+  dependencies,
+  disableSegments,
+  environmentId,
+  featureId,
+  newEnvName,
+  newState,
+  noChangesMessage,
+  oldEnvName,
+  oldState,
+  projectId,
+  tabTheme,
+}) => {
+  const { data: projectFlag } = useGetProjectFlagQuery({
+    id: featureId,
+    project: projectId,
+  })
+
+  const oldEnv = oldState?.find((v) => !v.feature_segment)
+  const newEnv = newState?.find((v) => !v.feature_segment)
+  const { data: feature } = useGetProjectFlagQuery({
+    id: `${featureId}`,
+    project: projectId,
+  })
+
+  const diff = getFeatureStateDiff(oldEnv, newEnv)
+  const { conflict: valueConflict, totalChanges } = diff
+  const [value, setValue] = useState(0)
+  const [viewMode, setViewMode] = useState<ViewMode>('combined')
+
+  const { data: segments } = useGetSegmentsQuery({
+    include_feature_specific: true,
+    page_size: 1000,
+    projectId,
+  })
+
+  // Dependency segments get their own tab once loaded.
+  const overrideSegments = dependencies?.changes
+    ? segments?.results.filter((segment) => segment.managed_by !== 'dependency')
+    : segments?.results
+  const segmentDiffs = disableSegments
+    ? { diffs: [], totalChanges: 0 }
+    : getSegmentOverrideDiff(oldState, newState, overrideSegments, conflicts)
+  const variationDiffs = getVariationDiff(oldEnv, newEnv)
+  const totalSegmentChanges = segmentDiffs?.totalChanges
+  const totalVariationChanges = variationDiffs?.totalChanges
+  const totalDependencyChanges = dependencies?.changes?.length ?? 0
+  const showDependencies = !!totalDependencyChanges || !!dependencies?.isError
+  // Each tab's change count, in the order the tabs render.
+  const tabChanges = [
+    totalChanges,
+    ...(variationDiffs?.diffs?.length ? [totalVariationChanges] : []),
+    ...(segmentDiffs?.diffs.length ? [totalSegmentChanges] : []),
+    ...(showDependencies ? [totalDependencyChanges] : []),
+  ]
+  const changedTab = tabChanges.findIndex((changes) => !!changes)
+  // With no other changes, open Dependencies (the last tab) to show its error.
+  const firstChangedTab =
+    changedTab === -1 && dependencies?.isError
+      ? tabChanges.length - 1
+      : changedTab
+  useEffect(() => {
+    if (firstChangedTab > 0) {
+      setValue(firstChangedTab)
+    }
+  }, [firstChangedTab])
+  const hideValue =
+    !totalChanges && (diff.newValue === null || diff.newValue === undefined)
+  const viewOptions = [
+    { label: 'Combined Diff', value: 'combined' },
+    { label: newEnvName || 'New Value', value: 'new' },
+    { label: oldEnvName || 'Old Value', value: 'old' },
+  ]
+  const selectedOption = viewOptions.find((v) => v.value === viewMode)
+  return (
+    <div>
+      {!feature ? (
+        <div className='text-center'>
+          <Loader />
+        </div>
+      ) : (
+        <>
+          {!totalChanges &&
+            !totalSegmentChanges &&
+            !totalVariationChanges &&
+            noChangesMessage && <InfoMessage>{noChangesMessage}</InfoMessage>}
+          {(oldEnvName || newEnvName) && (
+            <div className='d-flex gap-3 mb-3'>
+              {oldEnvName && (
+                <span className='diff-header py-1 px-2 rounded-sm bg-surface-danger text-danger'>
+                  <span className='me-1 fw-bold'>−</span> {oldEnvName}
+                </span>
+              )}
+              {newEnvName && (
+                <span className='diff-header py-1 px-2 rounded-sm bg-surface-success text-success'>
+                  <span className='me-1 fw-bold'>+</span> {newEnvName}
+                </span>
+              )}
+            </div>
+          )}
+          <Tabs
+            hideNavOnSingleTab
+            theme={tabTheme}
+            onChange={setValue}
+            value={value}
+            cta={
+              <div className='d-flex align-items-center gap-2'>
+                <label className='mb-0'>View</label>
+                <div style={{ width: 150 }}>
+                  <Select
+                    size='select-xsm'
+                    value={selectedOption}
+                    options={viewOptions}
+                    onChange={(option) => setViewMode(option.value as ViewMode)}
+                  />
+                </div>
+              </div>
+            }
+          >
+            <TabItem
+              className={'p-0'}
+              tabLabel={
+                <div className='d-flex justify-content-center gap-1 align-items-center'>
+                  Value
+                  {!!valueConflict && <Icon width={16} name='warning' />}
+                  {totalChanges ? (
+                    <span className='unread'>{totalChanges}</span>
+                  ) : null}
+                </div>
+              }
+            >
+              {!!valueConflict && (
+                <div className='mt-4'>
+                  <WarningMessage
+                    warningMessage={
+                      <div>
+                        A change request was published since the creation of
+                        this one that also modified the value.
+                        <br />
+                        Please review the following changes to make sure they
+                        are correct.
+                        <div>
+                          <Link
+                            to={`/project/${projectId}/environment/${environmentId}/change-requests/${valueConflict.original_cr_id}`}
+                          >
+                            View published change request
+                          </Link>
+                        </div>
+                      </div>
+                    }
+                  />
+                </div>
+              )}
+              <DiffFeatureStateValues
+                hideValue={hideValue}
+                enabled={{
+                  newValue:
+                    viewMode === 'old' ? diff.oldEnabled : diff.newEnabled,
+                  oldValue:
+                    viewMode === 'new' ? diff.newEnabled : diff.oldEnabled,
+                }}
+                value={{
+                  newValue: viewMode === 'old' ? diff.oldValue : diff.newValue,
+                  oldValue: viewMode === 'new' ? diff.newValue : diff.oldValue,
+                }}
+              />
+            </TabItem>
+            {!!variationDiffs?.diffs?.length && (
+              <TabItem
+                className={'p-0'}
+                tabLabel={
+                  <div className='d-flex justify-content-center gap-1 align-items-center'>
+                    Variations{' '}
+                    {variationDiffs.totalChanges ? (
+                      <span className='unread'>
+                        {variationDiffs.totalChanges}
+                      </span>
+                    ) : null}
+                  </div>
+                }
+              >
+                <DiffVariations
+                  projectFlag={projectFlag}
+                  diffs={variationDiffs.diffs}
+                />
+              </TabItem>
+            )}
+            {!!segmentDiffs?.diffs.length && (
+              <TabItem
+                className={'p-0'}
+                tabLabel={
+                  <div className='d-flex justify-content-center gap-1 align-items-center'>
+                    Segment Overrides
+                    {!!segmentDiffs.totalConflicts && (
+                      <Icon width={16} name='warning' />
+                    )}
+                    {!!segmentDiffs.totalChanges && (
+                      <span className='unread'>
+                        {segmentDiffs.totalChanges}
+                      </span>
+                    )}
+                  </div>
+                }
+              >
+                {!!segmentDiffs.totalConflicts && (
+                  <div className='mt-4'>
+                    <WarningMessage
+                      warningMessage={
+                        <div>
+                          A change request was published since the creation of
+                          this one that also modified{' '}
+                          {segmentDiffs.totalConflicts === 1 ? 'one' : 'some'}{' '}
+                          of the segment overrides.
+                          <br />
+                          Please review the following changes to make sure they
+                          are correct.
+                        </div>
+                      }
+                    />
+                  </div>
+                )}
+                <DiffSegmentOverrides
+                  diffs={segmentDiffs.diffs}
+                  projectId={projectId}
+                  environmentId={environmentId}
+                  projectFlag={projectFlag}
+                />
+              </TabItem>
+            )}
+            {showDependencies && (
+              <TabItem
+                className={'p-0'}
+                tabLabel={
+                  <div className='d-flex justify-content-center gap-1 align-items-center'>
+                    Dependencies
+                    {!!totalDependencyChanges && (
+                      <span className='unread'>{totalDependencyChanges}</span>
+                    )}
+                  </div>
+                }
+              >
+                {dependencies?.isError ? (
+                  <Banner type='error' className='mt-4'>
+                    Could not load the dependency changes in this change
+                    request.
+                  </Banner>
+                ) : (
+                  <DependencyChangesTable
+                    changes={dependencies?.changes ?? []}
+                    isEnabled={dependencies?.isEnabled}
+                  />
+                )}
+              </TabItem>
+            )}
+          </Tabs>
+        </>
+      )}
+    </div>
+  )
+}
+
+export default DiffFeature

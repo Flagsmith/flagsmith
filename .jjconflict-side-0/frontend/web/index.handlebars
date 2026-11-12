@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+
+<head>
+  <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="description" content="Manage your Feature Flags, Feature Toggles and Remote Config in your Mobile, React, React Native, Java, Javascript (Node) and Python projects." />
+    <meta property="og:image" content="https://flagsmith.com/static/aa08b77a1a9bca99643945f1f3eeb027/b2d24/social-preview.jpg" />
+    <meta property="og:title" content="Flagsmith - Feature Flags, Feature Toggles and Remote Config" />
+    <meta name="robots" content="noindex, nofollow"/>
+    <!--Project.js overrides-->
+    <script src="/config/project-overrides"></script>
+    <style>
+        @font-face {
+            font-family: 'OpenSans';
+            src: local('OpenSans'),
+            url('/static/fonts/OpenSans-Regular.ttf') format('ttf'),
+            url('/static/fonts/OpenSans-Regular.woff2') format('woff2'),
+            url('/static/fonts/OpenSans-Regular.woff') format('woff');
+            font-weight: normal;
+            font-display:swap;
+        }
+
+        @font-face {
+            font-family: 'OpenSans';
+            src: local('OpenSans'),
+            url('/static/fonts/OpenSans-Regular.woff2') format('woff2'),
+            url('/static/fonts/OpenSans-Regular.woff') format('woff');
+            font-weight: 400;
+            font-display:swap;
+        }
+
+        @font-face {
+            font-family: 'OpenSans';
+            src: local('OpenSans'),
+            url('/static/fonts/OpenSans-Light.woff2') format('woff2'),
+            url('/static/fonts/OpenSans-Light.woff') format('woff');
+            font-weight: 300;
+            font-display:swap;
+        }
+
+        @font-face {
+            font-family: 'OpenSans';
+            src: local('OpenSans'),
+            url('/static/fonts/OpenSans-Light.ttf') format('ttf'),
+            url('/static/fonts/OpenSans-Light.woff2') format('woff2'),
+            url('/static/fonts/OpenSans-Light.woff') format('woff');
+            font-weight: 100;
+            font-display:swap;
+        }
+
+        @font-face {
+            font-family: 'OpenSans';
+            src: local('OpenSans'),
+            url('/static/fonts/OpenSans-Light.ttf') format('ttf'),
+            url('/static/fonts/OpenSans-Light.woff2') format('woff2'),
+            url('/static/fonts/OpenSans-Light.woff') format('woff');
+            font-weight: 200;
+            font-display:swap;
+        }
+
+        @font-face {
+            font-family: 'OpenSans';
+            src: local('OpenSans'),
+            url('/static/fonts/OpenSans-Light.ttf') format('ttf'),
+            url('/static/fonts/OpenSans-Light.woff2') format('woff2'),
+            url('/static/fonts/OpenSans-Light.woff') format('woff');
+            font-weight:bold;
+            font-display:swap;
+        }
+
+
+        @font-face {
+            font-family: 'OpenSans';
+            src: local('OpenSans'),
+            url('/static/fonts/OpenSans-Bold.ttf') format('ttf'),
+            url('/static/fonts/OpenSans-Bold.woff2') format('woff2'),
+            url('/static/fonts/OpenSans-Bold.woff') format('woff');
+            font-weight:bold;
+            font-display:swap;
+        }
+
+        @font-face {
+            font-family: 'OpenSans';
+            src: local('OpenSans'),
+            url('/static/fonts/OpenSans-SemiBold.ttf') format('ttf'),
+            url('/static/fonts/OpenSans-SemiBold.woff2') format('woff2'),
+            url('/static/fonts/OpenSans-SemiBold.woff') format('woff');
+            font-weight:500;
+            font-display:swap;
+        }
+
+        @font-face {
+            font-family: 'OpenSans';
+            src: local('OpenSans'),
+            url('/static/fonts/OpenSans-Bold.ttf') format('ttf'),
+            url('/static/fonts/OpenSans-Bold.woff2') format('woff2'),
+            url('/static/fonts/OpenSans-Bold.woff') format('woff');
+            font-weight:600;
+            font-display:swap;
+        }
+    </style>
+
+    <title>Flagsmith</title>
+    <link rel="shortcut icon" href="/static/images/favicon.ico">
+</head>
+<body>
+<div id="app"></div>
+<div id="toast"></div>
+<div id="modal"></div>
+<div id="modal2"></div>
+<div id="confirm"></div>
+{{#if isDev}}
+    <!--This is inserted by webpack in production-->
+    <script src="/main.js"></script> {{/if}}
+</body>
+{{#if linkedin}}
+<script type="text/javascript"> _linkedin_partner_id = "{{linkedin}}"; window._linkedin_data_partner_ids = window._linkedin_data_partner_ids || []; window._linkedin_data_partner_ids.push(_linkedin_partner_id); </script><script type="text/javascript"> (function(){var s = document.getElementsByTagName("script")[0]; var b = document.createElement("script"); b.type = "text/javascript";b.async = true; b.src = "https://snap.licdn.com/li.lms-analytics/insight.min.js"; s.parentNode.insertBefore(b, s);})(); </script> <noscript> <img height="1" width="1" style="display:none;" alt="" src="https://px.ads.linkedin.com/collect/?pid={{linkedin}}&fmt=gif" /> </noscript>
+{{/if}}
+</html>

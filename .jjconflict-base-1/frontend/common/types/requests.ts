@@ -1,0 +1,1293 @@
+import {
+  Account,
+  ExternalResource,
+  FeatureState,
+  FeatureStateValue,
+  ImportStrategy,
+  Approval,
+  Metadata,
+  MultivariateOption,
+  SAMLConfiguration,
+  Segment,
+  Tag,
+  ProjectFlag,
+  Environment,
+  UserGroup,
+  AttributeName,
+  Identity,
+  ProjectChangeRequest,
+  Role,
+  RolePermission,
+  Webhook,
+  IdentityTrait,
+  Onboarding,
+  StageTrigger,
+  StageActionType,
+  StageActionBody,
+  ChangeRequest,
+  ExpectedDirection,
+  ExperimentAudienceMatch,
+  ExperimentStatus,
+  MetricAggregation,
+  MetricDirection,
+  MetricDefinition,
+  FlagsmithValue,
+  TagStrategy,
+  FeatureType,
+  LifecycleStage,
+  TrustRelationshipClaimRule,
+} from './responses'
+import { UtmsType } from './utms'
+
+export type ChangeRequestAction = 'approve' | 'commit'
+
+export type UpdateProjectBody = {
+  name: string
+  hide_disabled_flags?: boolean
+  prevent_flag_defaults?: boolean
+  enforce_feature_owners?: boolean
+  enable_realtime_updates?: boolean
+  minimum_change_request_approvals?: number | null
+  stale_flags_limit_days?: number | null
+  only_allow_lower_case_feature_names?: boolean
+  feature_name_regex?: string | null
+}
+
+export type UpdateOrganisationBody = {
+  name: string
+  force_2fa?: boolean
+  restrict_project_create_to_admin?: boolean
+  webhook_notification_email?: string | null
+}
+
+export type UpdateFeatureStateBody = {
+  enabled?: boolean
+  feature_state_value?: FeatureStateValue
+  multivariate_feature_state_values?: MultivariateOption[] | null
+}
+
+// The API refuses organisation level together with a project or environments.
+export type OrganisationAuditLogScopeQuery =
+  | { is_organisation_level: true; project?: never; environments?: never }
+  | {
+      is_organisation_level?: false
+      project?: number
+      environments?: number[]
+    }
+export type OrganisationAuditLogQuery = {
+  search?: string
+} & OrganisationAuditLogScopeQuery
+
+export type PagedRequest<T> = T & {
+  page?: number
+  page_size?: number
+  q?: string
+}
+export type OAuthType = 'github' | 'saml' | 'google'
+export type PermissionLevel = 'organisation' | 'project' | 'environment'
+export enum PermissionRoleType {
+  GRANTED = 'GRANTED',
+  GRANTED_FOR_TAGS = 'GRANTED_FOR_TAGS',
+  NONE = 'NONE',
+}
+export type BillingPeriod = Req['getOrganisationUsage']['billing_period']
+export type PeriodOption = { label: string; value: BillingPeriod }
+
+export const periodOptions: PeriodOption[] = [
+  {
+    label: 'Current billing period',
+    value: 'current_billing_period',
+  },
+  {
+    label: 'Previous billing period',
+    value: 'previous_billing_period',
+  },
+  { label: 'Last 90 days', value: '90_day_period' },
+  { label: 'Last 30 days', value: undefined },
+]
+export const rollingPeriodOptions: PeriodOption[] = [
+  { label: 'Last 90 days', value: '90_day_period' },
+  { label: 'Last 30 days', value: undefined },
+]
+export type CreateVersionFeatureState = {
+  environmentId: string
+  featureId: number
+  sha: string
+  featureState: FeatureState
+}
+export type WithoutId<T> = Omit<
+  T,
+  | 'id'
+  | 'uuid'
+  | 'created_at'
+  | 'updated_at'
+  | 'user'
+  | 'committed_at'
+  | 'deleted_at'
+>
+export type LoginRequest = {
+  email: string
+  password: string
+}
+export type RegisterRequest = {
+  email: string
+  first_name: string
+  last_name: string
+  password: string
+  superuser?: boolean
+  organisation_name?: string
+  marketing_consent_given?: boolean
+  utm_data?: UtmsType
+  signup_anonymous_id?: string
+}
+export enum SortOrder {
+  ASC = 'ASC',
+  DESC = 'DESC',
+}
+export interface StageActionRequest {
+  action_type: StageActionType | ''
+  action_body: StageActionBody
+}
+
+export interface ReleasePipelineRequest {
+  project: number
+  name: string
+  description?: string
+  stages: PipelineStageRequest[]
+}
+
+export interface UpdateReleasePipelineRequest extends ReleasePipelineRequest {
+  id: number
+}
+
+export interface PipelineStageRequest {
+  name: string
+  environment: number
+  order: number
+  trigger: StageTrigger
+  actions: StageActionRequest[]
+}
+
+type WarehouseConfigValue = string | number | boolean
+type WarehouseCredentials =
+  | { password: string }
+  | { client_id: string; client_secret: string }
+
+// Omitting `audience` leaves the stored audience untouched; an empty
+// `segment_ids` clears it back to every identity in the environment.
+export type ExperimentAudienceBody = {
+  match: ExperimentAudienceMatch
+  segment_ids: number[]
+}
+
+export type ExperimentRolloutBody = {
+  enabled: boolean
+  rollout_percentage: number
+  feature_state_value: {
+    type: 'integer' | 'string' | 'boolean'
+    value: string
+  }
+  multivariate_feature_state_values: {
+    multivariate_feature_option: number
+    percentage_allocation: number
+  }[]
+  audience?: ExperimentAudienceBody
+}
+
+export type UsageGroupBy = 'project' | 'environment'
+
+export type Req = {
+  getFeatureCodeReferences: {
+    projectId: number
+    featureId: number
+  }
+  getSegments: PagedRequest<{
+    q?: string
+    projectId: number
+    identity?: number
+    include_feature_specific?: boolean
+  }>
+  deleteSegment: { projectId: number; id: number }
+  updateSegment: {
+    projectId: number
+    segment: Segment
+  }
+  createSegment: {
+    projectId: number
+    segment: Omit<Segment, 'id' | 'uuid' | 'project'>
+  }
+  createCohort: {
+    environmentApiKey: string
+    projectId: number
+    name: string
+    description?: string
+    metadata?: Metadata[]
+  }
+  deleteCohort: {
+    environmentApiKey: string
+    cohortId: number
+    projectId: number
+  }
+  getCohort: {
+    environmentApiKey: string
+    cohortId: number
+  }
+  updateCohort: {
+    environmentApiKey: string
+    cohortId: number
+    projectId: number
+    segmentId: number
+    name?: string
+    description?: string
+    metadata?: Metadata[]
+  }
+  syncCohortCsv: {
+    environmentApiKey: string
+    cohortId: number
+    projectId: number
+    file: File
+    identifier_column?: number
+    has_header?: boolean
+  }
+  getCohortSyncKeys: {
+    environmentApiKey: string
+  }
+  createCohortSyncKey: {
+    environmentApiKey: string
+    name: string
+  }
+  revokeCohortSyncKey: {
+    environmentApiKey: string
+    prefix: string
+  }
+  cloneSegment: {
+    projectId: number
+    segmentId: number
+    name: string
+  }
+  getAuditLogs: PagedRequest<{
+    search?: string
+    project: number
+    environments?: number
+  }>
+  getOrganisationAuditLogs: PagedRequest<
+    { organisationId: number } & OrganisationAuditLogQuery
+  >
+  getOrganisationAuditLogItem: { organisationId: number; id: number }
+  getOrganisations: {}
+  getOrganisation: { id: number }
+  updateOrganisation: { id: number; body: UpdateOrganisationBody }
+  deleteOrganisation: { id: number }
+  uploadOrganisationLicence: {
+    id: number
+    body: {
+      licence_signature: File
+      licence: File
+    }
+  }
+  getProjects: {
+    organisationId: number
+  }
+  getEnvironments: {
+    projectId: number
+  }
+  getAllEnvironments: {
+    projectId: number
+  }
+  getOrganisationUsage: {
+    organisationId: number
+    projectId?: number
+    environmentId?: string
+    group_by?: UsageGroupBy
+    billing_period?:
+      | 'current_billing_period'
+      | 'previous_billing_period'
+      | '90_day_period'
+  }
+  getWebhooks: {
+    environmentId: string
+  }
+  createWebhook: {
+    environmentId: string
+    enabled: boolean
+    secret: string
+    url: string
+  }
+  updateWebhook: {
+    id: number
+    environmentId: string
+    enabled: boolean
+    secret: string
+    url: string
+  }
+  deleteWebhook: {
+    id: number
+    environmentId: string
+  }
+  deleteIdentity: {
+    id: string
+    environmentId: string
+    isEdge: boolean
+  }
+  createIdentities: {
+    isEdge: boolean
+    environmentId: string
+    identifiers: string[]
+  }
+  featureSegment: {
+    segment: number
+  }
+  getIdentities: PagedRequest<{
+    environmentId: string
+    pageType?: 'NEXT' | 'PREVIOUS'
+    dashboard_alias?: string
+    pages?: (string | undefined)[] // this is needed for edge since it returns no paging info other than a key
+    isEdge: boolean
+  }>
+  getPermission: { id: number | string; level: PermissionLevel }
+  getAvailablePermissions: { level: PermissionLevel }
+  getTag: { id: number }
+  getHealthEvents: { projectId: number }
+  dismissHealthEvent: { projectId: number; eventId: number }
+  getHealthProviders: { projectId: number }
+  createHealthProvider: { projectId: number; name: string }
+  deleteHealthProvider: { projectId: number; name: string }
+  updateTag: { projectId: number; tag: Tag }
+  deleteTag: {
+    id: number
+    projectId: number
+  }
+  getTags: {
+    projectId: number
+  }
+  createTag: {
+    projectId: number
+    tag: Omit<Tag, 'id' | 'project' | 'type' | 'is_system_tag' | 'is_permanent'>
+  }
+  getSegment: { projectId: number; id: number }
+  getSegmentMembers: PagedRequest<{
+    projectId: number
+    id: number
+    environment: number
+    pages?: (string | undefined)[]
+  }>
+  updateAccount: Account
+  deleteAccount: {
+    current_password: string
+    delete_orphan_organisations: boolean
+  }
+  updateUserEmail: { current_password: string; new_email: string }
+  activateAccount: { uid: string; token: string }
+  resendActivationEmail: { email: string }
+  createGroupAdmin: {
+    group: number
+    user: number
+    orgId: number
+  }
+  deleteGroupAdmin: {
+    orgId: number
+    group: number
+    user: number
+  }
+  getGroups: PagedRequest<{
+    orgId: number
+  }>
+  deleteGroup: { id: number; orgId: number }
+  getGroup: { id: number; orgId: number }
+  getMyGroups: PagedRequest<{
+    orgId: number
+  }>
+  createSegmentOverride: {
+    environmentId: string
+    featureId: number
+    enabled: boolean
+    multivariate_feature_state_values: MultivariateOption[] | null
+    feature_segment: {
+      segment: number
+    }
+    feature_state_value: FeatureStateValue
+  }
+  getRoles: { organisation_id: number }
+  createRole: {
+    organisation_id: number
+    description: string | null
+    name: string
+  }
+  getUserInvites: {
+    organisationId: number
+  }
+  createUserInvite: {
+    organisationId: number
+    invites: {
+      email: string
+      role: string
+      permission_groups: number[]
+    }[]
+  }
+  deleteUserInvite: {
+    organisationId: number
+    inviteId: number
+  }
+  resendUserInvite: {
+    organisationId: number
+    inviteId: number
+  }
+  getRole: { organisation_id: number; role_id: number }
+  updateRole: {
+    organisation_id: number
+    role_id: number
+    body: Role
+  }
+  deleteRole: { organisation_id: number; role_id: number }
+  getRolePermissionEnvironment: {
+    organisation_id: number
+    role_id: number
+    env_id: number
+  }
+  getRolePermissionProject: {
+    organisation_id: number
+    role_id: number
+    project_id: number
+  }
+  getRolePermissionOrganisation: {
+    organisation_id: number
+    role_id: number
+  }
+  createRolePermission: {
+    level: PermissionLevel
+    body: {
+      admin?: boolean
+      permissions: RolePermission['permissions']
+      project: number
+      environment: number
+    }
+    organisation_id: number
+    role_id: number
+  }
+  createProjectRolePermission: {
+    organisation_id: number
+    role_id: number
+    body: {
+      admin?: boolean
+      permissions: RolePermission['permissions']
+      project: number
+    }
+  }
+  createEnvironmentRolePermission: {
+    organisation_id: number
+    role_id: number
+    body: {
+      admin?: boolean
+      permissions: RolePermission['permissions']
+      environment: number
+    }
+  }
+  updateRolePermission: Req['createRolePermission'] & { id: number }
+  deleteRolePermission: { organisation_id: number; role_id: number }
+
+  getIdentityFeatureStatesAll: {
+    environment: number
+    user: string
+  }
+  getProjectFlags: {
+    project: string
+    environment?: number
+    segment?: number
+    search?: string | null
+    releasePipelines?: number[]
+    page?: number
+    tag_strategy?: TagStrategy
+    tags?: string
+    is_archived?: boolean
+    value_search?: string | null
+    is_enabled?: boolean | null
+    owners?: number[]
+    group_owners?: number[]
+    sort_field?: string
+    sort_direction?: SortOrder
+    lifecycle_stage?: LifecycleStage
+  }
+  getLifecycleStatusCounts: {
+    environment: number
+  }
+  getProjectFlag: { project: number; id: number }
+  getRolesPermissionUsers: { organisation_id: number; role_id: number }
+  deleteRolesPermissionUsers: {
+    organisation_id: number
+    role_id: number
+    user_id: number
+    level?: string
+  }
+  createRolesPermissionUsers: {
+    data: {
+      user: number
+    }
+    organisation_id: number
+    role_id: number
+  }
+  getRolePermissionGroup: {
+    organisation_id: number
+    role_id: number
+  }
+  updateRolePermissionGroup: { id: number; role_id: number }
+  deleteRolePermissionGroup: {
+    group_id: number
+    organisation_id: number
+    role_id: number
+  }
+  createRolePermissionGroup: {
+    data: {
+      group: number
+    }
+    organisation_id: number
+    role_id: number
+  }
+  getGetSubscriptionMetadata: { id: number }
+  getEnvironment: { id: string }
+  getSubscriptionMetadata: { id: number }
+  getMetadataModelFields: { organisation_id: number }
+  getMetadataModelField: { organisation_id: number; id: number }
+  updateMetadataModelField: {
+    organisation_id: number
+    id: number
+    body: {
+      content_type: number
+      field: number
+      is_required_for: {
+        content_type: number
+        object_id: number
+      }[]
+    }
+  }
+  deleteMetadataModelField: { organisation_id: number; id: number }
+  createMetadataModelField: {
+    organisation_id: number
+    body: {
+      content_type: number
+      field: number
+    }
+  }
+  getMetadataField: { organisation_id: number }
+  getMetadataList: PagedRequest<{ organisation: number }>
+  getProjectMetadataFieldList: PagedRequest<{
+    project_id: number
+    include_organisation?: boolean
+  }>
+  updateMetadataField: {
+    id: number
+    body: {
+      name: string
+      type: string
+      description: string
+      organisation: number
+      project?: number | null
+    }
+  }
+  deleteMetadataField: { id: number }
+  createMetadataField: {
+    body: {
+      description: string
+      name: string
+      organisation: number
+      type: string
+      project?: number | null
+    }
+  }
+
+  getRoleMasterApiKey: { org_id: number; role_id: number; id: string }
+  updateRoleMasterApiKey: { org_id: number; role_id: number; id: string }
+  deleteRoleMasterApiKey: { org_id: number; role_id: number; id: string }
+  createRoleMasterApiKey: {
+    org_id: number
+    role_id: number
+    body: { master_api_key: string }
+  }
+  getMasterAPIKeyWithMasterAPIKeyRoles: { org_id: number; prefix: string }
+  deleteMasterAPIKeyWithMasterAPIKeyRoles: {
+    org_id: number
+    prefix: string
+    role_id: number
+  }
+  getRolesMasterAPIKeyWithMasterAPIKeyRoles: { org_id: number; prefix: string }
+  getTrustRelationships: { organisation_id: number }
+  createTrustRelationship: {
+    organisation_id: number
+    body: {
+      name: string
+      issuer: string
+      audience: string
+      claim_rules: TrustRelationshipClaimRule[]
+      is_admin: boolean
+    }
+  }
+  updateTrustRelationship: {
+    organisation_id: number
+    id: number
+    body: {
+      name: string
+      issuer: string
+      audience: string
+      claim_rules: TrustRelationshipClaimRule[]
+      is_admin: boolean
+    }
+  }
+  deleteTrustRelationship: { organisation_id: number; id: number }
+  createLaunchDarklyProjectImport: {
+    project_id: number
+    body: {
+      project_key: string
+      token: string
+    }
+  }
+  createFeatureExport: {
+    environment_id: string
+    tag_ids?: number[]
+  }
+  getFeatureExport: {
+    id: number
+  }
+  getFeatureExports: {
+    projectId: number
+  }
+  createFlagsmithProjectImport: {
+    environment_id: string
+    strategy: ImportStrategy
+    file: File
+  }
+  getFeatureImports: {
+    projectId: number
+  }
+  getLaunchDarklyProjectImport: { project_id: number; import_id: number }
+  getLaunchDarklyProjectsImport: { project_id: number }
+  getUserWithRoles: { org_id: number; user_id: number }
+  deleteUserWithRole: { org_id: number; user_id: number; role_id: number }
+  getGroupWithRole: { org_id: number; group_id: number }
+  deleteGroupWithRole: { org_id: number; group_id: number; role_id: number }
+  createAndSetFeatureVersion: {
+    projectId: number
+    environmentId: number // Numeric ID for getFeatureStates query
+    environmentApiKey?: string // API key for URL endpoints (optional for legacy store)
+    featureId: number
+    skipPublish?: boolean
+    featureStates: FeatureState[]
+    liveFrom?: string
+  }
+  createFeatureVersion: {
+    environmentId: number // Numeric ID for URL
+    featureId: number
+    live_from?: string
+    feature_states_to_create: Omit<FeatureState, 'id'>[]
+    feature_states_to_update: Omit<FeatureState, 'id'>[]
+    publish_immediately: boolean
+    segment_ids_to_delete_overrides: number[]
+  }
+  publishFeatureVersion: {
+    sha: string
+    environmentId: string
+    featureId: number
+  }
+  createVersionFeatureState: CreateVersionFeatureState
+  deleteVersionFeatureState: CreateVersionFeatureState & { id: number }
+  updateVersionFeatureState: CreateVersionFeatureState & {
+    id: number
+    uuid: string
+  }
+  getVersionFeatureState: {
+    sha: string
+    environmentId: number
+    featureId: number
+  }
+  updateSegmentPriorities: { id: number; priority: number }[]
+  deleteFeatureSegment: { id: number }
+  getFeatureVersions: PagedRequest<{
+    featureId: number
+    environmentId: string
+    is_live?: boolean
+  }>
+  getUsers: { organisationId: number }
+  getFeatureVersion: {
+    uuid: string
+  }
+  enableFeatureVersioning: {
+    environmentId: string
+  }
+  getChangeRequests: PagedRequest<{
+    search?: string
+    environmentId: string
+    feature_id?: number
+    live_from_after?: string
+    committed?: boolean
+  }>
+  getScheduledChangeRequests: PagedRequest<{
+    environmentId: string
+  }>
+  updateChangeRequest: ChangeRequest
+  getChangeRequest: { id: string }
+  getEnvironmentFeatureState: { environmentId: string; feature: number }
+  actionChangeRequest: { id: string; actionType: ChangeRequestAction }
+  updateChangeRequestAssignees: {
+    id: string
+    approvals: ChangeRequest['approvals']
+    group_assignments: ChangeRequest['group_assignments']
+  }
+  getGroupSummaries: {
+    orgId: number
+  }
+  getSupportedContentType: { organisation_id: number }
+  getExternalResources: { project_id: number; feature_id: number }
+  deleteExternalResource: {
+    project_id: number
+    feature_id: number
+    external_resource_id: string
+  }
+  createExternalResource: {
+    project_id: number
+    feature_id: number
+    body: ExternalResource
+  }
+
+  getGithubIntegration: {
+    organisation_id: number
+    id?: number
+  }
+  updateGithubIntegration: {
+    organisation_id: number
+    github_integration_id: number
+  }
+  deleteGithubIntegration: {
+    organisation_id: number
+    github_integration_id: number
+  }
+  createGithubIntegration: {
+    organisation_id: number
+    body: {
+      installation_id: string
+    }
+  }
+  getGithubRepositories: {
+    organisation_id: number
+    github_id: number
+  }
+  updateGithubRepository: {
+    organisation_id: number
+    github_id: number
+    id: number
+    body: {
+      project: number
+      repository_name: string
+      repository_owner: string
+      tagging_enabled: boolean
+    }
+  }
+  deleteGithubRepository: {
+    organisation_id: number
+    github_id: number
+    id: number
+  }
+  createGithubRepository: {
+    organisation_id: number
+    github_id: number
+    body: {
+      project: number
+      repository_name: string
+      repository_owner: string
+    }
+  }
+  getGithubResources: PagedRequest<{
+    organisation_id: number
+    repo_name: string
+    repo_owner: string
+    github_resource: string
+  }>
+  getGithubRepos: { installation_id: string; organisation_id: number }
+  getServersideEnvironmentKeys: { environmentId: string }
+  deleteServersideEnvironmentKeys: { environmentId: string; id: string }
+  createServersideEnvironmentKeys: {
+    environmentId: string
+    data: { name: string }
+  }
+  getAuditLogItem: {
+    projectId: number
+    id: string
+  }
+  getProject: { id: number }
+  createProject: { name: string; organisation: number }
+  updateProject: { id: number; body: UpdateProjectBody }
+  deleteProject: { id: number }
+  migrateProject: { id: number }
+  getProjectPermissions: { projectId: number }
+  createProjectUserPermission: {
+    projectId: number
+    body: {
+      admin?: boolean
+      permissions: string[]
+      user: number
+    }
+  }
+  createEnvironmentUserPermission: {
+    environmentId: string
+    body: {
+      admin?: boolean
+      permissions: string[]
+      user: number
+    }
+  }
+  createGroup: {
+    orgId: number
+    data: Omit<UserGroup, 'id' | 'users'>
+    users: UserGroup['users']
+    usersToAddAdmin: number[] | null
+  }
+  getUserGroupPermission: { project_id: number }
+  updateProjectFlag: {
+    project_id: number
+    feature_id: number
+    body: ProjectFlag
+  }
+  createProjectFlag: {
+    project_id: number
+    body: ProjectFlag & {
+      owners?: number[]
+      group_owners?: number[]
+    }
+  }
+  removeProjectFlag: {
+    project_id: number
+    flag_id: number
+  }
+  addFlagOwners: {
+    project_id: number
+    feature_id: number
+    user_ids: number[]
+  }
+  removeFlagOwners: {
+    project_id: number
+    feature_id: number
+    user_ids: number[]
+  }
+  addFlagGroupOwners: {
+    project_id: number
+    feature_id: number
+    group_ids: number[]
+  }
+  removeFlagGroupOwners: {
+    project_id: number
+    feature_id: number
+    group_ids: number[]
+  }
+  createEnvironment: { name: string; project: number }
+  updateEnvironment: { id: number; body: Environment }
+  createCloneIdentityFeatureStates: {
+    environment_id: string
+    identity_id: string
+    body: {
+      source_identity_id?: string
+      source_identity_uuid?: string
+    }
+  }
+  updateGroup: Req['createGroup'] & {
+    orgId: number
+    data: UserGroup
+    usersToAdd: number[] | null
+    usersToAddAdmin: number[] | null
+    usersToRemoveAdmin: number[] | null
+    usersToRemove: number[] | null
+  }
+  createChangeRequest: {
+    approvals: Approval[]
+    live_from: string | undefined
+    description: string
+    multivariate_options: MultivariateOption[]
+    title: string
+  }
+  getFeatureStates: {
+    environment?: number
+    feature?: number
+  }
+  getAllEnvironmentFeatureStates: {
+    environmentKey: string
+  }
+  getFeatureSegment: { id: number }
+  getFeatureDependencies: {
+    environmentId: string
+    featureId: number
+    // Lists them as if this change request were live.
+    changeRequestId?: number
+  }
+  getFeatureDependents: { environmentId: string; featureId: number }
+  createFeatureDependency: {
+    environmentId: string
+    featureId: number
+    prerequisiteFeatureId: number
+    // Stages the change in this change request instead of publishing it.
+    changeRequestId?: number
+  }
+  deleteFeatureDependency: {
+    environmentId: string
+    featureId: number
+    prerequisiteFeatureId: number
+    changeRequestId?: number
+  }
+  createEnvironmentChangeRequest: {
+    environmentId: string
+    featureId: number
+    title: string
+    description: string
+    live_from?: string
+    approvals: Approval[]
+  }
+  deleteChangeRequest: { id: number }
+  getSamlConfiguration: { name: string }
+  getSamlConfigurations: { organisation_id: number }
+  getSamlConfigurationMetadata: { name: string }
+  updateSamlConfiguration: { name: string; body: SAMLConfiguration }
+  deleteSamlConfiguration: { name: string }
+  createSamlConfiguration: SAMLConfiguration
+  getSamlAttributeMapping: { saml_configuration_id: number }
+  updateSamlAttributeMapping: {
+    attribute_id: number
+    body: {
+      saml_configuration: number
+      django_attribute_name: AttributeName
+      idp_attribute_name: string
+    }
+  }
+  deleteSamlAttributeMapping: { attribute_id: number }
+  createSamlAttributeMapping: {
+    body: {
+      saml_configuration: number
+      django_attribute_name: AttributeName
+      idp_attribute_name: string
+    }
+  }
+  getScimConfiguration: { organisation_id: number }
+  createScimConfiguration: { organisation_id: number }
+  deleteScimConfiguration: { organisation_id: number }
+  regenerateScimToken: { organisation_id: number }
+  updateIdentity: {
+    environmentId: string
+    data: Identity
+  }
+  getProjectChangeRequests: PagedRequest<{
+    project_id: number
+    segment_id?: number
+    live_from_after?: string
+    committed?: boolean
+  }>
+  getProjectChangeRequest: { project_id: number; id: string }
+  updateProjectChangeRequest: {
+    data: ProjectChangeRequest
+    project_id: number
+  }
+  createProjectChangeRequest: {
+    data: WithoutId<ProjectChangeRequest>
+    project_id: number
+  }
+  actionProjectChangeRequest: {
+    actionType: 'approve' | 'commit'
+    project_id: number
+    id: string
+  }
+  deleteProjectChangeRequest: { project_id: number; id: string }
+  createAuditLogWebhooks: {
+    organisationId: number
+    data: Omit<Webhook, 'id' | 'created_at' | 'updated_at'>
+  }
+  getAuditLogWebhooks: { organisationId: number }
+  updateAuditLogWebhooks: { organisationId: number; data: Webhook }
+  deleteAuditLogWebhook: { organisationId: number; id: number }
+  createIdentityTrait: {
+    use_edge_identities: boolean
+    environmentId: string
+    identity: string
+    data: IdentityTrait
+  }
+  getIdentityTraits: {
+    use_edge_identities: boolean
+    environmentId: string
+    identity: string
+  }
+  updateIdentityTrait: {
+    use_edge_identities: boolean
+    environmentId: string
+    identity: string
+    data: IdentityTrait
+  }
+  deleteIdentityTrait: {
+    environmentId: string
+    identity: string
+    use_edge_identities: boolean
+    data: Omit<IdentityTrait, 'trait_value'>
+  }
+  getIdentitySegments: PagedRequest<{
+    q?: string
+    identity: string
+    projectId: number
+  }>
+  getConversionEvents: PagedRequest<{ q?: string; environment_id: string }>
+  testWebhook: {
+    webhookUrl: string
+    secret?: string
+    scope: {
+      type: 'environment' | 'organisation'
+      id: number
+    }
+  }
+  register: {
+    first_name: string
+    last_name: string
+    email: string
+    password: string
+    contact_consent_given: boolean
+    organisation_name: string
+    superuser: boolean
+  }
+  getBuildVersion: {}
+  createOnboardingSupportOptIn: {}
+  // The backend reads the user from the session; the id keys the cache per user.
+  getHubspotChatToken: { userId: number }
+  getEnvironmentMetrics: { id: number }
+  getEnvironmentOnboardingStatus: { environmentKey: string }
+  getUserEnvironmentPermissions: {
+    environmentId: string
+    userId: number
+  }
+  getUserPermissions: {
+    id?: number | string
+    userId: number | undefined
+    level: PermissionLevel
+  }
+  getProfile: {
+    id?: number
+  }
+  getUser: { id: number }
+  updateOnboarding: Partial<Onboarding>
+  getReleasePipelines: PagedRequest<{ projectId: number; order_by?: string }>
+  getReleasePipeline: { projectId: number; pipelineId: number }
+  createReleasePipeline: ReleasePipelineRequest
+  updateReleasePipeline: UpdateReleasePipelineRequest
+  getPipelineStages: PagedRequest<{
+    projectId: number
+    pipelineId: number
+  }>
+  getPipelineStage: {
+    projectId: number
+    pipelineId: number
+    stageId: number
+  }
+  deleteReleasePipeline: {
+    projectId: number
+    pipelineId: number
+  }
+  addFeatureToReleasePipeline: {
+    projectId: number
+    pipelineId: number
+    featureId: number
+  }
+  publishReleasePipeline: {
+    projectId: number
+    pipelineId: number
+  }
+  removeFeatureFromReleasePipeline: {
+    projectId: number
+    pipelineId: number
+    featureId: number
+  }
+  cloneReleasePipeline: {
+    projectId: number
+    pipelineId: number
+    name: string
+  }
+  getFeatureAnalytics: {
+    project_id: number
+    feature_id: number
+    period: number
+    environment_ids: string[]
+  }
+  getEnvironmentAnalytics: {
+    project_id: number
+    feature_id: number
+    period: number
+    environment_id: string
+  }
+  getFeatureList: {
+    projectId: number
+    environmentId: string
+    page?: number
+    page_size?: number
+    search?: string | null
+    tags?: string
+    is_archived?: boolean
+    is_enabled?: boolean | null
+    owners?: string
+    group_owners?: string
+    value_search?: string
+    tag_strategy?: TagStrategy
+    sort_field?: string
+    sort_direction?: 'ASC' | 'DESC'
+    identity?: string
+    type?: FeatureType
+  }
+  updateFeatureState: {
+    environmentId: string
+    environmentFlagId: number
+    body: UpdateFeatureStateBody
+  }
+  getAdminDashboardMetrics: {
+    days?: number
+  }
+  createCleanupIssue: {
+    organisation_id: number
+    body: {
+      feature_id: number
+    }
+  }
+  getIdentityOverrides: {
+    environmentId: string
+    featureId: number
+    page?: number
+    isEdge: boolean
+  }
+  createIdentityOverride: {
+    environmentId: string
+    identityId: string
+    featureId: number
+    enabled: boolean
+    feature_state_value: FlagsmithValue | null
+  }
+  validateOAuthAuthorize: Record<string, string>
+  processOAuthConsent: {
+    allow: boolean
+    client_id: string
+    redirect_uri: string
+    response_type: string
+    scope: string
+    code_challenge: string
+    code_challenge_method: string
+    state?: string
+  }
+  getIntegration: {
+    integrationId: string
+    projectId?: string
+    environmentApiKey?: string
+  }
+  createIntegration: {
+    integrationId: string
+    projectId?: string
+    environmentApiKey?: string
+    organisationId?: string
+    body: Record<string, any>
+  }
+  updateIntegration: {
+    integrationId: string
+    id: string
+    projectId?: string
+    environmentApiKey?: string
+    organisationId?: string
+    body: Record<string, any>
+  }
+  getGitLabConfiguration: { project_id: number }
+  getGitLabProjects: PagedRequest<{ project_id: number }>
+  getGitLabIssues: PagedRequest<{
+    project_id: number
+    gitlab_project_id: number
+  }>
+  getGitLabMergeRequests: PagedRequest<{
+    project_id: number
+    gitlab_project_id: number
+  }>
+  getWarehouseConnections: {
+    environmentId: string
+    exclude_event_stats?: boolean
+  }
+  getWarehouseConnectionEvents: { environmentId: string; id: number }
+  createWarehouseConnection: {
+    environmentId: string
+    warehouse_type: string
+    name?: string
+    config?: Record<string, WarehouseConfigValue>
+    credentials?: WarehouseCredentials
+  }
+  deleteWarehouseConnection: { environmentId: string; id: number }
+  testWarehouseConnection: { environmentId: string; id: number }
+  testWarehouseConnectionConfig: {
+    environmentId: string
+    warehouse_type: string
+    name?: string
+    config?: Record<string, WarehouseConfigValue>
+    credentials?: WarehouseCredentials
+  }
+  updateWarehouseConnection: {
+    environmentId: string
+    id: number
+    name?: string
+    config?: Record<string, WarehouseConfigValue>
+    credentials?: WarehouseCredentials
+  }
+  getExperiments: PagedRequest<{
+    environmentId: string
+    status?: ExperimentStatus | ExperimentStatus[]
+  }>
+  createExperiment: {
+    environmentId: string
+    body: {
+      name: string
+      hypothesis: string
+      feature: number
+      metrics: { metric: number; expected_direction: ExpectedDirection }[]
+      experiment_rollout: ExperimentRolloutBody
+    }
+  }
+  experimentAction: { environmentId: string; experimentId: number }
+  updateExperiment: {
+    environmentId: string
+    experimentId: number
+    body: { hypothesis?: string }
+  }
+  updateExperimentRollout: {
+    environmentId: string
+    experimentId: number
+    body: ExperimentRolloutBody
+  }
+  deleteExperiment: { environmentId: string; experimentId: number }
+  getExperiment: { environmentId: string; experimentId: number }
+  getExperimentExposures: { environmentId: string; experimentId: number }
+  refreshExperimentExposures: { environmentId: string; experimentId: number }
+  getExperimentBayesianResults: { environmentId: string; experimentId: number }
+  refreshExperimentBayesianResults: {
+    environmentId: string
+    experimentId: number
+  }
+  getMetrics: PagedRequest<{
+    environmentId: string
+    q?: string
+  }>
+  getMetric: { environmentId: string; metricId: number }
+  createMetric: {
+    environmentId: string
+    body: {
+      name: string
+      description: string
+      aggregation: MetricAggregation
+      direction: MetricDirection
+      definition: MetricDefinition
+    }
+  }
+  updateMetric: {
+    environmentId: string
+    metricId: number
+    body: Req['createMetric']['body']
+  }
+  deleteMetric: { environmentId: string; metricId: number }
+  createMultivariateOption: {
+    project_id: string | number
+    feature_id: number
+    body: Partial<MultivariateOption> & { feature: number }
+  }
+  saveMultivariateOptions: {
+    project_id: string | number
+    feature_id: number
+    multivariate_options: Partial<MultivariateOption>[]
+  }
+  // END OF TYPES
+}

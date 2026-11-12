@@ -1,0 +1,75 @@
+{
+    "family": "flagsmith-api-migration",
+    "networkMode": "awsvpc",
+    "executionRoleArn": "arn:aws:iam::084060095745:role/task-exec-role-741a7e3",
+    "taskRoleArn": "arn:aws:iam::084060095745:role/task-exec-role-741a7e3",
+    "containerDefinitions": [
+        {
+            "name": "flagsmith-api-migration",
+            "command": [
+                "migrate"
+            ],
+            "environment": [
+                {
+                    "name": "LOG_LEVEL",
+                    "value": "INFO"
+                },
+                {
+                    "name": "LOG_FORMAT",
+                    "value": "json"
+                },
+                {
+                    "name": "AWS_REGION",
+                    "value": "eu-west-2"
+                },
+                {
+                    "name": "DJANGO_SETTINGS_MODULE",
+                    "value": "app.settings.production"
+                },
+                {
+                    "name": "IDENTITIES_TABLE_NAME_DYNAMO",
+                    "value": "flagsmith_identities"
+                },
+                {
+                    "name": "PROJECT_METADATA_TABLE_NAME_DYNAMO",
+                    "value": "flagsmith_project_metadata"
+                },
+                {
+                    "name": "ENVIRONMENTS_TABLE_NAME_DYNAMO",
+                    "value": "flagsmith_environments"
+                },
+                {
+                    "name": "ENVIRONMENTS_V2_TABLE_NAME_DYNAMO",
+                    "value": "flagsmith_environments_v2"
+                },
+                {
+                    "name": "ENVIRONMENTS_API_KEY_TABLE_NAME_DYNAMO",
+                    "value": "flagsmith_environment_api_key"
+                }
+            ],
+            "secrets": [
+                {
+                    "name": "DATABASE_URL",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:DATABASE_URL::"
+                },
+                {
+                    "name": "CLICKHOUSE_URL",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:clickhouse-url-kB2CK9"
+                }
+            ],
+            "logConfiguration": {
+                "logDriver": "awslogs",
+                "options": {
+                    "awslogs-group": "flagsmith-fargate-eu-west-2-e815bfd",
+                    "awslogs-region": "eu-west-2",
+                    "awslogs-stream-prefix": "awslogs-flagsmith"
+                }
+            }
+        }
+    ],
+    "requiresCompatibilities": [
+        "FARGATE"
+    ],
+    "cpu": "1024",
+    "memory": "2048"
+}

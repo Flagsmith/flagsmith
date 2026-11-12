@@ -1,0 +1,50 @@
+.list-item {
+  display: block;
+  min-height: $panel-list-item-min-height;
+  transition: all 0.2s ease-in;
+  color: $panel-list-item-color;
+
+  &--toggling {
+    opacity: 0.6;
+    pointer-events: none;
+  }
+  .btn-link {
+    font-weight: bold;
+    svg {
+      vertical-align: sub;
+    }
+  }
+  &.change-request-item {
+    min-height: auto;
+    padding: 20px 0px;
+  }
+
+  &-subtitle {
+    font-size: $panel-list-item-sub-font-size;
+    line-height: $panel-list-item-sub-line-height;
+    color: $panel-list-item-sub-color;
+    font-weight: normal;
+  }
+
+
+  &-sm {
+    min-height: 60px;
+  }
+  &-xs {
+    min-height: 50px;
+  }
+  a:hover svg {
+    path {
+      fill: var(--color-text-action);
+    }
+  }
+}
+
+.dark {
+  .list-item {
+    color: $text-icon-light;
+    .btn-link path {
+      fill: var(--color-text-action);
+    }
+  }
+}

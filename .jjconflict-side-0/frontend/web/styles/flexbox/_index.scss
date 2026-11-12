@@ -1,0 +1,41 @@
+@import "mixins";
+
+.flex {
+  @include flexbox();
+  @include flex-direction(column)
+}
+
+.flex-row {
+  @include flexbox();
+  @include flex-direction(row);
+  @include flex-wrap(wrap);
+  @include align-items(center);
+  @include align-self(stretch);
+  &.no-wrap {
+    @include flex-wrap(nowrap);
+  }
+  &.space {
+    @include flex-value(1);
+    @include justify-content(space-between);
+  }
+  &.noWrap {
+    @include flex-wrap(nowrap);
+  }
+}
+
+.centered-container {
+  @include flexbox();
+  @include justify-content(center);
+  @include align-items(center);
+}
+
+.flex-column {
+  margin-left: calc($input-padding-x / 2);
+  margin-right: calc($input-padding-x / 2);
+}
+
+.flex-1 {
+  @include flexbox();
+  @include flex-value(1);
+}
+

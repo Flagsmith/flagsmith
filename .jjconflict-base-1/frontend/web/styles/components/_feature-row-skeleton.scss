@@ -1,0 +1,46 @@
+.skeleton-row {
+  padding: 0 16px;
+}
+
+.skeleton {
+  background: linear-gradient(90deg, $bg-light300 25%, $bg-light500 50%, $bg-light300 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 4px;
+
+  .dark & {
+    background: linear-gradient(
+      90deg,
+      $white-alpha-8 25%,
+      $white-alpha-16 50%,
+      $white-alpha-8 75%
+    );
+  }
+
+  &-text {
+    height: 16px;
+  }
+
+  &-badge {
+    border-radius: 12px;
+  }
+
+  &-circle {
+    border-radius: 50%;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+  }
+}

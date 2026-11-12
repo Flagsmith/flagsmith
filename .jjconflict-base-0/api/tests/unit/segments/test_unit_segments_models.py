@@ -1,0 +1,333 @@
+from collections.abc import Callable
+from typing import Any
+
+import pytest
+from django.core.exceptions import ValidationError
+from flag_engine.segments.constants import EQUAL
+from pytest_mock import MockerFixture
+
+from segments.models import Condition, Segment, SegmentRule
+
+
+# TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
+def test_Condition_str__valid_condition__returns_readable_representation(
+    segment: Segment,
+    segment_rule: SegmentRule,
+) -> None:
+    # Given
+    condition = Condition.objects.create(
+        rule=segment_rule,
+        property="foo",
+        operator=EQUAL,
+        value="bar",
+    )
+
+    # When
+    result = str(condition)
+
+    # Then
+    assert result == "Condition for ALL rule for Segment - segment: foo EQUAL bar"
+
+
+# TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
+@pytest.mark.parametrize(
+    "delete",
+    [
+        lambda rule: rule.delete(),
+        lambda rule: rule.hard_delete(),
+    ],
+)
+def test_Condition_get_skip_create_audit_log__rule_deleted__returns_true(
+    delete: Callable[[SegmentRule], None],
+    segment_rule: SegmentRule,
+) -> None:
+    # Given
+    condition = Condition.objects.create(
+        rule=segment_rule,
+        property="foo",
+        operator=EQUAL,
+        value="bar",
+        created_with_segment=False,
+    )
+
+    # When
+    delete(segment_rule)
+
+    # Then
+    assert condition.get_skip_create_audit_log() is True
+
+
+# TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
+@pytest.mark.parametrize(
+    "delete",
+    [
+        lambda segment: segment.delete(),
+        lambda segment: segment.hard_delete(),
+    ],
+)
+def test_Condition_get_skip_create_audit_log__segment_deleted__returns_true(
+    delete: Callable[[Segment], None],
+    segment: Segment,
+    segment_rule: SegmentRule,
+) -> None:
+    # Given
+    condition = Condition.objects.create(
+        rule=segment_rule,
+        property="foo",
+        operator=EQUAL,
+        value="bar",
+        created_with_segment=False,
+    )
+
+    # When
+    delete(segment)
+
+    # Then
+    assert condition.get_skip_create_audit_log() is True
+
+
+def test_LiveSegmentManager__cloned_segment_exists__returns_only_highest_version(
+    segment: Segment,
+) -> None:
+    # Given
+    cloned_segment = segment.clone(is_revision=True)
+
+    # When
+    queryset1 = Segment.live_objects.filter(id=cloned_segment.id)
+    queryset2 = Segment.objects.filter(id=cloned_segment.id)
+    queryset3 = Segment.live_objects.filter(id=segment.id)
+    queryset4 = Segment.objects.filter(id=segment.id)
+
+    # Then
+    assert not queryset1.exists()
+    assert queryset2.first() == cloned_segment
+    assert queryset3.first() == segment
+    assert queryset4.first() == segment
+
+
+# TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
+@pytest.mark.parametrize(
+    "get_parents",
+    [
+        lambda segment, rule: {"segment": segment, "rule": rule},
+        lambda segment, rule: {"segment": None, "rule": None},
+    ],
+)
+def test_SegmentRule_clean__invalid_parent_count__raises_validation_error(
+    get_parents: Callable[[Segment, SegmentRule], dict[str, Any]],
+    segment: Segment,
+    segment_rule: SegmentRule,
+) -> None:
+    # Given
+    parents = get_parents(segment, segment_rule)
+    rule = SegmentRule(**parents)
+
+    # When
+    with pytest.raises(ValidationError) as exc_info:
+        rule.clean()
+
+    # Then
+    parents_count = sum(parent is not None for parent in parents.values())
+    assert exc_info.match(
+        f"SegmentRule must have exactly one parent, {parents_count} found"
+    )
+
+
+# TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
+def test_SegmentRule_get_skip_create_audit_log__always__returns_true(
+    segment: Segment,
+) -> None:
+    # Given
+    segment_rule = SegmentRule.objects.create(
+        segment=segment, type=SegmentRule.ALL_RULE
+    )
+
+    # When
+    result = segment_rule.get_skip_create_audit_log()
+
+    # Then
+    assert result is True
+
+
+# TODO: Revisit as per https://github.com/Flagsmith/flagsmith/issues/7818
+def test_Segment_delete__multiple_rules_conditions__schedules_audit_log_task_once(
+    mocker: MockerFixture, segment: Segment
+) -> None:
+    # Given
+    for _ in range(5):
+        segment_rule = SegmentRule.objects.create(
+            segment=segment, type=SegmentRule.ALL_RULE
+        )
+        for _ in range(5):
+            Condition.objects.create(
+                rule=segment_rule,
+                property="foo",
+                operator=EQUAL,
+                value="bar",
+                created_with_segment=False,
+            )
+
+    # When
+    task = mocker.patch("core.signals.tasks.create_audit_log_from_historical_record")
+    segment.delete()
+
+    # Then
+    assert task.delay.call_count == 1
+
+
+def test_Segment_clone__not_revision__creates_standalone_segment(
+    segment: Segment,
+) -> None:
+    # Given
+    segment.version = 5
+    segment.save()
+
+    # When
+    cloned_segment = segment.clone(name="another-segment", is_revision=False)
+
+    # Then
+    assert cloned_segment != segment
+    assert cloned_segment.name == "another-segment"
+    assert cloned_segment.version_of == cloned_segment
+    assert cloned_segment.version == 1
+
+
+def test_Segment_clone__empty_segment__returns_new_revision(
+    segment: Segment,
+) -> None:
+    # Given
+    original_version: int = segment.version  # type: ignore[assignment]
+
+    # When
+    cloned_segment = segment.clone(is_revision=True)
+
+    # Then
+    assert cloned_segment != segment
+    assert cloned_segment.version_of == segment
+    assert cloned_segment.version == original_version
+    assert segment.version == original_version + 1
+
+
+@pytest.mark.parametrize(
+    "is_revision, expected_cloned_version, expected_source_version",
+    [
+        pytest.param(True, 5, 6, id="revision"),
+        pytest.param(False, 1, 5, id="standalone"),
+    ],
+)
+def test_Segment_clone__given_is_revision__returns_cloned_segment(
+    is_revision: bool,
+    expected_cloned_version: int,
+    expected_source_version: int,
+    segment: Segment,
+) -> None:
+    # Given
+    segment.version = 5
+    segment.save()
+
+    # When
+    cloned_segment = segment.clone(is_revision=is_revision)
+
+    # Then
+    assert cloned_segment != segment
+    cloned_segment.refresh_from_db()
+    assert cloned_segment.uuid != segment.uuid
+    assert cloned_segment.project == segment.project
+    assert cloned_segment.name == segment.name
+    assert cloned_segment.description == segment.description
+    assert cloned_segment.rules_data == segment.rules_data
+    assert cloned_segment.version == expected_cloned_version
+    assert cloned_segment.version_of == (segment if is_revision else cloned_segment)
+    segment.refresh_from_db()
+    assert segment.version == expected_source_version
+
+
+@pytest.mark.parametrize("is_revision", [True, False])
+def test_Segment_clone__segment_with_rules__returns_new_segment_with_copied_rules_and_conditions_x_replaced_above(
+    is_revision: bool,
+    segment: Segment,
+) -> None:
+    # Given
+    rule1 = SegmentRule.objects.create(
+        segment=segment,
+        type=SegmentRule.ALL_RULE,
+    )
+    Condition.objects.create(
+        rule=rule1,
+        property="property1a",
+        operator=EQUAL,
+        value="value1a",
+    )
+    Condition.objects.create(
+        rule=rule1,
+        property="property1b",
+        operator=EQUAL,
+        value="value1b",
+    )
+    rule2 = SegmentRule.objects.create(
+        segment=segment,
+        type=SegmentRule.ANY_RULE,
+    )
+    Condition.objects.create(
+        rule=rule2,
+        property="property2a",
+        operator=EQUAL,
+        value="value2a",
+    )
+    rule3 = SegmentRule.objects.create(
+        rule=rule2,
+        type=SegmentRule.ALL_RULE,
+    )
+    Condition.objects.create(
+        rule=rule3,
+        property="property3a",
+        operator=EQUAL,
+        value="value3a",
+    )
+
+    # When
+    cloned_segment = segment.clone(is_revision=is_revision)
+
+    # Then
+    assert cloned_segment != segment
+    assert list(
+        SegmentRule.objects.filter(segment=cloned_segment)
+        .values("rule", "type")
+        .order_by("type")
+    ) == [
+        {"rule": None, "type": SegmentRule.ALL_RULE},
+        {"rule": None, "type": SegmentRule.ANY_RULE},
+    ]
+    assert list(
+        Condition.objects.filter(rule__segment=cloned_segment)
+        .values("property", "operator", "value")
+        .order_by("property")
+    ) == [
+        {"property": "property1a", "operator": EQUAL, "value": "value1a"},
+        {"property": "property1b", "operator": EQUAL, "value": "value1b"},
+        {"property": "property2a", "operator": EQUAL, "value": "value2a"},
+    ]
+    assert list(
+        SegmentRule.objects.filter(rule__segment=cloned_segment).values(
+            "rule__type", "type"
+        )
+    ) == [
+        {"rule__type": SegmentRule.ANY_RULE, "type": SegmentRule.ALL_RULE},
+    ]
+    assert list(
+        Condition.objects.filter(rule__rule__segment=cloned_segment).values(
+            "property", "operator", "value"
+        )
+    ) == [
+        {"property": "property3a", "operator": EQUAL, "value": "value3a"},
+    ]
+
+
+def test_Segment_get_skip_create_audit_log__system_segment__returns_true(
+    system_segment: Segment,
+) -> None:
+    # Given / When
+    result = system_segment.get_skip_create_audit_log()
+
+    # Then
+    assert result is True

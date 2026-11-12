@@ -1,0 +1,14 @@
+inverseOperationIds:
+  # List operations used by Flagsmith's LaucnhDarkly importer here.
+  - getProject
+  - getEnvironmentsByProject
+  - getFeatureFlags
+  - getTags
+  - getSegments
+unusedComponents:
+  - schemas
+  - parameters
+  - examples
+  - headers
+  - requestBodies
+  - responses

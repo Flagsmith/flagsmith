@@ -1,0 +1,61 @@
+import { useMemo } from 'react'
+import Color from 'color'
+import { getEnvironmentColourById } from 'common/utils/environmentColour'
+import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
+
+type UseEnvChartPropsArgs = {
+  projectId: number
+  environmentIds: string[]
+}
+
+type UseEnvChartPropsResult = {
+  /** Selected env ids sorted by their position in the project's env list. */
+  series: string[]
+  /** env id → CSS colour matching the env tag chip colour. */
+  colorMap: Record<string, string>
+  /** env id → human-readable env name (for tooltip / legend display). */
+  seriesLabels: Record<string, string>
+}
+
+/**
+ * Chart-series config for environment-grouped charts.
+ *
+ * Resolves every value recharts needs per env: its colour (the same as the
+ * env chip, via `getEnvironmentColourById`), its display
+ * name (for the tooltip), and a stable sort order (project-list position so
+ * stack order doesn't shift with selection order).
+ *
+ * Reusable by any env-grouped chart — this hook is the single source of env
+ * chart styling so new consumers (e.g. legacy `OrganisationUsage`) stay
+ * visually consistent with feature analytics without duplicating logic.
+ */
+export function useEnvChartProps({
+  environmentIds,
+  projectId,
+}: UseEnvChartPropsArgs): UseEnvChartPropsResult {
+  const { data: environments } = useGetEnvironmentsQuery({
+    projectId,
+  })
+
+  return useMemo(() => {
+    const envList = environments?.results ?? []
+    const findIndexById = (id: string) =>
+      envList.findIndex((env) => `${env.id}` === id)
+
+    const series = [...environmentIds].sort(
+      (idA, idB) => findIndexById(idA) - findIndexById(idB),
+    )
+
+    const colorMap: Record<string, string> = {}
+    const seriesLabels: Record<string, string> = {}
+    series.forEach((id) => {
+      const env = envList.find((candidate) => `${candidate.id}` === id)
+      colorMap[id] = `${Color(getEnvironmentColourById(envList, id))
+        .alpha(0.75)
+        .rgb()}`
+      if (env) seriesLabels[id] = env.name
+    })
+
+    return { colorMap, series, seriesLabels }
+  }, [environmentIds, environments?.results])
+}

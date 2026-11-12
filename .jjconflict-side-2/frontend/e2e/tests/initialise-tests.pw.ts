@@ -1,0 +1,75 @@
+import { test } from '../test-setup';
+import {
+  byId,
+  createHelpers,
+  getFlagsmith,
+  log,
+  visualSnapshot,
+} from '../helpers';
+import { E2E_SIGN_UP_USER, PASSWORD } from '../config';
+
+test.describe('Signup', () => {
+  test('Create Organisation and Project @oss', async ({ page }, testInfo) => {
+    const { addErrorLogging, click, logout, setText, waitForElementVisible } = createHelpers(page);
+    const flagsmith = await getFlagsmith();
+
+    // Add error logging
+    await addErrorLogging();
+
+    // Navigate to signup page
+    await page.goto('/');
+
+    log('Create Organisation');
+    await click(byId('jsSignup'));
+    // Wait for firstName field to be visible after modal opens
+    await waitForElementVisible(byId('firstName'));
+    await visualSnapshot(page, 'signup-form', testInfo)
+
+    await setText(byId('firstName'), 'Bullet');
+    await setText(byId('lastName'), 'Train');
+    await setText(byId('email'), E2E_SIGN_UP_USER);
+    await setText(byId('password'), PASSWORD);
+    await click(byId('signup-btn'));
+    // onboarding_quickstart_flow buckets per organisation, on an identifier
+    // created at signup. `hasFeature` here identifies nobody, so it only ever
+    // sees the environment default.
+    await page.waitForURL(
+      (url) => url.pathname === '/create' || url.pathname === '/getting-started',
+      { timeout: 20000 },
+    );
+    test.skip(
+      new URL(page.url()).pathname === '/getting-started',
+      'Signup entered the single-page onboarding flow',
+    );
+    await waitForElementVisible('[name="orgName"]');
+    await visualSnapshot(page, 'create-organisation', testInfo)
+
+    await setText('[name="orgName"]', 'Flagsmith Ltd 0');
+    await click('#create-org-btn');
+
+    if (flagsmith.hasFeature('integration_onboarding')) {
+      await click(byId('integration-0'));
+      await click(byId('integration-1'));
+      await click(byId('integration-2'));
+      await click(byId('submit-integrations'));
+    }
+    await click(byId('create-project'));
+
+    log('Create Project');
+    await click(byId('create-first-project-btn'));
+    await setText(byId('projectName'), 'My Test Project');
+    await click(byId('create-project-btn'));
+    await waitForElementVisible(byId('features-page'));
+
+    log('Hide disabled flags');
+    await click('#project-link');
+    await click('#project-settings-link');
+    await click(byId('js-sdk-settings'));
+    await click(byId('js-hide-disabled-flags'));
+    await setText(byId('js-project-name'), 'My Test Project');
+    await click(byId('js-confirm'));
+
+    // Logout after test
+    await logout();
+  });
+});

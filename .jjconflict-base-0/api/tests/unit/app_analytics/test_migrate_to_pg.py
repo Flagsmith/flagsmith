@@ -1,0 +1,77 @@
+from unittest.mock import Mock
+
+import pytest
+from django.utils import timezone
+from pytest_mock import MockerFixture
+
+from app_analytics.influxdb_wrapper import InfluxDBWrapper
+from app_analytics.migrate_to_pg import migrate_feature_evaluations
+from app_analytics.models import FeatureEvaluationBucket
+
+
+@pytest.mark.use_analytics_db
+def test_migrate_feature_evaluations__influx_records_exist__creates_pg_buckets(
+    mock_influxdb_client: Mock,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    feature_name = "test_feature_one"
+    environment_id = "1"
+    mocker.patch.object(
+        InfluxDBWrapper, "get_downsampled_bucket", return_value="test_bucket"
+    )
+    mock_query_api = mock_influxdb_client.query_api.return_value
+    mock_tables = []
+    for i in range(3):
+        mock_record = mocker.MagicMock(
+            values={"feature_id": feature_name, "environment_id": environment_id},
+            spec_set=["values", "get_time", "get_value"],
+        )
+        mock_record.get_time.return_value = timezone.now() - timezone.timedelta(days=i)  # type: ignore[attr-defined]
+        mock_record.get_value.return_value = 100
+
+        mock_table = mocker.MagicMock(records=[mock_record], spec_set=["records"])
+        mock_tables.append(mock_table)
+
+    mock_query_api.query.side_effect = [[table] for table in mock_tables]
+
+    # When
+    migrate_feature_evaluations(migrate_till=3)
+
+    # Then - only 3 records should be created
+    assert FeatureEvaluationBucket.objects.count() == 3
+    assert (
+        FeatureEvaluationBucket.objects.filter(
+            feature_name=feature_name,
+            environment_id=environment_id,
+            bucket_size=15,
+            total_count=100,
+        ).count()
+        == 3
+    )
+    # And, the query should have been called 3 times
+    mock_query_api.assert_has_calls(
+        [
+            mocker.call.query(
+                (
+                    'from (bucket: "test_bucket") '
+                    "|> range(start: -1d, stop: -0d) "
+                    '|> filter(fn: (r) => r._measurement == "feature_evaluation")'
+                )
+            ),
+            mocker.call.query(
+                (
+                    'from (bucket: "test_bucket") '
+                    "|> range(start: -2d, stop: -1d) "
+                    '|> filter(fn: (r) => r._measurement == "feature_evaluation")'
+                )
+            ),
+            mocker.call.query(
+                (
+                    'from (bucket: "test_bucket") '
+                    "|> range(start: -3d, stop: -2d) "
+                    '|> filter(fn: (r) => r._measurement == "feature_evaluation")'
+                )
+            ),
+        ]
+    )

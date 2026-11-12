@@ -1,0 +1,265 @@
+import json
+from datetime import timedelta
+from typing import Any
+
+from django.conf import settings
+from django.contrib.auth import user_logged_out
+from django.utils import timezone
+from django.utils.decorators import method_decorator
+from djoser.views import TokenCreateView, UserViewSet  # type: ignore[import-untyped]
+from drf_spectacular.utils import extend_schema, inline_serializer
+from rest_framework import serializers, status
+from rest_framework.authtoken.models import Token
+from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.request import Request
+from rest_framework.response import Response
+from rest_framework.status import HTTP_204_NO_CONTENT
+from rest_framework.throttling import ScopedRateThrottle
+
+from custom_auth.jwt_cookie.services import authorise_response, blacklist_user_tokens
+from custom_auth.mfa.backends.application import CustomApplicationBackend
+from custom_auth.mfa.trench.command.authenticate_second_factor import (
+    authenticate_second_step_command,
+)
+from custom_auth.mfa.trench.exceptions import (
+    MFAMethodDoesNotExistError,
+    MFAValidationError,
+)
+from custom_auth.mfa.trench.models import MFAMethod
+from custom_auth.mfa.trench.responses import ErrorResponse
+from custom_auth.mfa.trench.serializers import CodeLoginSerializer
+from custom_auth.mfa.trench.utils import user_token_generator
+from custom_auth.serializers import CustomUserDelete
+from custom_auth.signals import user_login_password_verified, user_password_changed
+from integrations.lead_tracking.hubspot.client import HubspotClient
+from integrations.lead_tracking.hubspot.services import (
+    register_hubspot_tracker_and_track_user,
+)
+from users.constants import DEFAULT_DELETE_ORPHAN_ORGANISATIONS_VALUE
+from users.models import FFAdminUser
+from users.serializers import PatchOnboardingSerializer
+
+from .models import UserPasswordResetRequest
+
+
+class CustomAuthTokenLoginOrRequestMFACode(TokenCreateView):  # type: ignore[misc]
+    """
+    Class to handle throttling for login requests
+    """
+
+    authentication_classes = []  # type: ignore[var-annotated]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "login"
+
+    def post(self, request: Request) -> Response:
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.user
+        try:
+            mfa_model = MFAMethod
+            mfa_method = mfa_model.objects.get_primary_active(user_id=user.id)
+            conf = settings.TRENCH_AUTH["MFA_METHODS"]["app"]  # type: ignore[index]
+            mfa_handler = CustomApplicationBackend(mfa_method=mfa_method, config=conf)
+            mfa_handler.dispatch_message()  # type: ignore[no-untyped-call]
+            user_login_password_verified.send(
+                sender=user.__class__, user=user, is_2fa_required=True
+            )
+            return Response(
+                data={
+                    "ephemeral_token": user_token_generator.make_token(user),
+                    "method": mfa_method.name,
+                }
+            )
+        except MFAMethodDoesNotExistError:
+            user_login_password_verified.send(
+                sender=user.__class__, user=user, is_2fa_required=False
+            )
+            if settings.COOKIE_AUTH_ENABLED:
+                return authorise_response(user, Response(status=HTTP_204_NO_CONTENT))
+            return self._action(serializer)  # type: ignore[no-any-return]
+
+
+class CustomAuthTokenLoginWithMFACode(TokenCreateView):  # type: ignore[misc]
+    """
+    Override class to add throttling
+    """
+
+    authentication_classes = []  # type: ignore[var-annotated]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "mfa_code"
+
+    def post(self, request: Request) -> Response:
+        serializer = CodeLoginSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        try:
+            user = authenticate_second_step_command(
+                code=serializer.validated_data["code"],
+                ephemeral_token=serializer.validated_data["ephemeral_token"],
+            )
+            serializer.user = user  # type: ignore[attr-defined]
+            if settings.COOKIE_AUTH_ENABLED:
+                return authorise_response(user, Response(status=HTTP_204_NO_CONTENT))
+            return self._action(serializer)  # type: ignore[no-any-return]
+        except MFAValidationError as cause:
+            return ErrorResponse(error=cause, status=status.HTTP_401_UNAUTHORIZED)  # type: ignore[arg-type]
+
+
+@api_view(["DELETE"])
+@permission_classes([IsAuthenticated])
+def delete_token(request):  # type: ignore[no-untyped-def]
+    Token.objects.filter(user=request.user).delete()
+    user_logged_out.send(
+        sender=request.user.__class__, request=request, user=request.user
+    )
+    return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+@method_decorator(
+    name="destroy",
+    decorator=extend_schema(parameters=[CustomUserDelete]),
+)
+class FFAdminUserViewSet(UserViewSet):  # type: ignore[misc]
+    throttle_scope = "signup"
+
+    throttle_scopes_by_action = {
+        "create": "signup",
+        "resend_activation": "resend_activation",
+        "hubspot_chat_token": "hubspot_chat_token",
+    }
+
+    def perform_authentication(self, request: Request) -> None:
+        if self.action == "create":
+            return
+        return super().perform_authentication(request)  # type: ignore[no-any-return]
+
+    def get_throttles(self) -> list[ScopedRateThrottle]:
+        """
+        Used for throttling the create (signup) and resend_activation actions
+        """
+        scope = self.throttle_scopes_by_action.get(self.action)
+        if scope is None:
+            return []
+        # Safe to set per action: a view instance serves a single request.
+        self.throttle_scope = scope
+        return [ScopedRateThrottle()]
+
+    def create(self, request: Request, *args: Any, **kwargs: Any) -> Response:
+        response = super().create(request, *args, **kwargs)
+        register_hubspot_tracker_and_track_user(request, user=self.user)
+
+        if settings.COOKIE_AUTH_ENABLED:
+            authorise_response(self.user, response)
+        return response  # type: ignore[no-any-return]
+
+    def perform_destroy(self, instance):  # type: ignore[no-untyped-def]
+        instance.delete(
+            delete_orphan_organisations=self.request.data.get(
+                "delete_orphan_organisations",
+                DEFAULT_DELETE_ORPHAN_ORGANISATIONS_VALUE,
+            )
+        )
+
+    def retrieve(self, request: Request, *args: Any, **kwargs: Any) -> Response:
+        user = request.user
+        assert isinstance(user, FFAdminUser)
+        if not user.last_login or timezone.now() - user.last_login > timedelta(
+            minutes=settings.LAST_LOGIN_UPDATE_THRESHOLD_MINUTES
+        ):
+            user.last_login = timezone.now()
+            user.save(update_fields=["last_login"])
+        resp: Response = super().retrieve(request, *args, **kwargs)
+        return resp
+
+    @action(
+        detail=False,
+        methods=["patch"],
+        url_path="me/onboarding",
+        permission_classes=[IsAuthenticated],
+    )
+    def patch_onboarding(self, request: Request, *args: Any, **kwargs: Any) -> Response:
+        user = request.user
+        assert isinstance(user, FFAdminUser)
+        serializer = PatchOnboardingSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        existing_onboarding = (
+            json.loads(user.onboarding_data) if user.onboarding_data else {}
+        )
+
+        updated_onboarding = {**existing_onboarding, **serializer.data}
+        user.onboarding_data = json.dumps(updated_onboarding)
+        user.save(update_fields=["onboarding_data"])
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @extend_schema(
+        responses={
+            200: inline_serializer(
+                name="HubspotChatTokenResponse",
+                fields={
+                    "token": serializers.CharField(),
+                    "email": serializers.EmailField(),
+                },
+            ),
+            404: None,
+            502: None,
+        },
+    )
+    @action(
+        detail=False,
+        methods=["get"],
+        url_path="me/hubspot-chat-token",
+        permission_classes=[IsAuthenticated],
+    )
+    def hubspot_chat_token(
+        self, request: Request, *args: Any, **kwargs: Any
+    ) -> Response:
+        """
+        Return a token that identifies the user to the HubSpot chat widget.
+        """
+        if not settings.HUBSPOT_ACCESS_TOKEN:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        user = request.user
+        assert isinstance(user, FFAdminUser)
+        token = HubspotClient().create_visitor_identification_token(user)
+        if token is None:
+            return Response(status=status.HTTP_502_BAD_GATEWAY)
+
+        return Response({"token": token, "email": user.email})
+
+    @action(["post"], detail=False)
+    def set_password(self, request: Request, *args: Any, **kwargs: Any) -> Response:
+        """Update the user password"""
+        user = request.user
+        assert isinstance(user, FFAdminUser)
+        response: Response = super().set_password(request, *args, **kwargs)
+        blacklist_user_tokens(user)
+        user_password_changed.send(sender=user.__class__, request=request, user=user)
+        return response
+
+    @action(["post"], detail=False)
+    def reset_password(self, request: Request, *args: Any, **kwargs: Any) -> Response:
+        """Request a password reset email"""
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.get_user()
+        if user and user.can_send_password_reset_email():
+            super().reset_password(request, *args, **kwargs)
+            UserPasswordResetRequest.objects.create(user=user)
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(["post"], detail=False)
+    def reset_password_confirm(
+        self, request: Request, *args: Any, **kwargs: Any
+    ) -> Response:
+        """Update the user password from a password reset URL"""
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.user
+        response: Response = super().reset_password_confirm(request, *args, **kwargs)
+        Token.objects.filter(user=user).delete()
+        blacklist_user_tokens(user)
+        user_password_changed.send(sender=user.__class__, request=request, user=user)
+        return response

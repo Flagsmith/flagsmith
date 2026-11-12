@@ -1,0 +1,56 @@
+---
+title: Experimentation
+description:
+ 'Run A/B tests natively in Flagsmith: serve variations, collect events, and analyse results with built-in Bayesian
+ statistics.'
+---
+
+:::info Beta
+
+Experimentation is in beta.
+
+:::
+
+Flagsmith Experimentation lets you run A/B tests end to end on the platform: serve variations of a feature with a
+[multivariate flag](/managing-flags/core-management), collect events from your application into a data warehouse (the
+managed Flagsmith warehouse, or your own), and read the results with a built-in Bayesian statistics engine.
+
+Experiments are scoped to an [**environment**](/flagsmith-concepts/data-model#environments).
+
+## Set up and run an experiment
+
+:::tip
+
+Using Claude Code or another coding agent? [One prompt](/experimentation/set-up-with-a-coding-agent) creates the flag,
+metric and experiment, and instruments your application.
+
+:::
+
+1. **[Connect a warehouse](/experimentation/connect-a-warehouse)**: enable the managed Flagsmith warehouse, or connect
+   your own ClickHouse or Databricks. Self-hosted Flagsmith uses your own. Done once per environment.
+2. **[Create metrics](/experimentation/create-metrics)**: define the outcomes you measure, computed from the events your
+   application sends.
+3. **[Create an experiment](/experimentation/create-an-experiment)**: pick a multivariate flag, decide how much traffic
+   enters the test and how it is split, and choose a primary metric.
+4. **[Run the experiment](/experimentation/run-an-experiment)**: instrument your application to record exposures and
+   conversion events with the Flagsmith SDKs.
+5. **[Analyse the results](/experimentation/analyse-an-experiment)**: read lift, credible intervals and win probability
+   on the experiment's results page, then roll out the winner.
+
+Prefer to see it end to end? Follow the [PayPal button example](/experimentation/example-paypal-button).
+
+Unfamiliar with a term? See the [Statistics Glossary](/experimentation/statistics).
+
+:::note SDK availability
+
+Event collection is available in the **JavaScript**, **React**, **Python**, **Java**, **Node.js**, **Go** and
+**Flutter** SDKs. Check [Run an Experiment](/experimentation/run-an-experiment) for minimum versions and instrumentation
+details.
+
+:::
+
+## A/B testing without the Experimentation feature
+
+You can also run A/B tests with multivariate flags and your own analytics platform. See
+[A/B Testing with Integrations](/experimentation-ab-testing). The self-managed approach remains fully supported and is
+not going away.

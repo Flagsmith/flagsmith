@@ -1,0 +1,211 @@
+import pytest
+from django.test import RequestFactory
+from django.utils import timezone
+from pytest_lazy_fixtures import lf as lazy_fixture
+from pytest_mock import MockerFixture
+
+from api_keys.user import APIKeyUser
+from edge_api.identities.models import EdgeIdentity
+from edge_api.identities.serializers import EdgeIdentityFeatureStateSerializer
+from environments.identities.models import Identity
+from environments.identities.serializers import (
+    IdentityAllFeatureStatesSerializer,
+)
+from evaluation.services import get_edge_identity_feature_states
+from features.feature_types import STANDARD
+from features.models import Feature
+from users.models import FFAdminUser
+from util.engine_models.features.models import FeatureModel, FeatureStateModel
+from util.mappers import map_identity_to_identity_document
+from webhooks.constants import WEBHOOK_DATETIME_FORMAT
+
+
+def test_edge_identity_feature_state_serializer__missing_mvfsvs__saves_successfully(  # type: ignore[no-untyped-def]
+    mocker, identity, feature, admin_user
+):
+    # Given
+    identity_model = EdgeIdentity.from_identity_document(
+        map_identity_to_identity_document(identity)
+    )
+    view = mocker.MagicMock(identity=identity_model)
+    request = mocker.MagicMock(user=admin_user, master_api_key=None)
+
+    serializer = EdgeIdentityFeatureStateSerializer(
+        data={"feature_state_value": "foo", "feature": feature.id},
+        context={"view": view, "request": request},
+    )
+
+    mock_dynamo_wrapper = mocker.patch(
+        "edge_api.identities.serializers.EdgeIdentity.dynamo_wrapper"
+    )
+    mocker.patch("edge_api.identities.tasks.DynamoEnvironmentV2Wrapper")
+
+    # When
+    serializer.is_valid(raise_exception=True)
+    result = serializer.save()  # type: ignore[no-untyped-call]
+
+    # Then
+    assert result
+
+    mock_dynamo_wrapper.put_item.assert_called_once()
+    saved_identity_record = mock_dynamo_wrapper.put_item.call_args[0][0]
+    assert saved_identity_record["identifier"] == identity.identifier
+    assert len(saved_identity_record["identity_features"]) == 1
+
+    saved_identity_feature_state = saved_identity_record["identity_features"][0]
+    assert saved_identity_feature_state["multivariate_feature_state_values"] == []
+    assert saved_identity_feature_state["featurestate_uuid"]
+    assert saved_identity_feature_state["enabled"] is False
+    assert saved_identity_feature_state["feature"]["id"] == feature.id
+
+
+@pytest.mark.parametrize(
+    "user",
+    [
+        lazy_fixture("api_key_user"),
+        lazy_fixture("admin_user"),
+    ],
+)
+def test_edge_identity_feature_state_serializer__new_override__calls_webhook(  # type: ignore[no-untyped-def]
+    mocker: MockerFixture,
+    identity: Identity,
+    feature: Feature,
+    user: FFAdminUser | APIKeyUser,
+    rf: RequestFactory,
+):
+    # Given
+    identity_model = EdgeIdentity.from_identity_document(
+        map_identity_to_identity_document(identity)
+    )
+    view = mocker.MagicMock(identity=identity_model)
+    request = rf.post("/")
+    request.user = user  # type: ignore[assignment]
+
+    new_enabled_state = True
+    new_value = "foo"
+
+    serializer = EdgeIdentityFeatureStateSerializer(
+        data={
+            "feature_state_value": new_value,
+            "enabled": new_enabled_state,
+            "feature": feature.id,
+        },
+        context={"view": view, "request": request},
+    )
+
+    mocker.patch("edge_api.identities.serializers.EdgeIdentity.dynamo_wrapper")
+    mocker.patch("edge_api.identities.tasks.DynamoEnvironmentV2Wrapper")
+    mock_call_environment_webhook = mocker.patch(
+        "edge_api.identities.serializers.call_environment_webhook_for_feature_state_change"
+    )
+
+    now = timezone.now()
+    mocker.patch("edge_api.identities.serializers.timezone.now", return_value=now)
+
+    # When
+    serializer.is_valid(raise_exception=True)
+    serializer.save()  # type: ignore[no-untyped-call]
+
+    # Then
+    mock_call_environment_webhook.delay.assert_called_once_with(
+        kwargs={
+            "feature_id": feature.id,
+            "environment_api_key": identity.environment.api_key,
+            "identity_id": identity.id,
+            "identity_identifier": identity.identifier,
+            "changed_by": str(user),
+            "new_enabled_state": new_enabled_state,
+            "new_value": new_value,
+            "previous_enabled_state": None,
+            "previous_value": None,
+            "timestamp": now.strftime(WEBHOOK_DATETIME_FORMAT),
+        }
+    )
+
+
+def test_edge_identity_feature_state_serializer__update_override__calls_webhook(  # type: ignore[no-untyped-def]
+    mocker, identity, feature, admin_user
+):
+    # Given
+    identity_model = EdgeIdentity.from_identity_document(
+        map_identity_to_identity_document(identity)
+    )
+    view = mocker.MagicMock(identity=identity_model)
+    request = mocker.MagicMock(user=admin_user)
+
+    previous_enabled_state = False
+    previous_value = "foo"
+
+    new_enabled_state = True
+    new_value = "bar"
+
+    instance = FeatureStateModel(
+        feature=FeatureModel(id=feature.id, name=feature.name, type=STANDARD),
+        enabled=previous_enabled_state,
+    )
+    instance.set_value(previous_value)
+
+    serializer = EdgeIdentityFeatureStateSerializer(
+        instance=instance,
+        data={
+            "feature_state_value": new_value,
+            "enabled": new_enabled_state,
+            "feature": feature.id,
+        },
+        context={"view": view, "request": request},
+    )
+
+    mocker.patch("edge_api.identities.serializers.EdgeIdentity.dynamo_wrapper")
+    mock_call_environment_webhook = mocker.patch(
+        "edge_api.identities.serializers.call_environment_webhook_for_feature_state_change"
+    )
+
+    now = timezone.now()
+    mocker.patch("edge_api.identities.serializers.timezone.now", return_value=now)
+
+    # When
+    serializer.is_valid(raise_exception=True)
+    serializer.save()  # type: ignore[no-untyped-call]
+
+    # Then
+    mock_call_environment_webhook.delay.assert_called_once_with(
+        kwargs={
+            "feature_id": feature.id,
+            "environment_api_key": identity.environment.api_key,
+            "identity_id": identity.id,
+            "identity_identifier": identity.identifier,
+            "changed_by": str(admin_user),
+            "new_enabled_state": new_enabled_state,
+            "new_value": new_value,
+            "previous_enabled_state": previous_enabled_state,
+            "previous_value": previous_value,
+            "timestamp": now.strftime(WEBHOOK_DATETIME_FORMAT),
+        }
+    )
+
+
+def test_all_feature_states_serializer__edge_identity_with_mv_feature__uses_mv_values(  # type: ignore[no-untyped-def]
+    identity, multivariate_feature, environment, mocker
+):
+    # Given
+    identity_document = map_identity_to_identity_document(identity)
+    del identity_document["django_id"]  # delete django id to simulate an edge identity
+    edge_identity = EdgeIdentity.from_identity_document(identity_document)
+
+    mocker.patch(
+        "edge_api.identities.models.EdgeIdentity.dynamo_wrapper"
+    ).get_segment_ids.return_value = []
+
+    (evaluated_feature_state,) = [
+        evaluated_feature_state
+        for evaluated_feature_state in get_edge_identity_feature_states(edge_identity)
+        if evaluated_feature_state.evaluation_result["name"]
+        == multivariate_feature.name
+    ]
+    serializer = IdentityAllFeatureStatesSerializer()
+
+    # When
+    value = serializer.get_feature_state_value(instance=evaluated_feature_state)
+
+    # Then
+    assert value != multivariate_feature.initial_value

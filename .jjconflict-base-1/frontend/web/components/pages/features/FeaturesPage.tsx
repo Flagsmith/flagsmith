@@ -1,0 +1,431 @@
+import React, { FC, useCallback, useEffect, useMemo } from 'react'
+import cloneDeep from 'lodash/cloneDeep'
+import { useHistory } from 'react-router-dom'
+import CreateFlagModal from 'components/modals/create-feature'
+import Constants from 'common/constants'
+import Utils from 'common/utils/utils'
+import AppActions from 'common/dispatcher/app-actions'
+import FeatureListStore from 'common/stores/feature-list-store'
+import { FEATURES_PAGE_SIZE } from 'common/services/useProjectFlag'
+import { useRouteContext } from 'components/providers/RouteContext'
+import { usePageTracking } from 'common/hooks/usePageTracking'
+import FeatureRow from 'components/feature-summary/FeatureRow'
+import FeatureRowSkeleton from 'components/feature-summary/FeatureRowSkeleton'
+import JSONReference from 'components/JSONReference'
+import Permission from 'common/providers/Permission'
+import {
+  FeaturesEmptyState,
+  FeatureMetricsSection,
+  FeaturesPageHeader,
+  FeaturesTableFilters,
+  FeaturesSDKIntegration,
+} from './components'
+import { useDeepLinkedFeature } from './hooks/useDeepLinkedFeature'
+import { useFeatureFilters } from './hooks/useFeatureFilters'
+import { useRemoveFeatureWithToast } from './hooks/useRemoveFeatureWithToast'
+import { useToggleFeatureWithToast } from './hooks/useToggleFeatureWithToast'
+import { useProjectEnvironments } from 'common/hooks/useProjectEnvironments'
+import { useFeatureListWithApiKey } from 'common/hooks/useFeatureListWithApiKey'
+import { useViewMode } from 'common/useViewMode'
+import type { Pagination } from './types'
+import type {
+  FeatureListProviderData,
+  FeatureState,
+  ProjectFlag,
+} from 'common/types/responses'
+import { ProjectPermission } from 'common/types/permissions.types'
+
+const DEFAULT_PAGINATION: Pagination = {
+  count: 0,
+  currentPage: 1,
+  next: null,
+  pageSize: FEATURES_PAGE_SIZE,
+  previous: null,
+}
+
+const SKELETON_ITEMS = Array(10).fill({ isSkeleton: true })
+
+type SkeletonItem = { isSkeleton: boolean }
+
+function isSkeletonItem(
+  item: ProjectFlag | SkeletonItem,
+): item is SkeletonItem {
+  return 'isSkeleton' in item && item.isSkeleton === true
+}
+
+type FeaturesPageProps = {
+  pageTitle?: string
+  forcedTagIds?: number[]
+}
+
+const FeaturesPage: FC<FeaturesPageProps> = ({ forcedTagIds, pageTitle }) => {
+  const history = useHistory()
+  const routeContext = useRouteContext()
+  const projectId = routeContext.projectId!
+  const environmentId = routeContext.environmentId!
+  const {
+    clearFilters,
+    filters,
+    goToPage,
+    handleFilterChange,
+    hasFilters,
+    page,
+    searchResetKey,
+  } = useFeatureFilters(history)
+
+  const {
+    isCompact,
+    setViewMode: handleViewModeChange,
+    viewMode,
+  } = useViewMode()
+
+  const effectiveFilters = useMemo(() => {
+    if (!forcedTagIds) return filters
+    const mergedTags = [...new Set([...(filters.tags || []), ...forcedTagIds])]
+    return { ...filters, tags: mergedTags }
+  }, [filters, forcedTagIds])
+
+  const {
+    error: projectEnvError,
+    getEnvironment,
+    getEnvironmentIdFromKey,
+    project,
+  } = useProjectEnvironments(projectId)
+  const { currentData, data, error, isFetching, isLoading, refetch } =
+    useFeatureListWithApiKey(effectiveFilters, page, environmentId, projectId)
+  const isDataStale = !!data && !currentData
+
+  // Backward compatibility: Populate ProjectStore for legacy components (CreateFlag)
+  // TODO: Remove this when CreateFlag is migrated to RTK Query
+  useEffect(() => {
+    if (projectId) {
+      AppActions.getProject(projectId)
+    }
+  }, [projectId])
+
+  useEffect(() => {
+    if (data && environmentId) {
+      // TODO: Remove this when CreateFlag is migrated to RTK Query
+      // This currently avoids duplicate api calls
+      FeatureListStore.envId = environmentId
+      FeatureListStore.projectId = projectId
+      FeatureListStore.environmentId = environmentId
+      FeatureListStore.model = {
+        features: cloneDeep(data.results),
+        keyedEnvironmentFeatures: cloneDeep(data.environmentStates),
+      }
+      FeatureListStore.paging = { ...data.pagination }
+      FeatureListStore.loaded()
+    }
+  }, [data, environmentId, projectId])
+
+  // Force re-fetch when legacy Flux store updates features
+  // TODO: Remove when all feature mutations use RTK Query
+  useEffect(() => {
+    const onFeatureListChange = () => {
+      // Refetch RTK Query data when Flux store changes
+      refetch()
+    }
+    FeatureListStore.on('saved', onFeatureListChange)
+    FeatureListStore.on('removed', onFeatureListChange)
+    return () => {
+      FeatureListStore.off('saved', onFeatureListChange)
+      FeatureListStore.off('removed', onFeatureListChange)
+    }
+  }, [refetch])
+
+  const currentEnvironment = getEnvironment(environmentId)
+  const minimumChangeRequestApprovals =
+    currentEnvironment?.minimum_change_request_approvals
+
+  const [removeFeature] = useRemoveFeatureWithToast()
+  const [toggleFeature] = useToggleFeatureWithToast()
+
+  const removeFlag = useCallback(
+    async (projectFlag: ProjectFlag) => {
+      await removeFeature(projectFlag, projectId)
+    },
+    [removeFeature, projectId],
+  )
+
+  const toggleFlag = useCallback(
+    async (
+      flag: ProjectFlag,
+      environmentFlag: FeatureState | undefined,
+      onError?: () => void,
+    ) => {
+      if (!currentEnvironment) {
+        onError?.()
+        return
+      }
+      await toggleFeature(flag, environmentFlag, currentEnvironment, {
+        onError,
+      })
+    },
+    [toggleFeature, currentEnvironment],
+  )
+
+  const projectFlags = useMemo(() => data?.results ?? [], [data?.results])
+  const environmentFlags = useMemo(
+    () => data?.environmentStates ?? {},
+    [data?.environmentStates],
+  )
+  const paging = useMemo(
+    () => data?.pagination ?? DEFAULT_PAGINATION,
+    [data?.pagination],
+  )
+
+  // Deep-link support: open the slideout for a `?feature=` target that isn't on
+  // the current page by fetching it and rendering a hidden FeatureRow below.
+  const deepLinkedFeature = useDeepLinkedFeature({
+    environmentApiKey: environmentId,
+    getEnvironmentIdFromKey,
+    isListLoaded: !!data && !isFetching,
+    projectFlags,
+    projectId,
+  })
+
+  usePageTracking({
+    context: {
+      environmentId,
+      organisationId: routeContext.organisationId,
+      projectId,
+    },
+    pageName: Constants.pages.FEATURES,
+    saveToStorage: true,
+  })
+
+  const openNewFlagModal = () => {
+    openModal(
+      'New Feature',
+      <CreateFlagModal
+        environmentId={environmentId}
+        history={history}
+        projectId={projectId}
+      />,
+      'side-modal create-feature-modal',
+    )
+  }
+
+  const renderHeader = useCallback(
+    () => (
+      <FeaturesTableFilters
+        projectId={projectId}
+        filters={filters}
+        hasFilters={hasFilters}
+        isLoading={isLoading}
+        orgId={project?.organisation}
+        onFilterChange={handleFilterChange}
+        onClearFilters={clearFilters}
+        viewMode={viewMode}
+        onViewModeChange={handleViewModeChange}
+        searchResetKey={searchResetKey}
+      />
+    ),
+    [
+      projectId,
+      filters,
+      hasFilters,
+      isLoading,
+      project?.organisation,
+      handleFilterChange,
+      clearFilters,
+      viewMode,
+      handleViewModeChange,
+      searchResetKey,
+    ],
+  )
+
+  const renderFooter = useCallback(
+    () => (
+      <>
+        <JSONReference
+          className='mx-2 mt-4'
+          showNamesButton
+          title='Features'
+          json={projectFlags}
+        />
+        <JSONReference
+          className='mx-2'
+          title='Feature States'
+          json={environmentFlags && Object.values(environmentFlags)}
+        />
+      </>
+    ),
+    [projectFlags, environmentFlags],
+  )
+
+  const renderPermissionedFeatureRow = useCallback(
+    (
+      projectFlag: ProjectFlag,
+      i: number,
+      environmentFlagsOverride?: FeatureListProviderData['environmentFlags'],
+    ) => (
+      <Permission
+        key={projectFlag.id}
+        level='environment'
+        tags={projectFlag.tags}
+        permission={Utils.getManageFeaturePermission(
+          Utils.changeRequestsEnabled(minimumChangeRequestApprovals),
+        )}
+        id={environmentId}
+      >
+        {({ permission }) => (
+          <FeatureRow
+            openFromUrl
+            environmentFlags={environmentFlagsOverride ?? environmentFlags}
+            permission={permission}
+            environmentId={environmentId}
+            projectId={projectId}
+            index={i}
+            toggleFlag={toggleFlag}
+            removeFlag={removeFlag}
+            projectFlag={projectFlag}
+            isCompact={isCompact}
+          />
+        )}
+      </Permission>
+    ),
+    [
+      environmentFlags,
+      environmentId,
+      projectId,
+      minimumChangeRequestApprovals,
+      toggleFlag,
+      removeFlag,
+      isCompact,
+    ],
+  )
+
+  const renderFeatureRow = useCallback(
+    (projectFlag: ProjectFlag | SkeletonItem, i: number) => {
+      if (isSkeletonItem(projectFlag)) {
+        return <FeatureRowSkeleton key={`skeleton-${i}`} />
+      }
+
+      return renderPermissionedFeatureRow(projectFlag, i)
+    },
+    [renderPermissionedFeatureRow],
+  )
+
+  const handleNextPage = () => {
+    if (paging?.next) {
+      goToPage(page + 1)
+    }
+  }
+
+  const handlePrevPage = () => {
+    if (paging?.previous) {
+      goToPage(page - 1)
+    }
+  }
+
+  const renderFeaturesList = () => {
+    const shouldShowEmptyState =
+      data && projectFlags.length === 0 && !hasFilters && !isFetching
+
+    if (!shouldShowEmptyState) {
+      return (
+        <PanelSearch
+          className='no-pad overflow-visible'
+          id='features-list'
+          renderSearchWithNoResults
+          itemHeight={65}
+          isLoading={isLoading || isDataStale}
+          paging={paging}
+          header={renderHeader()}
+          nextPage={handleNextPage}
+          prevPage={handlePrevPage}
+          goToPage={goToPage}
+          items={!data ? SKELETON_ITEMS : projectFlags}
+          renderFooter={renderFooter}
+          renderRow={renderFeatureRow}
+        />
+      )
+    }
+
+    return (
+      <Permission
+        level='project'
+        permission={ProjectPermission.CREATE_FEATURE}
+        id={projectId}
+        showTooltip
+        permissionName='Create Feature'
+      >
+        {({ permission: perm }) => (
+          <FeaturesEmptyState
+            environmentId={environmentId}
+            projectId={projectId}
+            onCreateFeature={openNewFlagModal}
+            canCreateFeature={perm}
+          />
+        )}
+      </Permission>
+    )
+  }
+
+  const readOnly = Utils.getFlagsmithHasFeature('read_only_mode')
+  return (
+    <div
+      data-test='features-page'
+      id='features-page'
+      className='app-container container'
+    >
+      <div className='features-page'>
+        {error || projectEnvError ? (
+          <div className='text-center'>
+            <h4 className='mb-3'>Unable to Load Features</h4>
+            <p className='text-muted mb-3'>
+              We couldn't load your feature flags. This might be due to a
+              network issue or a temporary server problem.
+            </p>
+          </div>
+        ) : (
+          <>
+            <FeatureMetricsSection
+              environmentId={environmentId}
+              projectId={projectId}
+            />
+
+            <FeaturesPageHeader
+              onCreateFeature={openNewFlagModal}
+              readOnly={readOnly}
+              projectId={projectId}
+              title={pageTitle}
+            />
+
+            <FormGroup className='mb-4'>{renderFeaturesList()}</FormGroup>
+
+            {deepLinkedFeature && (
+              <div className='d-none' data-test='deep-linked-feature'>
+                {renderPermissionedFeatureRow(
+                  deepLinkedFeature.projectFlag,
+                  -1,
+                  deepLinkedFeature.environmentFlag
+                    ? {
+                        [deepLinkedFeature.projectFlag.id]:
+                          deepLinkedFeature.environmentFlag,
+                      }
+                    : {},
+                )}
+              </div>
+            )}
+
+            <FeaturesSDKIntegration
+              projectId={projectId}
+              environmentId={environmentId}
+              totalFeatures={Math.max(
+                // The list count is filter-aware but live; the project
+                // total is unfiltered but cached.
+                data?.pagination?.count ?? 0,
+                project?.total_features ?? 0,
+              )}
+            />
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
+
+export default FeaturesPage

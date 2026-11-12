@@ -1,0 +1,53 @@
+name: MCP Pull Request
+
+permissions:
+  contents: read # For actions/checkout
+
+on:
+  pull_request:
+    paths:
+      - mcp/**
+      - .github/**
+    types: [opened, synchronize, reopened, ready_for_review]
+  push:
+    paths:
+      - mcp/**
+      - .github/**
+    branches:
+      - main
+
+defaults:
+  run:
+    working-directory: mcp
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    name: MCP Tests
+
+    steps:
+      - name: Cloning repo
+        uses: actions/checkout@v5
+
+      - uses: ./.github/actions/install-uv
+        with:
+          working-directory: mcp
+
+      - name: Install dependencies
+        run: make install
+
+      - uses: liskin/gh-problem-matcher-wrap@v2
+        with:
+          action: add
+          linters: mypy
+
+      - name: Check for new typing errors
+        run: make typecheck
+
+      - uses: liskin/gh-problem-matcher-wrap@v2
+        with:
+          action: remove
+          linters: mypy
+
+      - name: Run tests
+        run: make test

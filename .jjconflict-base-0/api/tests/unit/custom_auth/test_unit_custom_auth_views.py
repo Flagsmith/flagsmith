@@ -1,0 +1,647 @@
+import json
+from typing import Any
+from unittest.mock import MagicMock
+
+import pytest
+from django.contrib.auth.hashers import PBKDF2PasswordHasher, make_password
+from django.contrib.auth.tokens import default_token_generator
+from django.db import DatabaseError
+from django.urls import reverse
+from djoser import utils  # type: ignore[import-untyped]
+from freezegun import freeze_time
+from pytest_django.fixtures import SettingsWrapper
+from pytest_mock import MockerFixture
+from rest_framework import status
+from rest_framework.authtoken.models import Token
+from rest_framework.test import APIClient
+from rest_framework.throttling import ScopedRateThrottle
+from rest_framework_simplejwt.tokens import SlidingToken
+
+from custom_auth.jwt_cookie.constants import JWT_SLIDING_COOKIE_KEY
+from users.models import FFAdminUser, HubspotTracker
+
+
+def test_get_current_user__authenticated__returns_user_details(
+    staff_user: FFAdminUser, staff_client: APIClient
+) -> None:
+    # Given
+    url = reverse("api-v1:custom_auth:ffadminuser-me")
+
+    # When
+    response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    response_json = response.json()
+    assert response_json["email"] == staff_user.email
+    assert response_json["first_name"] == staff_user.first_name
+    assert response_json["last_name"] == staff_user.last_name
+    assert response_json["uuid"] == str(staff_user.uuid)
+    assert response_json["pylon_email_signature"] is None
+
+
+def test_get_current_user__pylon_secret_configured__returns_pylon_signature(
+    staff_user: FFAdminUser,
+    staff_client: APIClient,
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    secret = "736f6d652d736563726574"  # "some-secret" in hexadecimal
+
+    # calculated manually to verify the logic without relying on behaviour under test
+    expected_signature = (
+        "6c2bf866224d1d7661db091d2572982161fc2872103b04a44e0397cd4117ab68"
+    )
+
+    settings.PYLON_IDENTITY_VERIFICATION_SECRET = secret
+    url = reverse("api-v1:custom_auth:ffadminuser-me")
+
+    # When
+    response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    response_json = response.json()
+    assert response_json["pylon_email_signature"] == expected_signature
+
+
+@pytest.mark.parametrize(
+    "onboarding_data, expected_response",
+    [
+        (None, None),
+        (
+            {"signup_anonymous_id": "6f1c5d2e-3b4a-4c8d-9e0f-1a2b3c4d5e6f"},
+            {"tasks": []},
+        ),
+        (
+            {"tasks": [{"name": "task-1"}]},
+            {"tasks": [{"name": "task-1", "completed_at": "2025-01-01T12:00:00Z"}]},
+        ),
+        (
+            {"tools": {"completed": True, "integrations": ["integration-1"]}},
+            {
+                "tasks": [],
+                "tools": {"completed": True, "integrations": ["integration-1"]},
+            },
+        ),
+        (
+            {
+                "tasks": [{"name": "task-1"}],
+                "tools": {"completed": True, "integrations": ["integration-1"]},
+            },
+            {
+                "tasks": [{"name": "task-1", "completed_at": "2025-01-01T12:00:00Z"}],
+                "tools": {"completed": True, "integrations": ["integration-1"]},
+            },
+        ),
+        (
+            {
+                "tasks": [{"name": "task-1"}],
+                "tools": {"completed": True, "integrations": ["integration-1"]},
+                "hosting_preferences": ["hosting-preference-1, hosting-preference-2"],
+            },
+            {
+                "tasks": [{"name": "task-1", "completed_at": "2025-01-01T12:00:00Z"}],
+                "tools": {"completed": True, "integrations": ["integration-1"]},
+                "hosting_preferences": ["hosting-preference-1, hosting-preference-2"],
+            },
+        ),
+    ],
+)
+@freeze_time("2025-01-01T12:00:00Z")
+def test_get_me__onboarding_data_set__returns_onboarding_object(
+    db: None, onboarding_data: dict[str, Any], expected_response: dict[str, Any]
+) -> None:
+    # Given
+    onboarding_serialized = json.dumps(onboarding_data)
+    new_user = FFAdminUser.objects.create(
+        email="testuser@mail.com",
+        onboarding_data=onboarding_serialized,
+    )
+
+    new_user.save()
+    client = APIClient()
+    client.force_authenticate(user=new_user)
+    url = reverse("api-v1:custom_auth:ffadminuser-me")
+
+    # When
+    response = client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    response_json = response.json()
+    assert response_json["onboarding"] == expected_response
+
+
+@pytest.mark.parametrize(
+    "data,expected_keys",
+    [
+        (
+            {"tasks": [{"name": "task-1", "completed_at": "2024-01-01T12:00:00Z"}]},
+            {"tasks"},
+        ),
+        ({"tools": {"completed": True, "integrations": ["integration-1"]}}, {"tools"}),
+        (
+            {
+                "tasks": [{"name": "task-1", "completed_at": "2024-01-01T12:00:00Z"}],
+                "tools": {"completed": True, "integrations": ["integration-1"]},
+            },
+            {"tasks", "tools"},
+        ),
+        (
+            {
+                "tasks": [{"name": "task-1", "completed_at": "2024-01-01T12:00:00Z"}],
+                "tools": {"completed": True, "integrations": ["integration-1"]},
+                "hosting_preferences": ["hosting-preference-1, hosting-preference-2"],
+            },
+            {"tasks", "tools", "hosting_preferences"},
+        ),
+    ],
+)
+def test_patch_user_onboarding__nested_objects_provided__updates_only_provided_keys(
+    staff_user: FFAdminUser,
+    staff_client: APIClient,
+    data: dict[str, Any],
+    expected_keys: set[str],
+) -> None:
+    # Given
+    url = reverse("api-v1:custom_auth:ffadminuser-patch-onboarding")
+
+    # When
+    response = staff_client.patch(url, data=data, format="json")
+
+    # Then
+    staff_user.refresh_from_db()
+
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    onboarding_json = json.loads(staff_user.onboarding_data or "{}")
+    assert onboarding_json is not None
+    if "tasks" in expected_keys:
+        assert onboarding_json.get("tasks", [])[0]
+        assert onboarding_json.get("tasks", [])[0].get("name") == data.get("tasks", [])[
+            0
+        ].get("name")
+    if "tools" in expected_keys:
+        assert onboarding_json.get("tools", {}).get("completed") is True
+        assert onboarding_json.get("tools", {}).get("integrations") == data.get(
+            "tools", {}
+        ).get("integrations")
+
+
+def test_patch_user_onboarding__empty_payload__returns_bad_request(
+    staff_user: FFAdminUser,
+    staff_client: APIClient,
+) -> None:
+    # Given
+    url = reverse("api-v1:custom_auth:ffadminuser-patch-onboarding")
+
+    # When
+    response = staff_client.patch(url, data={}, format="json")
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json() == {
+        "non_field_errors": [
+            "At least one of 'tasks' or 'tools' or 'hosting_preferences' must be provided."
+        ]
+    }
+
+
+def test_create_user__hubspot_cookie_provided__creates_hubspot_contact(
+    mocker: MagicMock,
+    db: None,
+    settings: SettingsWrapper,
+    staff_client: APIClient,
+) -> None:
+    # Given
+    hubspot_cookie = "1234567890"
+    settings.ENABLE_HUBSPOT_LEAD_TRACKING = True
+    data = {
+        "first_name": "new",
+        "last_name": "user",
+        "email": "test@exemple.fr",
+        "password": "password123456!=&",
+        "sign_up_type": "NO_INVITE",
+        "hubspotutk": hubspot_cookie,
+    }
+
+    mock_create_hubspot_contact_for_user = mocker.patch(
+        "integrations.lead_tracking.hubspot.services.create_hubspot_contact_for_user"
+    )
+
+    url = reverse("api-v1:custom_auth:ffadminuser-list")
+    # When
+    response = staff_client.post(url, data=data, format="json")
+
+    user = FFAdminUser.objects.filter(email="test@exemple.fr").first()
+    hubspot_tracker = HubspotTracker.objects.filter(user=user).first()
+    assert hubspot_tracker is not None
+    assert hubspot_tracker.hubspot_cookie == hubspot_cookie
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert user is not None
+
+    mock_create_hubspot_contact_for_user.delay.assert_called_once_with(args=(user.id,))
+
+
+def test_create_user__no_hubspot_cookie__does_not_create_hubspot_tracker(
+    mocker: MagicMock,
+    db: None,
+    settings: SettingsWrapper,
+    staff_client: APIClient,
+) -> None:
+    # Given
+    settings.ENABLE_HUBSPOT_LEAD_TRACKING = True
+    data = {
+        "first_name": "new",
+        "last_name": "user",
+        "email": "test@exemple.fr",
+        "password": "password123456!=&",
+        "sign_up_type": "NO_INVITE",
+    }
+
+    mock_create_hubspot_contact_for_user = mocker.patch(
+        "integrations.lead_tracking.hubspot.services.create_hubspot_contact_for_user"
+    )
+
+    url = reverse("api-v1:custom_auth:ffadminuser-list")
+    # When
+    response = staff_client.post(url, data=data, format="json")
+
+    user = FFAdminUser.objects.filter(email="test@exemple.fr").first()
+    hubspot_tracker = HubspotTracker.objects.filter(user=user).first()
+    assert hubspot_tracker is None
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert user is not None
+
+    mock_create_hubspot_contact_for_user.delay.assert_called_once_with(args=(user.id,))
+
+
+def test_set_password__token_auth__revokes_token_for_all_sessions(
+    staff_user: FFAdminUser,
+) -> None:
+    # Given
+    staff_user.password = make_password("old-password")
+    staff_user.save()
+    token = Token.objects.create(user=staff_user)
+    current_client = APIClient()
+    current_client.credentials(HTTP_AUTHORIZATION=f"Token {token.key}")
+    other_client = APIClient()
+    other_client.credentials(HTTP_AUTHORIZATION=f"Token {token.key}")
+    url = reverse("api-v1:custom_auth:ffadminuser-set-password")
+
+    # When
+    response = current_client.post(
+        url,
+        data={
+            "current_password": "old-password",
+            "new_password": "new-password-123!",
+            "re_new_password": "new-password-123!",
+        },
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert not Token.objects.filter(user=staff_user).exists()
+    me_url = reverse("api-v1:custom_auth:ffadminuser-me")
+    assert other_client.get(me_url).status_code == status.HTTP_401_UNAUTHORIZED
+
+
+def test_reset_password_confirm__token_auth__revokes_token(
+    staff_user: FFAdminUser,
+) -> None:
+    # Given
+    token = Token.objects.create(user=staff_user)
+    authenticated_client = APIClient()
+    authenticated_client.credentials(HTTP_AUTHORIZATION=f"Token {token.key}")
+    url = reverse("api-v1:custom_auth:ffadminuser-reset-password-confirm")
+
+    # When
+    response = APIClient().post(
+        url,
+        data={
+            "uid": utils.encode_uid(staff_user.pk),
+            "token": default_token_generator.make_token(staff_user),
+            "new_password": "new-password-123!",
+            "re_new_password": "new-password-123!",
+        },
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert not Token.objects.filter(user=staff_user).exists()
+    me_url = reverse("api-v1:custom_auth:ffadminuser-me")
+    assert authenticated_client.get(me_url).status_code == status.HTTP_401_UNAUTHORIZED
+
+
+def test_set_password__jwt_cookie_auth__revokes_all_sessions(
+    staff_user: FFAdminUser,
+) -> None:
+    # Given
+    staff_user.password = make_password("old-password")
+    staff_user.save()
+    current_client = APIClient()
+    current_client.cookies[JWT_SLIDING_COOKIE_KEY] = str(
+        SlidingToken.for_user(staff_user)
+    )
+    other_client = APIClient()
+    other_client.cookies[JWT_SLIDING_COOKIE_KEY] = str(
+        SlidingToken.for_user(staff_user)
+    )
+    url = reverse("api-v1:custom_auth:ffadminuser-set-password")
+
+    # When
+    response = current_client.post(
+        url,
+        data={
+            "current_password": "old-password",
+            "new_password": "new-password-123!",
+            "re_new_password": "new-password-123!",
+        },
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    projects_url = reverse("api-v1:projects:project-list")
+    assert current_client.get(projects_url).status_code == status.HTTP_401_UNAUTHORIZED
+    assert other_client.get(projects_url).status_code == status.HTTP_401_UNAUTHORIZED
+
+
+def test_reset_password_confirm__jwt_cookie_auth__revokes_all_sessions(
+    staff_user: FFAdminUser,
+) -> None:
+    # Given
+    authenticated_client = APIClient()
+    authenticated_client.cookies[JWT_SLIDING_COOKIE_KEY] = str(
+        SlidingToken.for_user(staff_user)
+    )
+    url = reverse("api-v1:custom_auth:ffadminuser-reset-password-confirm")
+
+    # When
+    response = APIClient().post(
+        url,
+        data={
+            "uid": utils.encode_uid(staff_user.pk),
+            "token": default_token_generator.make_token(staff_user),
+            "new_password": "new-password-123!",
+            "re_new_password": "new-password-123!",
+        },
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    projects_url = reverse("api-v1:projects:project-list")
+    assert (
+        authenticated_client.get(projects_url).status_code
+        == status.HTTP_401_UNAUTHORIZED
+    )
+
+
+def test_set_password__save_fails__keeps_token(
+    staff_user: FFAdminUser,
+    mocker: MagicMock,
+) -> None:
+    # Given
+    staff_user.password = make_password("old-password")
+    staff_user.save()
+    token = Token.objects.create(user=staff_user)
+    client = APIClient()
+    client.credentials(HTTP_AUTHORIZATION=f"Token {token.key}")
+    url = reverse("api-v1:custom_auth:ffadminuser-set-password")
+    mocker.patch.object(FFAdminUser, "save", side_effect=DatabaseError)
+
+    # When
+    with pytest.raises(DatabaseError):
+        client.post(
+            url,
+            data={
+                "current_password": "old-password",
+                "new_password": "new-password-123!",
+                "re_new_password": "new-password-123!",
+            },
+        )
+
+    # Then
+    assert Token.objects.filter(key=token.key).exists()
+
+
+def test_reset_password_confirm__save_fails__keeps_token(
+    staff_user: FFAdminUser,
+    mocker: MagicMock,
+) -> None:
+    # Given
+    token = Token.objects.create(user=staff_user)
+    url = reverse("api-v1:custom_auth:ffadminuser-reset-password-confirm")
+    mocker.patch.object(FFAdminUser, "save", side_effect=DatabaseError)
+
+    # When
+    with pytest.raises(DatabaseError):
+        APIClient().post(
+            url,
+            data={
+                "uid": utils.encode_uid(staff_user.pk),
+                "token": default_token_generator.make_token(staff_user),
+                "new_password": "new-password-123!",
+                "re_new_password": "new-password-123!",
+            },
+        )
+
+    # Then
+    assert Token.objects.filter(key=token.key).exists()
+
+
+def test_login__outdated_password_hash__keeps_token(
+    staff_user: FFAdminUser,
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    settings.PASSWORD_HASHERS = [
+        "django.contrib.auth.hashers.MD5PasswordHasher",
+        "django.contrib.auth.hashers.PBKDF2PasswordHasher",
+    ]
+    hasher = PBKDF2PasswordHasher()
+    staff_user.password = hasher.encode("password", hasher.salt(), iterations=1)
+    staff_user.save()
+    token = Token.objects.create(user=staff_user)
+    url = reverse("api-v1:custom_auth:custom-mfa-authtoken-login")
+
+    # When
+    response = APIClient().post(
+        url, data={"email": staff_user.email, "password": "password"}
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    staff_user.refresh_from_db()
+    assert staff_user.password.startswith("md5$")
+    assert Token.objects.filter(key=token.key).exists()
+
+
+@pytest.mark.parametrize(
+    "signup_data, expected_onboarding_data",
+    [
+        (
+            {"signup_anonymous_id": "6f1c5d2e-3b4a-4c8d-9e0f-1a2b3c4d5e6f"},
+            {"signup_anonymous_id": "6f1c5d2e-3b4a-4c8d-9e0f-1a2b3c4d5e6f"},
+        ),
+        (
+            {"signup_anonymous_id": "1759651200000-0.123"},
+            {"signup_anonymous_id": "1759651200000-0.123"},
+        ),
+        ({}, None),
+    ],
+)
+def test_create_user__signup_anonymous_id__stores_in_onboarding_data(
+    db: None,
+    api_client: APIClient,
+    signup_data: dict[str, Any],
+    expected_onboarding_data: dict[str, Any] | None,
+) -> None:
+    # Given
+    data = {
+        "first_name": "new",
+        "last_name": "user",
+        "email": "test@exemple.fr",
+        "password": "password123456!=&",
+        **signup_data,
+    }
+    url = reverse("api-v1:custom_auth:ffadminuser-list")
+
+    # When
+    response = api_client.post(url, data=data, format="json")
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert "signup_anonymous_id" not in response.json()
+    user = FFAdminUser.objects.get(email="test@exemple.fr")
+    onboarding_data = json.loads(user.onboarding_data) if user.onboarding_data else None
+    assert onboarding_data == expected_onboarding_data
+
+
+@pytest.mark.parametrize("signup_anonymous_id", ["   ", "a" * 65])
+def test_create_user__invalid_signup_anonymous_id__returns_400(
+    db: None,
+    api_client: APIClient,
+    signup_anonymous_id: str,
+) -> None:
+    # Given
+    data = {
+        "first_name": "new",
+        "last_name": "user",
+        "email": "test@exemple.fr",
+        "password": "password123456!=&",
+        "signup_anonymous_id": signup_anonymous_id,
+    }
+    url = reverse("api-v1:custom_auth:ffadminuser-list")
+
+    # When
+    response = api_client.post(url, data=data, format="json")
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "signup_anonymous_id" in response.json()
+    assert not FFAdminUser.objects.filter(email="test@exemple.fr").exists()
+
+
+def test_hubspot_chat_token__hubspot_configured__returns_token(
+    staff_user: FFAdminUser,
+    staff_client: APIClient,
+    settings: SettingsWrapper,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    settings.HUBSPOT_ACCESS_TOKEN = "test-access-token"
+    mock_hubspot_client = mocker.patch("custom_auth.views.HubspotClient")
+    mock_create_token = (
+        mock_hubspot_client.return_value.create_visitor_identification_token
+    )
+    mock_create_token.return_value = "test-token"
+    url = reverse("api-v1:custom_auth:ffadminuser-hubspot-chat-token")
+
+    # When
+    response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == {"token": "test-token", "email": staff_user.email}
+    mock_create_token.assert_called_once_with(staff_user)
+
+
+def test_hubspot_chat_token__hubspot_not_configured__returns_404(
+    staff_client: APIClient,
+    settings: SettingsWrapper,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    settings.HUBSPOT_ACCESS_TOKEN = None
+    mock_hubspot_client = mocker.patch("custom_auth.views.HubspotClient")
+    url = reverse("api-v1:custom_auth:ffadminuser-hubspot-chat-token")
+
+    # When
+    response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+    mock_hubspot_client.assert_not_called()
+
+
+def test_hubspot_chat_token__hubspot_fails__returns_502(
+    staff_client: APIClient,
+    settings: SettingsWrapper,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    settings.HUBSPOT_ACCESS_TOKEN = "test-access-token"
+    mock_hubspot_client = mocker.patch("custom_auth.views.HubspotClient")
+    mock_hubspot_client.return_value.create_visitor_identification_token.return_value = None
+    url = reverse("api-v1:custom_auth:ffadminuser-hubspot-chat-token")
+
+    # When
+    response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_502_BAD_GATEWAY
+
+
+def test_hubspot_chat_token__unauthenticated__returns_401(
+    api_client: APIClient,
+    settings: SettingsWrapper,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    settings.HUBSPOT_ACCESS_TOKEN = "test-access-token"
+    mock_hubspot_client = mocker.patch("custom_auth.views.HubspotClient")
+    url = reverse("api-v1:custom_auth:ffadminuser-hubspot-chat-token")
+
+    # When
+    response = api_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+    mock_hubspot_client.assert_not_called()
+
+
+def test_hubspot_chat_token__rate_exceeded__returns_429(
+    staff_client: APIClient,
+    reset_cache: None,
+    settings: SettingsWrapper,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    settings.HUBSPOT_ACCESS_TOKEN = "test-access-token"
+    mocker.patch.dict(
+        ScopedRateThrottle.THROTTLE_RATES, {"hubspot_chat_token": "1/min"}
+    )
+    mock_hubspot_client = mocker.patch("custom_auth.views.HubspotClient")
+    mock_hubspot_client.return_value.create_visitor_identification_token.return_value = "test-token"
+    url = reverse("api-v1:custom_auth:ffadminuser-hubspot-chat-token")
+    staff_client.get(url)
+
+    # When
+    response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_429_TOO_MANY_REQUESTS

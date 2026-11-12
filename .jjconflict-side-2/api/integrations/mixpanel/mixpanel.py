@@ -1,0 +1,55 @@
+import logging
+import typing
+
+import requests
+
+from environments.identities.models import Identity
+from environments.identities.traits.models import Trait
+from evaluation.types import EvaluatedFeatureState
+from integrations.common.mappers import map_feature_states_to_feature_properties
+from integrations.common.wrapper import AbstractBaseIdentityIntegrationWrapper
+
+from .constants import DEFAULT_MIXPANEL_API_URL
+from .models import MixpanelConfiguration
+
+MixpanelUserData: typing.TypeAlias = list[dict[str, typing.Any]]
+
+
+logger = logging.getLogger(__name__)
+
+
+class MixpanelWrapper(AbstractBaseIdentityIntegrationWrapper[MixpanelUserData]):
+    def __init__(self, config: MixpanelConfiguration):
+        self.api_key = config.api_key
+        base_url = (config.base_url or DEFAULT_MIXPANEL_API_URL).rstrip("/")
+        self.url = f"{base_url}/engage#profile-set"
+
+        # Pass the integration ID as per https://developer.mixpanel.com/docs/partner-integration-id
+        self.headers = {
+            "Accept": "text/plain",
+            "X-Mixpanel-Integration-ID": "flagsmith",
+        }
+
+    def _identify_user(self, user_data: MixpanelUserData) -> None:
+        response = requests.post(self.url, headers=self.headers, json=user_data)
+        logger.debug(
+            "Sent event to Mixpanel. Response code was: %s" % response.status_code
+        )
+        logger.debug("Sent event to Mixpanel. Response content was: %s" % response.text)
+
+    def generate_user_data(
+        self,
+        identity: Identity,
+        feature_states: typing.List[EvaluatedFeatureState],
+        trait_models: typing.List[Trait],
+    ) -> MixpanelUserData:
+        feature_properties = map_feature_states_to_feature_properties(feature_states)
+
+        return [
+            {
+                "$token": self.api_key,
+                "$distinct_id": identity.identifier,
+                "$set": feature_properties,
+                "$ip": "0",
+            }
+        ]

@@ -1,0 +1,467 @@
+import React, { FC, useCallback, useEffect, useMemo, useRef } from 'react'
+import ConfirmToggleFeature from 'components/modals/ConfirmToggleFeature'
+import ConfirmRemoveFeature from 'components/modals/ConfirmRemoveFeature'
+import CreateFlagModal from 'components/modals/create-feature'
+import IconButton from 'components/base/IconButton'
+import ProjectStore from 'common/stores/project-store'
+import Constants from 'common/constants'
+import { useProtectedTags } from 'common/utils/useProtectedTags'
+import Icon from 'components/icons/Icon'
+import FeatureValue from './FeatureValue'
+import FeatureAction, { FeatureActionProps } from './FeatureAction'
+import classNames from 'classnames'
+import {
+  Environment,
+  FeatureListProviderData,
+  FeatureState,
+  ProjectFlag,
+  ReleasePipeline,
+} from 'common/types/responses'
+import Utils from 'common/utils/utils'
+import API from 'project/api'
+import Switch from 'components/Switch'
+import AccountStore from 'common/stores/account-store'
+import CondensedFeatureRow from 'components/CondensedFeatureRow'
+import { useHistory } from 'react-router-dom'
+import { useGetHealthEventsQuery } from 'common/services/useHealthEvents'
+import { useGetProjectQuery } from 'common/services/useProject'
+import getUserDisplayName from 'common/utils/getUserDisplayName'
+import FeatureName from './FeatureName'
+import FeatureDescription from './FeatureDescription'
+import FeatureTags from './FeatureTags'
+import { useFeatureRowState } from 'components/pages/features/hooks/useFeatureRowState'
+
+interface FeatureRowProps {
+  // Only the page that owns `?feature=` sets this: Compare renders one row per
+  // environment for the same flag, so every row would match.
+  openFromUrl?: boolean
+  disableControls?: boolean
+  environmentFlags: FeatureListProviderData['environmentFlags']
+  environmentId: string
+  permission?: boolean
+  projectFlag: ProjectFlag
+  projectId: number
+  removeFlag?: (projectFlag: ProjectFlag) => void | Promise<void>
+  toggleFlag?: (
+    projectFlag: ProjectFlag,
+    environmentFlag: FeatureState | undefined,
+    onError?: () => void,
+  ) => void | Promise<void>
+  index: number
+  readOnly?: boolean
+  condensed?: boolean
+  className?: string
+  style?: React.CSSProperties
+  fadeEnabled?: boolean
+  fadeValue?: boolean
+  hideAudit?: boolean
+  hideRemove?: boolean
+  releasePipelines?: ReleasePipeline[]
+  onCloseEditModal?: () => void
+  isCompact?: boolean
+}
+
+const width = [220, 50, 55, 70, 450]
+
+const FeatureRow: FC<FeatureRowProps> = (props) => {
+  const {
+    className,
+    condensed = false,
+    disableControls,
+    environmentFlags,
+    environmentId,
+    fadeEnabled,
+    fadeValue,
+    hideAudit = false,
+    hideRemove = false,
+    index,
+    isCompact = false,
+    onCloseEditModal,
+    openFromUrl = false,
+    permission,
+    projectFlag,
+    projectId,
+    readOnly = false,
+    removeFlag,
+    style,
+    toggleFlag,
+  } = props
+  const protectedTags = useProtectedTags(projectFlag, String(projectId))
+  const history = useHistory()
+  const { id } = projectFlag
+
+  const actualEnabled = environmentFlags?.[id]?.enabled
+  const {
+    displayEnabled,
+    isLoading,
+    revertToggle,
+    startRemoving,
+    startToggle,
+    stopRemoving,
+  } = useFeatureRowState(actualEnabled)
+
+  const { data: healthEvents } = useGetHealthEventsQuery(
+    { projectId: projectFlag.project },
+    { skip: !projectFlag?.project },
+  )
+
+  const { data: projectData } = useGetProjectQuery(
+    { id: projectId },
+    { skip: !projectId },
+  )
+  const enforceFeatureOwners = !!projectData?.enforce_feature_owners
+
+  // Read during render, so a push to ?feature=<id> from elsewhere in the app
+  // opens the modal on the feature it names. Without it the effect only ran
+  // when the flag data changed, so following a dependency link did nothing.
+  const { feature: featureParam } = Utils.fromParam()
+
+  // Which feature this row last opened the modal for. The modal lives in its
+  // own React root behind a fade, so checking whether one is in the DOM says
+  // nothing about which feature it is showing.
+  const openedFor = useRef<string | undefined>(undefined)
+
+  useEffect(() => {
+    if (
+      openFromUrl &&
+      `${projectFlag.id}` === featureParam &&
+      openedFor.current !== featureParam
+    ) {
+      editFeature()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openFromUrl, environmentFlags, projectFlag, featureParam])
+
+  const featureUnhealthyEvents = useMemo(
+    () =>
+      healthEvents?.filter(
+        (event) =>
+          event.type === 'UNHEALTHY' && event.feature === projectFlag.id,
+      ),
+    [healthEvents, projectFlag],
+  )
+
+  const copyFeature = () => {
+    Utils.copyToClipboard(projectFlag.name)
+  }
+
+  const confirmRemove = (projectFlag: ProjectFlag, cb: () => void) => {
+    openModal2(
+      'Remove Feature',
+      <ConfirmRemoveFeature projectFlag={projectFlag} cb={cb} />,
+      'p-0',
+    )
+  }
+
+  const confirmToggle = () => {
+    openModal(
+      'Toggle Feature',
+      <ConfirmToggleFeature
+        environmentId={environmentId}
+        projectFlag={projectFlag}
+        environmentFlag={environmentFlags?.[id]}
+        cb={() => {
+          handleToggle()
+        }}
+      />,
+      'p-0',
+    )
+  }
+
+  const handleToggle = useCallback(() => {
+    const canToggle = startToggle(!actualEnabled)
+    if (!canToggle) return // Prevent rapid toggling
+    toggleFlag?.(projectFlag, environmentFlags?.[id], revertToggle)
+  }, [
+    actualEnabled,
+    environmentFlags,
+    id,
+    projectFlag,
+    revertToggle,
+    startToggle,
+    toggleFlag,
+  ])
+
+  const onChange = () => {
+    if (disableControls) {
+      return
+    }
+    if (
+      projectFlag?.multivariate_options?.length ||
+      Utils.changeRequestsEnabled(environment?.minimum_change_request_approvals)
+    ) {
+      editFeature()
+      return
+    }
+    confirmToggle()
+  }
+
+  const editFeature = (tab?: string) => {
+    const projectFlag = props.projectFlag
+    const environmentFlag = environmentFlags?.[id]
+    if (disableControls) {
+      return
+    }
+
+    API.trackEvent(Constants.events.VIEW_FEATURE)
+    openedFor.current = `${projectFlag.id}`
+    const tabValue = tab || Utils.fromParam().tab || 'value'
+    const cameFrom = Utils.fromParam().from
+
+    const modalProps = {
+      environmentFlag,
+      environmentId,
+      hasUnhealthyEvents:
+        isFeatureHealthEnabled && !!featureUnhealthyEvents?.length,
+      hideTagsByType: ['UNHEALTHY'],
+      history,
+      noPermissions: !permission,
+      projectFlag,
+      projectId,
+      tab,
+    }
+
+    const ownerChips = enforceFeatureOwners
+      ? [
+          ...(projectFlag.owners ?? []).map((u) => ({
+            id: `user-${u.id}`,
+            label: getUserDisplayName(u),
+          })),
+          ...(projectFlag.group_owners ?? []).map((g) => ({
+            id: `group-${g.id}`,
+            label: g.name,
+          })),
+        ]
+      : []
+
+    openModal(
+      <Row className='align-items-center'>
+        {!!cameFrom && (
+          <IconButton
+            size='medium'
+            variant='ghost'
+            className='me-2'
+            onClick={() => history.goBack()}
+            aria-label='Back to the previous flag'
+          >
+            <Icon name='arrow-left' width={20} />
+          </IconButton>
+        )}
+        <span>
+          {permission ? 'Edit Feature' : 'Feature'}: {projectFlag.name}
+        </span>
+        <IconButton
+          variant='ghost'
+          size='small'
+          aria-label='Copy feature name'
+          onClick={() => {
+            Utils.copyToClipboard(projectFlag.name)
+          }}
+          className='ms-2'
+        >
+          <Icon width={16} name='copy' />
+        </IconButton>
+        {ownerChips.length > 0 && (
+          <div className='d-flex align-items-center gap-1 ms-3'>
+            <Icon name='people' width={16} fill='#9DA4AE' />
+            {ownerChips.slice(0, 3).map((chip) => (
+              <span key={chip.id} className='chip chip--xs'>
+                {chip.label}
+              </span>
+            ))}
+            {ownerChips.length > 3 && (
+              <span className='chip chip--xs'>+{ownerChips.length - 3}</span>
+            )}
+          </div>
+        )}
+      </Row>,
+      <CreateFlagModal {...modalProps} />,
+      'side-modal create-feature-modal',
+      () => {
+        openedFor.current = undefined
+
+        if (onCloseEditModal) {
+          return onCloseEditModal()
+        }
+
+        history.replace({
+          pathname: document.location.pathname,
+          search: '',
+        })
+      },
+    )
+
+    // After openModal, not before: replacing a modal fires the outgoing one's
+    // close callback, and that clears the query string. Written first, the tab
+    // would be gone before the new modal's Tabs reads it.
+    history.replace({
+      pathname: document.location.pathname,
+      // `from` is kept, or the arrow goes as soon as it arrives.
+      search: `?feature=${projectFlag.id}&tab=${tabValue}${
+        cameFrom ? `&from=${cameFrom}` : ''
+      }`,
+    })
+  }
+
+  const isReadOnly = readOnly || Utils.getFlagsmithHasFeature('read_only_mode')
+  const isFeatureHealthEnabled = Utils.getFlagsmithHasFeature('feature_health')
+
+  const { description } = projectFlag
+  const environment = ProjectStore.getEnvironment(
+    environmentId,
+  ) as Environment | null
+
+  if (condensed) {
+    return (
+      <CondensedFeatureRow
+        disableControls={disableControls}
+        readOnly={isReadOnly}
+        projectFlag={projectFlag}
+        environmentFlags={environmentFlags}
+        permission={permission}
+        editFeature={editFeature}
+        hasUnhealthyEvents={
+          isFeatureHealthEnabled && !!featureUnhealthyEvents?.length
+        }
+        onChange={onChange}
+        style={style}
+        className={className}
+        isCompact={isCompact}
+        fadeEnabled={fadeEnabled}
+        fadeValue={fadeValue}
+        index={index}
+      />
+    )
+  }
+  const featureActionProps: Omit<FeatureActionProps, 'e2e'> = {
+    featureIndex: index,
+    featureName: projectFlag.name,
+    hideAudit: AccountStore.getOrganisationRole() !== 'ADMIN' || hideAudit,
+    hideHistory: !environment?.use_v2_feature_versioning,
+    hideRemove,
+    onCopyName: copyFeature,
+    onRemove: () => {
+      if (disableControls) return
+      confirmRemove(projectFlag, async () => {
+        startRemoving()
+        try {
+          await removeFlag?.(projectFlag)
+        } catch {
+          stopRemoving()
+        }
+      })
+    },
+    onShowAudit: () => {
+      if (disableControls) return
+      history.push(
+        `/project/${projectId}/audit-log?env=${environment?.id}&search=${projectFlag.name}`,
+        '',
+      )
+    },
+    onShowHistory: () => {
+      if (disableControls) return
+      editFeature(Constants.featurePanelTabs.HISTORY)
+    },
+    projectId: String(projectId),
+    protectedTags,
+    readOnly: isReadOnly,
+    tags: projectFlag.tags,
+  }
+  return (
+    <>
+      <div
+        className={classNames(
+          `d-none d-lg-flex align-items-lg-center flex-lg-row list-item py-0 list-item-xs fs-small' ${
+            isReadOnly ? '' : 'clickable'
+          }`,
+          className,
+          { 'list-item--toggling': isLoading },
+        )}
+        key={id}
+        data-test={`feature-item-${index}`}
+        onClick={() => !isReadOnly && editFeature()}
+      >
+        <div className='table-column ps-2 px-0 align-items-center flex-1'>
+          <div className='mx-0 flex-1 flex-column'>
+            <div className='d-flex align-items-center'>
+              <FeatureName name={projectFlag.name} />
+              <FeatureTags
+                editFeature={editFeature}
+                projectFlag={projectFlag}
+              />
+            </div>
+            {!isCompact && <FeatureDescription description={description} />}
+          </div>
+          <div className='d-none d-lg-flex align-items-center'>
+            <div
+              className='table-column px-1 px-lg-2 flex-1 flex-lg-auto'
+              style={{ width: width[0] }}
+            >
+              <FeatureValue
+                onClick={() => !isReadOnly && editFeature()}
+                value={environmentFlags?.[id]?.feature_state_value ?? null}
+                data-test={`feature-value-${index}`}
+              />
+            </div>
+            <div
+              className='table-column'
+              style={{ width: width[1] }}
+              onClick={(e) => {
+                e.stopPropagation()
+              }}
+            >
+              <Switch
+                disabled={!permission || isReadOnly || isLoading}
+                data-test={`feature-switch-${index}${
+                  displayEnabled ? '-on' : '-off'
+                }`}
+                checked={displayEnabled}
+                onChange={onChange}
+              />
+            </div>
+            <div
+              className='table-column px-1 px-lg-2'
+              style={{ width: isCompact ? width[2] : width[3] }}
+              onClick={(e) => {
+                e.stopPropagation()
+              }}
+            >
+              <FeatureAction {...featureActionProps} />
+            </div>
+          </div>
+        </div>
+      </div>
+      <div
+        onClick={() => !isReadOnly && editFeature()}
+        className={classNames(
+          'd-flex cursor-pointer flex-column justify-content-center px-2 list-item py-1 d-lg-none',
+          { 'list-item--toggling': isLoading },
+        )}
+      >
+        <div className='d-flex gap-2 align-items-center'>
+          <div className='flex-1 align-items-center flex-wrap'>
+            <FeatureName name={projectFlag.name} />
+            <FeatureTags editFeature={editFeature} projectFlag={projectFlag} />
+          </div>
+          <div
+            onClick={(e) => {
+              e.stopPropagation()
+            }}
+          >
+            <Switch
+              disabled={!permission || isReadOnly || isLoading}
+              data-test={`feature-switch-${index}${
+                displayEnabled ? '-on' : '-off'
+              }`}
+              checked={displayEnabled}
+              onChange={onChange}
+            />
+          </div>
+          <FeatureAction {...featureActionProps} disableE2E={true} />
+        </div>
+      </div>
+    </>
+  )
+}
+
+export default FeatureRow

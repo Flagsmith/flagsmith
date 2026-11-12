@@ -1,0 +1,10 @@
+from users.forms import CustomUserAdminForm
+
+
+def test_custom_user_admin_form__empty_username__returns_none(db):  # type: ignore[no-untyped-def]
+    # Given
+    form = CustomUserAdminForm({"email": "test@mail.com"})
+    # When
+    form.is_valid()
+    # Then
+    assert form.cleaned_data["username"] is None

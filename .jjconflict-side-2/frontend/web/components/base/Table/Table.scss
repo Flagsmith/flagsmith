@@ -1,0 +1,83 @@
+// Only what no utility expresses: off-scale sizes, a positional divider, and
+// the border, whose token utilities cannot win against Bootstrap yet.
+.ds-table {
+  th {
+    padding: 10px 16px;
+    font-size: 12px;
+    border-bottom: 1px solid var(--color-border-default);
+  }
+
+  // A height rather than padding alone: on a cell `height` is a minimum, so
+  // two tables agree even when one holds an icon button and the other a line
+  // of text.
+  td {
+    height: 48px;
+    font-size: 13px;
+  }
+
+  // A divider is the lower row's top border, not the upper row's bottom one.
+  // Appending a row then only paints the row that arrived; with a bottom border
+  // and a :last-child exception it has to repaint the row above as well, and
+  // that does not happen until something else forces it, such as a hover.
+  tbody tr + tr td {
+    border-top: 1px solid var(--color-border-default);
+  }
+}
+
+// The house style: the table owns its border and the header carries a fill.
+.ds-table--surface {
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 1px solid var(--color-border-default);
+
+  th {
+    background: var(--color-surface-subtle);
+  }
+}
+
+// For a table inside something that already draws a border.
+.ds-table--ghost {
+  border-collapse: collapse;
+}
+
+// A column of row actions, so two tables do not each pick a width.
+.ds-table__actions {
+  width: 60px;
+}
+
+// On the row rather than the cell, so one node animates instead of each column.
+.ds-table__row--pending {
+  opacity: 0.45;
+  pointer-events: none;
+  transition: opacity var(--duration-fast) var(--easing-standard);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ds-table__row--pending {
+    transition: none;
+  }
+}
+
+// Tracking a row across its columns, not an affordance. A clickable row takes
+// .cursor-pointer on top of this, as Bootstrap separates .table-hover from it.
+.ds-table--hover tbody tr {
+  transition: background-color var(--duration-fast) var(--easing-standard);
+
+  &:hover {
+    background: var(--color-surface-subtle);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ds-table--hover tbody tr {
+    transition: none;
+  }
+}
+
+.ds-table--auto {
+  table-layout: auto;
+}
+
+.ds-table--fixed {
+  table-layout: fixed;
+}

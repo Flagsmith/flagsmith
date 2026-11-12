@@ -1,0 +1,2427 @@
+import socket
+from datetime import datetime, timezone
+
+import pytest
+from clickhouse_connect.driver.exceptions import OperationalError
+from common.test_tools import AssertMetricFixture
+from django.urls import reverse
+from pytest_django.fixtures import SettingsWrapper
+from pytest_mock import MockerFixture
+from pytest_structlog import StructuredLogCapture
+from requests_mock import Mocker as RequestsMockerFixture
+from rest_framework import status
+from rest_framework.test import APIClient
+from rest_framework.throttling import ScopedRateThrottle
+
+from audit.models import AuditLog
+from audit.related_object_type import RelatedObjectType
+from environments.models import Environment
+from experimentation.constants import BODY_LIMIT_ERROR, MAX_BODY_BYTES
+from experimentation.dataclasses import (
+    WarehouseEventNames,
+    WarehouseEventStats,
+)
+from experimentation.models import (
+    SDKExperimentationEvent,
+    WarehouseConnection,
+    WarehouseConnectionStatus,
+    WarehouseDeliveryStatus,
+    WarehouseType,
+)
+from experimentation.views import WarehouseConnectionViewSet
+from experimentation.warehouses.constants import (
+    FLAGSMITH_DATABASE_SOURCE,
+    FLAGSMITH_DATABASE_UNAVAILABLE_DETAIL,
+)
+from tests.unit.experimentation.conftest import (
+    PostgresWarehouseSchema,
+    SetWarehousesFlagFixture,
+)
+
+pytestmark = pytest.mark.django_db
+
+
+@pytest.fixture(autouse=True)
+def mock_clickhouse_stats(
+    mocker: MockerFixture,
+    settings: SettingsWrapper,
+) -> object:
+    """Default every view test to a configured, empty warehouse. Tests that need
+    events re-patch experimentation.warehouses.flagsmith.get_warehouse_event_stats; tests for the
+    unconfigured/erroring paths override the setting / raise."""
+    settings.EXPERIMENTATION_CLICKHOUSE_URL = "clickhouse://localhost:9000/test"
+    mock_client = mocker.Mock()
+    mock_client.execute.return_value = [(0, 0)]
+    return mocker.patch(
+        "experimentation.warehouses.flagsmith._get_clickhouse_client",
+        return_value=mock_client,
+    )
+
+
+def test_post__valid_data__returns_201_and_creates_connection(
+    admin_client: APIClient,
+    environment: Environment,
+    warehouse_connection_url: str,
+) -> None:
+    # Given / When
+    response = admin_client.post(
+        warehouse_connection_url,
+        data={"warehouse_type": "flagsmith"},
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.json()["warehouse_type"] == "flagsmith"
+    assert response.json()["status"] == "created"
+    assert response.json()["name"] == f"Flagsmith Warehouse - {environment.name}"
+    assert response.json()["config"] is None
+    assert "id" in response.json()
+    assert "created_at" in response.json()
+    assert WarehouseConnection.objects.filter(environment=environment).count() == 1
+
+
+def test_post__already_exists__returns_409(
+    admin_client: APIClient,
+    environment: Environment,
+    warehouse_connection: WarehouseConnection,
+    warehouse_connection_url: str,
+) -> None:
+    # Given / When
+    response = admin_client.post(
+        warehouse_connection_url,
+        data={"warehouse_type": "flagsmith"},
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_409_CONFLICT
+    assert (
+        response.json()["detail"]
+        == "This environment already has an active warehouse connection."
+    )
+
+
+def test_post__different_type_already_exists__returns_409(
+    admin_client: APIClient,
+    environment: Environment,
+    warehouse_connection: WarehouseConnection,
+    warehouse_connection_url: str,
+) -> None:
+    # Given / When
+    response = admin_client.post(
+        warehouse_connection_url,
+        data={
+            "warehouse_type": "snowflake",
+            "name": "My Snowflake",
+            "config": {"account_identifier": "xy12345.us-east-1"},
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_409_CONFLICT
+    assert (
+        response.json()["detail"]
+        == "This environment already has an active warehouse connection."
+    )
+
+
+def test_post__soft_deleted_exists__creates_new_record_and_returns_201(
+    admin_client: APIClient,
+    environment: Environment,
+    warehouse_connection: WarehouseConnection,
+    warehouse_connection_url: str,
+) -> None:
+    # Given
+    original_id = warehouse_connection.id
+    warehouse_connection.delete()
+
+    # When
+    response = admin_client.post(
+        warehouse_connection_url,
+        data={"warehouse_type": "flagsmith"},
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.json()["id"] != original_id
+    assert response.json()["status"] == "created"
+
+
+def test_post__non_admin__returns_403(
+    staff_client: APIClient,
+    environment: Environment,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:environments:experimentation:warehouse-connections-list",
+        args=[environment.api_key],
+    )
+
+    # When
+    response = staff_client.post(
+        url,
+        data={"warehouse_type": "flagsmith"},
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+def test_post__valid_data__creates_audit_log(
+    admin_client: APIClient,
+    environment: Environment,
+    warehouse_connection_url: str,
+) -> None:
+    # Given / When
+    admin_client.post(
+        warehouse_connection_url,
+        data={"warehouse_type": "flagsmith"},
+        format="json",
+    )
+
+    # Then
+    assert (
+        AuditLog.objects.filter(
+            related_object_type=RelatedObjectType.WAREHOUSE_CONNECTION.name,
+        ).count()
+        == 1
+    )
+    audit_log = AuditLog.objects.get(
+        related_object_type=RelatedObjectType.WAREHOUSE_CONNECTION.name,
+    )
+    assert "created" in audit_log.log
+    assert environment.name in audit_log.log
+
+
+def test_get__exists__returns_200_with_list(
+    admin_client: APIClient,
+    environment: Environment,
+    warehouse_connection: WarehouseConnection,
+    warehouse_connection_url: str,
+) -> None:
+    # Given / When
+    response = admin_client.get(warehouse_connection_url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+    assert len(data) == 1
+    assert data[0]["warehouse_type"] == "flagsmith"
+    assert data[0]["status"] == "created"
+    assert data[0]["name"] == f"Flagsmith Warehouse - {environment.name}"
+    assert data[0]["id"] == warehouse_connection.id
+    assert "created_at" in data[0]
+
+
+def test_get__not_exists__returns_200_with_empty_list(
+    admin_client: APIClient,
+    warehouse_connection_url: str,
+) -> None:
+    # Given / When
+    response = admin_client.get(warehouse_connection_url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == []
+
+
+def test_delete__exists__returns_204(
+    admin_client: APIClient,
+    environment: Environment,
+    warehouse_connection: WarehouseConnection,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:environments:experimentation:warehouse-connections-detail",
+        args=[environment.api_key, warehouse_connection.id],
+    )
+
+    # When
+    response = admin_client.delete(url)
+
+    # Then
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert WarehouseConnection.objects.filter(environment=environment).count() == 0
+    deleted = WarehouseConnection.objects.all_with_deleted().get(
+        pk=warehouse_connection.pk,
+    )
+    assert deleted.deleted_at is not None
+
+
+def test_delete__not_exists__returns_404(
+    admin_client: APIClient,
+    environment: Environment,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:environments:experimentation:warehouse-connections-detail",
+        args=[environment.api_key, 999999],
+    )
+
+    # When
+    response = admin_client.delete(url)
+
+    # Then
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
+def test_delete__exists__creates_audit_log(
+    admin_client: APIClient,
+    environment: Environment,
+    warehouse_connection: WarehouseConnection,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:environments:experimentation:warehouse-connections-detail",
+        args=[environment.api_key, warehouse_connection.id],
+    )
+
+    # When
+    admin_client.delete(url)
+
+    # Then
+    assert (
+        AuditLog.objects.filter(
+            related_object_type=RelatedObjectType.WAREHOUSE_CONNECTION.name,
+        ).count()
+        == 1
+    )
+    audit_log = AuditLog.objects.get(
+        related_object_type=RelatedObjectType.WAREHOUSE_CONNECTION.name,
+    )
+    assert "deleted" in audit_log.log
+    assert environment.name in audit_log.log
+
+
+def test_get_detail__exists__returns_200(
+    admin_client: APIClient,
+    environment: Environment,
+    warehouse_connection: WarehouseConnection,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:environments:experimentation:warehouse-connections-detail",
+        args=[environment.api_key, warehouse_connection.id],
+    )
+
+    # When
+    response = admin_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+    assert data["id"] == warehouse_connection.id
+    assert data["warehouse_type"] == "flagsmith"
+    assert data["status"] == "created"
+    assert data["name"] == f"Flagsmith Warehouse - {environment.name}"
+    assert "created_at" in data
+
+
+def test_get_detail__not_exists__returns_404(
+    admin_client: APIClient,
+    environment: Environment,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:environments:experimentation:warehouse-connections-detail",
+        args=[environment.api_key, 999999],
+    )
+
+    # When
+    response = admin_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
+def test_post__snowflake_valid_config__returns_201(
+    admin_client: APIClient,
+    environment: Environment,
+    warehouse_connection_url: str,
+) -> None:
+    # Given
+    config = {
+        "account_identifier": "xy12345.us-east-1",
+        "warehouse": "MY_WH",
+        "database": "MY_DB",
+        "schema": "MY_SCHEMA",
+        "role": "MY_ROLE",
+        "user": "MY_USER",
+    }
+
+    # When
+    response = admin_client.post(
+        warehouse_connection_url,
+        data={
+            "warehouse_type": "snowflake",
+            "name": "My Snowflake",
+            "config": config,
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    data = response.json()
+    assert data["warehouse_type"] == "snowflake"
+    assert data["status"] == "created"
+    assert data["name"] == "My Snowflake"
+    assert data["config"] == config
+
+
+def test_post__snowflake_minimal_config__applies_defaults(
+    admin_client: APIClient,
+    environment: Environment,
+    warehouse_connection_url: str,
+) -> None:
+    # Given / When
+    response = admin_client.post(
+        warehouse_connection_url,
+        data={
+            "warehouse_type": "snowflake",
+            "name": "Minimal Snowflake",
+            "config": {"account_identifier": "xy12345.us-east-1"},
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    data = response.json()
+    assert data["config"]["account_identifier"] == "xy12345.us-east-1"
+    assert data["config"]["warehouse"] == "COMPUTE_WH"
+    assert data["config"]["database"] == "FLAGSMITH"
+    assert data["config"]["schema"] == "ANALYTICS"
+    assert data["config"]["role"] == "FLAGSMITH_LOADER"
+    assert data["config"]["user"] == "FLAGSMITH_SERVICE"
+
+
+def test_post__snowflake_missing_account_identifier__returns_400(
+    admin_client: APIClient,
+    warehouse_connection_url: str,
+) -> None:
+    # Given / When
+    response = admin_client.post(
+        warehouse_connection_url,
+        data={
+            "warehouse_type": "snowflake",
+            "name": "Bad Snowflake",
+            "config": {"warehouse": "MY_WH"},
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+def test_post__flagsmith_with_config__returns_400(
+    admin_client: APIClient,
+    warehouse_connection_url: str,
+) -> None:
+    # Given / When
+    response = admin_client.post(
+        warehouse_connection_url,
+        data={
+            "warehouse_type": "flagsmith",
+            "config": {"account_identifier": "should-not-be-here"},
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+def test_post__custom_name__uses_provided_name(
+    admin_client: APIClient,
+    warehouse_connection_url: str,
+) -> None:
+    # Given / When
+    response = admin_client.post(
+        warehouse_connection_url,
+        data={"warehouse_type": "flagsmith", "name": "My Custom Name"},
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.json()["name"] == "My Custom Name"
+
+
+def test_post__snowflake_no_name__auto_generates_name(
+    admin_client: APIClient,
+    environment: Environment,
+    warehouse_connection_url: str,
+) -> None:
+    # Given / When
+    response = admin_client.post(
+        warehouse_connection_url,
+        data={
+            "warehouse_type": "snowflake",
+            "config": {"account_identifier": "xy12345.us-east-1"},
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.json()["name"] == f"Snowflake Warehouse - {environment.name}"
+
+
+def test_post__snowflake_soft_deleted__creates_new_record_with_new_config(
+    admin_client: APIClient,
+    environment: Environment,
+    warehouse_connection_url: str,
+) -> None:
+    # Given
+    create_response = admin_client.post(
+        warehouse_connection_url,
+        data={
+            "warehouse_type": "snowflake",
+            "name": "Original",
+            "config": {"account_identifier": "old.us-east-1"},
+        },
+        format="json",
+    )
+    original_id = create_response.json()["id"]
+    url = reverse(
+        "api-v1:environments:experimentation:warehouse-connections-detail",
+        args=[environment.api_key, original_id],
+    )
+    admin_client.delete(url)
+
+    # When
+    response = admin_client.post(
+        warehouse_connection_url,
+        data={
+            "warehouse_type": "snowflake",
+            "name": "Replacement",
+            "config": {"account_identifier": "new.us-west-2"},
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    data = response.json()
+    assert data["id"] != original_id
+    assert data["status"] == "created"
+    assert data["name"] == "Replacement"
+    assert data["config"]["account_identifier"] == "new.us-west-2"
+
+
+def test_post__different_type_soft_deleted__creates_new_record(
+    admin_client: APIClient,
+    environment: Environment,
+    warehouse_connection_url: str,
+) -> None:
+    # Given
+    create_response = admin_client.post(
+        warehouse_connection_url,
+        data={
+            "warehouse_type": "snowflake",
+            "name": "Old Snowflake",
+            "config": {"account_identifier": "xy12345.us-east-1"},
+        },
+        format="json",
+    )
+    original_id = create_response.json()["id"]
+    url = reverse(
+        "api-v1:environments:experimentation:warehouse-connections-detail",
+        args=[environment.api_key, original_id],
+    )
+    admin_client.delete(url)
+
+    # When
+    response = admin_client.post(
+        warehouse_connection_url,
+        data={"warehouse_type": "flagsmith"},
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    data = response.json()
+    assert data["id"] != original_id
+    assert data["warehouse_type"] == "flagsmith"
+
+
+def test_patch__snowflake_update_config__returns_200(
+    admin_client: APIClient,
+    environment: Environment,
+    warehouse_connection_url: str,
+) -> None:
+    # Given
+    create_response = admin_client.post(
+        warehouse_connection_url,
+        data={
+            "warehouse_type": "snowflake",
+            "name": "My Snowflake",
+            "config": {"account_identifier": "xy12345.us-east-1"},
+        },
+        format="json",
+    )
+    connection_id = create_response.json()["id"]
+    url = reverse(
+        "api-v1:environments:experimentation:warehouse-connections-detail",
+        args=[environment.api_key, connection_id],
+    )
+
+    # When
+    response = admin_client.patch(
+        url,
+        data={"config": {"account_identifier": "new.us-west-2", "warehouse": "BIG_WH"}},
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+    assert data["config"]["account_identifier"] == "new.us-west-2"
+    assert data["config"]["warehouse"] == "BIG_WH"
+
+
+def test_patch__snowflake_partial_config__preserves_stored_account_identifier(
+    admin_client: APIClient,
+    environment: Environment,
+    warehouse_connection_url: str,
+) -> None:
+    # Given
+    create_response = admin_client.post(
+        warehouse_connection_url,
+        data={
+            "warehouse_type": "snowflake",
+            "name": "My Snowflake",
+            "config": {"account_identifier": "xy12345.us-east-1"},
+        },
+        format="json",
+    )
+    connection_id = create_response.json()["id"]
+    url = reverse(
+        "api-v1:environments:experimentation:warehouse-connections-detail",
+        args=[environment.api_key, connection_id],
+    )
+
+    # When
+    response = admin_client.patch(
+        url,
+        data={"config": {"warehouse": "BIG_WH"}},
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+    assert data["config"]["account_identifier"] == "xy12345.us-east-1"
+    assert data["config"]["warehouse"] == "BIG_WH"
+
+
+def test_patch__snowflake_update_name__returns_200(
+    admin_client: APIClient,
+    environment: Environment,
+    warehouse_connection_url: str,
+) -> None:
+    # Given
+    create_response = admin_client.post(
+        warehouse_connection_url,
+        data={
+            "warehouse_type": "snowflake",
+            "name": "Original Name",
+            "config": {"account_identifier": "xy12345.us-east-1"},
+        },
+        format="json",
+    )
+    connection_id = create_response.json()["id"]
+    url = reverse(
+        "api-v1:environments:experimentation:warehouse-connections-detail",
+        args=[environment.api_key, connection_id],
+    )
+
+    # When
+    response = admin_client.patch(
+        url,
+        data={"name": "Updated Name"},
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["name"] == "Updated Name"
+
+
+def test_patch__flagsmith_update_name__returns_200(
+    admin_client: APIClient,
+    environment: Environment,
+    warehouse_connection: WarehouseConnection,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:environments:experimentation:warehouse-connections-detail",
+        args=[environment.api_key, warehouse_connection.id],
+    )
+
+    # When
+    response = admin_client.patch(
+        url,
+        data={"name": "New Flagsmith Name"},
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["name"] == "New Flagsmith Name"
+
+
+def test_patch__flagsmith_add_config__returns_400(
+    admin_client: APIClient,
+    environment: Environment,
+    warehouse_connection: WarehouseConnection,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:environments:experimentation:warehouse-connections-detail",
+        args=[environment.api_key, warehouse_connection.id],
+    )
+
+    # When
+    response = admin_client.patch(
+        url,
+        data={"config": {"account_identifier": "nope"}},
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+def test_patch__non_admin__returns_403(
+    staff_client: APIClient,
+    environment: Environment,
+    warehouse_connection: WarehouseConnection,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:environments:experimentation:warehouse-connections-detail",
+        args=[environment.api_key, warehouse_connection.id],
+    )
+
+    # When
+    response = staff_client.patch(
+        url,
+        data={"name": "Hacked"},
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+def test_patch__exists__creates_audit_log(
+    admin_client: APIClient,
+    environment: Environment,
+    warehouse_connection: WarehouseConnection,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:environments:experimentation:warehouse-connections-detail",
+        args=[environment.api_key, warehouse_connection.id],
+    )
+
+    # When
+    admin_client.patch(
+        url,
+        data={"name": "Renamed"},
+        format="json",
+    )
+
+    # Then
+    assert (
+        AuditLog.objects.filter(
+            related_object_type=RelatedObjectType.WAREHOUSE_CONNECTION.name,
+        ).count()
+        == 1
+    )
+    audit_log = AuditLog.objects.get(
+        related_object_type=RelatedObjectType.WAREHOUSE_CONNECTION.name,
+    )
+    assert "updated" in audit_log.log
+
+
+@pytest.mark.parametrize(
+    "warehouse_type, config, expected_total, expected_unique",
+    [
+        (WarehouseType.FLAGSMITH, None, 12, 3),
+        (
+            WarehouseType.SNOWFLAKE,
+            {"account_identifier": "xy12345.us-east-1"},
+            None,
+            None,
+        ),
+    ],
+    ids=["flagsmith", "snowflake"],
+)
+def test_get__warehouse_type__returns_expected_event_stats(
+    admin_client: APIClient,
+    environment: Environment,
+    warehouse_connection_url: str,
+    mocker: MockerFixture,
+    warehouse_type: str,
+    config: dict[str, str] | None,
+    expected_total: int | None,
+    expected_unique: int | None,
+) -> None:
+    # Given
+    WarehouseConnection.objects.create(
+        environment=environment,
+        warehouse_type=warehouse_type,
+        name="Warehouse",
+        config=config,
+    )
+    mocker.patch(
+        "experimentation.warehouses.flagsmith.get_warehouse_event_stats",
+        return_value=WarehouseEventStats(
+            total_events_received=12,
+            unique_events_count=3,
+        ),
+    )
+
+    # When
+    response = admin_client.get(warehouse_connection_url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()[0]
+    assert data["total_events_received"] == expected_total
+    assert data["unique_events_count"] == expected_unique
+
+
+def test_get__pending_connection_with_events__shows_stats_but_does_not_flip(
+    admin_client: APIClient,
+    environment: Environment,
+    warehouse_connection_url: str,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    connection = WarehouseConnection.objects.create(
+        environment=environment,
+        warehouse_type=WarehouseType.FLAGSMITH,
+        name="Flagsmith Warehouse",
+        status=WarehouseConnectionStatus.PENDING_CONNECTION,
+    )
+    mocker.patch(
+        "experimentation.warehouses.flagsmith.get_warehouse_event_stats",
+        return_value=WarehouseEventStats(
+            total_events_received=1,
+            unique_events_count=1,
+        ),
+    )
+
+    # When
+    response = admin_client.get(warehouse_connection_url)
+
+    # Then
+    data = response.json()[0]
+    assert data["total_events_received"] == 1
+    assert data["unique_events_count"] == 1
+    # GET is read-only: the flip happens on the POST endpoint, not here.
+    assert data["status"] == "pending_connection"
+    connection.refresh_from_db()
+    assert connection.status == WarehouseConnectionStatus.PENDING_CONNECTION
+
+
+@pytest.mark.parametrize(
+    "warehouse_type, config, expected_status",
+    [
+        (WarehouseType.FLAGSMITH, None, status.HTTP_200_OK),
+        (
+            WarehouseType.SNOWFLAKE,
+            {"account_identifier": "xy12345.us-east-1"},
+            status.HTTP_400_BAD_REQUEST,
+        ),
+    ],
+    ids=["flagsmith", "snowflake"],
+)
+def test_test_warehouse_connection__warehouse_type__expected_status(
+    admin_client: APIClient,
+    environment: Environment,
+    warehouse_type: str,
+    config: dict[str, str] | None,
+    expected_status: int,
+) -> None:
+    # Given
+    connection = WarehouseConnection.objects.create(
+        environment=environment,
+        warehouse_type=warehouse_type,
+        name="Warehouse",
+        config=config,
+    )
+    url = reverse(
+        "api-v1:environments:experimentation:warehouse-connections-test-warehouse-connection",
+        args=[environment.api_key, connection.id],
+    )
+
+    # When
+    response = admin_client.post(url, format="json")
+
+    # Then
+    assert response.status_code == expected_status
+    if expected_status == status.HTTP_200_OK:
+        assert response.json()["status"] == "pending_connection"
+        connection.refresh_from_db()
+        assert connection.status == WarehouseConnectionStatus.PENDING_CONNECTION
+
+
+def test_test_warehouse_connection__pending_with_events__flips_to_connected(
+    admin_client: APIClient,
+    environment: Environment,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    connection = WarehouseConnection.objects.create(
+        environment=environment,
+        warehouse_type=WarehouseType.FLAGSMITH,
+        name="Flagsmith Warehouse",
+        status=WarehouseConnectionStatus.PENDING_CONNECTION,
+    )
+    mocker.patch(
+        "experimentation.warehouses.flagsmith.get_warehouse_event_stats",
+        return_value=WarehouseEventStats(
+            total_events_received=1,
+            unique_events_count=1,
+        ),
+    )
+    url = reverse(
+        "api-v1:environments:experimentation:warehouse-connections-test-warehouse-connection",
+        args=[environment.api_key, connection.id],
+    )
+
+    # When
+    response = admin_client.post(url, format="json")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["status"] == "connected"
+    connection.refresh_from_db()
+    assert connection.status == WarehouseConnectionStatus.CONNECTED
+
+
+def test_test_warehouse_connection__pending_no_events__stays_pending(
+    admin_client: APIClient,
+    environment: Environment,
+) -> None:
+    # Given (autouse mock returns 0 events)
+    connection = WarehouseConnection.objects.create(
+        environment=environment,
+        warehouse_type=WarehouseType.FLAGSMITH,
+        name="Flagsmith Warehouse",
+        status=WarehouseConnectionStatus.PENDING_CONNECTION,
+    )
+    url = reverse(
+        "api-v1:environments:experimentation:warehouse-connections-test-warehouse-connection",
+        args=[environment.api_key, connection.id],
+    )
+
+    # When
+    response = admin_client.post(url, format="json")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["status"] == "pending_connection"
+    connection.refresh_from_db()
+    assert connection.status == WarehouseConnectionStatus.PENDING_CONNECTION
+
+
+def test_test_warehouse_connection__clickhouse_unreachable__stays_pending(
+    admin_client: APIClient,
+    environment: Environment,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    connection = WarehouseConnection.objects.create(
+        environment=environment,
+        warehouse_type=WarehouseType.FLAGSMITH,
+        name="Flagsmith Warehouse",
+        status=WarehouseConnectionStatus.PENDING_CONNECTION,
+    )
+    mocker.patch(
+        "experimentation.warehouses.flagsmith.get_warehouse_event_stats",
+        side_effect=OSError("clickhouse unreachable"),
+    )
+    url = reverse(
+        "api-v1:environments:experimentation:warehouse-connections-test-warehouse-connection",
+        args=[environment.api_key, connection.id],
+    )
+
+    # When
+    response = admin_client.post(url, format="json")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+    assert data["status"] == "pending_connection"
+    assert data["total_events_received"] is None
+    assert data["unique_events_count"] is None
+
+
+def test_test_warehouse_connection__already_connected__is_noop(
+    admin_client: APIClient,
+    environment: Environment,
+) -> None:
+    # Given
+    connection = WarehouseConnection.objects.create(
+        environment=environment,
+        warehouse_type=WarehouseType.FLAGSMITH,
+        name="Flagsmith Warehouse",
+        status=WarehouseConnectionStatus.CONNECTED,
+    )
+    url = reverse(
+        "api-v1:environments:experimentation:warehouse-connections-test-warehouse-connection",
+        args=[environment.api_key, connection.id],
+    )
+
+    # When
+    response = admin_client.post(url, format="json")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["status"] == "connected"
+
+
+def test_test_warehouse_connection__non_admin__returns_403(
+    staff_client: APIClient,
+    environment: Environment,
+    warehouse_connection: WarehouseConnection,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:environments:experimentation:warehouse-connections-test-warehouse-connection",
+        args=[environment.api_key, warehouse_connection.id],
+    )
+
+    # When
+    response = staff_client.post(url, format="json")
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+@pytest.mark.parametrize(
+    "action, expected_scope",
+    [
+        ("create", "warehouse_connection_write"),
+        ("update", "warehouse_connection_write"),
+        ("partial_update", "warehouse_connection_write"),
+        ("test_warehouse_connection", "warehouse_connection_write"),
+        ("test_warehouse_connection_config", "warehouse_connection_write"),
+        ("list", "warehouse_connection_read"),
+        ("retrieve", "warehouse_connection_read"),
+    ],
+)
+def test_get_throttles__throttled_actions__returns_scoped_throttle(
+    action: str,
+    expected_scope: str,
+) -> None:
+    # Given
+    view = WarehouseConnectionViewSet()
+    view.action = action
+
+    # When
+    throttles = view.get_throttles()
+
+    # Then
+    assert any(isinstance(t, ScopedRateThrottle) for t in throttles)
+    assert view.throttle_scope == expected_scope
+
+
+@pytest.mark.parametrize(
+    "action",
+    ["destroy"],
+)
+def test_get_throttles__other_actions__returns_view_default_throttles(
+    action: str,
+) -> None:
+    # Given
+    view = WarehouseConnectionViewSet()
+    view.action = action
+
+    # When
+    throttles = view.get_throttles()
+
+    # Then
+    assert [type(throttle) for throttle in throttles] == list(view.throttle_classes)
+
+
+def test_get__clickhouse_unconfigured__returns_200_without_stats(
+    admin_client: APIClient,
+    environment: Environment,
+    warehouse_connection: WarehouseConnection,
+    warehouse_connection_url: str,
+    settings: SettingsWrapper,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    settings.EXPERIMENTATION_CLICKHOUSE_URL = None
+    stats_spy = mocker.patch(
+        "experimentation.warehouses.flagsmith.get_warehouse_event_stats"
+    )
+
+    # When
+    response = admin_client.get(warehouse_connection_url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()[0]
+    assert data["total_events_received"] is None
+    assert data["unique_events_count"] is None
+    stats_spy.assert_not_called()
+
+
+def test_get__exclude_event_stats__returns_200_without_querying_warehouse(
+    admin_client: APIClient,
+    environment: Environment,
+    warehouse_connection: WarehouseConnection,
+    warehouse_connection_url: str,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    annotate_spy = mocker.patch("experimentation.views.annotate_warehouse_event_stats")
+
+    # When
+    response = admin_client.get(f"{warehouse_connection_url}?exclude_event_stats=true")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()[0]
+    assert data["id"] == warehouse_connection.id
+    assert data["total_events_received"] is None
+    assert data["unique_events_count"] is None
+    annotate_spy.assert_not_called()
+
+
+def test_get__clickhouse_errors__returns_200_without_stats(
+    admin_client: APIClient,
+    environment: Environment,
+    warehouse_connection_url: str,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    WarehouseConnection.objects.create(
+        environment=environment,
+        warehouse_type=WarehouseType.FLAGSMITH,
+        name="Flagsmith Warehouse",
+        status=WarehouseConnectionStatus.PENDING_CONNECTION,
+    )
+    mocker.patch(
+        "experimentation.warehouses.flagsmith.get_warehouse_event_stats",
+        side_effect=OSError("clickhouse unreachable"),
+    )
+
+    # When
+    response = admin_client.get(warehouse_connection_url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()[0]
+    assert data["total_events_received"] is None
+    assert data["unique_events_count"] is None
+    # connection stays pending (GET never writes)
+    assert data["status"] == "pending_connection"
+
+
+def test_post__clickhouse_minimal_payload__applies_defaults_and_generates_name(
+    admin_client: APIClient,
+    environment: Environment,
+    mocker: MockerFixture,
+    warehouse_connection_url: str,
+) -> None:
+    # Given
+    mocker.patch(
+        "experimentation.warehouses.clickhouse.clickhouse_connect.get_client",
+    )
+
+    # When
+    response = admin_client.post(
+        warehouse_connection_url,
+        data={
+            "warehouse_type": "clickhouse",
+            "config": {"host": "ch.example.com"},
+            "credentials": {"password": "hunter2"},
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.json()["config"] == {
+        "host": "ch.example.com",
+        "port": 8443,
+        "database": "flagsmith_exp",
+        "username": "default",
+        "secure": True,
+    }
+    assert response.json()["name"] == f"ClickHouse Warehouse - {environment.name}"
+    assert "credentials" not in response.json()
+
+
+@pytest.mark.parametrize(
+    "data, error_path",
+    [
+        pytest.param(
+            {"warehouse_type": "clickhouse", "credentials": {"password": "hunter2"}},
+            ("config", "host"),
+            id="missing_host",
+        ),
+        pytest.param(
+            {
+                "warehouse_type": "clickhouse",
+                "config": {"host": "ch.example.com", "port": 0},
+                "credentials": {"password": "hunter2"},
+            },
+            ("config", "port"),
+            id="port_zero",
+        ),
+        pytest.param(
+            {
+                "warehouse_type": "clickhouse",
+                "config": {"host": "ch.example.com", "port": 65536},
+                "credentials": {"password": "hunter2"},
+            },
+            ("config", "port"),
+            id="port_above_range",
+        ),
+        pytest.param(
+            {
+                "warehouse_type": "clickhouse",
+                "config": {"host": "ch.example.com", "port": "not-a-port"},
+                "credentials": {"password": "hunter2"},
+            },
+            ("config", "port"),
+            id="port_not_a_number",
+        ),
+        pytest.param(
+            {
+                "warehouse_type": "clickhouse",
+                "config": {"host": "ch.example.com", "port": True},
+                "credentials": {"password": "hunter2"},
+            },
+            ("config", "port"),
+            id="port_boolean",
+        ),
+        pytest.param(
+            {"warehouse_type": "clickhouse", "config": {"host": "ch.example.com"}},
+            ("credentials", "password"),
+            id="missing_password",
+        ),
+        pytest.param(
+            {
+                "warehouse_type": "clickhouse",
+                "config": {"host": "ch.example.com"},
+                "credentials": "hunter2",
+            },
+            ("credentials",),
+            id="non_dict_credentials",
+        ),
+        pytest.param(
+            {
+                "warehouse_type": "clickhouse",
+                "config": "not-a-dict",
+                "credentials": {"password": "hunter2"},
+            },
+            ("config",),
+            id="non_dict_config",
+        ),
+        pytest.param(
+            {"warehouse_type": "flagsmith", "credentials": {"password": "hunter2"}},
+            ("credentials",),
+            id="flagsmith_with_credentials",
+        ),
+        pytest.param(
+            {
+                "warehouse_type": "snowflake",
+                "config": {"account_identifier": "xy12345.us-east-1"},
+                "credentials": {"password": "hunter2"},
+            },
+            ("credentials",),
+            id="snowflake_with_credentials",
+        ),
+        pytest.param(
+            {"warehouse_type": "flagsmith", "credentials": {}},
+            ("credentials",),
+            id="flagsmith_empty_credentials",
+        ),
+        pytest.param(
+            {
+                "warehouse_type": "clickhouse",
+                "config": {"host": "ch.example.com", "password": "oops"},
+                "credentials": {"password": "hunter2"},
+            },
+            ("config", "password"),
+            id="unknown_config_key",
+        ),
+        pytest.param(
+            {
+                "warehouse_type": "clickhouse",
+                "config": {"host": "ch.example.com", "secure": "false"},
+                "credentials": {"password": "hunter2"},
+            },
+            ("config", "secure"),
+            id="secure_not_boolean",
+        ),
+        pytest.param(
+            {
+                "warehouse_type": "clickhouse",
+                "config": {"host": "ch.example.com", "database": 123},
+                "credentials": {"password": "hunter2"},
+            },
+            ("config", "database"),
+            id="database_not_string",
+        ),
+        pytest.param(
+            {"warehouse_type": "snowflake", "config": "not-a-dict"},
+            ("config",),
+            id="snowflake_non_dict_config",
+        ),
+        pytest.param(
+            {
+                "warehouse_type": "snowflake",
+                "config": {"account_identifier": "xy12345", "extra": "bad"},
+            },
+            ("config", "extra"),
+            id="snowflake_unknown_key",
+        ),
+        pytest.param(
+            {
+                "warehouse_type": "snowflake",
+                "config": {"account_identifier": "xy12345", "warehouse": 123},
+            },
+            ("config", "warehouse"),
+            id="snowflake_non_string_value",
+        ),
+    ],
+)
+def test_post__invalid_payload__returns_400(
+    admin_client: APIClient,
+    data: dict[str, object],
+    error_path: tuple[str, ...],
+    warehouse_connection_url: str,
+) -> None:
+    # Given / When
+    response = admin_client.post(warehouse_connection_url, data=data, format="json")
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    errors = response.json()
+    for key in error_path[:-1]:
+        errors = errors[key]
+    assert error_path[-1] in errors
+
+
+@pytest.mark.parametrize(
+    "host",
+    [
+        pytest.param("127.0.0.1", id="loopback_host"),
+        pytest.param("10.0.0.1", id="private_host"),
+        pytest.param("169.254.169.254", id="link_local_host"),
+        pytest.param("100.64.0.1", id="shared_address_space_host"),
+    ],
+)
+@pytest.mark.usefixtures("saas_mode")
+def test_post__internal_clickhouse_host_on_saas__returns_400(
+    admin_client: APIClient,
+    host: str,
+    warehouse_connection_url: str,
+) -> None:
+    # Given / When
+    response = admin_client.post(
+        warehouse_connection_url,
+        data={
+            "warehouse_type": "clickhouse",
+            "config": {"host": host},
+            "credentials": {"password": "hunter2"},
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "host" in response.json()["config"]
+
+
+def test_post__internal_clickhouse_host_on_self_hosted__returns_201(
+    admin_client: APIClient,
+    warehouse_connection_url: str,
+) -> None:
+    # Given / When
+    response = admin_client.post(
+        warehouse_connection_url,
+        data={
+            "warehouse_type": "clickhouse",
+            "config": {"host": "10.0.0.1", "port": 8123, "secure": False},
+            "credentials": {"password": "hunter2"},
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.json()["config"]["host"] == "10.0.0.1"
+
+
+@pytest.mark.usefixtures("saas_mode")
+def test_post__clickhouse_hostname_resolves_to_internal_ip_on_saas__returns_400(
+    admin_client: APIClient,
+    mocker: MockerFixture,
+    warehouse_connection_url: str,
+) -> None:
+    # Given
+    mocker.patch(
+        "core.network.socket.getaddrinfo",
+        return_value=[(socket.AF_INET, None, None, None, ("192.168.1.100", 0))],
+    )
+
+    # When
+    response = admin_client.post(
+        warehouse_connection_url,
+        data={
+            "warehouse_type": "clickhouse",
+            "config": {"host": "internal.example.com"},
+            "credentials": {"password": "hunter2"},
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "host" in response.json()["config"]
+
+
+def test_patch__flagsmith_to_clickhouse_without_credentials__returns_400(
+    admin_client: APIClient,
+    environment: Environment,
+    warehouse_connection: WarehouseConnection,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:environments:experimentation:warehouse-connections-detail",
+        args=[environment.api_key, warehouse_connection.id],
+    )
+
+    # When
+    response = admin_client.patch(
+        url,
+        data={
+            "warehouse_type": "clickhouse",
+            "config": {"host": "ch.example.com"},
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "password" in response.json()["credentials"]
+
+
+@pytest.mark.parametrize(
+    "query_side_effect, expected_status, expected_detail",
+    [
+        (None, "connected", None),
+        (Exception("unreachable"), "errored", "Connection failed."),
+    ],
+    ids=["reachable", "unreachable"],
+)
+def test_post__clickhouse_verification_outcome__returns_201_with_status(
+    admin_client: APIClient,
+    query_side_effect: Exception | None,
+    expected_detail: str | None,
+    expected_status: str,
+    mocker: MockerFixture,
+    warehouse_connection_url: str,
+) -> None:
+    # Given
+    mock_client = mocker.patch(
+        "experimentation.warehouses.clickhouse.clickhouse_connect.get_client",
+    )
+    mock_client.return_value.query.side_effect = query_side_effect
+
+    # When
+    response = admin_client.post(
+        warehouse_connection_url,
+        data={
+            "warehouse_type": "clickhouse",
+            "name": "Production ClickHouse",
+            "config": {"host": "ch.example.com"},
+            "credentials": {"password": "hunter2"},
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.json()["status"] == expected_status
+    assert response.json()["status_detail"] == expected_detail
+    assert "credentials" not in response.json()
+    mock_client.return_value.query.assert_called_once_with("EXISTS TABLE events")
+
+
+def test_get__clickhouse__credentials_not_in_response(
+    admin_client: APIClient,
+    clickhouse_connection: WarehouseConnection,
+    warehouse_connection_url: str,
+) -> None:
+    # Given / When
+    response = admin_client.get(warehouse_connection_url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    (data,) = response.json()
+    assert "credentials" not in data
+    assert "password" not in str(data)
+
+
+def test_patch__clickhouse_config_without_credentials__keeps_stored_password(
+    admin_client: APIClient,
+    clickhouse_connection: WarehouseConnection,
+    environment: Environment,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mock_client = mocker.patch(
+        "experimentation.warehouses.clickhouse.clickhouse_connect.get_client",
+    )
+    url = reverse(
+        "api-v1:environments:experimentation:warehouse-connections-detail",
+        args=[environment.api_key, clickhouse_connection.id],
+    )
+
+    # When
+    response = admin_client.patch(
+        url,
+        data={"config": {"host": "ch.example.com", "port": 8123}},
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    clickhouse_connection.refresh_from_db()
+    assert clickhouse_connection.credentials == {"password": "hunter2"}
+    assert clickhouse_connection.config is not None
+    assert clickhouse_connection.config.get("database") == "acme_dwh"
+    assert clickhouse_connection.config.get("port") == 8123
+    assert mock_client.call_args.kwargs["password"] == "hunter2"
+    assert mock_client.call_args.kwargs["port"] == 8123
+
+
+def test_patch__clickhouse_name_only__does_not_reverify(
+    admin_client: APIClient,
+    clickhouse_connection: WarehouseConnection,
+    environment: Environment,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mock_client = mocker.patch(
+        "experimentation.warehouses.clickhouse.clickhouse_connect.get_client",
+    )
+    url = reverse(
+        "api-v1:environments:experimentation:warehouse-connections-detail",
+        args=[environment.api_key, clickhouse_connection.id],
+    )
+
+    # When
+    response = admin_client.patch(url, data={"name": "Renamed"}, format="json")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    mock_client.assert_not_called()
+
+
+def test_put__clickhouse_name_only__preserves_config_and_credentials(
+    admin_client: APIClient,
+    clickhouse_connection: WarehouseConnection,
+    environment: Environment,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mocker.patch(
+        "experimentation.warehouses.clickhouse.clickhouse_connect.get_client",
+    )
+    url = reverse(
+        "api-v1:environments:experimentation:warehouse-connections-detail",
+        args=[environment.api_key, clickhouse_connection.id],
+    )
+
+    # When
+    response = admin_client.put(
+        url,
+        data={
+            "warehouse_type": "clickhouse",
+            "name": "Renamed",
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    clickhouse_connection.refresh_from_db()
+    assert clickhouse_connection.config is not None
+    assert clickhouse_connection.credentials == {"password": "hunter2"}
+
+
+def test_test_warehouse_connection__clickhouse__reverifies_and_returns_status(
+    admin_client: APIClient,
+    clickhouse_connection: WarehouseConnection,
+    environment: Environment,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    clickhouse_connection.status = WarehouseConnectionStatus.ERRORED
+    clickhouse_connection.save()
+    mocker.patch(
+        "experimentation.warehouses.clickhouse.clickhouse_connect.get_client",
+    )
+    url = reverse(
+        "api-v1:environments:experimentation:"
+        "warehouse-connections-test-warehouse-connection",
+        args=[environment.api_key, clickhouse_connection.id],
+    )
+
+    # When
+    response = admin_client.post(url, format="json")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["status"] == "connected"
+    clickhouse_connection.refresh_from_db()
+    assert clickhouse_connection.status == WarehouseConnectionStatus.CONNECTED
+
+
+CLICKHOUSE_TEST_PAYLOAD = {
+    "warehouse_type": "clickhouse",
+    "config": {"host": "ch.example.com"},
+    "credentials": {"password": "hunter2"},
+}
+
+
+@pytest.mark.parametrize(
+    "data, client_side_effect, expected_status_code, expected_response",
+    [
+        pytest.param(
+            CLICKHOUSE_TEST_PAYLOAD,
+            None,
+            status.HTTP_200_OK,
+            {"status": "connected", "status_detail": None},
+            id="reachable",
+        ),
+        pytest.param(
+            CLICKHOUSE_TEST_PAYLOAD,
+            OperationalError("boom"),
+            status.HTTP_200_OK,
+            {"status": "errored", "status_detail": "Could not connect to the host."},
+            id="unreachable",
+        ),
+        pytest.param(
+            {"warehouse_type": "flagsmith"},
+            None,
+            status.HTTP_400_BAD_REQUEST,
+            {"detail": "Connection testing is not supported for this warehouse type."},
+            id="non_clickhouse_type",
+        ),
+        pytest.param(
+            {"warehouse_type": "clickhouse", "config": {"host": "ch.example.com"}},
+            None,
+            status.HTTP_400_BAD_REQUEST,
+            {"credentials": {"password": "This field is required."}},
+            id="invalid_payload",
+        ),
+    ],
+)
+def test_test_warehouse_connection_config__payload__returns_expected_response(
+    admin_client: APIClient,
+    client_side_effect: Exception | None,
+    data: dict[str, object],
+    environment: Environment,
+    expected_response: dict[str, object],
+    expected_status_code: int,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mocker.patch(
+        "experimentation.warehouses.clickhouse.clickhouse_connect.get_client",
+        side_effect=client_side_effect,
+    )
+    url = reverse(
+        "api-v1:environments:experimentation:"
+        "warehouse-connections-test-warehouse-connection-config",
+        args=[environment.api_key],
+    )
+
+    # When
+    response = admin_client.post(url, data=data, format="json")
+
+    # Then
+    assert response.status_code == expected_status_code
+    assert response.json() == expected_response
+    assert not WarehouseConnection.objects.filter(environment=environment).exists()
+
+
+def test_patch__clickhouse_to_flagsmith__resets_connection_state(
+    admin_client: APIClient,
+    clickhouse_connection: WarehouseConnection,
+    environment: Environment,
+) -> None:
+    # Given
+    clickhouse_connection.status = WarehouseConnectionStatus.ERRORED
+    clickhouse_connection.status_detail = "Authentication failed."
+    clickhouse_connection.save()
+    url = reverse(
+        "api-v1:environments:experimentation:warehouse-connections-detail",
+        args=[environment.api_key, clickhouse_connection.id],
+    )
+
+    # When
+    response = admin_client.patch(
+        url,
+        data={"warehouse_type": "flagsmith"},
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    clickhouse_connection.refresh_from_db()
+    assert clickhouse_connection.credentials is None
+    assert clickhouse_connection.config is None
+    assert clickhouse_connection.status == WarehouseConnectionStatus.CREATED
+    assert clickhouse_connection.status_detail is None
+
+
+def test_patch__flagsmith_to_clickhouse_without_config__returns_400(
+    admin_client: APIClient,
+    environment: Environment,
+    warehouse_connection: WarehouseConnection,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:environments:experimentation:warehouse-connections-detail",
+        args=[environment.api_key, warehouse_connection.id],
+    )
+
+    # When
+    response = admin_client.patch(
+        url,
+        data={
+            "warehouse_type": "clickhouse",
+            "credentials": {"password": "hunter2"},
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "host" in response.json()["config"]
+
+
+def test_patch__clickhouse_null_credentials__returns_400(
+    admin_client: APIClient,
+    clickhouse_connection: WarehouseConnection,
+    environment: Environment,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:environments:experimentation:warehouse-connections-detail",
+        args=[environment.api_key, clickhouse_connection.id],
+    )
+
+    # When
+    response = admin_client.patch(
+        url,
+        data={"credentials": None},
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "password" in response.json()["credentials"]
+    clickhouse_connection.refresh_from_db()
+    assert clickhouse_connection.credentials == {"password": "hunter2"}
+
+
+@pytest.mark.parametrize(
+    "service_result, expected_status, expected_body",
+    [
+        (
+            WarehouseEventNames(events=["conversion"], is_truncated=False),
+            status.HTTP_200_OK,
+            {"events": ["conversion"], "is_truncated": False},
+        ),
+        (
+            None,
+            status.HTTP_503_SERVICE_UNAVAILABLE,
+            {"detail": "The warehouse is currently unreachable."},
+        ),
+    ],
+    ids=["reachable", "unreachable"],
+)
+def test_get_events__warehouse_availability__maps_to_response(
+    admin_client: APIClient,
+    environment: Environment,
+    warehouse_connection: WarehouseConnection,
+    service_result: WarehouseEventNames | None,
+    expected_status: int,
+    expected_body: dict[str, object],
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mocker.patch(
+        "experimentation.views.get_warehouse_event_names",
+        return_value=service_result,
+    )
+    url = reverse(
+        "api-v1:environments:experimentation:warehouse-connections-events",
+        args=[environment.api_key, warehouse_connection.id],
+    )
+
+    # When
+    response = admin_client.get(url)
+
+    # Then
+    assert response.status_code == expected_status
+    assert response.json() == expected_body
+
+
+def test_get_events__unsupported_type__returns_400(
+    admin_client: APIClient,
+    environment: Environment,
+) -> None:
+    # Given
+    connection = WarehouseConnection.objects.create(
+        environment=environment,
+        warehouse_type=WarehouseType.SNOWFLAKE,
+        name="Snowflake",
+        config={"account_identifier": "acme"},
+    )
+    url = reverse(
+        "api-v1:environments:experimentation:warehouse-connections-events",
+        args=[environment.api_key, connection.id],
+    )
+
+    # When
+    response = admin_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json() == {
+        "detail": "Event listing is not supported for this warehouse type."
+    }
+
+
+def test_list__verified_connection_failing_delivery__shows_errored_without_saving(
+    admin_client: APIClient,
+    environment: Environment,
+    clickhouse_connection: WarehouseConnection,
+    failing_delivery_status: WarehouseDeliveryStatus,
+) -> None:
+    # Given a connection that passed verification when saved, whose warehouse
+    # has since started refusing the events the delivery service sends
+    clickhouse_connection.status = WarehouseConnectionStatus.CONNECTED
+    clickhouse_connection.save()
+    url = reverse(
+        "api-v1:environments:experimentation:warehouse-connections-list",
+        args=[environment.api_key],
+    )
+
+    # When
+    response = admin_client.get(url, {"exclude_event_stats": "true"})
+
+    # Then the dashboard sees the failure, while the stored verification stands
+    assert response.status_code == status.HTTP_200_OK
+    (connection,) = response.json()
+    assert connection["status"] == "errored"
+    assert connection["status_detail"] == "Authentication failed."
+    clickhouse_connection.refresh_from_db()
+    assert clickhouse_connection.status == WarehouseConnectionStatus.CONNECTED
+
+
+DATABRICKS_HOST = "https://acme.cloud.databricks.com"
+DATABRICKS_PAYLOAD = {
+    "warehouse_type": "databricks",
+    "config": {
+        "host": "acme.cloud.databricks.com",
+        "workspace_id": "1234567890",
+        "region": "us-east-1",
+        "warehouse_id": "abc123",
+        "catalog": "main",
+    },
+    "credentials": {"client_id": "sp-id", "client_secret": "sp-secret"},
+}
+DATABRICKS_UNAVAILABLE = {
+    "warehouse_type": ["Databricks connections are not available on your plan."]
+}
+
+
+@pytest.fixture()
+def databricks_workspace(
+    requests_mock: RequestsMockerFixture,
+) -> RequestsMockerFixture:
+    requests_mock.post(
+        f"{DATABRICKS_HOST}/oidc/v1/token", json={"access_token": "t0k3n"}
+    )
+    requests_mock.post(
+        f"{DATABRICKS_HOST}/api/2.0/sql/statements",
+        json={
+            "statement_id": "st-1",
+            "status": {"state": "SUCCEEDED"},
+            "manifest": {"schema": {"columns": []}},
+            "result": {},
+        },
+    )
+    return requests_mock
+
+
+@pytest.mark.parametrize(
+    "statement_response, expected_status, expected_detail",
+    [
+        (None, "connected", None),
+        (
+            {
+                "statement_id": "st-1",
+                "status": {
+                    "state": "FAILED",
+                    "error": {
+                        "error_code": "BAD_REQUEST",
+                        "message": "[TABLE_OR_VIEW_NOT_FOUND] The table `events` cannot be found.",
+                    },
+                },
+            },
+            "errored",
+            "Events table not found in the configured database. Run the setup SQL to create it.",
+        ),
+    ],
+    ids=["reachable", "missing-table"],
+)
+def test_post__databricks__returns_201_with_verification_status(
+    admin_client: APIClient,
+    databricks_workspace: RequestsMockerFixture,
+    statement_response: dict[str, object] | None,
+    expected_status: str,
+    expected_detail: str | None,
+    environment: Environment,
+    warehouse_connection_url: str,
+) -> None:
+    # Given
+    if statement_response is not None:
+        databricks_workspace.post(
+            f"{DATABRICKS_HOST}/api/2.0/sql/statements", json=statement_response
+        )
+
+    # When
+    response = admin_client.post(
+        warehouse_connection_url, data=DATABRICKS_PAYLOAD, format="json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.json()["status"] == expected_status
+    assert response.json()["status_detail"] == expected_detail
+    assert response.json()["config"] == {
+        "host": "acme.cloud.databricks.com",
+        "workspace_id": "1234567890",
+        "region": "us-east-1",
+        "warehouse_id": "abc123",
+        "catalog": "main",
+        "schema": "flagsmith_exp",
+    }
+    assert response.json()["name"] == f"Databricks Warehouse - {environment.name}"
+    assert "credentials" not in response.json()
+
+
+@pytest.mark.parametrize(
+    "url_name",
+    [
+        "warehouse-connections-list",
+        "warehouse-connections-test-warehouse-connection-config",
+    ],
+    ids=["create", "test-unsaved"],
+)
+@pytest.mark.usefixtures("saas_mode")
+def test_post__databricks_below_minimum_plan_on_saas__returns_400(
+    admin_client: APIClient,
+    databricks_workspace: RequestsMockerFixture,
+    environment: Environment,
+    set_warehouses_flag: SetWarehousesFlagFixture,
+    url_name: str,
+) -> None:
+    # Given
+    set_warehouses_flag({"minimum_plans": {"databricks": "scale-up"}})
+    url = reverse(
+        f"api-v1:environments:experimentation:{url_name}", args=[environment.api_key]
+    )
+
+    # When
+    response = admin_client.post(url, data=DATABRICKS_PAYLOAD, format="json")
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json() == DATABRICKS_UNAVAILABLE
+    assert not WarehouseConnection.objects.filter(environment=environment).exists()
+    assert databricks_workspace.call_count == 0
+
+
+@pytest.mark.parametrize(
+    "minimum_plan, expected_status_code, expected_type",
+    [
+        ("scale-up", status.HTTP_400_BAD_REQUEST, WarehouseType.CLICKHOUSE),
+        ("free", status.HTTP_200_OK, WarehouseType.DATABRICKS),
+    ],
+    ids=["below-minimum-plan", "meets-minimum-plan"],
+)
+@pytest.mark.usefixtures("saas_mode", "databricks_workspace")
+def test_patch__clickhouse_to_databricks_on_saas__gated_by_plan(
+    admin_client: APIClient,
+    clickhouse_connection: WarehouseConnection,
+    environment: Environment,
+    set_warehouses_flag: SetWarehousesFlagFixture,
+    minimum_plan: str,
+    expected_status_code: int,
+    expected_type: str,
+) -> None:
+    # Given
+    set_warehouses_flag({"minimum_plans": {"databricks": minimum_plan}})
+    url = reverse(
+        "api-v1:environments:experimentation:warehouse-connections-detail",
+        args=[environment.api_key, clickhouse_connection.id],
+    )
+
+    # When
+    response = admin_client.patch(url, data=DATABRICKS_PAYLOAD, format="json")
+
+    # Then
+    assert response.status_code == expected_status_code
+    clickhouse_connection.refresh_from_db()
+    assert clickhouse_connection.warehouse_type == expected_type
+
+
+@pytest.mark.usefixtures("saas_mode")
+def test_patch__existing_databricks_below_minimum_plan_on_saas__saves(
+    admin_client: APIClient,
+    databricks_connection: WarehouseConnection,
+    environment: Environment,
+    set_warehouses_flag: SetWarehousesFlagFixture,
+) -> None:
+    # Given
+    set_warehouses_flag({"minimum_plans": {"databricks": "scale-up"}})
+    url = reverse(
+        "api-v1:environments:experimentation:warehouse-connections-detail",
+        args=[environment.api_key, databricks_connection.id],
+    )
+
+    # When
+    response = admin_client.patch(url, data={"name": "Renamed"}, format="json")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    databricks_connection.refresh_from_db()
+    assert databricks_connection.name == "Renamed"
+
+
+def test_post__postgres__returns_201_connected_with_generated_name(
+    admin_client: APIClient,
+    environment: Environment,
+    postgres_warehouse_schema: PostgresWarehouseSchema,
+    warehouse_connection_url: str,
+) -> None:
+    # Given
+    payload = {
+        "warehouse_type": "postgres",
+        "config": postgres_warehouse_schema.config,
+        "credentials": {"password": postgres_warehouse_schema.password},
+    }
+
+    # When
+    response = admin_client.post(warehouse_connection_url, data=payload, format="json")
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.json()["status"] == WarehouseConnectionStatus.CONNECTED
+    assert response.json()["name"] == f"PostgreSQL Warehouse - {environment.name}"
+    assert response.json()["config"] == postgres_warehouse_schema.config
+    assert "credentials" not in response.json()
+
+
+@pytest.mark.usefixtures("saas_mode")
+def test_post__postgres_below_minimum_plan_on_saas__returns_400(
+    admin_client: APIClient,
+    environment: Environment,
+    set_warehouses_flag: SetWarehousesFlagFixture,
+    warehouse_connection_url: str,
+) -> None:
+    # Given
+    set_warehouses_flag({"minimum_plans": {"postgres": "scale-up"}})
+
+    # When
+    response = admin_client.post(
+        warehouse_connection_url,
+        data={
+            "warehouse_type": "postgres",
+            "config": {"host": "pg.example.com", "database": "a", "username": "b"},
+            "credentials": {"password": "hunter2"},
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json() == {
+        "warehouse_type": ["PostgreSQL connections are not available on your plan."]
+    }
+    assert not WarehouseConnection.objects.filter(environment=environment).exists()
+
+
+def test_post__flagsmith_database_config__returns_201_connected_without_credentials(
+    admin_client: APIClient,
+    environment: Environment,
+    warehouse_connection_url: str,
+) -> None:
+    # Given
+    payload = {
+        "warehouse_type": "postgres",
+        "config": {"source": FLAGSMITH_DATABASE_SOURCE},
+    }
+
+    # When
+    response = admin_client.post(warehouse_connection_url, data=payload, format="json")
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.json()["status"] == WarehouseConnectionStatus.CONNECTED
+    assert response.json()["config"] == {"source": FLAGSMITH_DATABASE_SOURCE}
+    assert response.json()["name"] == f"Flagsmith database - {environment.name}"
+    connection = WarehouseConnection.objects.get(environment=environment)
+    assert connection.credentials is None
+
+
+@pytest.mark.parametrize(
+    "is_saas, is_default_database_postgresql",
+    [(True, True), (False, False)],
+    ids=["saas", "non-postgres-database"],
+)
+def test_post__flagsmith_database_on_saas_or_non_postgres__returns_400(
+    admin_client: APIClient,
+    environment: Environment,
+    mocker: MockerFixture,
+    warehouse_connection_url: str,
+    is_saas: bool,
+    is_default_database_postgresql: bool,
+) -> None:
+    # Given
+    mocker.patch("experimentation.warehouses.postgres.is_saas", return_value=is_saas)
+    mocker.patch(
+        "experimentation.warehouses.postgres.is_default_database_postgresql",
+        return_value=is_default_database_postgresql,
+    )
+
+    # When
+    response = admin_client.post(
+        warehouse_connection_url,
+        data={
+            "warehouse_type": "postgres",
+            "config": {"source": FLAGSMITH_DATABASE_SOURCE},
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json() == {"config": [FLAGSMITH_DATABASE_UNAVAILABLE_DETAIL]}
+    assert not WarehouseConnection.objects.filter(environment=environment).exists()
+
+
+@pytest.mark.parametrize(
+    "payload, expected_error",
+    [
+        (
+            {
+                "config": {"source": FLAGSMITH_DATABASE_SOURCE},
+                "credentials": {"password": "hunter2"},
+            },
+            {"credentials": ["The Flagsmith database takes no credentials."]},
+        ),
+        (
+            {"config": {"source": FLAGSMITH_DATABASE_SOURCE, "host": "db.example"}},
+            {
+                "config": {
+                    "source": 'Must be "flagsmith_database", with no other fields.'
+                }
+            },
+        ),
+    ],
+    ids=["with-credentials", "extra-config-keys"],
+)
+def test_post__invalid_flagsmith_database_payload__returns_400(
+    admin_client: APIClient,
+    environment: Environment,
+    warehouse_connection_url: str,
+    payload: dict[str, object],
+    expected_error: dict[str, object],
+) -> None:
+    # Given
+    payload = {"warehouse_type": "postgres", **payload}
+
+    # When
+    response = admin_client.post(warehouse_connection_url, data=payload, format="json")
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json() == expected_error
+    assert not WarehouseConnection.objects.filter(environment=environment).exists()
+
+
+@pytest.mark.parametrize(
+    "has_credentials, expected_status_code",
+    [(True, status.HTTP_200_OK), (False, status.HTTP_400_BAD_REQUEST)],
+    ids=["with-credentials", "without-credentials"],
+)
+def test_patch__flagsmith_database_to_customer_postgres__requires_credentials(
+    admin_client: APIClient,
+    environment: Environment,
+    flagsmith_database_connection: WarehouseConnection,
+    postgres_warehouse_schema: PostgresWarehouseSchema,
+    has_credentials: bool,
+    expected_status_code: int,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:environments:experimentation:warehouse-connections-detail",
+        args=[environment.api_key, flagsmith_database_connection.id],
+    )
+    payload: dict[str, object] = {"config": postgres_warehouse_schema.config}
+    if has_credentials:
+        payload["credentials"] = {"password": postgres_warehouse_schema.password}
+
+    # When
+    response = admin_client.patch(url, data=payload, format="json")
+
+    # Then
+    assert response.status_code == expected_status_code
+    flagsmith_database_connection.refresh_from_db()
+    assert flagsmith_database_connection.config == (
+        postgres_warehouse_schema.config
+        if has_credentials
+        else {"source": FLAGSMITH_DATABASE_SOURCE}
+    )
+
+
+def test_patch__flagsmith_database_connection_name_only__saves_without_credentials(
+    admin_client: APIClient,
+    environment: Environment,
+    flagsmith_database_connection: WarehouseConnection,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:environments:experimentation:warehouse-connections-detail",
+        args=[environment.api_key, flagsmith_database_connection.id],
+    )
+
+    # When
+    response = admin_client.patch(url, data={"name": "Renamed"}, format="json")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    flagsmith_database_connection.refresh_from_db()
+    assert flagsmith_database_connection.name == "Renamed"
+
+
+def test_patch__postgres_to_flagsmith_database_config__clears_credentials(
+    admin_client: APIClient,
+    environment: Environment,
+    postgres_connection: WarehouseConnection,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:environments:experimentation:warehouse-connections-detail",
+        args=[environment.api_key, postgres_connection.id],
+    )
+
+    # When
+    response = admin_client.patch(
+        url, data={"config": {"source": FLAGSMITH_DATABASE_SOURCE}}, format="json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    postgres_connection.refresh_from_db()
+    assert postgres_connection.config == {"source": FLAGSMITH_DATABASE_SOURCE}
+    assert postgres_connection.credentials is None
+    assert postgres_connection.status == WarehouseConnectionStatus.CONNECTED
+
+
+def test_post_sdk_events__mixed_batch__stores_valid_events_and_returns_202(
+    api_client: APIClient,
+    environment: Environment,
+    flagsmith_database_connection: WarehouseConnection,
+    log: StructuredLogCapture,
+    assert_metric: AssertMetricFixture,
+) -> None:
+    # Given
+    timestamp = datetime.now(timezone.utc).replace(microsecond=0)
+    timestamp_ms = int(timestamp.timestamp() * 1000)
+    api_client.credentials(
+        HTTP_X_ENVIRONMENT_KEY=environment.api_key,
+        HTTP_FLAGSMITH_SDK_USER_AGENT="flagsmith-python-sdk/6.2.3",
+    )
+    payload = {
+        "events": [
+            {
+                "event": "$flag_exposure",
+                "feature_name": "checkout",
+                "identifier": "user-1",
+                "value": "variant_a",
+                "timestamp": timestamp_ms,
+            },
+            {"event": "purchase", "timestamp": 1},
+            "purchase",
+        ]
+    }
+
+    # When
+    response = api_client.post(
+        reverse("api-v1:experimentation-events"), data=payload, format="json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_202_ACCEPTED
+    assert response.json() == {
+        "accepted": 1,
+        "rejected": [
+            {
+                "index": 1,
+                "error": "timestamp: Timestamp must be after 2020-01-01.",
+            },
+            {
+                "index": 2,
+                "error": "Invalid data. Expected a dictionary, but got str.",
+            },
+        ],
+    }
+    assert list(
+        SDKExperimentationEvent.objects.values_list(
+            "environment_key", "event", "timestamp", "sdk_language"
+        )
+    ) == [(environment.api_key, "$flag_exposure", timestamp, "python")]
+    assert log.events == [
+        {
+            "level": "warning",
+            "event": "sdk_events.rejected",
+            "environment__id": environment.id,
+            "submitted_events__count": 3,
+            "rejected_events__count": 2,
+            "rejected_events__fields": ["non_field_errors", "timestamp"],
+        }
+    ]
+    assert_metric(
+        name="flagsmith_experimentation_sdk_events_total",
+        labels={"result": "accepted"},
+        value=1,
+    )
+    assert_metric(
+        name="flagsmith_experimentation_sdk_events_total",
+        labels={"result": "rejected"},
+        value=2,
+    )
+
+
+@pytest.mark.parametrize(
+    "payload, expected_body",
+    [
+        (
+            {"events": []},
+            {"accepted": 0, "rejected": [], "error": "events must be non-empty"},
+        ),
+        (
+            [{"event": "purchase"}],
+            {"accepted": 0, "rejected": [], "error": "events must be non-empty"},
+        ),
+        (
+            {"events": [{"event": "$made_up", "timestamp": 1}]},
+            {
+                "accepted": 0,
+                "rejected": [
+                    {"index": 0, "error": "event: The `$` prefix is reserved."}
+                ],
+            },
+        ),
+    ],
+    ids=["empty-batch", "not-a-batch", "no-valid-events"],
+)
+def test_post_sdk_events__nothing_to_store__returns_400(
+    api_client: APIClient,
+    environment: Environment,
+    flagsmith_database_connection: WarehouseConnection,
+    payload: object,
+    expected_body: dict[str, object],
+) -> None:
+    # Given
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+
+    # When
+    response = api_client.post(
+        reverse("api-v1:experimentation-events"), data=payload, format="json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json() == expected_body
+    assert not SDKExperimentationEvent.objects.exists()
+
+
+@pytest.mark.parametrize(
+    "config",
+    [None, {"host": "pg.example.com"}],
+    ids=["no-config", "customer-postgres"],
+)
+def test_post_sdk_events__environment_without_flagsmith_database__returns_404(
+    api_client: APIClient,
+    environment: Environment,
+    config: dict[str, str] | None,
+) -> None:
+    # Given
+    WarehouseConnection.objects.create(
+        environment=environment,
+        warehouse_type=WarehouseType.POSTGRES,
+        name="Production PostgreSQL",
+        config=config,
+    )
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+
+    # When
+    response = api_client.post(
+        reverse("api-v1:experimentation-events"),
+        data={"events": [{"event": "purchase", "timestamp": 1}]},
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
+def test_post_sdk_events__body_over_limit__returns_413(
+    api_client: APIClient,
+    environment: Environment,
+    flagsmith_database_connection: WarehouseConnection,
+) -> None:
+    # Given
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+    payload = {"events": [{"event": "purchase", "value": "x" * MAX_BODY_BYTES}]}
+
+    # When
+    response = api_client.post(
+        reverse("api-v1:experimentation-events"), data=payload, format="json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_413_REQUEST_ENTITY_TOO_LARGE
+    assert response.content == BODY_LIMIT_ERROR.encode()
+    assert not SDKExperimentationEvent.objects.exists()

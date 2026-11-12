@@ -1,0 +1,27 @@
+import pytest
+from django.urls import reverse
+from pytest_lazy_fixtures import lf as lazy_fixture
+from rest_framework import status
+from rest_framework.test import APIClient
+
+
+@pytest.mark.parametrize(
+    "url",
+    (
+        reverse("api-v1:schema-json"),
+        reverse("api-v1:schema-yaml"),
+        reverse("api-v1:schema-swagger-ui"),
+    ),
+)
+@pytest.mark.parametrize(
+    "client",
+    (lazy_fixture("api_client"), lazy_fixture("admin_client")),
+)
+def test_swagger_docs_generation__valid_url__returns_ok(
+    url: str, client: APIClient
+) -> None:
+    # Given / When
+    response = client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK

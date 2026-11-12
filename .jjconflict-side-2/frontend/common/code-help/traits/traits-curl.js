@@ -1,0 +1,19 @@
+import Constants from 'common/constants'
+
+export default (
+  envId,
+  { TRAIT_NAME, USER_ID },
+  userId,
+) => `curl -i -X POST '${Constants.getFlagsmithSDKUrl()}identities/' \\
+     -H 'X-Environment-Key: ${envId}' \\
+     -H 'Content-Type: application/json; charset=utf-8' \\
+     -d $'{
+  "traits": [
+    {
+      "trait_key": "${TRAIT_NAME}",
+      "trait_value": 42
+    }
+  ],
+  "identifier": "${userId || USER_ID}"
+}'
+`

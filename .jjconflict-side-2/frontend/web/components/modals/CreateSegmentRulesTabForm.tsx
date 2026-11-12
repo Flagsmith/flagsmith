@@ -1,0 +1,288 @@
+import React from 'react'
+import InfoMessage from 'components/InfoMessage'
+import Input from 'components/base/forms/Input'
+import InputGroup from 'components/base/forms/InputGroup'
+import Switch from 'components/Switch'
+import Button from 'components/base/forms/Button'
+import InlinePillToggle from 'components/base/forms/InlinePillToggle'
+import Format from 'common/utils/format'
+import Utils from 'common/utils/utils'
+import Constants from 'common/constants'
+import JSONReference from 'components/JSONReference'
+import { Segment } from 'common/types/responses'
+import ChangeRequestModal from './ChangeRequestModal'
+import { ProjectPermission } from 'common/types/permissions.types'
+
+type DefaultSegmentType = Omit<Segment, 'id' | 'project' | 'uuid'> & {
+  id?: number
+  uuid?: string
+  project?: number
+}
+
+interface CreateSegmentRulesTabFormProps {
+  save: (e: React.FormEvent<HTMLFormElement>) => void
+  condensed?: boolean
+  segmentsLimitAlert: { percentage: number }
+  name: string
+  is4Eyes?: boolean
+  onCreateChangeRequest: (changeRequestData: {
+    approvals: []
+    description: string
+    title: string
+  }) => void
+  setName: (name: string) => void
+  setValueChanged: (value: boolean) => void
+  description: string
+  setDescription: (description: string) => void
+  identity?: boolean
+  readOnly?: boolean
+  // Explains why editing is unavailable; defaults to the permission hint.
+  readOnlyMessage?: string
+  showDescriptions: boolean
+  setShowDescriptions: (show: boolean) => void
+  allWarnings: string[]
+  rulesEl: React.ReactNode
+  isEdit: boolean
+  segment: Segment | DefaultSegmentType
+  isSaving: boolean
+  isValid: boolean
+  isLimitReached: boolean
+  onCancel?: () => void
+  topLevelRuleType?: 'ALL' | 'ANY'
+  setTopLevelRuleType?: (type: 'ALL' | 'ANY') => void
+}
+
+const CreateSegmentRulesTabForm: React.FC<CreateSegmentRulesTabFormProps> = ({
+  allWarnings,
+  condensed,
+  description,
+  identity,
+  is4Eyes,
+  isEdit,
+  isLimitReached,
+  isSaving,
+  isValid,
+  name,
+  onCancel,
+  onCreateChangeRequest,
+  readOnly,
+  readOnlyMessage,
+  rulesEl,
+  save,
+  segment,
+  segmentsLimitAlert,
+  setDescription,
+  setName,
+  setShowDescriptions,
+  setTopLevelRuleType,
+  setValueChanged,
+  showDescriptions,
+  topLevelRuleType = 'ALL',
+}) => {
+  const SEGMENT_ID_MAXLENGTH = Constants.forms.maxLength.SEGMENT_ID
+
+  let buttonProps: Record<string, any> = {
+    'data-test': 'update-segment',
+    disabled: isSaving || !name || !isValid,
+    id: 'update-feature-btn',
+  }
+
+  switch (true) {
+    case isEdit && is4Eyes:
+      buttonProps = {
+        ...buttonProps,
+        children: isSaving ? 'Creating' : 'Create Change Request',
+        onClick: () => {
+          openModal2(
+            'New Change Request',
+            <ChangeRequestModal
+              showAssignees={is4Eyes}
+              hideSchedule
+              onSave={onCreateChangeRequest}
+            />,
+          )
+        },
+      }
+      break
+
+    case !isEdit:
+      buttonProps = {
+        ...buttonProps,
+        children: isSaving ? 'Creating' : 'Create Segment',
+        'data-test': 'create-segment',
+        disabled: isSaving || !name || !isValid || isLimitReached,
+        id: 'create-feature-btn',
+        type: 'submit',
+      }
+      break
+
+    case isEdit && !is4Eyes:
+    default:
+      buttonProps = {
+        ...buttonProps,
+        children: isSaving ? 'Creating' : 'Update Segment',
+        type: 'submit',
+      }
+  }
+
+  return (
+    <form id='create-segment-modal' onSubmit={save}>
+      {!condensed && segmentsLimitAlert.percentage && (
+        <div className='mt-3'>
+          {Utils.displayLimitAlert('segments', segmentsLimitAlert.percentage)}
+        </div>
+      )}
+
+      <div className='mb-3'>
+        <label htmlFor='segmentID'>Name*</label>
+        <Flex>
+          <Input
+            data-test='segmentID'
+            name='id'
+            id='segmentID'
+            maxLength={SEGMENT_ID_MAXLENGTH}
+            value={name}
+            onChange={(e) => {
+              setValueChanged(true)
+              setName(
+                Format.enumeration
+                  .set(Utils.safeParseEventValue(e))
+                  .toLowerCase(),
+              )
+            }}
+            isValid={!!(name && name.length)}
+            type='text'
+            placeholder='E.g. power_users'
+          />
+        </Flex>
+      </div>
+      {!condensed && (
+        <InputGroup
+          className='mb-3'
+          value={description}
+          inputProps={{
+            className: 'full-width',
+            name: 'featureDesc',
+            readOnly: !!identity || readOnly,
+          }}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+            setValueChanged(true)
+            setDescription(Utils.safeParseEventValue(e))
+          }}
+          isValid={name && name.length}
+          type='text'
+          title='Description'
+          placeholder="e.g. 'People who have spent over $100' "
+        />
+      )}
+
+      <div className='form-group '>
+        <Row className='mb-3'>
+          <Switch
+            checked={showDescriptions}
+            onChange={() => {
+              setShowDescriptions(!showDescriptions)
+            }}
+            className={'ml-0'}
+          />
+          <span
+            style={{ fontWeight: 'normal', marginLeft: '12px' }}
+            className='mb-0 fs-small text-default'
+          >
+            Show condition descriptions
+          </span>
+        </Row>
+        {!condensed && (
+          <InfoMessage collapseId={'value-type-conversions'} className='mb-3'>
+            Trait names are case sensitive. Learn more about rule and trait
+            value type conversions{' '}
+            <a href='https://docs.flagsmith.com/basic-features/segments#rule-typing'>
+              here
+            </a>
+            .
+          </InfoMessage>
+        )}
+        {!readOnly &&
+        setTopLevelRuleType &&
+        Utils.getFlagsmithHasFeature('segment_any_rule_type') ? (
+          <>
+            <Row className='mb-2 align-items-center gap-2'>
+              <label className='control-label mb-0'>Include users when</label>
+              <InlinePillToggle
+                data-test='top-level-rule-type'
+                size='medium'
+                options={[
+                  { label: 'ALL', value: 'ALL' },
+                  { label: 'ANY', value: 'ANY' },
+                ]}
+                value={topLevelRuleType}
+                onChange={setTopLevelRuleType}
+              />
+              <label className='control-label mb-0'>
+                of the following rules apply
+              </label>
+            </Row>
+            {topLevelRuleType === 'ANY' &&
+              Utils.getFlagsmithValue('segment_any_rule_type') && (
+                <div className='fs-small fst-italic text-muted mb-3'>
+                  {Utils.getFlagsmithValue('segment_any_rule_type')}
+                </div>
+              )}
+          </>
+        ) : (
+          <Flex className='mb-3'>
+            <label className='cols-sm-2 control-label mb-1'>
+              Include users when {topLevelRuleType === 'ANY' ? 'any' : 'all'} of
+              the following rules apply
+            </label>
+          </Flex>
+        )}
+        {allWarnings?.map((warning, i) => (
+          <InfoMessage key={i}>
+            <div dangerouslySetInnerHTML={{ __html: warning }} />
+          </InfoMessage>
+        ))}
+        {rulesEl}
+      </div>
+
+      {isEdit && <JSONReference title={'Segment'} json={segment} />}
+      {readOnly ? (
+        <div className='text-right'>
+          <Tooltip
+            title={
+              <Button
+                disabled
+                data-test='show-create-feature-btn'
+                id='show-create-feature-btn'
+              >
+                Update Segment
+              </Button>
+            }
+            place='left'
+          >
+            {readOnlyMessage ||
+              Constants.projectPermissions(ProjectPermission.ADMIN)}
+          </Tooltip>
+        </div>
+      ) : (
+        <div className='text-right' style={{ marginTop: '32px' }}>
+          <Row className='justify-content-end'>
+            {condensed && (
+              <Button
+                theme='secondary'
+                type='button'
+                onClick={onCancel}
+                className='mr-2'
+              >
+                Cancel
+              </Button>
+            )}
+            <Button {...buttonProps} />
+          </Row>
+        </div>
+      )}
+    </form>
+  )
+}
+
+export default CreateSegmentRulesTabForm
