@@ -258,6 +258,11 @@ export type Req = {
     project: number
     environments?: number
   }>
+  getOrganisationAuditLogs: PagedRequest<{
+    organisationId: number
+    search?: string
+  }>
+  getOrganisationAuditLogItem: { organisationId: number; id: number }
   getOrganisations: {}
   getOrganisation: { id: number }
   updateOrganisation: { id: number; body: UpdateOrganisationBody }
