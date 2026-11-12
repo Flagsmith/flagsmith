@@ -28,6 +28,18 @@
     cursor: pointer;
   }
 
+  // Toggle mode: the checkbox is visually hidden, so the chip shows its focus.
+  &--toggle:has(.ds-chip__checkbox:focus-visible) {
+    outline: 2px solid var(--color-border-action);
+    outline-offset: 2px;
+  }
+
+  // The global input[type='checkbox'] rule sets display: none, which would
+  // take the checkbox out of the tab order. Nesting outranks it.
+  & &__checkbox {
+    display: block;
+  }
+
   // Value chips: cap the width and ellipsis the label.
   &--truncate {
     max-width: 200px;
