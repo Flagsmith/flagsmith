@@ -86,3 +86,30 @@ export const Group: Story = {
     </div>
   ),
 }
+
+// An item in a list: no card border, and the list draws the dividers.
+export const Row: Story = {
+  args: { defaultOpen: true, variant: 'row' },
+}
+
+// Controlled, so a list can keep one item open at a time.
+const OneOpenList = () => {
+  const [openId, setOpenId] = React.useState<number | null>(1)
+  return (
+    <div>
+      {[1, 2, 3].map((id) => (
+        <Accordion
+          key={id}
+          variant='row'
+          title={`Item ${id}`}
+          open={openId === id}
+          onOpenChange={(open) => setOpenId(open ? id : null)}
+        >
+          Content for item {id}
+        </Accordion>
+      ))}
+    </div>
+  )
+}
+
+export const OneOpenAtATime: Story = { render: () => <OneOpenList /> }
