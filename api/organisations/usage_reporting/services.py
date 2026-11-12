@@ -86,6 +86,11 @@ def push_usage_snapshots() -> None:
         with structlog.contextvars.bound_contextvars(organisation__id=organisation.id):
             try:
                 window_start = get_window_start(organisation, window_end)
+                if window_start >= window_end:
+                    # The control plane drops snapshots with a repeated timestamp,
+                    # so an empty push would make the next window collide and be lost.
+                    logger.debug("snapshot.skipped", reason="empty_window")
+                    continue
 
                 push_snapshot(
                     base_url=base_url,

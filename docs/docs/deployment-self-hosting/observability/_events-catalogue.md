@@ -910,7 +910,7 @@ Attributes:
 ### `usage_reporting.snapshot.errored`
 
 Logged at `exception` from:
- - `api/organisations/usage_reporting/services.py:104`
+ - `api/organisations/usage_reporting/services.py:109`
 
 Attributes:
  - `reason`
@@ -922,6 +922,14 @@ Logged at `info` from:
 
 Attributes:
  - `status_code`
+
+### `usage_reporting.snapshot.skipped`
+
+Logged at `debug` from:
+ - `api/organisations/usage_reporting/services.py:92`
+
+Attributes:
+ - `reason`
 
 ### `warehouse.connection.connected`
 

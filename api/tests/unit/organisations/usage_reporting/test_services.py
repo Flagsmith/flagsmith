@@ -22,6 +22,8 @@ from organisations.usage_reporting.services import (
     push_usage_snapshots,
 )
 
+REPORTED_LONG_AGO = datetime(2000, 1, 1, tzinfo=timezone.utc)
+
 
 @pytest.fixture
 def snapshot() -> UsageSnapshot:
@@ -230,8 +232,16 @@ def test_push_usage_snapshots__licensed_organisations__pushes_each(
 ) -> None:
     # Given
     settings.CONTROL_PLANE_URL = "https://cp.example.com"
-    org_one = mocker.Mock(id=1, licence=mocker.Mock(signature="sig-1"))
-    org_two = mocker.Mock(id=2, licence=mocker.Mock(signature="sig-2"))
+    org_one = mocker.Mock(
+        id=1,
+        licence=mocker.Mock(signature="sig-1"),
+        usage_reporting_state=mocker.Mock(reported_until=REPORTED_LONG_AGO),
+    )
+    org_two = mocker.Mock(
+        id=2,
+        licence=mocker.Mock(signature="sig-2"),
+        usage_reporting_state=mocker.Mock(reported_until=REPORTED_LONG_AGO),
+    )
     mocker.patch(
         "organisations.usage_reporting.services.get_licensed_organisations",
         return_value=[org_one, org_two],
@@ -356,6 +366,28 @@ def test_push_usage_snapshots__previously_reported_push_succeeds__moves_reported
 
 
 @pytest.mark.freeze_time("2026-06-18T09:30:00+00:00")
+def test_push_usage_snapshots__already_reported_this_hour__skips_push(
+    mocker: MockerFixture,
+    log: StructuredLogCapture,
+    organisation: Organisation,
+    mocked_map_for_licensed_organisation: MagicMock,
+) -> None:
+    # Given - the window up to the start of the current hour is already reported
+    UsageReportingState.objects.create(
+        organisation=organisation,
+        reported_until=datetime(2026, 6, 18, 9, 0, 0, tzinfo=timezone.utc),
+    )
+    mocked_push = mocker.patch("organisations.usage_reporting.services.push_snapshot")
+
+    # When
+    push_usage_snapshots()
+
+    # Then
+    mocked_push.assert_not_called()
+    assert log.has("snapshot.skipped", level="debug", reason="empty_window")
+
+
+@pytest.mark.freeze_time("2026-06-18T09:30:00+00:00")
 def test_push_usage_snapshots__push_fails__keeps_reported_until(
     mocker: MockerFixture,
     log: StructuredLogCapture,
@@ -389,8 +421,16 @@ def test_push_usage_snapshots__one_organisation_raises__continues(
 ) -> None:
     # Given
     settings.CONTROL_PLANE_URL = "https://cp.example.com"
-    org_one = mocker.Mock(id=1, licence=mocker.Mock(signature="sig-1"))
-    org_two = mocker.Mock(id=2, licence=mocker.Mock(signature="sig-2"))
+    org_one = mocker.Mock(
+        id=1,
+        licence=mocker.Mock(signature="sig-1"),
+        usage_reporting_state=mocker.Mock(reported_until=REPORTED_LONG_AGO),
+    )
+    org_two = mocker.Mock(
+        id=2,
+        licence=mocker.Mock(signature="sig-2"),
+        usage_reporting_state=mocker.Mock(reported_until=REPORTED_LONG_AGO),
+    )
     mocker.patch(
         "organisations.usage_reporting.services.get_licensed_organisations",
         return_value=[org_one, org_two],
