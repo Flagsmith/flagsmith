@@ -61,7 +61,7 @@ const SegmentedControl = <T extends string>({
           role='radio'
           aria-checked={i === index}
           tabIndex={i === index ? 0 : -1}
-          className='segmented-control__option border-0 rounded-sm fw-semibold'
+          className='segmented-control__option border-0 rounded-sm fw-semibold fs-caption'
           onClick={() => onChange(option.value)}
         >
           {option.label}
