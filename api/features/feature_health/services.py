@@ -91,14 +91,14 @@ def create_feature_health_events_from_provider(
                     )
                 )
     FeatureHealthEvent.objects.bulk_create(events_to_create)
-    for feature_id in feature_ids_to_update:
-        tasks.update_feature_unhealthy_tag.delay(args=(feature_id,))
     for feature, environment in updated_feature_environments:
-        feature_health_updated.send(
+        feature_health_updated.send_robust(
             sender=Feature,
             feature=feature,
             environment=environment,
         )
+    for feature_id in feature_ids_to_update:
+        tasks.update_feature_unhealthy_tag.delay(args=(feature_id,))
     return events_to_create
 
 
@@ -161,11 +161,11 @@ def dismiss_feature_health_event(
         external_id=feature_health_event.external_id,
     )
 
-    tasks.update_feature_unhealthy_tag.delay(
-        args=(feature_health_event.feature.id,),
-    )
-    feature_health_updated.send(
+    feature_health_updated.send_robust(
         sender=Feature,
         feature=feature_health_event.feature,
         environment=feature_health_event.environment,
+    )
+    tasks.update_feature_unhealthy_tag.delay(
+        args=(feature_health_event.feature.id,),
     )

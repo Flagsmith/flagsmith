@@ -176,3 +176,32 @@ def test_dismiss_feature_health_event__unhealthy_event__sends_feature_health_upd
         feature=feature,
         environment=environment,
     )
+
+
+def test_create_feature_health_events_from_provider__receiver_raises__still_updates_unhealthy_tag(
+    feature: Feature,
+    feature_health_provider: FeatureHealthProvider,
+    feature_health_updated_receiver: MagicMock,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mocker.patch(
+        "features.feature_health.services.get_provider_response",
+        return_value=FeatureHealthProviderResponse(
+            events=[
+                FeatureHealthEventData(
+                    feature_name=feature.name,
+                    type=FeatureHealthEventType.UNHEALTHY,
+                    provider_name="Webhook",
+                ),
+            ]
+        ),
+    )
+    feature_health_updated_receiver.side_effect = RuntimeError("receiver error")
+
+    # When
+    create_feature_health_events_from_provider(feature_health_provider, "payload")
+
+    # Then
+    feature_health_updated_receiver.assert_called_once()
+    assert list(feature.tags.values_list("label", flat=True)) == ["Unhealthy"]
