@@ -1,0 +1,45 @@
+.ds-radio {
+  // The input is visually hidden, so the label shows its focus.
+  &:has(input:focus-visible) {
+    outline: 2px solid var(--color-border-action);
+    outline-offset: 2px;
+  }
+
+  &--disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+
+  &__dot {
+    display: grid;
+    place-items: center;
+    width: 16px;
+    height: 16px;
+    border: 1.5px solid var(--color-icon-secondary);
+    border-radius: 50%;
+
+    &::after {
+      content: '';
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--color-surface-action);
+      transform: scale(0);
+      transition: transform var(--duration-normal) var(--easing-entrance);
+    }
+  }
+
+  input:checked ~ &__dot {
+    border-color: var(--color-border-action);
+
+    &::after {
+      transform: scale(1);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &__dot::after {
+      transition: none;
+    }
+  }
+}
