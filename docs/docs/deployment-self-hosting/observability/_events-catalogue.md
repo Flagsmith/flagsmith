@@ -278,7 +278,7 @@ Attributes:
 ### `feature_health.feature_health_event_dismissal_not_supported`
 
 Logged at `warning` from:
- - `api/features/feature_health/services.py:127`
+ - `api/features/feature_health/services.py:153`
 
 Attributes:
  - `feature_health_event_external_id`
@@ -289,7 +289,7 @@ Attributes:
 ### `feature_health.feature_health_provider_error`
 
 Logged at `error` from:
- - `api/features/feature_health/services.py:50`
+ - `api/features/feature_health/services.py:51`
 
 Attributes:
  - `exc_info`

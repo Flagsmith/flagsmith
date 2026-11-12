@@ -1,13 +1,23 @@
 import uuid
+from unittest.mock import MagicMock
 
 from pytest_mock import MockerFixture
 from pytest_structlog import StructuredLogCapture
 
 from environments.models import Environment
-from features.feature_health.models import FeatureHealthEvent, FeatureHealthEventType
+from features.feature_health.models import (
+    FeatureHealthEvent,
+    FeatureHealthEventType,
+    FeatureHealthProvider,
+)
 from features.feature_health.services import (
+    create_feature_health_events_from_provider,
     dismiss_feature_health_event,
     get_provider_response,
+)
+from features.feature_health.types import (
+    FeatureHealthEventData,
+    FeatureHealthProviderResponse,
 )
 from features.models import Feature
 
@@ -70,3 +80,129 @@ def test_dismiss_feature_health_event__healthy_event__log_expected(
             "provider_name": healthy_event.provider_name,
         },
     ]
+
+
+def test_create_feature_health_events_from_provider__events_in_several_environments__sends_feature_health_updated_per_environment(
+    feature: Feature,
+    environment: Environment,
+    feature_health_provider: FeatureHealthProvider,
+    feature_health_updated_receiver: MagicMock,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mocker.patch(
+        "features.feature_health.services.get_provider_response",
+        return_value=FeatureHealthProviderResponse(
+            events=[
+                FeatureHealthEventData(
+                    feature_name=feature.name,
+                    environment_name=environment.name,
+                    type=FeatureHealthEventType.UNHEALTHY,
+                    provider_name="Webhook",
+                    external_id="alert-1",
+                ),
+                FeatureHealthEventData(
+                    feature_name=feature.name,
+                    environment_name=environment.name,
+                    type=FeatureHealthEventType.UNHEALTHY,
+                    provider_name="Webhook",
+                    external_id="alert-2",
+                ),
+                FeatureHealthEventData(
+                    feature_name=feature.name,
+                    type=FeatureHealthEventType.UNHEALTHY,
+                    provider_name="Webhook",
+                ),
+            ]
+        ),
+    )
+
+    # When
+    create_feature_health_events_from_provider(feature_health_provider, "payload")
+
+    # Then
+    assert feature_health_updated_receiver.call_count == 2
+    assert {
+        call.kwargs["environment"]
+        for call in feature_health_updated_receiver.call_args_list
+    } == {environment, None}
+    assert all(
+        call.kwargs["feature"] == feature
+        for call in feature_health_updated_receiver.call_args_list
+    )
+
+
+def test_create_feature_health_events_from_provider__unhealthy_event__sends_feature_health_updated_after_tag_update(
+    feature: Feature,
+    environment: Environment,
+    feature_health_provider: FeatureHealthProvider,
+    feature_health_updated_receiver: MagicMock,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mocker.patch(
+        "features.feature_health.services.get_provider_response",
+        return_value=FeatureHealthProviderResponse(
+            events=[
+                FeatureHealthEventData(
+                    feature_name=feature.name,
+                    environment_name=environment.name,
+                    type=FeatureHealthEventType.UNHEALTHY,
+                    provider_name="Webhook",
+                ),
+            ]
+        ),
+    )
+    tag_labels_seen_by_receiver: list[list[str]] = []
+    feature_health_updated_receiver.side_effect = lambda feature, **kwargs: (
+        tag_labels_seen_by_receiver.append(
+            list(feature.tags.values_list("label", flat=True))
+        )
+    )
+
+    # When
+    create_feature_health_events_from_provider(feature_health_provider, "payload")
+
+    # Then
+    assert tag_labels_seen_by_receiver == [["Unhealthy"]]
+
+
+def test_create_feature_health_events_from_provider__invalid_payload__does_not_send_feature_health_updated(
+    feature_health_provider: FeatureHealthProvider,
+    feature_health_updated_receiver: MagicMock,
+) -> None:
+    # Given
+    invalid_payload = "invalid"
+
+    # When
+    create_feature_health_events_from_provider(feature_health_provider, invalid_payload)
+
+    # Then
+    feature_health_updated_receiver.assert_not_called()
+
+
+def test_dismiss_feature_health_event__unhealthy_event__sends_feature_health_updated(
+    feature: Feature,
+    environment: Environment,
+    feature_health_updated_receiver: MagicMock,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    unhealthy_event = FeatureHealthEvent.objects.create(
+        feature=feature,
+        environment=environment,
+        provider_name="Webhook",
+        external_id="test_external_id",
+        type=FeatureHealthEventType.UNHEALTHY,
+    )
+
+    # When
+    dismiss_feature_health_event(unhealthy_event, mocker.MagicMock())
+
+    # Then
+    feature_health_updated_receiver.assert_called_once_with(
+        signal=mocker.ANY,
+        sender=Feature,
+        feature=feature,
+        environment=environment,
+    )
