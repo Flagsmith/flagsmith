@@ -1,23 +1,43 @@
 from typing import TYPE_CHECKING, Any, Callable
 
 from flagsmith_schemas.api import FeatureStateMetadata
+from rest_framework.exceptions import ValidationError
 
 from experimentation.models import Experiment, ExperimentStatus
+from features.constants import LIVE_EXPERIMENT_MV_OPTIONS_MESSAGE
 
 if TYPE_CHECKING:  # pragma: no cover
     from environments.models import Environment
     from features.models import FeatureState
 
 
-def has_live_experiment(feature_id: int) -> bool:
+def get_live_experiment(feature_id: int) -> Experiment | None:
     # Multivariate options belong to the feature, not an environment, so an
-    # experiment running in any environment locks them.
-    return bool(
+    # experiment in any environment locks them. A paused experiment counts:
+    # changing the variants before it resumes would skew its results.
+    return (  # type: ignore[no-any-return]
         Experiment.objects.filter(
             feature_id=feature_id,
-            status=ExperimentStatus.RUNNING,
-        ).exists()
+            status__in=(ExperimentStatus.RUNNING, ExperimentStatus.PAUSED),
+        )
+        .select_related("environment")
+        .first()
     )
+
+
+def live_experiment_error(experiment: Experiment) -> ValidationError:
+    return ValidationError(
+        {
+            "detail": LIVE_EXPERIMENT_MV_OPTIONS_MESSAGE.format(
+                environment=experiment.environment.name
+            )
+        }
+    )
+
+
+def check_no_live_experiment(feature_id: int) -> None:
+    if experiment := get_live_experiment(feature_id):
+        raise live_experiment_error(experiment)
 
 
 def get_feature_state_metadata_builder(

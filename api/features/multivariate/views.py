@@ -11,13 +11,23 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 
-from experimentation.feature_state_metadata import has_live_experiment
-from features.constants import LIVE_EXPERIMENT_MV_OPTIONS_MESSAGE
+from experimentation.feature_state_metadata import check_no_live_experiment
 from features.models import Feature
 from projects.permissions import NestedProjectPermissions
 
 from .models import MultivariateFeatureOption
 from .serializers import MultivariateFeatureOptionSerializer
+
+# What makes a variation. `default_percentage_allocation` is left out: the
+# dashboard always sends it as 0, and it only seeds new environments.
+VARIATION_FIELDS = (
+    "type",
+    "string_value",
+    "integer_value",
+    "boolean_value",
+    "key",
+    "feature",
+)
 
 
 @method_decorator(
@@ -91,34 +101,38 @@ class MultivariateFeatureOptionViewSet(viewsets.ModelViewSet):  # type: ignore[t
             raise ValidationError({"feature": "Feature must match the URL."})
         with transaction.atomic():
             Feature.objects.select_for_update().filter(pk=url_feature.pk).exists()
-            self._check_no_live_experiment(url_feature)
+            check_no_live_experiment(url_feature.id)
             super().perform_create(serializer)
 
     def perform_update(self, serializer):  # type: ignore[no-untyped-def]
-        features = [serializer.instance.feature]
-        if "feature" in serializer.validated_data:
-            features.append(serializer.validated_data["feature"])
-        feature_ids = sorted({feature.id for feature in features})
+        instance = serializer.instance
+        data = serializer.validated_data
+        # The dashboard PUTs every option on each save, changed or not, so only
+        # a change to the variation itself is checked against experiments.
+        if not any(
+            field in data and data[field] != getattr(instance, field)
+            for field in VARIATION_FIELDS
+        ):
+            super().perform_update(serializer)
+            return
+
+        features = {instance.feature, data.get("feature", instance.feature)}
         with transaction.atomic():
             list(
                 Feature.objects.select_for_update()
-                .filter(pk__in=feature_ids)
+                .filter(pk__in=[feature.pk for feature in features])
                 .order_by("pk")
                 .values_list("pk", flat=True)
             )
             for feature in features:
-                self._check_no_live_experiment(feature)
+                check_no_live_experiment(feature.id)
             super().perform_update(serializer)
 
     def perform_destroy(self, instance):  # type: ignore[no-untyped-def]
         with transaction.atomic():
             Feature.objects.select_for_update().filter(pk=instance.feature_id).exists()
-            self._check_no_live_experiment(instance.feature)
+            check_no_live_experiment(instance.feature_id)
             super().perform_destroy(instance)
-
-    def _check_no_live_experiment(self, feature: Feature) -> None:
-        if has_live_experiment(feature.id):
-            raise ValidationError(LIVE_EXPERIMENT_MV_OPTIONS_MESSAGE)
 
     def get_queryset(self):  # type: ignore[no-untyped-def]
         if getattr(self, "swagger_fake_view", False):

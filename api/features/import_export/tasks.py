@@ -3,7 +3,6 @@ from datetime import timedelta
 from typing import Optional
 
 from django.conf import settings
-from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
 from task_processor.decorators import (
@@ -11,6 +10,11 @@ from task_processor.decorators import (
     register_task_handler,
 )
 
+from environments.models import Environment
+from experimentation.feature_state_metadata import (
+    get_live_experiment,
+    live_experiment_error,
+)
 from features.import_export.constants import (
     FAILED,
     PROCESSING,
@@ -144,32 +148,55 @@ def import_features_for_environment(feature_import_id: int) -> None:
 
 
 def _import_features_for_environment(feature_import: FeatureImport) -> None:
-    with transaction.atomic():
-        environment = feature_import.environment
-        input_data: list[FeatureExportData] = json.loads(feature_import.data)
-        project = environment.project
+    environment = feature_import.environment
+    input_data: list[FeatureExportData] = json.loads(feature_import.data)
+    project = environment.project
 
-        for feature_data in input_data:
-            existing_feature = Feature.objects.filter(
-                name=feature_data["name"],
-                project=project,
-            ).first()
+    if feature_import.strategy != SKIP:
+        _check_import_against_live_experiments(input_data, environment)
 
-            if existing_feature and feature_import.strategy == SKIP:
-                continue
+    for feature_data in input_data:
+        existing_feature = Feature.objects.filter(
+            name=feature_data["name"],
+            project=project,
+        ).first()
 
-            if existing_feature is None:
-                existing_feature = map_feature_export_data_to_feature(
-                    feature_data, project
-                )
-                existing_feature.save()
+        if existing_feature and feature_import.strategy == SKIP:
+            continue
 
-            overwrite_feature_for_environment(
-                feature_data, existing_feature, environment
-            )
+        if existing_feature is None:
+            existing_feature = map_feature_export_data_to_feature(feature_data, project)
+            existing_feature.save()
 
-        feature_import.status = SUCCESS
-        feature_import.save()
+        overwrite_feature_for_environment(feature_data, existing_feature, environment)
+
+    feature_import.status = SUCCESS
+    feature_import.save()
+
+
+def _check_import_against_live_experiments(
+    input_data: list[FeatureExportData], environment: Environment
+) -> None:
+    """
+    Reject the whole import, before anything is written, if it would add a
+    variation to a feature in an experiment, or overwrite the environment the
+    experiment runs in (which deletes its rollout segment override).
+    """
+    for feature_data in input_data:
+        feature = Feature.objects.filter(
+            name=feature_data["name"], project=environment.project
+        ).first()
+        if feature is None or not (experiment := get_live_experiment(feature.id)):
+            continue
+        existing_variations = {
+            (option.type, option.value) for option in feature.multivariate_options.all()
+        }
+        adds_variation = any(
+            (mv_data["type"], mv_data["value"]) not in existing_variations
+            for mv_data in feature_data["multivariate"]
+        )
+        if adds_variation or experiment.environment_id == environment.id:
+            raise live_experiment_error(experiment)
 
 
 # Should only run on official flagsmith instance.

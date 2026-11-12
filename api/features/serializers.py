@@ -1,6 +1,6 @@
 from datetime import datetime
 from functools import cached_property
-from typing import Any, Callable, cast
+from typing import Any, Callable
 from uuid import UUID
 
 import django.core.exceptions
@@ -31,9 +31,9 @@ from evaluation.results import get_split_weight
 from evaluation.types import EvaluatedFeatureState
 from experimentation.feature_state_metadata import (
     get_feature_state_metadata_builder,
-    has_live_experiment,
+    get_live_experiment,
+    live_experiment_error,
 )
-from features.constants import LIVE_EXPERIMENT_MV_OPTIONS_MESSAGE
 from integrations.vcs.services import dispatch_vcs_on_feature_state_changed
 from metadata.serializers import MetadataSerializer, MetadataSerializerMixin
 from projects.code_references.serializers import (
@@ -312,16 +312,13 @@ class CreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
     def update(self, instance: Feature, validated_data: dict[str, Any]) -> Feature:
         with transaction.atomic():
             Feature.objects.select_for_update().filter(pk=instance.pk).exists()
-            if (
-                has_live_experiment(instance.id)
-                and "multivariate_options" in validated_data
+            if "multivariate_options" in validated_data and (
+                experiment := get_live_experiment(instance.id)
             ):
                 if self._changes_multivariate_options(
                     validated_data["multivariate_options"], instance
                 ):
-                    raise serializers.ValidationError(
-                        {"multivariate_options": LIVE_EXPERIMENT_MV_OPTIONS_MESSAGE}
-                    )
+                    raise live_experiment_error(experiment)
                 validated_data.pop("multivariate_options")
             return super().update(instance, validated_data)  # type: ignore[no-any-return]
 
@@ -342,23 +339,13 @@ class CreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
             )
             if total_percentage_allocation > 100:
                 raise serializers.ValidationError("Invalid percentage allocation")
-        instance = cast(Feature | None, self.instance)
-        if (
-            instance
-            and self._changes_multivariate_options(multivariate_options, instance)
-            and has_live_experiment(instance.id)
-        ):
-            raise serializers.ValidationError(LIVE_EXPERIMENT_MV_OPTIONS_MESSAGE)
         return multivariate_options
 
     def _changes_multivariate_options(
         self,
         multivariate_options: list[dict[str, Any]] | None,
-        instance: Feature | None = None,
+        instance: Feature,
     ) -> bool:
-        instance = instance or cast(Feature | None, self.instance)
-        if instance is None:
-            return False
         # The frontend resubmits the whole feature, so only a real change to
         # writable option fields counts. Compare on content, not ids.
         fields = (
