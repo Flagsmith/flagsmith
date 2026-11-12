@@ -1,53 +1,24 @@
-$segmented-control-gap: 2px;
-$segmented-control-padding: 4px;
-
-// Equal columns, so the indicator moves by its own width without measuring.
-// Supports two to five options.
 .segmented-control {
-  gap: $segmented-control-gap;
-
-  @for $count from 2 through 5 {
-    &--count-#{$count} {
-      grid-template-columns: repeat($count, minmax(0, 1fr));
-
-      .segmented-control__indicator {
-        width: calc(
-          (100% - #{2 * $segmented-control-padding} - #{($count - 1) * $segmented-control-gap}) /
-            #{$count}
-        );
-      }
-    }
-  }
-
-  @for $index from 0 through 4 {
-    &--index-#{$index} .segmented-control__indicator {
-      transform: translateX(calc(#{$index} * (100% + #{$segmented-control-gap})));
-    }
-  }
-
-  &__indicator {
-    top: $segmented-control-padding;
-    bottom: $segmented-control-padding;
-    left: $segmented-control-padding;
-    // The ring keeps it visible where the surface is darker than the track.
-    box-shadow:
-      var(--shadow-sm),
-      inset 0 0 0 1px var(--color-border-strong);
-    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
-
-    @media (prefers-reduced-motion: reduce) {
-      transition: none;
-    }
-  }
+  gap: 2px;
 
   &__option {
+    // Grow to share the track, never shrink below the label.
+    flex: 1 0 auto;
     padding: 6px 12px;
     font-size: 13px;
     color: var(--color-text-secondary);
-    transition: color 0.2s ease;
+    background-color: transparent;
+    transition:
+      color 0.2s ease,
+      background-color 0.2s ease;
 
     &[aria-checked='true'] {
       color: var(--color-text-default);
+      background-color: var(--color-surface-default);
+      // The ring keeps it visible where the surface is darker than the track.
+      box-shadow:
+        var(--shadow-sm),
+        inset 0 0 0 1px var(--color-border-strong);
     }
 
     &:focus-visible {

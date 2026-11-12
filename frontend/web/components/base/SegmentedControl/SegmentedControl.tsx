@@ -15,7 +15,7 @@ export type SegmentedControlProps<T extends string> = {
   className?: string
 }
 
-// One choice from two to five, all visible. A radio group: Tab reaches the checked
+// One choice from a few, all visible. A radio group: Tab reaches the checked
 // option, arrow keys move and select, like native radios.
 const SegmentedControl = <T extends string>({
   'aria-label': ariaLabel,
@@ -46,17 +46,11 @@ const SegmentedControl = <T extends string>({
       role='radiogroup'
       aria-label={ariaLabel}
       className={classNames(
-        'segmented-control d-grid position-relative p-1 rounded-md bg-surface-muted',
-        `segmented-control--count-${options.length}`,
-        `segmented-control--index-${index}`,
+        'segmented-control d-flex p-1 rounded-md bg-surface-muted',
         className,
       )}
       onKeyDown={onKeyDown}
     >
-      <span
-        aria-hidden
-        className='segmented-control__indicator position-absolute rounded-sm bg-surface-default'
-      />
       {options.map((option, i) => (
         <button
           key={option.value}
@@ -67,7 +61,7 @@ const SegmentedControl = <T extends string>({
           role='radio'
           aria-checked={i === index}
           tabIndex={i === index ? 0 : -1}
-          className='segmented-control__option position-relative border-0 bg-transparent rounded-sm fw-semibold'
+          className='segmented-control__option border-0 rounded-sm fw-semibold'
           onClick={() => onChange(option.value)}
         >
           {option.label}
