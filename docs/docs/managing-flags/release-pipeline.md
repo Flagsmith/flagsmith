@@ -74,8 +74,8 @@ Each stage in your pipeline consists of:
 - Triggers after waiting for a specified amount of time.
 - Configure the wait time in minutes, hours, or days.
 - Use this for gradual rollouts or testing periods.
-- Optionally, add an [abort condition](#aborting-a-pipeline-when-a-flag-is-tagged) to stop the release if the flag is
-  tagged during the wait.
+- Optionally, add an [abort condition](#aborting-a-pipeline-when-a-flag-becomes-unhealthy) to stop the release if the
+  flag becomes unhealthy during the wait.
 
 ### Stage Actions
 
@@ -119,7 +119,7 @@ Once published, a release pipeline cannot be modified. Ensure your configuration
 :::warning
 
 In alpha phase there are no automatic rollbacks, you'd need to revert changes manually. To stop a release automatically,
-use an [abort condition](#aborting-a-pipeline-when-a-flag-is-tagged).
+use an [abort condition](#aborting-a-pipeline-when-a-flag-becomes-unhealthy).
 
 :::
 
@@ -152,26 +152,25 @@ Once a flag is added to a pipeline:
 - **Active Pipelines**: View all published pipelines and their current status.
 - **Flag Progress**: Track which flags are currently in each stage.
 
-### Aborting a Pipeline When a Flag Is Tagged
+### Aborting a Pipeline When a Flag Becomes Unhealthy
 
-A **Wait For** stage can act as a kill switch. Choose a tag under **Abort if tagged with**. If the flag gets that tag
-while it waits in the stage, the pipeline stops and the flag is turned off in the stage's environment. If the wait runs
-out and the flag doesn't have the tag, the stage runs its actions and the flag moves to the next stage as usual.
-
-Any tag in the project can be used, including system tags. The most common choice is the **Unhealthy** tag, which
-[Feature Health](/managing-flags/feature-health-metrics) adds when your observability provider sends an alert for the
-flag. You can also use your own tags and apply them from your own tooling through the Admin API.
+A **Wait For** stage can act as a kill switch. Tick **Abort if unhealthy in this environment**. If
+[Feature Health](/managing-flags/feature-health-metrics) reports the flag as unhealthy in the stage's environment while
+it waits, the pipeline stops and the flag is turned off in that environment. If the wait runs out and the flag is
+healthy, the stage runs its actions and the flag moves to the next stage as usual.
 
 **Example: release to everyone unless an alert fires**
 
 1. **Production (beta)**: _On Enter_, enable the flag for the `beta` segment.
-2. **Production (everyone)**: _Wait For_ 1 hour, abort if tagged with **Unhealthy**, then enable the flag for everyone.
+2. **Production (everyone)**: _Wait For_ 1 hour, abort if unhealthy, then enable the flag for everyone.
 
 The pipeline aborts if the flag:
 
-- is tagged with the chosen tag while it waits in the stage, whoever adds the tag (a team member, the Admin API, Feature
-  Health or an integration); or
-- already has the chosen tag when it enters the stage.
+- becomes unhealthy in the stage's environment while it waits in the stage; or
+- is already unhealthy in the stage's environment when it enters the stage.
+
+Health is checked per environment, so an alert in Staging doesn't abort a Production stage. An unhealthy event that
+doesn't name an environment counts as unhealthy in every environment. Dismissed alerts don't count.
 
 When the pipeline aborts:
 
@@ -184,13 +183,12 @@ When the pipeline aborts:
 
 :::note
 
-- Removing the tag after the pipeline has aborted does not resume it. An abort can't be undone.
-- The **Unhealthy** tag applies to the flag across the whole project. An alert from any environment, such as staging,
-  will abort a production stage that uses it.
+- The abort condition needs a [Feature Health provider](/managing-flags/feature-health-metrics) set up for the project.
+  Without one, flags are never reported unhealthy and the stage won't abort.
+- An abort can't be undone. The pipeline doesn't resume if the flag becomes healthy again.
 - Abort conditions are only available on **Wait For** stages. They don't apply to stages that have already finished, or
   to phased rollouts.
 - Identity overrides are not changed when a pipeline aborts.
-- If the chosen tag is deleted, the stage can no longer abort. Flags waiting in it will move on when the wait runs out.
 
 :::
 
@@ -236,7 +234,7 @@ Release Pipelines generate audit log events to track pipeline-related activities
 **Pipeline Aborted**
 
 - Event: `RELEASE_PIPELINE_ABORTED_MESSAGE`.
-- Triggered when a flag is tagged with a stage's abort tag and the pipeline turns the flag off.
+- Triggered when a flag becomes unhealthy in a stage with an abort condition and the pipeline turns the flag off.
 
 ### Viewing Audit Logs
 
