@@ -1,5 +1,6 @@
 import json
 from datetime import datetime, timezone
+from unittest.mock import MagicMock
 
 import pytest
 from django.conf import settings as django_settings
@@ -14,6 +15,7 @@ from organisations.usage_reporting.dataclasses import (
     UsageSnapshot,
 )
 from organisations.usage_reporting.services import (
+    RETRY_POLICY,
     get_licensed_organisations,
     push_snapshot,
     push_usage_snapshots,
@@ -33,6 +35,15 @@ def snapshot() -> UsageSnapshot:
         instance_version="2.142.3",
         project_usage=[ProjectUsage(project_id=1, api_call_count=10)],
     )
+
+
+@pytest.fixture
+def mocked_post(mocker: MockerFixture) -> MagicMock:
+    mocked_session = mocker.patch(
+        "organisations.usage_reporting.services.requests.Session"
+    )
+    post: MagicMock = mocked_session.return_value.__enter__.return_value.post
+    return post
 
 
 def test_get_licensed_organisations__licensing_not_installed__returns_empty(
@@ -75,7 +86,7 @@ def test_get_licensed_organisations__organisation_without_licence__excluded(
     ],
 )
 def test_push_snapshot__status_code__logs_expected_event(
-    mocker: MockerFixture,
+    mocked_post: MagicMock,
     log: StructuredLogCapture,
     snapshot: UsageSnapshot,
     status_code: int,
@@ -83,7 +94,6 @@ def test_push_snapshot__status_code__logs_expected_event(
     level: str,
 ) -> None:
     # Given
-    mocked_post = mocker.patch("organisations.usage_reporting.services.requests.post")
     mocked_post.return_value.status_code = status_code
     mocked_post.return_value.ok = status_code < 400
 
@@ -98,12 +108,36 @@ def test_push_snapshot__status_code__logs_expected_event(
     assert log.has(event, level=level, status_code=status_code)
 
 
-def test_push_snapshot__valid_snapshot__sends_bearer_authed_post(
+def test_push_snapshot__valid_snapshot__mounts_retry_policy(
     mocker: MockerFixture,
     snapshot: UsageSnapshot,
 ) -> None:
     # Given
-    mocked_post = mocker.patch("organisations.usage_reporting.services.requests.post")
+    mocked_session = mocker.patch(
+        "organisations.usage_reporting.services.requests.Session"
+    )
+    session = mocked_session.return_value.__enter__.return_value
+    session.post.return_value.ok = True
+
+    # When
+    push_snapshot(
+        base_url="https://cp.example.com/",
+        snapshot=snapshot,
+        signature_b64="c2ln",
+    )
+
+    # Then
+    session.mount.assert_called_once()
+    prefix, adapter = session.mount.call_args.args
+    assert prefix == "https://"
+    assert adapter.max_retries is RETRY_POLICY
+
+
+def test_push_snapshot__valid_snapshot__sends_bearer_authed_post(
+    mocked_post: MagicMock,
+    snapshot: UsageSnapshot,
+) -> None:
+    # Given
     mocked_post.return_value.status_code = 201
     signature_b64 = "++++ABE="
 
@@ -116,8 +150,8 @@ def test_push_snapshot__valid_snapshot__sends_bearer_authed_post(
 
     # Then
     mocked_post.assert_called_once()
-    (url,), kwargs = mocked_post.call_args
-    assert url == "https://cp.example.com/v1/public/usage"
+    kwargs = mocked_post.call_args.kwargs
+    assert kwargs["url"] == "https://cp.example.com/v1/public/usage"
     # The signature's raw bytes, unpadded base64url-encoded for the wire.
     assert kwargs["headers"]["Authorization"] == "Bearer ----ABE"
     assert kwargs["headers"]["Content-Type"] == "application/json"
