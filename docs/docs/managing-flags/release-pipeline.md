@@ -154,40 +154,19 @@ Once a flag is added to a pipeline:
 
 ### Aborting a Pipeline
 
-A **Wait For** stage can act as a kill switch. Tick **Abort if unhealthy in this environment**. If
-[Feature Health](/managing-flags/feature-health-metrics) reports the flag as unhealthy in the stage's environment while
-it waits, the pipeline stops and the flag is turned off in that environment.
+To turn a flag off automatically if it becomes unhealthy during a stage:
 
-**Example: release to everyone unless an alert fires**
+1. Set up a [Feature Health provider](/managing-flags/feature-health-metrics) for your project.
+2. When configuring the stage, select the **Wait For** trigger.
+3. Tick **Abort if unhealthy in this environment**.
 
-1. **Production (beta)**: _On Enter_, enable the flag for the `beta` segment.
-2. **Production (everyone)**: _Wait For_ 1 hour, abort if unhealthy, then enable the flag for everyone.
-
-The pipeline aborts if the flag:
-
-- becomes unhealthy in the stage's environment while it waits in the stage; or
-- is already unhealthy in the stage's environment when it enters the stage.
-
-Health is checked per environment, so an alert in Staging doesn't abort a Production stage. An unhealthy event that
-doesn't name an environment counts as unhealthy in every environment. Dismissed alerts don't count.
-
-When the pipeline aborts:
-
-- The flag is **disabled for everyone in the stage's environment**. This covers the environment default and every
-  segment override, including overrides set by earlier stages. Flag values are not changed.
-- The change is published as a new version of the flag, so it appears in the flag's version history.
-- The flag is removed from the pipeline. You can add it to a pipeline again once you've fixed the issue.
-- Other environments are not changed.
-- An entry is added to the audit log, and the stage notification email says the pipeline was aborted and why.
+If the flag is unhealthy in the stage's environment when it enters the stage, or becomes unhealthy during the wait, the
+flag is disabled for everyone in that environment, including segment overrides, and removed from the pipeline.
 
 :::note
 
-- The abort condition needs a [Feature Health provider](/managing-flags/feature-health-metrics) set up for the project.
-  Without one, flags are never reported unhealthy and the stage won't abort.
-- An abort can't be undone. The pipeline doesn't resume if the flag becomes healthy again.
-- Abort conditions are only available on **Wait For** stages. They don't apply to stages that have already finished, or
-  to phased rollouts.
-- Identity overrides are not changed when a pipeline aborts.
+Abort conditions are only available on **Wait For** stages. They don't apply to stages that have already finished, or to
+phased rollouts.
 
 :::
 
