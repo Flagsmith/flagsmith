@@ -44,7 +44,7 @@ def test_map_organisation_to_usage_snapshot__with_usage__returns_populated_snaps
 
     # Then
     assert snapshot == UsageSnapshot(
-        timestamp=datetime(2026, 6, 18, 8, 0, 0, tzinfo=timezone.utc),
+        timestamp=datetime(2026, 6, 17, 9, 0, 0, tzinfo=timezone.utc),
         seat_count=organisation.num_seats,
         api_call_total=10,
         api_call_breakdown=ApiCallBreakdown(
@@ -71,7 +71,7 @@ def test_map_organisation_to_usage_snapshot__no_analytics__returns_zeroed_snapsh
 
     # Then
     assert snapshot == UsageSnapshot(
-        timestamp=datetime(2026, 6, 18, 8, 0, 0, tzinfo=timezone.utc),
+        timestamp=datetime(2026, 6, 17, 9, 0, 0, tzinfo=timezone.utc),
         seat_count=organisation.num_seats,
         api_call_total=0,
         api_call_breakdown=ApiCallBreakdown(
