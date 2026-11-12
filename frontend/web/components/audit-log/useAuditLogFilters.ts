@@ -6,6 +6,7 @@ import {
   DEFAULT_AUDIT_LOG_FILTERS,
   parseAuditLogFilters,
 } from './auditLogFilters'
+import { AuditLogScopeFilter, writeScopeParams } from './auditLogScopeFilter'
 
 // The URL holds the filters, so a filtered view can be shared as a link and
 // the Audit Log tab, which links without them, resets them.
@@ -40,6 +41,12 @@ export default function useAuditLogFilters() {
     }
   }, [filters.search])
 
+  const setScope = (scope: AuditLogScopeFilter) => {
+    const params = new URLSearchParams(history.location.search)
+    writeScopeParams(params, scope)
+    history.replace({ ...history.location, search: params.toString() })
+  }
+
   const setSearchInput = (value: string) => {
     setSearchInputState(value)
     writeSearchLater(value, pendingWrite.current)
@@ -49,7 +56,8 @@ export default function useAuditLogFilters() {
     pendingWrite.current += 1
     setSearchInputState(DEFAULT_AUDIT_LOG_FILTERS.search)
     writeSearch(DEFAULT_AUDIT_LOG_FILTERS.search)
+    setScope(DEFAULT_AUDIT_LOG_FILTERS.scope)
   }
 
-  return { clearFilters, filters, searchInput, setSearchInput }
+  return { clearFilters, filters, searchInput, setScope, setSearchInput }
 }
