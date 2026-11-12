@@ -57,6 +57,8 @@ Each stage in your pipeline consists of:
    users").
 2. **Trigger**: When the stage should be activated.
 3. **Actions**: What should happen when the stage is triggered.
+4. **Abort condition** (optional): Stop the release if the flag becomes unhealthy while it's in the stage. See
+   [Aborting a Pipeline](#aborting-a-pipeline).
 
 ### Stage Triggers
 
@@ -74,8 +76,6 @@ Each stage in your pipeline consists of:
 - Triggers after waiting for a specified amount of time.
 - Configure the wait time in minutes, hours, or days.
 - Use this for gradual rollouts or testing periods.
-- Optionally, add an [abort condition](#aborting-a-pipeline) to stop the release if the flag becomes unhealthy during
-  the wait.
 
 ### Stage Actions
 
@@ -154,19 +154,22 @@ Once a flag is added to a pipeline:
 
 ### Aborting a Pipeline
 
-A **Wait For** stage can act as a kill switch. Tick **Abort if unhealthy in this environment**. If
+Any stage can act as a kill switch. Tick **Abort if unhealthy in this environment**. If
 [Feature Health](/managing-flags/feature-health-metrics) reports the flag as unhealthy in the stage's environment while
-it waits, the pipeline stops and the flag is turned off in that environment.
+the flag is in the stage, the pipeline stops and the flag is turned off in that environment.
 
-**Example: release to everyone unless an alert fires**
+The condition applies for as long as the flag is in the stage:
+
+| Stage                                  | The condition applies…                                                                  |
+| -------------------------------------- | --------------------------------------------------------------------------------------- |
+| **Wait For**                           | From when the flag enters the stage until the wait runs out.                            |
+| With a **Phased rollout** action       | From when the flag enters the stage until the rollout reaches 100%, including any wait. |
+| **On Enter**, without a phased rollout | Only when the flag enters the stage, so a flag that's already unhealthy isn't released. |
+
+**Example: roll out to everyone unless an alert fires**
 
 1. **Production (beta)**: _On Enter_, enable the flag for the `beta` segment.
-2. **Production (everyone)**: _Wait For_ 1 hour, abort if unhealthy, then enable the flag for everyone.
-
-The pipeline aborts if the flag:
-
-- becomes unhealthy in the stage's environment while it waits in the stage; or
-- is already unhealthy in the stage's environment when it enters the stage.
+2. **Production (rollout)**: _On Enter_, phased rollout starting at 10% and adding 10% every hour, abort if unhealthy.
 
 Health is checked per environment, so an alert in Staging doesn't abort a Production stage. An unhealthy event that
 doesn't name an environment counts as unhealthy in every environment. Dismissed alerts don't count.
@@ -174,7 +177,8 @@ doesn't name an environment counts as unhealthy in every environment. Dismissed 
 When the pipeline aborts:
 
 - The flag is **disabled for everyone in the stage's environment**. This covers the environment default and every
-  segment override, including overrides set by earlier stages. Flag values are not changed.
+  segment override, including overrides set by earlier stages and by the phased rollout. Flag values are not changed.
+- A phased rollout in progress stops, and the pipeline shows it as aborted at the percentage it reached.
 - The change is published as a new version of the flag, so it appears in the flag's version history.
 - The flag is removed from the pipeline. You can add it to a pipeline again once you've fixed the issue.
 - Other environments are not changed.
@@ -185,8 +189,7 @@ When the pipeline aborts:
 - The abort condition needs a [Feature Health provider](/managing-flags/feature-health-metrics) set up for the project.
   Without one, flags are never reported unhealthy and the stage won't abort.
 - An abort can't be undone. The pipeline doesn't resume if the flag becomes healthy again.
-- Abort conditions are only available on **Wait For** stages. They don't apply to stages that have already finished, or
-  to phased rollouts.
+- Once a flag has left a stage, the stage's abort condition no longer applies to it.
 - Identity overrides are not changed when a pipeline aborts.
 
 :::
