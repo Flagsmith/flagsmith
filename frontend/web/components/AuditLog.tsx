@@ -90,7 +90,6 @@ const AuditLog: FC<AuditLogType> = (props) => {
     environment,
     id,
     log,
-    project,
     related_object_type,
     related_object_uuid,
   }: AuditLogItem) => {
@@ -123,7 +122,7 @@ const AuditLog: FC<AuditLogType> = (props) => {
                 VersionButton
               ) : (
                 <Link
-                  to={`/project/${project.id}/environment/${environment.api_key}/history/${related_object_uuid}/`}
+                  to={`/project/${props.projectId}/environment/${environment.api_key}/history/${related_object_uuid}/`}
                 >
                   {VersionButton}
                 </Link>
