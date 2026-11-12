@@ -1,0 +1,28 @@
+.segmented-control {
+  gap: 2px;
+
+  &__option {
+    // Grow to share the track, never shrink below the label.
+    flex: 1 0 auto;
+    padding: 6px 12px;
+    color: var(--color-text-secondary);
+    background-color: transparent;
+    transition:
+      color var(--duration-normal) var(--easing-standard),
+      background-color var(--duration-normal) var(--easing-standard);
+
+    &[aria-checked='true'] {
+      color: var(--color-text-default);
+      background-color: var(--color-surface-default);
+      // The ring keeps it visible where the surface is darker than the track.
+      box-shadow:
+        var(--shadow-sm),
+        inset 0 0 0 1px var(--color-border-strong);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--color-border-action);
+      outline-offset: 1px;
+    }
+  }
+}
