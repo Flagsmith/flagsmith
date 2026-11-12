@@ -2,15 +2,16 @@ import json
 from datetime import timedelta
 
 import pytest
-from django.core.exceptions import ValidationError
 from django.db.models import Q
 from django.utils import timezone
 from freezegun.api import FrozenDateTimeFactory
 from pytest_django.fixtures import SettingsWrapper
+from rest_framework.exceptions import ValidationError
 
 from environments.identities.models import Identity
 from environments.models import Environment
 from experimentation.models import Experiment, ExperimentStatus
+from features.constants import LIVE_EXPERIMENT_MV_OPTIONS_MESSAGE
 from features.feature_types import MULTIVARIATE, STANDARD
 from features.import_export.constants import (
     FAILED,
@@ -24,7 +25,6 @@ from features.import_export.models import (
     FeatureImport,
     FlagsmithOnFlagsmithFeatureExport,
 )
-from features.import_export.services import overwrite_feature_for_environment
 from features.import_export.tasks import (
     _create_flagsmith_on_flagsmith_feature_export,
     clear_stale_feature_imports_and_exports,
@@ -43,18 +43,103 @@ from projects.tags.models import Tag
 from segments.models import Segment
 
 
-def test_overwrite_feature_for_environment__live_experiment__raises_validation_error(
+def _feature_import(
+    environment: Environment, features: list[FeatureExportData]
+) -> FeatureImport:
+    return FeatureImport.objects.create(
+        environment=environment,
+        strategy=OVERWRITE_DESTRUCTIVE,
+        data=json.dumps(features),
+    )
+
+
+def _export_data(
+    feature: Feature, multivariate: list[dict[str, object]]
+) -> FeatureExportData:
+    return {
+        "name": feature.name,
+        "default_enabled": feature.default_enabled,
+        "is_server_key_only": feature.is_server_key_only,
+        "initial_value": feature.initial_value,
+        "value": "imported",
+        "type": STRING,
+        "enabled": False,
+        "multivariate": multivariate,  # type: ignore[typeddict-item]
+    }
+
+
+NEW_FEATURE_DATA: FeatureExportData = {
+    "name": "imported before the rejected feature",
+    "default_enabled": False,
+    "is_server_key_only": False,
+    "initial_value": "initial",
+    "value": "imported",
+    "type": STRING,
+    "enabled": True,
+    "multivariate": [],
+}
+
+
+@pytest.mark.parametrize(
+    "experiment_status", [ExperimentStatus.RUNNING, ExperimentStatus.PAUSED]
+)
+def test_import_features__experiment_in_target_environment__changes_nothing(
     db: None,
     environment: Environment,
+    project: Project,
     feature: Feature,
     feature_segment: FeatureSegment,
+    experiment_status: str,
+) -> None:
+    # Given
+    feature_state = feature.feature_states.get(environment=environment)
+    feature_state.enabled = True
+    feature_state.save()
+    Experiment.objects.create(
+        environment=environment,
+        feature=feature,
+        name="live experiment",
+        hypothesis="new option wins",
+        status=experiment_status,
+    )
+    feature_import = _feature_import(
+        environment, [NEW_FEATURE_DATA, _export_data(feature, [])]
+    )
+
+    # When
+    with pytest.raises(ValidationError) as exc_info:
+        import_features_for_environment(feature_import.id)
+
+    # Then
+    assert exc_info.value.detail == {
+        "detail": LIVE_EXPERIMENT_MV_OPTIONS_MESSAGE.format(
+            environment=environment.name
+        )
+    }
+    feature_import.refresh_from_db()
+    assert feature_import.status == FAILED
+    assert not Feature.objects.filter(
+        project=project, name=NEW_FEATURE_DATA["name"]
+    ).exists()
+    assert FeatureSegment.objects.filter(pk=feature_segment.pk).exists()
+    feature_state.refresh_from_db()
+    assert feature_state.enabled is True
+    assert feature_state.get_feature_state_value() == feature.initial_value
+
+
+def test_import_features__adds_variation_to_feature_in_experiment__changes_nothing(
+    db: None,
+    environment: Environment,
+    environment_two: Environment,
+    project: Project,
+    feature: Feature,
 ) -> None:
     # Given
     MultivariateFeatureOption.objects.create(
         feature=feature,
         type=STRING,
         string_value="existing",
-        default_percentage_allocation=100,
+        default_percentage_allocation=0,
     )
     Experiment.objects.create(
         environment=environment,
@@ -63,92 +148,99 @@ def test_overwrite_feature_for_environment__live_experiment__raises_validation_e
         hypothesis="new option wins",
         status=ExperimentStatus.RUNNING,
     )
-    feature_state = feature.feature_states.get(environment=environment)
-    imported_feature: FeatureExportData = {
-        "name": feature.name,
-        "default_enabled": feature.default_enabled,
-        "is_server_key_only": feature.is_server_key_only,
-        "initial_value": feature.initial_value,
-        "value": feature.initial_value,
-        "type": STRING,
-        "enabled": feature_state.enabled,
-        "multivariate": [
-            {
-                "percentage_allocation": 100,
-                "default_percentage_allocation": 100,
-                "value": "existing",
-                "type": STRING,
-            }
+    feature_import = _feature_import(
+        environment_two,
+        [
+            NEW_FEATURE_DATA,
+            _export_data(
+                feature,
+                [
+                    {
+                        "percentage_allocation": 50,
+                        "default_percentage_allocation": 0,
+                        "value": "new variation",
+                        "type": STRING,
+                    }
+                ],
+            ),
         ],
-    }
-
-    # When / Then
-    with pytest.raises(ValidationError):
-        overwrite_feature_for_environment(imported_feature, feature, environment)
-
-    assert FeatureSegment.objects.filter(pk=feature_segment.pk).exists()
-    assert feature.multivariate_options.count() == 1
-    assert (
-        feature.feature_states.get(environment=environment).feature_state_value.value
-        == feature.initial_value
     )
 
-
-def test_import_features__live_experiment_on_later_feature__rolls_back_batch(
-    db: None,
-    environment: Environment,
-    project: Project,
-    feature: Feature,
-    feature_segment: FeatureSegment,
-) -> None:
-    # Given
-    Experiment.objects.create(
-        environment=environment,
-        feature=feature,
-        name="live experiment",
-        hypothesis="new option wins",
-        status=ExperimentStatus.RUNNING,
-    )
-    feature_import = FeatureImport.objects.create(
-        environment=environment,
-        strategy=OVERWRITE_DESTRUCTIVE,
-        data=json.dumps(
-            [
-                {
-                    "name": "created before failure",
-                    "default_enabled": False,
-                    "is_server_key_only": False,
-                    "initial_value": "initial",
-                    "value": "imported",
-                    "type": STRING,
-                    "enabled": True,
-                    "multivariate": [],
-                },
-                {
-                    "name": feature.name,
-                    "default_enabled": feature.default_enabled,
-                    "is_server_key_only": feature.is_server_key_only,
-                    "initial_value": feature.initial_value,
-                    "value": feature.initial_value,
-                    "type": STRING,
-                    "enabled": False,
-                    "multivariate": [],
-                },
-            ]
-        ),
-    )
-
-    # When / Then
+    # When
     with pytest.raises(ValidationError):
         import_features_for_environment(feature_import.id)
 
+    # Then
     feature_import.refresh_from_db()
     assert feature_import.status == FAILED
     assert not Feature.objects.filter(
-        project=project, name="created before failure"
+        project=project, name=NEW_FEATURE_DATA["name"]
     ).exists()
-    assert FeatureSegment.objects.filter(pk=feature_segment.pk).exists()
-    assert feature.feature_states.get(environment=environment).enabled is False
+    assert list(
+        feature.multivariate_options.values_list("string_value", flat=True)
+    ) == ["existing"]
+
+
+def test_import_features__existing_variations_into_other_environment__succeeds(
+    db: None,
+    environment: Environment,
+    environment_two: Environment,
+    feature: Feature,
+) -> None:
+    # Given
+    option = MultivariateFeatureOption.objects.create(
+        feature=feature,
+        type=STRING,
+        string_value="existing",
+        default_percentage_allocation=0,
+    )
+    Experiment.objects.create(
+        environment=environment,
+        feature=feature,
+        name="live experiment",
+        hypothesis="new option wins",
+        status=ExperimentStatus.RUNNING,
+    )
+    feature_import = _feature_import(
+        environment_two,
+        [
+            _export_data(
+                feature,
+                [
+                    {
+                        "percentage_allocation": 40,
+                        "default_percentage_allocation": 0,
+                        "value": "existing",
+                        "type": STRING,
+                    }
+                ],
+            )
+        ],
+    )
+
+    # When
+    import_features_for_environment(feature_import.id)
+
+    # Then
+    feature_import.refresh_from_db()
+    assert feature_import.status == SUCCESS
+    assert list(feature.multivariate_options.all()) == [option]
+    feature_state_two = feature.feature_states.get(
+        environment=environment_two, identity=None, feature_segment=None
+    )
+    assert feature_state_two.get_feature_state_value() == "imported"
+    assert (
+        feature_state_two.multivariate_feature_state_values.get(
+            multivariate_feature_option=option
+        ).percentage_allocation
+        == 40
+    )
+    assert (
+        feature.feature_states.get(
+            environment=environment, identity=None, feature_segment=None
+        ).get_feature_state_value()
+        == feature.initial_value
+    )
 
 
 def test_clear_stale_feature_imports_and_exports__stale_records__deletes_old_keeps_new(  # type: ignore[no-untyped-def]

@@ -18,7 +18,9 @@ and measures the impact on a metric.
 
 - A [connected warehouse](/experimentation/connect-a-warehouse).
 - A [**multivariate flag**](/managing-flags/core-management) with a variation for each treatment you want to test. The
-  flag's current value acts as the **control**. A flag can only be in one active experiment at a time.
+  flag's current value acts as the **control**. A flag can only be in one active experiment at a time. While the
+  experiment is running or paused, the flag's variations cannot be added, removed or edited; complete the experiment
+  first if you need to change them.
 - A [metric](/experimentation/create-metrics). You can also create one from inside the wizard.
 
 On the **Experiments** page, click **Create Experiment**. The wizard has four steps.
