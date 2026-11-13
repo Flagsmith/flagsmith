@@ -994,6 +994,7 @@ def test_sdk_feature_states_get__no_identifier__returns_feature_list(
             "feature_segment": None,
             "feature_state_value": None,
             "identity": None,
+            "reason": "STATIC",
         },
     ]
     assert response.json()[0]["feature"]["name"] == feature.name
@@ -1046,6 +1047,11 @@ def test_SDKFeatureStates_get__given_identifier__responds_200_with_feature_list(
             "feature_segment": None,
             "feature_state_value": None,
             "identity": None if is_new_identity else identity.id,
+            "reason": (
+                "STATIC"
+                if is_new_identity
+                else "TARGETING_MATCH; segment=identity_overrides"
+            ),
         },
     ]
     assert response.json()[0]["feature"]["name"] == feature.name
@@ -1098,6 +1104,11 @@ def test_sdk_feature_states_get__identifier_and_existing_feature__returns_featur
         "feature_segment": None,
         "feature_state_value": None,
         "identity": None if is_new_identity else identity.id,
+        "reason": (
+            "STATIC"
+            if is_new_identity
+            else "TARGETING_MATCH; segment=identity_overrides"
+        ),
     }
     assert response.json()["feature"]["name"] == feature.name
     assert Identity.objects.filter(identifier=identifier).exists()
@@ -1160,6 +1171,7 @@ def test_sdk_feature_states_get__existing_feature_filter__returns_feature(
         "feature_segment": None,
         "feature_state_value": None,
         "identity": None,
+        "reason": "STATIC",
     }
 
 
@@ -1300,7 +1312,7 @@ def test_get_flags__hide_sensitive_data_enabled__returns_nulled_fields(
         "initial_value",
         "default_enabled",
     ]
-    fs_sensitive_fields = ["id", "environment", "identity", "feature_segment"]
+    fs_sensitive_fields = ["id", "environment", "identity", "feature_segment", "reason"]
 
     # Then
     assert response.status_code == status.HTTP_200_OK

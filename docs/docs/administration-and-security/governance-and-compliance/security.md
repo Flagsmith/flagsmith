@@ -35,6 +35,7 @@ The following fields will always be Null:
 - `feature_segment`
 - `environment`
 - `identity`
+- `reason`
 
 The response from `/api/v1/flags` will change from this:
 
@@ -55,7 +56,8 @@ The response from `/api/v1/flags` will change from this:
   "environment": 5242,
   "identity": null,
   "feature_segment": null,
-  "enabled": false
+  "enabled": false,
+  "reason": "STATIC"
  },
  {
   "id": 27597,
@@ -72,7 +74,8 @@ The response from `/api/v1/flags` will change from this:
   "environment": 5242,
   "identity": null,
   "feature_segment": null,
-  "enabled": false
+  "enabled": false,
+  "reason": "STATIC"
  }
 ]
 ```
@@ -96,7 +99,8 @@ To this:
   "environment": null,
   "identity": null,
   "feature_segment": null,
-  "enabled": false
+  "enabled": false,
+  "reason": null
  },
  {
   "id": null,
@@ -113,7 +117,8 @@ To this:
   "environment": null,
   "identity": null,
   "feature_segment": null,
-  "enabled": false
+  "enabled": false,
+  "reason": null
  }
 ]
 ```
@@ -136,6 +141,7 @@ The following fields will always be Null:
 - `flags[].feature_segment`
 - `flags[].environment`
 - `flags[].identity`
+- `flags[].reason`
 
 The following field(s) will be empty
 
@@ -162,7 +168,8 @@ The response for `/api/v1/identities` will change from this:
    "environment": 5242,
    "identity": null,
    "feature_segment": null,
-   "enabled": false
+   "enabled": false,
+   "reason": "STATIC"
   },
   {
    "id": 27597,
@@ -179,7 +186,8 @@ The response for `/api/v1/identities` will change from this:
    "environment": 5242,
    "identity": null,
    "feature_segment": null,
-   "enabled": false
+   "enabled": false,
+   "reason": "STATIC"
   }
  ]
 }
@@ -206,7 +214,8 @@ To this
    "environment": null,
    "identity": null,
    "feature_segment": null,
-   "enabled": false
+   "enabled": false,
+   "reason": null
   },
   {
    "id": null,
@@ -223,7 +232,8 @@ To this
    "environment": null,
    "identity": null,
    "feature_segment": null,
-   "enabled": false
+   "enabled": false,
+   "reason": null
   }
  ]
 }
