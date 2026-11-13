@@ -309,6 +309,20 @@ input[type='checkbox'] {
       border: 1px solid $checkbox-border-color;
     }
   }
+
+  // Hidden visually but still focusable, so it can be toggled with the keyboard.
+  &.checkbox-input {
+    display: block;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: 0;
+    opacity: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
   &:checked:disabled + label {
     opacity: $btn-disabled-opacity;
     &:hover .checkbox {
