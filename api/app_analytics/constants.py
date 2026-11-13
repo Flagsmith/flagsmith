@@ -107,6 +107,7 @@ SDK_USER_AGENT_KNOWN_VERSIONS: dict[KnownClient, list[str]] = {
         "9.0.3",
         "9.1.0",
         "9.2.0",
+        "9.3.0",
     ],
     "flagsmith-php-sdk": [
         "unknown",
