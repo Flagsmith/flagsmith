@@ -33,14 +33,29 @@ describe('getContrastColour', () => {
 })
 
 describe('getProjectColourMap', () => {
-  it('colours each project by its position in the list', () => {
-    const colours = getProjectColourMap([{ id: 30 }, { id: 10 }, { id: 20 }])
-    expect(colours.get(30)).toBe(PROJECT_PALETTE[0])
-    expect(colours.get(10)).toBe(PROJECT_PALETTE[1])
-    expect(colours.get(20)).toBe(PROJECT_PALETTE[2])
+  it('colours each project by its position when sorted by name', () => {
+    const colours = getProjectColourMap([
+      { id: 30, name: 'Charlie' },
+      { id: 10, name: 'Alpha' },
+      { id: 20, name: 'Bravo' },
+    ])
+    expect(colours.get(10)).toBe(PROJECT_PALETTE[0])
+    expect(colours.get(20)).toBe(PROJECT_PALETTE[1])
+    expect(colours.get(30)).toBe(PROJECT_PALETTE[2])
+  })
+
+  it('puts capitalised names first, as the Projects page does', () => {
+    const colours = getProjectColourMap([
+      { id: 1, name: 'alpha' },
+      { id: 2, name: 'Bravo' },
+    ])
+    expect(colours.get(2)).toBe(PROJECT_PALETTE[0])
+    expect(colours.get(1)).toBe(PROJECT_PALETTE[1])
   })
 
   it('has no colour for an unknown project', () => {
-    expect(getProjectColourMap([{ id: 1 }]).get(2)).toBeUndefined()
+    expect(
+      getProjectColourMap([{ id: 1, name: 'Alpha' }]).get(2),
+    ).toBeUndefined()
   })
 })
