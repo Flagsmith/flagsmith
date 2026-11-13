@@ -16,19 +16,21 @@ const Checkbox: React.FC<CheckboxProps> = ({
   onChange,
 }) => {
   const idRef = useRef(id || Utils.GUID())
-  const handleChange = () => {
-    onChange(!checked)
-  }
 
   return (
     <>
-      <input id={idRef.current} type='checkbox' checked={checked} />
+      <input
+        id={idRef.current}
+        className='checkbox-input'
+        type='checkbox'
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+      />
       <label
-        onClick={handleChange}
         className='mb-0 user-select-none d-inline cursor-pointer'
         htmlFor={idRef.current}
       >
-        <span className='checkbox mr-2'>
+        <span className='checkbox mr-2' aria-hidden>
           {checked && <Icon name='checkmark-square' />}
         </span>
         {label}
