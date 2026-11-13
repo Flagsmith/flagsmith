@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.291.1](https://github.com/Flagsmith/flagsmith/compare/v2.291.0...v2.291.1) (2026-11-13)
+
+
+### Bug Fixes
+
+* **Change requests:** Fix flaky E2E tests and a stale deleted feature ([#8951](https://github.com/Flagsmith/flagsmith/issues/8951)) ([450eb5d](https://github.com/Flagsmith/flagsmith/commit/450eb5d9622c02b3c26ddad6bf13fb965a92b9df))
+
+
+### Refactoring
+
+* **Change requests:** Replace the Flux change request store with RTK Query ([#8923](https://github.com/Flagsmith/flagsmith/issues/8923)) ([00b7931](https://github.com/Flagsmith/flagsmith/commit/00b7931de44805df55347a088073bbe215da271f))
+
 ## [2.291.0](https://github.com/Flagsmith/flagsmith/compare/v2.290.0...v2.291.0) (2026-11-13)
 
 
