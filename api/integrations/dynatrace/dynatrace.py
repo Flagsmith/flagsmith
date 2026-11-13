@@ -24,7 +24,7 @@ class DynatraceWrapper(AbstractBaseEventIntegrationWrapper):
         self.base_url = base_url
         self.api_key = api_key
         self.entity_selector = entity_selector
-        self.url = f"{self.base_url}{EVENTS_API_URI}?api-token={self.api_key}"
+        self.url = f"{base_url.rstrip('/')}/{EVENTS_API_URI}?api-token={self.api_key}"
 
     def _track_event(self, event: dict) -> None:  # type: ignore[type-arg]
         event["entitySelector"] = self.entity_selector
