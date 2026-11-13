@@ -42,6 +42,11 @@ const meta: Meta<EmptyStateProps> = {
       description:
         'Icon fill colour. Defaults to the secondary icon colour, or the danger colour for `status="error"`.',
     },
+    onRetry: {
+      control: false,
+      description:
+        'Renders a Try again button, with "Try again in a few moments." as the description unless one is given.',
+    },
     status: {
       control: 'inline-radio',
       description:
@@ -102,20 +107,11 @@ export const WithDocsLink: Story = {
 
 export const LoadError: Story = {
   args: {
-    description: 'Try again in a few moments.',
+    description: undefined,
     // Clears the shared icon so the error status shows its warning icon
     icon: undefined,
+    onRetry: () => undefined,
     status: 'error',
     title: 'Could not load projects',
   },
-  render: (args: EmptyStateProps) => (
-    <EmptyState
-      {...args}
-      action={
-        <Button theme='outline' size='small'>
-          Try again
-        </Button>
-      }
-    />
-  ),
 }

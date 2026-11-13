@@ -5,7 +5,6 @@ import Utils from 'common/utils/utils'
 
 import { useGetProjectsQuery } from 'common/services/useProject'
 import EmptyState from 'components/EmptyState'
-import Button from 'components/base/forms/Button'
 import Input from 'components/base/forms/Input'
 import ExpandablePermissionsList from './ExpandablePermissionsList'
 
@@ -50,12 +49,7 @@ const ProjectPermissions = ({
         <EmptyState
           status='error'
           title='Could not load projects'
-          description='Try again in a few moments.'
-          action={
-            <Button theme='outline' size='small' onClick={() => refetch()}>
-              Try again
-            </Button>
-          }
+          onRetry={refetch}
         />
       )}
       <PanelSearch

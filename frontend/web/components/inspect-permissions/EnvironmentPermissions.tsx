@@ -3,7 +3,6 @@ import { skipToken } from '@reduxjs/toolkit/query'
 import { useGetAllEnvironmentsQuery } from 'common/services/useEnvironment'
 import { sortEnvironmentsByName } from 'common/utils/sortEnvironmentsByName'
 import EmptyState from 'components/EmptyState'
-import Button from 'components/base/forms/Button'
 import PanelSearch from 'components/PanelSearch'
 
 type EnvironmentPermissionsProps = {
@@ -37,12 +36,7 @@ const EnvironmentPermissions = ({
       <EmptyState
         status='error'
         title='Could not load environments'
-        description='Try again in a few moments.'
-        action={
-          <Button theme='outline' size='small' onClick={() => refetch()}>
-            Try again
-          </Button>
-        }
+        onRetry={refetch}
       />
     )
   }

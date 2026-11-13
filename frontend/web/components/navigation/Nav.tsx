@@ -5,7 +5,6 @@ import EnvironmentAside from './EnvironmentAside'
 import { skipToken } from '@reduxjs/toolkit/query'
 import { useGetProjectQuery } from 'common/services/useProject'
 import EmptyState from 'components/EmptyState'
-import Button from 'components/base/forms/Button'
 import { AsyncStorage } from 'polyfill-react-native'
 import ProjectNavbar from './navbars/ProjectNavbar'
 import OrganisationNavbar from './navbars/OrganisationNavbar'
@@ -40,16 +39,7 @@ const Nav: FC<NavType> = ({ children, environmentId, header, projectId }) => {
         <EmptyState
           status='error'
           title='Could not load this project'
-          description='Try again in a few moments.'
-          action={
-            <Button
-              theme='outline'
-              size='small'
-              onClick={() => refetchProject()}
-            >
-              Try again
-            </Button>
-          }
+          onRetry={refetchProject}
         />
       </div>
     )

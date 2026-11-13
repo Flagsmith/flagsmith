@@ -13,7 +13,6 @@ import { sortEnvironmentsByName } from 'common/utils/sortEnvironmentsByName'
 import PlanBasedAccess from './PlanBasedAccess'
 import WarningMessage from './WarningMessage'
 import EmptyState from './EmptyState'
-import Button from './base/forms/Button'
 import { useGetProjectsQuery } from 'common/services/useProject'
 
 type PermissionsTabsType = {
@@ -121,16 +120,7 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
             <EmptyState
               status='error'
               title='Could not load projects'
-              description='Try again in a few moments.'
-              action={
-                <Button
-                  theme='outline'
-                  size='small'
-                  onClick={() => refetchProjects()}
-                >
-                  Try again
-                </Button>
-              }
+              onRetry={refetchProjects}
             />
           )}
           {!!projects && (
@@ -178,16 +168,7 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
               <EmptyState
                 status='error'
                 title='Could not load environments'
-                description='Try again in a few moments.'
-                action={
-                  <Button
-                    theme='outline'
-                    size='small'
-                    onClick={() => refetch()}
-                  >
-                    Try again
-                  </Button>
-                }
+                onRetry={refetch}
               />
             )}
             {!!environments?.length && (
