@@ -1,6 +1,8 @@
+import json
 from datetime import date, timedelta
 
 import pytest
+from django.http import StreamingHttpResponse
 from django.test import Client, RequestFactory
 from django.urls import reverse
 from django.utils import timezone
@@ -94,6 +96,45 @@ def test_get_organisation_info__valid_organisation__returns_event_list(
         date_start=now - timedelta(days=180),
         date_stop=now,
     )
+
+
+def test_download_org_data__export_iterator__returns_streaming_json_file(
+    db: None,
+    superuser_client: APIClient,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    organisation_id = 1
+    export_data = [
+        {
+            "model": "organisations.organisation",
+            "pk": organisation_id,
+            "fields": {"name": "Test Organisation"},
+        },
+        {
+            "model": "projects.project",
+            "pk": 2,
+            "fields": {"name": "Test Project"},
+        },
+    ]
+    mock_full_export = mocker.patch(
+        "sales_dashboard.views.full_export",
+        return_value=iter(export_data),
+    )
+    url = reverse("sales_dashboard:download-org-data", args=[organisation_id])
+
+    # When
+    response = superuser_client.post(url)
+
+    # Then
+    assert isinstance(response, StreamingHttpResponse)
+    assert response.status_code == 200
+    assert response.headers["Content-Type"] == "application/json"
+    assert response.headers["Content-Disposition"] == (
+        "attachment; filename=org-1.json"
+    )
+    assert json.loads(b"".join(response.streaming_content)) == export_data
+    mock_full_export.assert_called_once_with(organisation_id)
 
 
 def test_list_organisations__search_by_name__returns_matching_organisation(
