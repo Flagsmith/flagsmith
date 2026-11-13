@@ -77,7 +77,7 @@ const ActionDropdown = ({
             onAction('inspect')
           }}
         >
-          <Icon name='search' width={18} fill='#9DA4AE' />
+          <Icon name='search' width={18} fill='var(--color-icon-secondary)' />
           <span>Inspect permissions</span>
         </BareButton>
       )}
@@ -89,7 +89,7 @@ const ActionDropdown = ({
             onAction('edit')
           }}
         >
-          <Icon name='edit' width={18} fill='#9DA4AE' />
+          <Icon name='edit' width={18} fill='var(--color-icon-secondary)' />
           <span>Manage user</span>
         </BareButton>
       )}
@@ -102,7 +102,7 @@ const ActionDropdown = ({
             onAction('remove')
           }}
         >
-          <Icon name='trash-2' width={18} fill='#9DA4AE' />
+          <Icon name='trash-2' width={18} fill='var(--color-icon-secondary)' />
           <span>Remove</span>
         </BareButton>
       )}

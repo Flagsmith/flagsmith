@@ -137,7 +137,7 @@ const ProjectManageWidget: FC<SegmentsPageType> = ({ organisationId }) => {
                                       <Icon
                                         name='plus'
                                         width={32}
-                                        fill='#9DA4AE'
+                                        fill='var(--color-icon-secondary)'
                                       />
                                     </div>
                                     <div className='font-weight-medium btn-project-title'>
@@ -206,7 +206,11 @@ const ProjectManageWidget: FC<SegmentsPageType> = ({ organisationId }) => {
                             >
                               <Row>
                                 <div className='btn-project-icon'>
-                                  <Icon name='plus' width={32} fill='#9DA4AE' />
+                                  <Icon
+                                    name='plus'
+                                    width={32}
+                                    fill='var(--color-icon-secondary)'
+                                  />
                                 </div>
                                 <div className='font-weight-medium'>
                                   Create Project
