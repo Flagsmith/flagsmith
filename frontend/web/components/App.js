@@ -23,7 +23,6 @@ import { getStore } from 'common/store'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import AccountStore from 'common/stores/account-store'
 import OrganisationLimit from './OrganisationLimit'
-import OrganisationStore from 'common/stores/organisation-store'
 import ScrollToTop from './ScrollToTop'
 import AnnouncementPerPage from './AnnouncementPerPage'
 import Announcement from './Announcement'
@@ -99,7 +98,6 @@ const App = class extends Component {
     if (this.state.projectId) {
       AppActions.getProject(this.state.projectId)
     }
-    this.listenTo(OrganisationStore, 'change', () => this.forceUpdate())
     this.listenTo(ProjectStore, 'change', () => this.forceUpdate())
     if (AccountStore.model) {
       this.onLogin()

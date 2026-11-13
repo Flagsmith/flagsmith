@@ -3,7 +3,6 @@ import OrganisationStore from 'common/stores/organisation-store'
 import AccountStore from 'common/stores/account-store'
 import AppActions from 'common/dispatcher/app-actions'
 import {
-  Invite,
   InviteLink,
   Project,
   SubscriptionMeta,
@@ -20,12 +19,10 @@ type OrganisationProviderType = {
     createProject: typeof AppActions.createProject
     invalidateInviteLink: typeof AppActions.invalidateInviteLink
     inviteLinks: InviteLink[] | null
-    invites: Invite[] | null
     error: any
     isLoading: boolean
     isSaving: boolean
     name: string
-    project: Project | null
     groups: UserGroupSummary[] | null
     projects: Project[] | null
     subscriptionMeta: SubscriptionMeta | null
@@ -81,11 +78,9 @@ const OrganisationProvider: FC<OrganisationProviderType> = ({
         groups: groups?.results || [],
         invalidateInviteLink: AppActions.invalidateInviteLink,
         inviteLinks: OrganisationStore.getInviteLinks(),
-        invites: OrganisationStore.getInvites(),
         isLoading: OrganisationStore.isLoading,
         isSaving: OrganisationStore.isSaving,
         name: AccountStore.getOrganisation()?.name || '',
-        project: OrganisationStore.getProject(id),
         projects: OrganisationStore.getProjects(),
         subscriptionMeta: OrganisationStore.getSubscriptionMeta(),
         users: OrganisationStore.getUsers(),

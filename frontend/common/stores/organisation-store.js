@@ -9,7 +9,6 @@ import BaseStore from './base/_store'
 import data from 'common/data/base/_data'
 import filter from 'lodash/filter'
 import findIndex from 'lodash/findIndex'
-import keyBy from 'lodash/keyBy'
 import { getDefaultEnvironmentNames } from 'common/utils/defaultEnvironmentNames'
 import { sortOrganisationUsers } from 'common/utils/sortOrganisationUsers'
 
@@ -74,7 +73,6 @@ const controller = {
     store.saving()
     if (store.model) {
       store.model.projects = filter(store.model.projects, (p) => p.id !== idInt)
-      store.model.keyedProjects = keyBy(store.model.projects, 'id')
     }
     API.trackEvent(Constants.events.REMOVE_PROJECT)
     data.delete(`${Project.api}projects/${id}/`).then(() => {
@@ -109,7 +107,6 @@ const controller = {
         ].concat(
           AccountStore.getOrganisationRole(id) === 'ADMIN'
             ? [
-                data.get(`${Project.api}organisations/${id}/invites/`),
                 getSubscriptionMetadata(getStore(), { id }).then(
                   (res) => res.data,
                 ),
@@ -118,14 +115,13 @@ const controller = {
         ),
       ).then((res) => {
         if (`${id}` === `${store.id}`) {
-          const [_projects, users, invites, subscriptionMeta] = res
+          const [_projects, users, subscriptionMeta] = res
           const projects = sortBy(_projects, (project) =>
             project.name.toLowerCase(),
           )
 
           store.model = {
             ...store.model,
-            invites: invites && invites.results,
             subscriptionMeta,
             users: sortOrganisationUsers(users, AccountStore.getUser()?.id),
           }
@@ -170,7 +166,6 @@ const controller = {
           }
 
           store.model.projects = projects
-          store.model.keyedProjects = keyBy(store.model.projects, 'id')
           store.loaded()
         }
       })
@@ -223,12 +218,6 @@ const controller = {
 const store = Object.assign({}, BaseStore, {
   getInviteLinks() {
     return store.model && store.model.inviteLinks
-  },
-  getInvites: () => store.model && store.model.invites,
-  getProject(id) {
-    return (
-      store.model && store.model.keyedProjects && store.model.keyedProjects[id]
-    )
   },
   getProjects() {
     return store.model && store.model.projects
