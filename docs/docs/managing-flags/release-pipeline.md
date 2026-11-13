@@ -156,6 +156,8 @@ If the flag is unhealthy in the stage's environment when it enters the stage, or
 
 Abort conditions are only available on stages that wait a set amount of time. They don't apply once a stage has finished, or once a "Phased Rollout" flag action has started.
 
+Aborted flags don't show on the pipeline page. To confirm an abort, look for the [Pipeline Aborted](#audit-log-events) entry in the audit log.
+
 :::
 
 ### Removing Flags from Pipelines
