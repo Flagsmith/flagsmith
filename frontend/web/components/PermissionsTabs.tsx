@@ -1,19 +1,19 @@
 import React, { FC, Ref, useState } from 'react'
 import { EditPermissionsModal } from './EditPermissions'
-import { Project, Role, User, UserGroupSummary } from 'common/types/responses'
+import { Role, User, UserGroupSummary } from 'common/types/responses'
 import Tabs from './navigation/TabMenu/Tabs'
 import TabItem from './navigation/TabMenu/TabItem'
 import Input from './base/forms/Input'
 import Utils from 'common/utils/utils'
 import RolePermissionsList from './RolePermissionsList'
 import ProjectFilter from './ProjectFilter'
-import OrganisationStore from 'common/stores/organisation-store'
 import { skipToken } from '@reduxjs/toolkit/query'
 import { useGetAllEnvironmentsQuery } from 'common/services/useEnvironment'
 import { sortEnvironmentsByName } from 'common/utils/sortEnvironmentsByName'
 import PlanBasedAccess from './PlanBasedAccess'
 import WarningMessage from './WarningMessage'
-import EnvironmentsLoadState from './EnvironmentsLoadState'
+import QueryLoadState from './QueryLoadState'
+import { useGetProjectsQuery } from 'common/services/useProject'
 
 type PermissionsTabsType = {
   orgId?: number
@@ -38,7 +38,11 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
 }) => {
   const [searchProject, setSearchProject] = useState<string>('')
   const [searchEnv, setSearchEnv] = useState<string>('')
-  const projectData: Project[] | undefined = OrganisationStore.getProjects()
+  const {
+    data: projects,
+    isError: isProjectsError,
+    isLoading: isLoadingProjects,
+  } = useGetProjectsQuery(orgId ? { organisationId: orgId } : skipToken)
   const [project, setProject] = useState<string>('')
   const projectId = Number(project) || undefined
   // currentData, not data: data keeps the previous project's list while the next one loads
@@ -111,19 +115,26 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
               search
             />
           </Row>
-          <RolePermissionsList
-            user={user}
-            group={group}
-            orgId={orgId}
-            filter={searchProject}
-            mainItems={(projectData ?? []).map((v) => ({
-              ...v,
-              projectId: v.id,
-            }))}
-            role={role}
-            level={'project'}
-            ref={tabRef}
+          <QueryLoadState
+            errorMessage='Could not load projects.'
+            isError={isProjectsError}
+            isLoading={isLoadingProjects}
           />
+          {!!projects && (
+            <RolePermissionsList
+              user={user}
+              group={group}
+              orgId={orgId}
+              filter={searchProject}
+              mainItems={projects.map((v) => ({
+                ...v,
+                projectId: v.id,
+              }))}
+              role={role}
+              level={'project'}
+              ref={tabRef}
+            />
+          )}
         </TabItem>
         <TabItem
           tabLabel={<Row className='justify-content-center'>Environment</Row>}
@@ -149,7 +160,11 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
             />
           </div>
           <div className='mt-2'>
-            <EnvironmentsLoadState isError={isError} isLoading={isLoading} />
+            <QueryLoadState
+              errorMessage='Could not load environments for this project.'
+              isError={isError}
+              isLoading={isLoading}
+            />
             {!!environments?.length && (
               <RolePermissionsList
                 user={user}

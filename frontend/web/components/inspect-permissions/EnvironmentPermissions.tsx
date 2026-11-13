@@ -2,7 +2,7 @@ import ExpandablePermissionsList from './ExpandablePermissionsList'
 import { skipToken } from '@reduxjs/toolkit/query'
 import { useGetAllEnvironmentsQuery } from 'common/services/useEnvironment'
 import { sortEnvironmentsByName } from 'common/utils/sortEnvironmentsByName'
-import EnvironmentsLoadState from 'components/EnvironmentsLoadState'
+import QueryLoadState from 'components/QueryLoadState'
 import PanelSearch from 'components/PanelSearch'
 
 type EnvironmentPermissionsProps = {
@@ -30,7 +30,13 @@ const EnvironmentPermissions = ({
     return `${v.name}`.toLowerCase().includes(search)
   })
   if (!environments?.length) {
-    return <EnvironmentsLoadState isError={isError} isLoading={isLoading} />
+    return (
+      <QueryLoadState
+        errorMessage='Could not load environments for this project.'
+        isError={isError}
+        isLoading={isLoading}
+      />
+    )
   }
   return (
     <>

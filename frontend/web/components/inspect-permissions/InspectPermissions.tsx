@@ -60,7 +60,7 @@ const InspectPermissions: FC<InspectPermissionsType> = ({
           tabLabel={<Row className='justify-content-center'>Project</Row>}
           data-test='project-permissions-tab'
         >
-          <ProjectPermissions userId={user?.id} />
+          <ProjectPermissions organisationId={orgId} userId={user?.id} />
         </TabItem>
         <TabItem
           tabLabel={<Row className='justify-content-center'>Environment</Row>}

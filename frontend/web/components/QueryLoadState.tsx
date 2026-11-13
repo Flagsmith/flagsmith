@@ -1,12 +1,14 @@
 import { FC } from 'react'
 import ErrorMessage from './ErrorMessage'
 
-type EnvironmentsLoadStateProps = {
+type QueryLoadStateProps = {
+  errorMessage: string
   isError: boolean
   isLoading: boolean
 }
 
-const EnvironmentsLoadState: FC<EnvironmentsLoadStateProps> = ({
+const QueryLoadState: FC<QueryLoadStateProps> = ({
+  errorMessage,
   isError,
   isLoading,
 }) => {
@@ -18,11 +20,9 @@ const EnvironmentsLoadState: FC<EnvironmentsLoadStateProps> = ({
     )
   }
   if (isError) {
-    return (
-      <ErrorMessage error='Could not load environments for this project.' />
-    )
+    return <ErrorMessage error={errorMessage} />
   }
   return null
 }
 
-export default EnvironmentsLoadState
+export default QueryLoadState

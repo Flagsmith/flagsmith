@@ -1,23 +1,33 @@
 import React, { useState } from 'react'
 import PanelSearch from 'components/PanelSearch'
-import { Project } from 'common/types/responses'
 
 import Utils from 'common/utils/utils'
 
-import OrganisationStore from 'common/stores/organisation-store'
+import { useGetProjectsQuery } from 'common/services/useProject'
+import QueryLoadState from 'components/QueryLoadState'
 import Input from 'components/base/forms/Input'
 import ExpandablePermissionsList from './ExpandablePermissionsList'
 
-const ProjectPermissions = ({ userId }: { userId?: number }) => {
-  const projectData: Project[] = OrganisationStore.getProjects()
+type ProjectPermissionsProps = {
+  organisationId: number
+  userId?: number
+}
+
+const ProjectPermissions = ({
+  organisationId,
+  userId,
+}: ProjectPermissionsProps) => {
+  const {
+    data: projects,
+    isError,
+    isLoading,
+  } = useGetProjectsQuery({ organisationId })
   const [searchProject, setSearchProject] = useState<string>('')
-  const filteredProjects =
-    projectData &&
-    projectData?.filter((v) => {
-      const search = searchProject?.toLowerCase()
-      if (!search) return true
-      return `${v.name}`.toLowerCase().includes(search)
-    })
+  const filteredProjects = projects?.filter((v) => {
+    const search = searchProject?.toLowerCase()
+    if (!search) return true
+    return `${v.name}`.toLowerCase().includes(search)
+  })
   return (
     <>
       <Row className='justify-content-between'>
@@ -34,7 +44,13 @@ const ProjectPermissions = ({ userId }: { userId?: number }) => {
           search
         />
       </Row>
+      <QueryLoadState
+        errorMessage='Could not load projects.'
+        isError={isError}
+        isLoading={false}
+      />
       <PanelSearch
+        isLoading={isLoading}
         header={
           <Row className='table-header'>
             <Flex className='px-3'>Name</Flex>
