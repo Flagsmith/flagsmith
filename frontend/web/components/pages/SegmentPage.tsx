@@ -5,7 +5,6 @@ import { useHistory, useRouteMatch } from 'react-router-dom'
 import CreateSegment from 'components/modals/CreateSegment'
 import ProjectStore from 'common/stores/project-store'
 import { Environment } from 'common/types/responses'
-import ChangeRequestStore from 'common/stores/change-requests-store'
 import Breadcrumb from 'components/Breadcrumb'
 import { useHasPermission } from 'common/providers/Permission'
 import Icon from 'components/icons/Icon'
@@ -41,7 +40,6 @@ const SegmentPage: FC<SegmentPageType> = ({}) => {
   }
   return (
     <div
-      style={{ opacity: ChangeRequestStore.isLoading ? 0.25 : 1 }}
       data-test='segment-page'
       id='segment-page'
       className='app-container container-fluid mt-3'

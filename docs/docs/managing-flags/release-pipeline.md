@@ -68,6 +68,7 @@ Each stage in your pipeline consists of:
 - Triggers after waiting for a specified amount of time.
 - Configure the wait time in minutes, hours, or days.
 - Use this for gradual rollouts or testing periods.
+- Optionally, add an [abort condition](#aborting-a-pipeline) to stop the release if the flag becomes unhealthy during the wait.
 
 ### Stage Actions
 
@@ -107,12 +108,6 @@ Once published, a release pipeline cannot be modified. Ensure your configuration
 
 ## Adding Flags to Release Pipelines
 
-:::warning
-
-In alpha phase there are no automatic rollbacks, you'd need to revert changes manually.
-
-:::
-
 ### From the Dashboard
 
 1. Navigate to your feature flags.
@@ -140,6 +135,24 @@ Once a flag is added to a pipeline:
 
 - **Active Pipelines**: View all published pipelines and their current status.
 - **Flag Progress**: Track which flags are currently in each stage.
+
+### Aborting a Pipeline
+
+To turn a flag off automatically if it becomes unhealthy during a stage:
+
+1. Set up a [Feature Health provider](/managing-flags/feature-health-metrics) for your project.
+2. When configuring the stage, select the **Wait a set amount of time** trigger.
+3. Tick **Abort if unhealthy in this environment**.
+
+If the flag is unhealthy in the stage's environment when it enters the stage, or becomes unhealthy during the wait, the flag is turned off in that environment, both for everyone and for segments targeted by earlier stages, and removed from the pipeline. Flag values are left as they are. Unhealthy events that don't name an environment apply to every environment.
+
+:::note
+
+Abort conditions are only available on stages that wait a set amount of time. They don't apply once a stage has finished, or once a "Phased Rollout" flag action has started.
+
+Aborted flags don't show on the pipeline page. To confirm an abort, look for the [Pipeline Aborted](#audit-log-events) entry in the audit log.
+
+:::
 
 ### Removing Flags from Pipelines
 
@@ -173,6 +186,10 @@ Release Pipelines generate audit log events to track pipeline-related activities
 **Feature State Updates**
 - Event: `FEATURE_STATE_UPDATED_BY_RELEASE_PIPELINE_MESSAGE`.
 - Triggered when a pipeline automatically updates a feature flag's state during stage execution.
+
+**Pipeline Aborted**
+- Event: `RELEASE_PIPELINE_ABORTED_MESSAGE`.
+- Triggered when a flag becomes unhealthy in a stage with an abort condition and the pipeline turns the flag off.
 
 ### Viewing Audit Logs
 

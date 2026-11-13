@@ -20,6 +20,7 @@ from features.feature_health.models import (
     FeatureHealthProviderName,
 )
 from features.feature_health.providers import grafana, webhook
+from features.feature_health.signals import feature_health_updated
 from features.feature_health.types import FeatureHealthEventReason
 from features.models import Feature
 from projects.tags.models import Tag, TagType
@@ -66,6 +67,7 @@ def create_feature_health_events_from_provider(
     project = provider.project
     events_to_create = []
     feature_ids_to_update = set()
+    updated_feature_environments: dict[tuple[Feature, Environment | None], None] = {}
     if response:
         for event_data in response.events:
             if feature := Feature.objects.filter(
@@ -79,6 +81,7 @@ def create_feature_health_events_from_provider(
                     ).first()
                 else:
                     environment = None
+                updated_feature_environments[(feature, environment)] = None
                 events_to_create.append(
                     map_feature_health_event_data_to_feature_health_event(
                         feature_health_event_data=event_data,
@@ -87,6 +90,12 @@ def create_feature_health_events_from_provider(
                     )
                 )
     FeatureHealthEvent.objects.bulk_create(events_to_create)
+    for feature, environment in updated_feature_environments:
+        feature_health_updated.send_robust(
+            sender=Feature,
+            feature=feature,
+            environment=environment,
+        )
     for feature_id in feature_ids_to_update:
         tasks.update_feature_unhealthy_tag.delay(args=(feature_id,))
     return events_to_create
@@ -151,6 +160,11 @@ def dismiss_feature_health_event(
         external_id=feature_health_event.external_id,
     )
 
+    feature_health_updated.send_robust(
+        sender=Feature,
+        feature=feature_health_event.feature,
+        environment=feature_health_event.environment,
+    )
     tasks.update_feature_unhealthy_tag.delay(
         args=(feature_health_event.feature.id,),
     )
