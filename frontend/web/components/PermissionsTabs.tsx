@@ -1,12 +1,7 @@
-import React, { FC, Ref, useEffect, useState } from 'react'
+import React, { FC, Ref, useMemo, useState } from 'react'
+import sortBy from 'lodash/sortBy'
 import { EditPermissionsModal } from './EditPermissions'
-import {
-  Environment,
-  Project,
-  Role,
-  User,
-  UserGroupSummary,
-} from 'common/types/responses'
+import { Project, Role, User, UserGroupSummary } from 'common/types/responses'
 import Tabs from './navigation/TabMenu/Tabs'
 import TabItem from './navigation/TabMenu/TabItem'
 import Input from './base/forms/Input'
@@ -14,6 +9,7 @@ import Utils from 'common/utils/utils'
 import RolePermissionsList from './RolePermissionsList'
 import ProjectFilter from './ProjectFilter'
 import OrganisationStore from 'common/stores/organisation-store'
+import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
 import PlanBasedAccess from './PlanBasedAccess'
 import WarningMessage from './WarningMessage'
 
@@ -42,16 +38,14 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
   const [searchEnv, setSearchEnv] = useState<string>('')
   const projectData: Project[] | undefined = OrganisationStore.getProjects()
   const [project, setProject] = useState<string>('')
-  const [environments, setEnvironments] = useState<Environment[]>([])
-
-  useEffect(() => {
-    if (project && projectData) {
-      const environments = projectData.find(
-        (p) => p.id === parseInt(project),
-      )?.environments
-      setEnvironments(environments || [])
-    }
-  }, [project, projectData])
+  const { data: environmentsData } = useGetEnvironmentsQuery(
+    { projectId: parseInt(project) },
+    { skip: !project },
+  )
+  const environments = useMemo(
+    () => sortBy(environmentsData?.results ?? [], 'name'),
+    [environmentsData],
+  )
 
   if (!orgId) {
     return

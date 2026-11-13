@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
+import sortBy from 'lodash/sortBy'
 import ExpandablePermissionsList from './ExpandablePermissionsList'
-import OrganisationStore from 'common/stores/organisation-store'
-import { Project } from 'common/types/responses'
+import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
 import PanelSearch from 'components/PanelSearch'
 
 type EnvironmentPermissionsProps = {
@@ -15,19 +15,23 @@ const EnvironmentPermissions = ({
   searchEnvironment = '',
   userId,
 }: EnvironmentPermissionsProps) => {
-  const projectData: Project[] = OrganisationStore.getProjects()
-  const environments = useMemo(() => {
-    if (!projectData || !projectId) {
-      return
-    }
-    return projectData.find((p) => p.id === parseInt(projectId))?.environments
-  }, [projectData, projectId])
+  const { data } = useGetEnvironmentsQuery(
+    { projectId: parseInt(projectId ?? '') },
+    { skip: !projectId },
+  )
+  const environments = useMemo(
+    () => data && sortBy(data.results, 'name'),
+    [data],
+  )
 
   const filteredEnvironments = environments?.filter((v) => {
     const search = searchEnvironment?.toLowerCase()
     if (!search) return true
     return `${v.name}`.toLowerCase().includes(search)
   })
+  if (environments?.length === 0) {
+    return null
+  }
   return (
     <>
       <PanelSearch

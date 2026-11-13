@@ -115,7 +115,7 @@ const ProjectManageWidget: FC<SegmentsPageType> = ({ organisationId }) => {
                       </div>
                     }
                     items={projects}
-                    renderRow={({ environments, id, name }, i) => {
+                    renderRow={({ id, name }, i) => {
                       return (
                         <>
                           {i === 0 && (
@@ -152,11 +152,7 @@ const ProjectManageWidget: FC<SegmentsPageType> = ({ organisationId }) => {
                             key={id}
                             id={`project-select-${i}`}
                             data-test={`project-${Utils.toKebabCase(name)}`}
-                            to={`/project/${id}/environment/${
-                              environments && environments[0]
-                                ? `${environments[0].api_key}/features`
-                                : 'create'
-                            }`}
+                            to={`/project/${id}`}
                             className='clickable col-md-6 col-xl-3'
                             style={{ minWidth: '190px' }}
                           >
