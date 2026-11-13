@@ -1,6 +1,6 @@
 import ExpandablePermissionsList from './ExpandablePermissionsList'
 import { useEnvironmentsByName } from 'common/hooks/useEnvironmentsByName'
-import ErrorMessage from 'components/ErrorMessage'
+import EnvironmentsLoadState from 'components/EnvironmentsLoadState'
 import PanelSearch from 'components/PanelSearch'
 
 type EnvironmentPermissionsProps = {
@@ -23,20 +23,8 @@ const EnvironmentPermissions = ({
     if (!search) return true
     return `${v.name}`.toLowerCase().includes(search)
   })
-  if (isLoading) {
-    return (
-      <div className='text-center'>
-        <Loader />
-      </div>
-    )
-  }
-  if (isError) {
-    return (
-      <ErrorMessage error='Could not load environments for this project.' />
-    )
-  }
   if (!environments?.length) {
-    return null
+    return <EnvironmentsLoadState isError={isError} isLoading={isLoading} />
   }
   return (
     <>

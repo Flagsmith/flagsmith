@@ -11,7 +11,7 @@ import OrganisationStore from 'common/stores/organisation-store'
 import { useEnvironmentsByName } from 'common/hooks/useEnvironmentsByName'
 import PlanBasedAccess from './PlanBasedAccess'
 import WarningMessage from './WarningMessage'
-import ErrorMessage from './ErrorMessage'
+import EnvironmentsLoadState from './EnvironmentsLoadState'
 
 type PermissionsTabsType = {
   orgId?: number
@@ -143,14 +143,7 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
             />
           </div>
           <div className='mt-2'>
-            {isLoading && (
-              <div className='text-center'>
-                <Loader />
-              </div>
-            )}
-            {isError && (
-              <ErrorMessage error='Could not load environments for this project.' />
-            )}
+            <EnvironmentsLoadState isError={isError} isLoading={isLoading} />
             {!!environments?.length && (
               <RolePermissionsList
                 user={user}
