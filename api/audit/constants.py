@@ -95,8 +95,12 @@ FEATURE_DEPENDENCY_DELETED_MESSAGE = (
 
 USER_LOGGED_IN_WITHOUT_2FA_MESSAGE = "User `%s` logged in without 2FA."
 USER_LOGGED_IN_WITH_2FA_MESSAGE = "User `%s` logged in with 2FA."
-USER_LOGGED_IN_WITH_OAUTH_MESSAGE = "User `%s` logged in with %s."
-OAUTH_PROVIDER_NAMES = {AuthType.GOOGLE: "Google", AuthType.GITHUB: "GitHub"}
+USER_LOGGED_IN_WITH_SSO_MESSAGE = "User `%s` logged in with %s."
+SSO_PROVIDER_NAMES = {
+    AuthType.GOOGLE: "Google",
+    AuthType.GITHUB: "GitHub",
+    AuthType.SAML: "SAML",
+}
 USER_LOGIN_REQUIRES_2FA_MESSAGE = "User `%s` has entered their password but needs 2FA."
 USER_LOGIN_PASSWORD_REJECTED_MESSAGE = "User `%s` failed to log in: incorrect password."
 USER_LOGIN_2FA_CODE_REJECTED_MESSAGE = "User `%s` failed to log in: incorrect 2FA code."

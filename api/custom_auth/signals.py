@@ -17,7 +17,7 @@ user_login_password_verified = Signal()
 user_login_password_rejected = Signal()
 user_login_2fa_code_verified = Signal()
 user_login_2fa_code_rejected = Signal()
-user_login_oauth_completed = Signal()
+user_login_sso_completed = Signal()
 user_2fa_enabled = Signal()
 user_2fa_disabled = Signal()
 

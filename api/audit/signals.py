@@ -7,11 +7,11 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 from audit.constants import (
-    OAUTH_PROVIDER_NAMES,
+    SSO_PROVIDER_NAMES,
     USER_2FA_DISABLED_MESSAGE,
     USER_2FA_ENABLED_MESSAGE,
     USER_LOGGED_IN_WITH_2FA_MESSAGE,
-    USER_LOGGED_IN_WITH_OAUTH_MESSAGE,
+    USER_LOGGED_IN_WITH_SSO_MESSAGE,
     USER_LOGGED_IN_WITHOUT_2FA_MESSAGE,
     USER_LOGGED_OUT_MESSAGE,
     USER_LOGIN_2FA_CODE_REJECTED_MESSAGE,
@@ -28,9 +28,9 @@ from custom_auth.signals import (
     user_2fa_enabled,
     user_login_2fa_code_rejected,
     user_login_2fa_code_verified,
-    user_login_oauth_completed,
     user_login_password_rejected,
     user_login_password_verified,
+    user_login_sso_completed,
     user_password_changed,
 )
 from features.models import FeatureState, FeatureStateValue
@@ -305,16 +305,16 @@ def create_user_login_2fa_code_rejected_audit_logs(
     _create_user_audit_logs(user, USER_LOGIN_2FA_CODE_REJECTED_MESSAGE % user.email)
 
 
-@receiver(user_login_oauth_completed)
-def create_user_login_oauth_completed_audit_logs(
+@receiver(user_login_sso_completed)
+def create_user_login_sso_completed_audit_logs(
     sender: type[FFAdminUser],
     user: FFAdminUser,
     auth_type: AuthType,
     **kwargs: Any,
 ) -> None:
-    provider_name = OAUTH_PROVIDER_NAMES[auth_type]
+    provider_name = SSO_PROVIDER_NAMES[auth_type]
     _create_user_audit_logs(
-        user, USER_LOGGED_IN_WITH_OAUTH_MESSAGE % (user.email, provider_name)
+        user, USER_LOGGED_IN_WITH_SSO_MESSAGE % (user.email, provider_name)
     )
 
 
