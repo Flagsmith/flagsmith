@@ -1337,7 +1337,12 @@ export enum StageTriggerType {
   WAIT_FOR = 'WAIT_FOR',
 }
 
-export type StageTriggerBody = { wait_for?: string } | null
+export type StageAbortCondition = { unhealthy?: boolean }
+
+export type StageTriggerBody = {
+  wait_for?: string
+  abort_if?: StageAbortCondition
+} | null
 
 export type StageTrigger = {
   trigger_type: StageTriggerType
