@@ -1,5 +1,58 @@
 # Changelog
 
+## [2.291.0](https://github.com/Flagsmith/flagsmith/compare/v2.290.0...v2.291.0) (2026-11-13)
+
+
+### Features
+
+* **Audit logs:** Emit and serve organisation-level audit logs ([#8921](https://github.com/Flagsmith/flagsmith/issues/8921)) ([e39de59](https://github.com/Flagsmith/flagsmith/commit/e39de590793a76a575315353df4a38b5d82b28f0))
+* **docker:** Run experimentation on the Flagsmith Postgres database in docker compose ([#8884](https://github.com/Flagsmith/flagsmith/issues/8884)) ([1ec1049](https://github.com/Flagsmith/flagsmith/commit/1ec1049e6e40ab539242417c645b0ed5e2181f48))
+* **Feature Health:** Send a `feature_health_updated` signal when a feature's health changes ([#8949](https://github.com/Flagsmith/flagsmith/issues/8949)) ([64c1ebe](https://github.com/Flagsmith/flagsmith/commit/64c1ebe7bcf8257ad829dfd2b3ce8c36a29931cb))
+* **Release Pipelines:** Add an abort if unhealthy option to wait stages ([#8950](https://github.com/Flagsmith/flagsmith/issues/8950)) ([7264f03](https://github.com/Flagsmith/flagsmith/commit/7264f03014de25042e2e18c41125d9a770b517af))
+
+
+### Bug Fixes
+
+* **Audit Log:** DynamoDB Edge migration status fetch N+1 ([#8909](https://github.com/Flagsmith/flagsmith/issues/8909)) ([1dfc2b3](https://github.com/Flagsmith/flagsmith/commit/1dfc2b31471ff42b51df5718c5a122459b9a60b5))
+* **Checkbox:** Make checkboxes reachable by keyboard and screen readers ([#8954](https://github.com/Flagsmith/flagsmith/issues/8954)) ([a7cb23a](https://github.com/Flagsmith/flagsmith/commit/a7cb23a10affbf61ac577f3a98b8766e50af52b5))
+* **Diff display:** Segment rules diff showing up as [Object object] ([#8910](https://github.com/Flagsmith/flagsmith/issues/8910)) ([13539af](https://github.com/Flagsmith/flagsmith/commit/13539afcb99c20b4351e26f215d01b49f2a9be03))
+* **E2E:** Lift the E2E organisation's plan limits on SaaS ([#8918](https://github.com/Flagsmith/flagsmith/issues/8918)) ([ca7a393](https://github.com/Flagsmith/flagsmith/commit/ca7a393f1f992b974ce70e9f1284276b179333f0))
+* **identities:** Identities search may bring the database down ([#8933](https://github.com/Flagsmith/flagsmith/issues/8933)) ([d9c857a](https://github.com/Flagsmith/flagsmith/commit/d9c857ae4980b0ff332b7f5ef0bc3a5fae4cfd81))
+* Revoke DRF token after password change ([#8698](https://github.com/Flagsmith/flagsmith/issues/8698)) ([773f1c0](https://github.com/Flagsmith/flagsmith/commit/773f1c06ca20768351dac722724bf87fcbc8453e))
+* **scheduling:** Stop counting published change requests in the badge ([#8914](https://github.com/Flagsmith/flagsmith/issues/8914)) ([fd6c366](https://github.com/Flagsmith/flagsmith/commit/fd6c366b2c6d200383098a8fcac637a967b08d00))
+* **Segments:** Incorrect audit logs when changing segment rules ([#8908](https://github.com/Flagsmith/flagsmith/issues/8908)) ([a002217](https://github.com/Flagsmith/flagsmith/commit/a002217f1e94487813a25e537e59bc8adec97d55))
+* signup last name field rendered as a password input ([#8943](https://github.com/Flagsmith/flagsmith/issues/8943)) ([e1d64e6](https://github.com/Flagsmith/flagsmith/commit/e1d64e6f15842f93dc67f30273e50ceb1d14bcc8))
+
+
+### Dependency Updates
+
+* **api:** update dependency flagsmith-private to &gt;=0.15.0,&lt;1 ([#8952](https://github.com/Flagsmith/flagsmith/issues/8952)) ([351bb23](https://github.com/Flagsmith/flagsmith/commit/351bb2305c95a7780b48a6cc33be5bbd411c868b))
+* **api:** update dependency oauthlib to v4.0.1 [security] ([#8924](https://github.com/Flagsmith/flagsmith/issues/8924)) ([21c9f44](https://github.com/Flagsmith/flagsmith/commit/21c9f441387362b1a07bbb4197f952c97ce67817))
+* bump Node and uv to distrust compromised eMudhra CAs ([#8898](https://github.com/Flagsmith/flagsmith/issues/8898)) ([4449ad4](https://github.com/Flagsmith/flagsmith/commit/4449ad4231392545807649e3b52a595999e0512d))
+
+
+### CI
+
+* **Renovate:** Upgrade to Renovate 44 and drop uv lock file maintenance ([#8912](https://github.com/Flagsmith/flagsmith/issues/8912)) ([b1ecf70](https://github.com/Flagsmith/flagsmith/commit/b1ecf7026d56ee92adb224309eb756795afd7e9f))
+
+
+### Docs
+
+* **experimentation:** document PostgreSQL warehouses ([#8873](https://github.com/Flagsmith/flagsmith/issues/8873)) ([a130da6](https://github.com/Flagsmith/flagsmith/commit/a130da6f417d657d784c36e03cbc245db9d2e187))
+* **experimentation:** group warehouse pages under Connect a Warehouse ([#8883](https://github.com/Flagsmith/flagsmith/issues/8883)) ([6102623](https://github.com/Flagsmith/flagsmith/commit/610262351b43323bb90f6562565a2656459c1779))
+* **experimentation:** Point the coding agent prompts at the Flagsmith database ([#8892](https://github.com/Flagsmith/flagsmith/issues/8892)) ([eeac04b](https://github.com/Flagsmith/flagsmith/commit/eeac04bd70b936314b6384cc91da442ce450140c))
+* **Release Pipelines:** Document aborting a wait stage when a flag becomes unhealthy ([#8947](https://github.com/Flagsmith/flagsmith/issues/8947)) ([7dce291](https://github.com/Flagsmith/flagsmith/commit/7dce2919eadc626424da03fed0d6a57b86acf050))
+
+
+### Performance Improvements
+
+* cache Databricks OAuth token and retry while warehouse starts ([#8906](https://github.com/Flagsmith/flagsmith/issues/8906)) ([674c63b](https://github.com/Flagsmith/flagsmith/commit/674c63bfbcae5274fa54d5ae083c43811d21de6c))
+
+
+### Tests
+
+* **Change requests:** Cover versioned, edited and scheduled change requests ([#8818](https://github.com/Flagsmith/flagsmith/issues/8818)) ([4cfa405](https://github.com/Flagsmith/flagsmith/commit/4cfa405e0ac06a7d105fc0f1136d19f21e03cf30))
+
 ## [2.290.0](https://github.com/Flagsmith/flagsmith/compare/v2.289.0...v2.290.0) (2026-11-05)
 
 
