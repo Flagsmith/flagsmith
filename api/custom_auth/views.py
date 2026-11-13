@@ -31,6 +31,7 @@ from custom_auth.mfa.trench.responses import ErrorResponse
 from custom_auth.mfa.trench.serializers import CodeLoginSerializer
 from custom_auth.mfa.trench.utils import user_token_generator
 from custom_auth.serializers import CustomUserDelete
+from custom_auth.signals import user_login_password_verified, user_password_changed
 from integrations.lead_tracking.hubspot.client import HubspotClient
 from integrations.lead_tracking.hubspot.services import (
     register_hubspot_tracker_and_track_user,
@@ -61,6 +62,9 @@ class CustomAuthTokenLoginOrRequestMFACode(TokenCreateView):  # type: ignore[mis
             conf = settings.TRENCH_AUTH["MFA_METHODS"]["app"]  # type: ignore[index]
             mfa_handler = CustomApplicationBackend(mfa_method=mfa_method, config=conf)
             mfa_handler.dispatch_message()  # type: ignore[no-untyped-call]
+            user_login_password_verified.send(
+                sender=user.__class__, user=user, is_2fa_required=True
+            )
             return Response(
                 data={
                     "ephemeral_token": user_token_generator.make_token(user),
@@ -68,6 +72,9 @@ class CustomAuthTokenLoginOrRequestMFACode(TokenCreateView):  # type: ignore[mis
                 }
             )
         except MFAMethodDoesNotExistError:
+            user_login_password_verified.send(
+                sender=user.__class__, user=user, is_2fa_required=False
+            )
             if settings.COOKIE_AUTH_ENABLED:
                 return authorise_response(user, Response(status=HTTP_204_NO_CONTENT))
             return self._action(serializer)  # type: ignore[no-any-return]
@@ -238,6 +245,7 @@ class FFAdminUserViewSet(UserViewSet):  # type: ignore[misc]
         assert isinstance(user, FFAdminUser)
         response: Response = super().set_password(request, *args, **kwargs)
         blacklist_user_tokens(user)
+        user_password_changed.send(sender=user.__class__, request=request, user=user)
         return response
 
     @action(["post"], detail=False)

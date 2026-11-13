@@ -10,6 +10,10 @@ from custom_auth.mfa.trench.exceptions import (
 )
 from custom_auth.mfa.trench.models import MFAMethod
 from custom_auth.mfa.trench.utils import get_mfa_handler, user_token_generator
+from custom_auth.signals import (
+    user_login_2fa_code_rejected,
+    user_login_2fa_code_verified,
+)
 from users.models import FFAdminUser
 
 
@@ -32,5 +36,10 @@ def authenticate_second_step_command(code: str, ephemeral_token: str) -> FFAdmin
     user = user_token_generator.check_token(user=None, token=ephemeral_token)
     if user is None:
         raise InvalidTokenError()
-    is_authenticated(user_id=user.id, code=code)
+    try:
+        is_authenticated(user_id=user.id, code=code)
+    except InvalidCodeError:
+        user_login_2fa_code_rejected.send(sender=user.__class__, user=user)
+        raise
+    user_login_2fa_code_verified.send(sender=user.__class__, user=user)
     return user
