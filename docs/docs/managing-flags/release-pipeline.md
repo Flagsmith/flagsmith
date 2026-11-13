@@ -110,7 +110,7 @@ Once published, a release pipeline cannot be modified. Ensure your configuration
 
 :::warning
 
-Release Pipelines don't revert changes that earlier stages have made. An [abort condition](#aborting-a-pipeline) can turn a flag off if it becomes unhealthy, but any other changes have to be reverted manually.
+Release Pipelines don't revert changes that earlier stages have made. An [abort condition](#aborting-a-pipeline) can turn a flag off if it becomes unhealthy, but values set by earlier stages stay as they are.
 
 :::
 
@@ -150,11 +150,11 @@ To turn a flag off automatically if it becomes unhealthy during a stage:
 2. When configuring the stage, select the **Wait a set amount of time** trigger.
 3. Tick **Abort if unhealthy in this environment**.
 
-If the flag is unhealthy in the stage's environment when it enters the stage, or becomes unhealthy during the wait, the flag is disabled in that environment, including for segments enabled by earlier stages, and removed from the pipeline. Unhealthy events that don't name an environment apply to every environment.
+If the flag is unhealthy in the stage's environment when it enters the stage, or becomes unhealthy during the wait, the flag is turned off in that environment, both for everyone and for segments targeted by earlier stages, and removed from the pipeline. Flag values are left as they are. Unhealthy events that don't name an environment apply to every environment.
 
 :::note
 
-Abort conditions are only available on stages that wait a set amount of time. They don't apply once a stage has finished, or while a phased rollout is in progress.
+Abort conditions are only available on stages that wait a set amount of time. They don't apply once a stage has finished, or once a "Phased Rollout" flag action has started.
 
 :::
 
