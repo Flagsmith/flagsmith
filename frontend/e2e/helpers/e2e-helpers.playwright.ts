@@ -1259,8 +1259,8 @@ export class E2EHelpers {
     await this.click('#env-settings-link');
     await this.click(byId('enable-versioning'));
     await this.click('#confirm-btn-yes');
-    // Feature versioning takes up to a minute to enable on the backend
-    await this.waitForElementVisible(byId('feature-versioning-enabled'), 60000);
+    // Feature versioning is enabled asynchronously on the backend
+    await this.waitForElementVisible(byId('feature-versioning-enabled'));
     await this.waitForElementVisible('.toast-message');
     await this.waitForToastsToClear();
   }
