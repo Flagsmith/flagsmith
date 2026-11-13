@@ -18,4 +18,5 @@ else
   cd ./frontend
 fi
 
-npx lint-staged --allow-empty
+# LINT_STAGED makes eslint check only the staged lines (see .eslintrc.js).
+LINT_STAGED=true npx lint-staged --allow-empty
