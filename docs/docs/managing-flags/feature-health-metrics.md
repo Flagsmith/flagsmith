@@ -107,6 +107,12 @@ You can use the webhook in your custom integration. Refer to the payload schema 
 
 ---
 
+## Stopping releases on unhealthy features
+
+A Release Pipeline can use Feature Health as a kill switch. Learn how to configure it [here](/managing-flags/release-pipeline#aborting-a-pipeline).
+
+---
+
 ## What's next?
 
 - For more on observability integrations, see the [observability integrations](/third-party-integrations/observability-and-monitoring/grafana).
