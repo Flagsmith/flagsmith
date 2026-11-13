@@ -21,8 +21,8 @@ test.describe('User permissions dialogs', () => {
       request,
     }) => {
       const { login } = createHelpers(page)
-      // Unique names so parallel tests and E2E_REPEAT runs never collide
-      const runId = Date.now()
+      // Unique per run and per case, as both cases run in parallel
+      const runId = `${action} ${Date.now()}`
 
       log('Create two projects with their own environments')
       const first = await createProjectThroughApi(
@@ -66,9 +66,13 @@ test.describe('User permissions dialogs', () => {
         .getByRole('button', { exact: true, name: 'Environment' })
         .click()
 
+      // E2E builds render Select's options as plain, always visible links
       const pickProject = async (name: string) => {
-        await dialog.getByRole('combobox').click()
-        await page.getByRole('option', { exact: true, name }).click()
+        // Inactive tabs stay in the page, so the Project tab also lists the name
+        await dialog
+          .getByText(name, { exact: true })
+          .filter({ visible: true })
+          .click()
       }
 
       log('The first project lists its environments')
