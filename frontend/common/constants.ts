@@ -654,14 +654,6 @@ const Constants = {
     'USERS': 'Users Page',
     'WHAT_ARE_FEATURE_FLAGS': 'What are feature flags Page',
   },
-  projectColors: [
-    '#906AF6',
-    '#FAE392',
-    '#42D0EB',
-    '#56CCAD',
-    '#FFBE71',
-    '#F57C78',
-  ],
   projectPermissions: (perm: ProjectPermission) => {
     return `To use this feature you need the <i>${ProjectPermissionDescriptions[perm]}</i> permission for this project.<br/>Please contact a member of this project who has administrator privileges.`
   },

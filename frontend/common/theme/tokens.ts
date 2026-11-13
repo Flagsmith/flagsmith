@@ -265,6 +265,7 @@ export const warning500 = 'var(--warning-500, #ffbc05)'
 export const warning900 = 'var(--warning-900, #744800)'
 
 // Always
+export const alwaysBlack = 'var(--always-black, #080c17)'
 export const alwaysPrimary = 'var(--always-primary, #6837fc)'
 export const alwaysWhite = 'var(--always-white, #ffffff)'
 

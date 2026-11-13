@@ -19,7 +19,6 @@ import {
 } from 'components/diff/diff-utils'
 import { getSegments } from './useSegment'
 import { getFeatureStates } from './useFeatureState'
-import moment from 'moment'
 
 const transformFeatureStates = (featureStates: TypedFeatureState[]) =>
   featureStates?.map((v) => ({
@@ -363,19 +362,11 @@ export const {
   // END OF EXPORTS
 } = featureVersionService
 
-export function isVersionOverLimit(
-  versionLimitDays: number | null | undefined,
-  date: string | undefined,
-) {
-  if (!versionLimitDays) {
-    return false
-  }
-  const days = moment().diff(moment(date), 'days') + 1
-  return !!versionLimitDays && days > versionLimitDays
-}
-
 /* Usage examples:
 const { data, isLoading } = useGetFeatureVersionQuery({ id: 2 }, {}) //get hook
 const [createFeatureVersion, { isLoading, data, isSuccess }] = useCreateFeatureVersionMutation() //create hook
 featureVersionService.endpoints.getFeatureVersion.select({id: 2})(store.getState()) //access data from any function
 */
+
+// Moved to a module without Flux, so Jest can import it.
+export { isVersionOverLimit } from 'common/utils/isVersionOverLimit'

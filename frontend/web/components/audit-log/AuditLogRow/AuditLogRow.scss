@@ -1,0 +1,49 @@
+$audit-log-type-size: 32px;
+// px-3 and gap-3 on the row Accordion header.
+$audit-log-row-spacing: 1rem;
+
+.audit-log-row {
+  border-bottom: 1px solid var(--color-border-default);
+
+  // Every row switches together, by the row's width rather than its text.
+  container-type: inline-size;
+
+  // Narrow rows put the scope chip under the text.
+  &__summary {
+    flex-wrap: wrap;
+    column-gap: $audit-log-row-spacing;
+    row-gap: 4px;
+  }
+
+  // Not .flex-column: the legacy grid gives that class side margins.
+  &__message {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 100%;
+    min-width: 0;
+  }
+
+  // Bootstrap's sm breakpoint, measured on the row: the chip sits on the right.
+  @container (min-width: 576px) {
+    &__summary {
+      flex-wrap: nowrap;
+    }
+
+    &__message {
+      flex-basis: 0;
+    }
+  }
+
+  &__type {
+    width: $audit-log-type-size;
+    height: $audit-log-type-size;
+  }
+
+  // Lines the changes up with the log text: row padding, icon, then gap.
+  &__details {
+    padding-left: calc(
+      #{$audit-log-row-spacing} * 2 + #{$audit-log-type-size}
+    );
+  }
+}
+
