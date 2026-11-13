@@ -24,6 +24,7 @@ from custom_auth.mfa.trench.serializers import (
     UserMFAMethodSerializer,
 )
 from custom_auth.mfa.trench.utils import get_mfa_handler
+from custom_auth.signals import user_2fa_disabled, user_2fa_enabled
 
 User: AbstractUser = get_user_model()  # type: ignore[assignment]
 
@@ -61,6 +62,7 @@ class MFAMethodConfirmActivationView(APIView):
             name=method,
             code=serializer.validated_data["code"],
         )
+        user_2fa_enabled.send(sender=request.user.__class__, user=request.user)
         return Response({"backup_codes": backup_codes})
 
 
@@ -74,6 +76,7 @@ class MFAMethodDeactivationView(APIView):
                 mfa_method_name=method,
                 user_id=request.user.id,  # type: ignore[arg-type]
             )
+            user_2fa_disabled.send(sender=request.user.__class__, user=request.user)
             return Response(status=HTTP_204_NO_CONTENT)
         except MFAValidationError as cause:
             return ErrorResponse(error=cause)

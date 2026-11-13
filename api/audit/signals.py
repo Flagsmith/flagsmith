@@ -8,6 +8,8 @@ from django.dispatch import receiver
 
 from audit.constants import (
     OAUTH_PROVIDER_NAMES,
+    USER_2FA_DISABLED_MESSAGE,
+    USER_2FA_ENABLED_MESSAGE,
     USER_LOGGED_IN_WITH_2FA_MESSAGE,
     USER_LOGGED_IN_WITH_OAUTH_MESSAGE,
     USER_LOGGED_IN_WITHOUT_2FA_MESSAGE,
@@ -22,6 +24,8 @@ from audit.related_object_type import RelatedObjectType
 from audit.serializers import AuditLogListSerializer
 from audit.services import get_audited_instance_from_audit_log_record
 from custom_auth.signals import (
+    user_2fa_disabled,
+    user_2fa_enabled,
     user_login_2fa_code_rejected,
     user_login_2fa_code_verified,
     user_login_oauth_completed,
@@ -312,6 +316,24 @@ def create_user_login_oauth_completed_audit_logs(
     _create_user_audit_logs(
         user, USER_LOGGED_IN_WITH_OAUTH_MESSAGE % (user.email, provider_name)
     )
+
+
+@receiver(user_2fa_enabled)
+def create_user_2fa_enabled_audit_logs(
+    sender: type[FFAdminUser],
+    user: FFAdminUser,
+    **kwargs: Any,
+) -> None:
+    _create_user_audit_logs(user, USER_2FA_ENABLED_MESSAGE % user.email)
+
+
+@receiver(user_2fa_disabled)
+def create_user_2fa_disabled_audit_logs(
+    sender: type[FFAdminUser],
+    user: FFAdminUser,
+    **kwargs: Any,
+) -> None:
+    _create_user_audit_logs(user, USER_2FA_DISABLED_MESSAGE % user.email)
 
 
 @receiver(user_logged_out)
