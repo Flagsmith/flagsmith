@@ -108,12 +108,6 @@ Once published, a release pipeline cannot be modified. Ensure your configuration
 
 ## Adding Flags to Release Pipelines
 
-:::warning
-
-Release Pipelines don't revert changes that earlier stages have made. An [abort condition](#aborting-a-pipeline) can turn a flag off if it becomes unhealthy, but values set by earlier stages stay as they are.
-
-:::
-
 ### From the Dashboard
 
 1. Navigate to your feature flags.

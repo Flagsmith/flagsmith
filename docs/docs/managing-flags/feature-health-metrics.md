@@ -109,7 +109,7 @@ You can use the webhook in your custom integration. Refer to the payload schema 
 
 ## Stopping releases on unhealthy features
 
-A [Release Pipeline](/managing-flags/release-pipeline#aborting-a-pipeline) can use Feature Health as a kill switch. If a feature becomes unhealthy in an environment while it waits in a pipeline stage for that environment, the feature is turned off in that environment and removed from the pipeline.
+A Release Pipeline can use Feature Health as a kill switch. Learn how to configure it [here](/managing-flags/release-pipeline#aborting-a-pipeline).
 
 ---
 
