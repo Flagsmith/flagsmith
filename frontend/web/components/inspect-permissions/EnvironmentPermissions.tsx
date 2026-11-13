@@ -1,5 +1,5 @@
 import ExpandablePermissionsList from './ExpandablePermissionsList'
-import { useEnvironmentsByName } from 'common/hooks/useEnvironmentsByName'
+import { useSortedProjectEnvironments } from 'common/hooks/useSortedProjectEnvironments'
 import EnvironmentsLoadState from 'components/EnvironmentsLoadState'
 import PanelSearch from 'components/PanelSearch'
 
@@ -14,7 +14,7 @@ const EnvironmentPermissions = ({
   searchEnvironment = '',
   userId,
 }: EnvironmentPermissionsProps) => {
-  const { environments, isError, isLoading } = useEnvironmentsByName(
+  const { environments, isError, isLoading } = useSortedProjectEnvironments(
     Number(projectId) || undefined,
   )
 

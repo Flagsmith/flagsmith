@@ -8,7 +8,7 @@ import Utils from 'common/utils/utils'
 import RolePermissionsList from './RolePermissionsList'
 import ProjectFilter from './ProjectFilter'
 import OrganisationStore from 'common/stores/organisation-store'
-import { useEnvironmentsByName } from 'common/hooks/useEnvironmentsByName'
+import { useSortedProjectEnvironments } from 'common/hooks/useSortedProjectEnvironments'
 import PlanBasedAccess from './PlanBasedAccess'
 import WarningMessage from './WarningMessage'
 import EnvironmentsLoadState from './EnvironmentsLoadState'
@@ -38,7 +38,7 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
   const [searchEnv, setSearchEnv] = useState<string>('')
   const projectData: Project[] | undefined = OrganisationStore.getProjects()
   const [project, setProject] = useState<string>('')
-  const { environments, isError, isLoading } = useEnvironmentsByName(
+  const { environments, isError, isLoading } = useSortedProjectEnvironments(
     Number(project) || undefined,
   )
 

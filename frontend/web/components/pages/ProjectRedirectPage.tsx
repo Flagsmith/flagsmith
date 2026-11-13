@@ -1,6 +1,6 @@
 import { FC } from 'react'
 import { Redirect } from 'react-router-dom'
-import { useEnvironmentsByName } from 'common/hooks/useEnvironmentsByName'
+import { useSortedProjectEnvironments } from 'common/hooks/useSortedProjectEnvironments'
 import Utils from 'common/utils/utils'
 import { getProjectLandingPath } from 'common/utils/projectLandingPath'
 import ConfigProvider from 'common/providers/ConfigProvider'
@@ -8,7 +8,7 @@ import { useRouteContext } from 'components/providers/RouteContext'
 
 const ProjectRedirectPage: FC = () => {
   const { projectId } = useRouteContext()
-  const { environments, isError } = useEnvironmentsByName(projectId)
+  const { environments, isError } = useSortedProjectEnvironments(projectId)
 
   if (isError) {
     return <Redirect to={Utils.getOrganisationHomePage()} />
