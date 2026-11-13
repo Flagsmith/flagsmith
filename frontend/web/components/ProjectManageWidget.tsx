@@ -1,4 +1,5 @@
 import React, { FC, useCallback, useEffect, useMemo } from 'react'
+import { colorIconSecondary } from 'common/theme/tokens'
 import { Link } from 'react-router-dom'
 import { useHistory, useLocation } from 'react-router-dom'
 
@@ -137,7 +138,7 @@ const ProjectManageWidget: FC<SegmentsPageType> = ({ organisationId }) => {
                                       <Icon
                                         name='plus'
                                         width={32}
-                                        fill='var(--color-icon-secondary)'
+                                        fill={colorIconSecondary}
                                       />
                                     </div>
                                     <div className='font-weight-medium btn-project-title'>
@@ -209,7 +210,7 @@ const ProjectManageWidget: FC<SegmentsPageType> = ({ organisationId }) => {
                                   <Icon
                                     name='plus'
                                     width={32}
-                                    fill='var(--color-icon-secondary)'
+                                    fill={colorIconSecondary}
                                   />
                                 </div>
                                 <div className='font-weight-medium'>
