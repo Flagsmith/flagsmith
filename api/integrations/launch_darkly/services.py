@@ -174,6 +174,14 @@ def _ld_operator_to_flagsmith_operator(ld_operator: str) -> Optional[ConditionOp
     }.get(ld_operator, None)
 
 
+def _to_unanchored_regex(pattern: str) -> str:
+    # Launch Darkly searches for `matches` patterns anywhere in the value, while Flagsmith matches from the
+    # start only. Leading inline flags such as `(?i)` must stay at the start of the expression.
+    flags = re.match(r"(?:\(\?[a-zA-Z]+\))+", pattern)
+    prefix = flags.group() if flags else ""
+    return f"{prefix}[\\s\\S]*(?:{pattern[len(prefix) :]})"
+
+
 def _convert_ld_values(values: list[str], ld_operator: str) -> list[str]:
     """
     Convert "values" of a Launch Darkly clause to Flagsmith compatible values. Some matching is converted to
@@ -201,6 +209,8 @@ def _convert_ld_values(values: list[str], ld_operator: str) -> list[str]:
             return [".*" + re.escape(value) + "$" for value in values]
         case "startsWith":
             return ["^" + re.escape(value) for value in values]
+        case "matches":
+            return [_to_unanchored_regex(value) for value in values]
         case "semVerEqual" | "semVerLessThan" | "semVerGreaterThan":
             return [value + ":semver" for value in values]
         case _:
