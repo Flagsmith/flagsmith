@@ -311,8 +311,6 @@ export type Project = {
   total_segments?: number
   only_allow_lower_case_feature_names?: boolean
   feature_name_regex?: string | null
-  // Filled in by the Flux project store, not returned by the API
-  environments?: Environment[]
 }
 export type ImportStrategy = 'SKIP' | 'OVERWRITE_DESTRUCTIVE'
 

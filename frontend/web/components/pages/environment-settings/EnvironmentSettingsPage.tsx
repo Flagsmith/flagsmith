@@ -16,7 +16,6 @@ import ColourSelect from 'components/tags/ColourSelect'
 import Constants from 'common/constants'
 import Switch from 'components/Switch'
 import Icon from 'components/icons/Icon'
-import find from 'lodash/find'
 import PageTitle from 'components/PageTitle'
 import { getStore } from 'common/store'
 import { getRoles } from 'common/services/useRole'
@@ -58,6 +57,10 @@ const showDisabledFlagOptions: { label: string; value: boolean | null }[] = [
   { label: 'Disabled', value: false },
   { label: 'Enabled', value: true },
 ]
+
+// ProjectStore is untyped JS; this keeps its environment lookup typed
+const getStoreEnvironment = (apiKey: string): Environment | undefined =>
+  ProjectStore.getEnvironment(apiKey) ?? undefined
 
 const EnvironmentSettingsPage: React.FC = () => {
   const [createWebhook] = useCreateWebhookMutation()
@@ -317,7 +320,6 @@ const EnvironmentSettingsPage: React.FC = () => {
       'Remove Webhook',
       <ConfirmRemoveWebhook
         environmentId={match.params.environmentId}
-        projectId={projectId}
         url={webhook.url}
         cb={() =>
           deleteWebhook({
@@ -387,10 +389,8 @@ const EnvironmentSettingsPage: React.FC = () => {
         onRemove={onRemove}
         onSave={onSave}
       >
-        {({ deleteEnv, isLoading, isSaving, project }) => {
-          const env = find(project?.environments, {
-            api_key: match.params.environmentId,
-          })
+        {({ deleteEnv, isLoading, isSaving }) => {
+          const env = getStoreEnvironment(match.params.environmentId)
           if (
             (env &&
               typeof env?.minimum_change_request_approvals === 'undefined') ||
@@ -614,9 +614,9 @@ const EnvironmentSettingsPage: React.FC = () => {
                           <Button
                             id='delete-env-btn'
                             onClick={() => {
-                              const envToRemove = find(project?.environments, {
-                                api_key: match.params.environmentId,
-                              })
+                              const envToRemove = getStoreEnvironment(
+                                match.params.environmentId,
+                              )
                               if (!envToRemove) return
                               confirmRemove(envToRemove, () => {
                                 deleteEnv(envToRemove)

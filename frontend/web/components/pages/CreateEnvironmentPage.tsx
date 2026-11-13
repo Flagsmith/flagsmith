@@ -29,6 +29,9 @@ import { useGetRolesQuery } from 'common/services/useRole'
 import { useCreateEnvironmentUserPermissionMutation } from 'common/services/useUserPermissions'
 import { useCreateEnvironmentRolePermissionMutation } from 'common/services/useRolePermission'
 import { useRouteContext } from 'components/providers/RouteContext'
+import { skipToken } from '@reduxjs/toolkit/query'
+import { useGetAllEnvironmentsQuery } from 'common/services/useEnvironment'
+import { sortEnvironmentsByName } from 'common/utils/sortEnvironmentsByName'
 import { ProjectPermission } from 'common/types/permissions.types'
 
 const CreateEnvironmentPage: React.FC = () => {
@@ -47,6 +50,12 @@ const CreateEnvironmentPage: React.FC = () => {
 
   const history = useHistory()
   const { projectId } = useRouteContext()
+  const { data: projectEnvironments } = useGetAllEnvironmentsQuery(
+    projectId ? { projectId } : skipToken,
+  )
+  const environments = projectEnvironments
+    ? sortEnvironmentsByName(projectEnvironments)
+    : []
 
   // ProjectProvider wires onSave into a Flux listener once on mount, so any
   // state we read in the saved handler is stale. Mirror selections into refs.
@@ -220,7 +229,7 @@ const CreateEnvironmentPage: React.FC = () => {
           const showAdminSelector = showUserSelector || showRoleSelector
           return (
             <ProjectProvider id={projectId} onSave={onSave}>
-              {({ createEnv, error, isSaving, project }) => {
+              {({ createEnv, error, isSaving }) => {
                 const busy = isSaving || assigningAdmins
                 return (
                   <form
@@ -260,7 +269,7 @@ const CreateEnvironmentPage: React.FC = () => {
                         />
                       </CondensedRow>
                       <CondensedRow>
-                        {!!project?.environments?.length && (
+                        {!!environments.length && (
                           <InputGroup
                             tooltip='This will copy feature enabled states and remote config values from the selected environment.'
                             title='Clone from environment'
@@ -268,12 +277,12 @@ const CreateEnvironmentPage: React.FC = () => {
                               <Select
                                 onChange={(env: { value: string }) => {
                                   setSelectedEnv(
-                                    project?.environments?.find(
+                                    environments.find(
                                       (v) => v.api_key === env.value,
                                     ),
                                   )
                                 }}
-                                options={project.environments.map((env) => ({
+                                options={environments.map((env) => ({
                                   label: env.name,
                                   value: env.api_key,
                                 }))}

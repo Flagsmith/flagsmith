@@ -323,7 +323,6 @@ const IdentityPage: FC = () => {
                       {!preventAddTrait && (
                         <IdentityTraits
                           environmentId={environmentId}
-                          projectId={projectId}
                           identityId={id}
                           identityName={identity?.identity?.identifier || id}
                         />
