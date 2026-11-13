@@ -75,7 +75,10 @@ const getTooltip = (
         disabled
           ? 'This feature is available with our <strong>Enterprise</strong> plan. '
           : ''
-      }A feature is marked as stale if no changes have been made to it in any environment within ${stale_flags_limit_days} days. This is automatically applied and will be re-evaluated if you remove this tag unless you apply a permanent tag to the feature.`
+      }A feature is marked as stale if no changes have been made to it in any environment${
+        // Left out until the project's limit has loaded
+        stale_flags_limit_days ? ` within ${stale_flags_limit_days} days` : ''
+      }. This is automatically applied and will be re-evaluated if you remove this tag unless you apply a permanent tag to the feature.`
       break
     }
     default:
