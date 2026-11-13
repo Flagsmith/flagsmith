@@ -131,7 +131,12 @@ test.describe('Change Request Page', () => {
       'Change for a deleted feature',
     )
 
-    log('Delete the feature')
+    log('Open the change request while the feature still exists')
+    await helpers.gotoChangeRequests()
+    await helpers.openChangeRequest(0)
+    await expect(page.getByText(featureName).first()).toBeVisible()
+
+    log('Delete the feature, without a reload')
     await helpers.gotoFeatures()
     await helpers.deleteFeature(featureName)
 
@@ -143,6 +148,8 @@ test.describe('Change Request Page', () => {
         'This change request contains changes for a feature that has since been deleted',
       ),
     ).toBeVisible()
+    log('Nothing left to approve or publish')
+    await expect(page.getByText(/approval to publish this change/)).toHaveCount(0)
   })
 
   test('Opening another change request shows its own changes @enterprise', async ({
