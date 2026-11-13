@@ -278,7 +278,7 @@ Attributes:
 ### `feature_health.feature_health_event_dismissal_not_supported`
 
 Logged at `warning` from:
- - `api/features/feature_health/services.py:137`
+ - `api/features/feature_health/services.py:136`
 
 Attributes:
  - `feature_health_event_external_id`
