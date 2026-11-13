@@ -300,6 +300,12 @@ input[type='checkbox'] {
     margin: 0;
     opacity: 0;
     pointer-events: none;
+
+    // The focus styles below drop the ring once checked, so keyboard focus gets its own
+    &:focus-visible + label .checkbox {
+      outline: 2px solid var(--color-border-action);
+      outline-offset: 2px;
+    }
   }
 
   & + label {
