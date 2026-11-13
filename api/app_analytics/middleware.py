@@ -1,5 +1,7 @@
 from typing import Callable
 
+from common.core.utils import is_saas
+from django.conf import settings
 from django.http import HttpRequest, HttpResponse
 
 from app_analytics.mappers import map_request_to_labels
@@ -30,9 +32,22 @@ class APIUsageMiddleware:
         get_response: Callable[[HttpRequest], HttpResponse],
     ) -> None:
         self.get_response = get_response
+        # The Edge Proxy reports its own usage. Only skip requests the
+        # edge_control_plane app verifies by their X-Proxy-Key; otherwise any
+        # client could add the header to avoid being counted.
+        self.is_valid_edge_proxy_request: Callable[[HttpRequest], bool] | None = None
+        if settings.EDGE_CONTROL_PLANE_INSTALLED and not is_saas():
+            from edge_control_plane.authentication import (
+                is_valid_edge_proxy_request,
+            )
+
+            self.is_valid_edge_proxy_request = is_valid_edge_proxy_request
 
     def __call__(self, request: HttpRequest) -> HttpResponse:
-        if environment_key := request.headers.get("X-Environment-Key"):
+        if (environment_key := request.headers.get("X-Environment-Key")) and not (
+            self.is_valid_edge_proxy_request is not None
+            and self.is_valid_edge_proxy_request(request)
+        ):
             track_usage_by_resource_host_and_environment(
                 resource=get_resource_from_uri(request.path),
                 host=request.get_host(),
