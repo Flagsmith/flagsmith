@@ -59,6 +59,10 @@ const CreateEnvironmentPage: React.FC = () => {
   const environments = projectEnvironments
     ? sortEnvironmentsByName(projectEnvironments)
     : []
+  // A selection made under another project is ignored, so a clone never crosses projects
+  const cloneSource = environments.find(
+    (env) => env.api_key === selectedEnv?.api_key,
+  )
 
   // ProjectProvider wires onSave into a Flux listener once on mount, so any
   // state we read in the saved handler is stale. Mirror selections into refs.
@@ -178,7 +182,7 @@ const CreateEnvironmentPage: React.FC = () => {
       if (name && !busy && projectId) {
         createEnv({
           cloneFeatureStatesAsync: true,
-          cloneId: selectedEnv?.api_key,
+          cloneId: cloneSource?.api_key,
           description,
           metadata,
           name,
@@ -307,10 +311,10 @@ const CreateEnvironmentPage: React.FC = () => {
                                   value: env.api_key,
                                 }))}
                                 value={
-                                  selectedEnv
+                                  cloneSource
                                     ? {
-                                        label: selectedEnv.name,
-                                        value: selectedEnv.api_key,
+                                        label: cloneSource.name,
+                                        value: cloneSource.api_key,
                                       }
                                     : { label: 'Please select an environment' }
                                 }
@@ -455,7 +459,7 @@ const CreateEnvironmentPage: React.FC = () => {
                                   AccountStore.getOrganisation().id
                                 }
                                 projectId={projectId}
-                                entityId={selectedEnv?.api_key}
+                                entityId={cloneSource?.api_key}
                                 envName={name}
                                 entityContentType={envContentType.id}
                                 entity={envContentType.model}
