@@ -67,7 +67,6 @@ def create_feature_health_events_from_provider(
     project = provider.project
     events_to_create = []
     feature_ids_to_update = set()
-    # Keyed for de-duplication; dicts keep the order events were received in.
     updated_feature_environments: dict[tuple[Feature, Environment | None], None] = {}
     if response:
         for event_data in response.events:
