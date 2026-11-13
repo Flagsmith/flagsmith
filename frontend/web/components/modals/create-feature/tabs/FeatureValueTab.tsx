@@ -8,6 +8,7 @@ import { AddVariationButton } from 'components/mv/AddVariationButton'
 import ErrorMessage from 'components/ErrorMessage'
 import InfoMessage from 'components/InfoMessage'
 import WarningMessage from 'components/WarningMessage'
+import Banner from 'components/base/Banner'
 import Tooltip from 'components/Tooltip'
 import Icon from 'components/icons/Icon'
 import Switch from 'components/Switch'
@@ -65,6 +66,9 @@ type FeatureValueTabProps = {
   isVersioned?: boolean
   isSaving?: boolean
   existingChangeRequest?: boolean
+  // When true, a warning banner is shown explaining the flag is served off due
+  // to unmet prerequisites.
+  isBlockedByDependencies?: boolean
   onSaveFeatureValue?: (schedule?: boolean) => void
   hasVariationChanges?: boolean
   onSaveVariationValues?: () => void
@@ -97,6 +101,7 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
   hasVariationChanges,
   identity,
   is4Eyes,
+  isBlockedByDependencies,
   isSaving,
   isVersioned,
   noPermissions,
@@ -373,6 +378,26 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
           projectId={projectId}
           environmentId={environmentId}
         />
+      )}
+      {!!isBlockedByDependencies && (
+        <Banner
+          type='warning'
+          className='mb-4'
+          title='Served off by dependencies'
+        >
+          This flag is currently forced off because one or more of its
+          prerequisites are not met.{' '}
+          {existingChangeRequest ? (
+            <>
+              Open the feature's <strong>Dependencies</strong> tab outside this
+              change request for details.
+            </>
+          ) : (
+            <>
+              See the <strong>Dependencies</strong> tab for details.
+            </>
+          )}
+        </Banner>
       )}
       <FormGroup className='mb-4'>
         <Tooltip

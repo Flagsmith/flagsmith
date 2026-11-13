@@ -36,6 +36,9 @@ const TabButton = React.forwardRef<HTMLButtonElement | null, TabButtonProps>(
               <ColorSwatch color={colorIconWarning} shape='circle' size='sm' />
             </span>
           )}
+          {child.props.tabBadge !== undefined && (
+            <span className='btn-tab__badge'>{child.props.tabBadge}</span>
+          )}
         </span>
       </Button>
     )

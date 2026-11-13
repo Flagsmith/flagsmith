@@ -8,5 +8,9 @@ export {
   DependentsEmptyState,
   PrerequisitesEmptyState,
 } from './DependenciesEmptyStates'
-export { toPrerequisiteRow } from './prerequisiteState'
+export {
+  countMetPrerequisites,
+  isBlocked,
+  toPrerequisiteRow,
+} from './prerequisiteState'
 export type { PrerequisiteRow } from './prerequisiteState'

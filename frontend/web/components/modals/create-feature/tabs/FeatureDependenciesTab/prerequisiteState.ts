@@ -28,6 +28,14 @@ export const toPrerequisiteRow = (
 })
 
 // Each prerequisite gets its own segment, so segment id is the order added.
+export const hasPrerequisiteStates = (
+  edges: DependencyEdge[],
+  features: ProjectFlag[],
+): boolean => {
+  const featureIds = new Set(features.map((feature) => feature.id))
+  return edges.every((edge) => featureIds.has(edge.prerequisite.id))
+}
+
 export const toPrerequisiteRows = (
   edges: DependencyEdge[],
   features: ProjectFlag[],
@@ -74,6 +82,16 @@ export const withStagedChanges = (
 
 export const isBlocked = (rows: PrerequisiteRow[]): boolean =>
   rows.some((row) => row.isMet === false)
+
+// Returns the number of judged prerequisites that are met, out of the total
+// number of judged prerequisites. Returns null when there are no judged rows.
+export const countMetPrerequisites = (
+  rows: PrerequisiteRow[],
+): { met: number; total: number } | null => {
+  const judged = rows.filter((row) => row.isMet !== undefined)
+  if (!judged.length) return null
+  return { met: judged.filter((row) => row.isMet).length, total: judged.length }
+}
 
 export const describeOffCount = (rows: PrerequisiteRow[]): string => {
   const total = rows.length

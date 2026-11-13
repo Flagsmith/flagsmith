@@ -1,6 +1,7 @@
 import { DependencyEdge, ProjectFlag } from 'common/types/responses'
 import {
   describeOffCount,
+  hasPrerequisiteStates,
   isBlocked,
   toPrerequisiteRow,
   toPrerequisiteRows,
@@ -55,6 +56,20 @@ describe('toPrerequisiteRow', () => {
   it('keeps the prerequisite state whether or not it can be judged', () => {
     expect(
       toPrerequisiteRow(edge(10, { isSystem: false }), true).isEnabled,
+    ).toBe(true)
+  })
+})
+
+describe('hasPrerequisiteStates', () => {
+  it('waits until each prerequisite is present in the feature list', () => {
+    expect(
+      hasPrerequisiteStates([edge(11), edge(12)], [feature(11, true)]),
+    ).toBe(false)
+    expect(
+      hasPrerequisiteStates(
+        [edge(11), edge(12)],
+        [feature(11, true), feature(12, false)],
+      ),
     ).toBe(true)
   })
 })

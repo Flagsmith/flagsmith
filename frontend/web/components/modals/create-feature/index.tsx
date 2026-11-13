@@ -48,6 +48,11 @@ import SegmentOverridesTab, {
 import UsageTab from './tabs/UsageTab'
 import FeatureDependenciesTab from './tabs/FeatureDependenciesTab'
 import { useStagedPrerequisites } from './tabs/FeatureDependenciesTab/hooks/useStagedPrerequisites'
+import { useDependencies } from './tabs/FeatureDependenciesTab/hooks/useDependencies'
+import {
+  countMetPrerequisites,
+  isBlocked,
+} from './tabs/FeatureDependenciesTab/prerequisiteState'
 import FeatureLimitAlert from './components/FeatureLimitAlert'
 import FeatureUpdateSummary from './components/FeatureUpdateSummary'
 import FeatureNameInput from './components/FeatureNameInput'
@@ -162,6 +167,22 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
     projectFlag,
   })
   const dependenciesChanged = !!dependencyChanges.staged.length
+
+  // Share the same RTK Query cache as FeatureDependenciesTab (no extra fetch).
+  // Used to show the blocked-by-dependencies notice in the Value tab and the
+  // met/total badge on the Dependencies tab.
+  const { isReady: areDependenciesReady, rows: prerequisiteRows } =
+    useDependencies({
+      environmentId,
+      featureId: projectFlag.id,
+      projectId,
+      skip: !projectFlag.id || Boolean(identity),
+    })
+  const prerequisitesMet = areDependenciesReady
+    ? countMetPrerequisites(prerequisiteRows)
+    : undefined
+  const isBlockedByDependencies =
+    areDependenciesReady && isBlocked(prerequisiteRows)
   const focusTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const close = useCallback(() => {
@@ -828,6 +849,7 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                       isVersioned={isVersioned}
                       isSaving={isSaving}
                       existingChangeRequest={!!existingChangeRequest}
+                      isBlockedByDependencies={isBlockedByDependencies}
                       hasVariationChanges={hasVariationChanges}
                       onSaveVariationValues={onSaveVariationValues}
                       originalMultivariateOptions={originalMultivariateOptions}
@@ -881,6 +903,11 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                       data-test='feature_dependencies'
                       tabLabel='Dependencies'
                       isDirty={dependenciesChanged}
+                      tabBadge={
+                        prerequisitesMet
+                          ? `${prerequisitesMet.met}/${prerequisitesMet.total}`
+                          : undefined
+                      }
                     >
                       <FeatureDependenciesTab
                         environmentId={environmentId}
