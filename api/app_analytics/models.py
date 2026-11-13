@@ -94,10 +94,11 @@ class AbstractBucket(LifecycleModelMixin, models.Model):  # type: ignore[misc]
 
 class APIUsageBucket(AbstractBucket):
     resource = models.IntegerField(choices=Resource.choices)
+    host = models.CharField(max_length=255, default="")
 
     @hook(BEFORE_CREATE)
     def check_overlapping_buckets(self):  # type: ignore[no-untyped-def]
-        filter = models.Q(resource=self.resource)
+        filter = models.Q(resource=self.resource, host=self.host)
         super().check_overlapping_buckets(filter)  # type: ignore[no-untyped-call]
 
 
