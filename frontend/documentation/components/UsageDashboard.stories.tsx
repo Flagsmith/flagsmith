@@ -108,7 +108,7 @@ const subscriptionOf = (values: Partial<Subscription>): Subscription =>
     payment_method: null,
     plan: 'scale-up',
     ...values,
-  } as Subscription)
+  }) as Subscription
 
 type HarnessProps = {
   subscription: Subscription
@@ -122,6 +122,7 @@ type HarnessProps = {
   organisation?: Partial<
     Pick<
       Organisation,
+      | 'api_limit_access_blocked'
       | 'api_limit_grace_period_used'
       | 'api_limit_restriction_enabled'
       | 'overage_billing_eligible'
@@ -341,13 +342,15 @@ export const FreeAndRestricted: Story = {
   args: {
     isRestricted: true,
     limit: 50000,
-    organisation: { stop_serving_flags: true },
+    organisation: {
+      api_limit_access_blocked: true,
+      stop_serving_flags: true,
+    },
     subscription: subscriptionOf({ plan: 'free' }),
   },
 }
 
-// The block outlives the overage, and support can set it by hand, so with
-// nothing in evidence the banner promises nothing.
+// Support can block access by hand, so there may be no API overage to show.
 export const RestrictedWithNoOverageInEvidence: Story = {
   args: {
     isRestricted: true,

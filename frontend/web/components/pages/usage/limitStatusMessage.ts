@@ -19,11 +19,12 @@ const RESTRICTED_TITLE = 'Your organisation is restricted'
 const STAYS_VISIBLE =
   'Your usage stays visible below so you can see what happened.'
 const FLAGS_PAUSED = 'Flags are not being served for your organisation.'
-// The API does not say whether the block came from API usage or support,
-// so this holds for both.
-const RECOVERY =
-  'If this is due to API usage, access returns after 30 days under the' +
-  ' limit or on upgrade. Otherwise, contact support.'
+// An APILimitAccessBlock lifts itself once usage drops; a block set by
+// support has to be lifted by support.
+const API_LIMIT_RECOVERY =
+  'Access returns after 30 days under the limit or on upgrade.'
+const SUPPORT_RECOVERY =
+  'Only support can lift this block, so contact support to get access back.'
 
 type OverLimitKind = Exclude<LimitStatusKind, 'restricted'>
 
@@ -55,7 +56,7 @@ export const limitStatusMessage = (
       body: joinSentences(
         status.flagsPaused && FLAGS_PAUSED,
         status.over && limitReached(status.over),
-        RECOVERY,
+        status.apiLimitAccessBlocked ? API_LIMIT_RECOVERY : SUPPORT_RECOVERY,
       ),
       title: RESTRICTED_TITLE,
     }
