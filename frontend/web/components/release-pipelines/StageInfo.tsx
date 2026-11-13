@@ -30,6 +30,9 @@ const getTriggerText = (
       <span>
         Wait for {moment.duration(triggerBody?.wait_for).humanize()} to proceed
         to next action
+        {triggerBody?.abort_if?.unhealthy && (
+          <>, or abort if the flag becomes unhealthy</>
+        )}
       </span>
     )
   }
