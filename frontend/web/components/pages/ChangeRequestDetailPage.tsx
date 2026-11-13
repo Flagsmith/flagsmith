@@ -1,7 +1,6 @@
 import { FC, ReactNode, useEffect, useMemo, useState } from 'react'
 import Icon from 'components/icons/Icon'
 import OrganisationStore from 'common/stores/organisation-store'
-import ChangeRequestStore from 'common/stores/change-requests-store'
 import FeatureListStore from 'common/stores/feature-list-store'
 import { useGetMyGroupsQuery } from 'common/services/useMyGroup'
 import CreateFeatureModal from 'components/modals/create-feature'
@@ -44,6 +43,8 @@ import { useHistory } from 'react-router-dom'
 import { openPublishChangeRequestConfirm } from 'components/PublishChangeRequestModal'
 import { getChangeRequestLiveDate } from 'common/utils/getChangeRequestLiveDate'
 import { EnvironmentPermission } from 'common/types/permissions.types'
+import { useChangeRequestDetail } from 'common/hooks/useChangeRequestDetail'
+import { useChangeRequestActions } from 'common/hooks/useChangeRequestActions'
 
 type ChangeRequestPageType = {
   match: {
@@ -60,21 +61,18 @@ const ChangeRequestDetailPage: FC<ChangeRequestPageType> = ({ match }) => {
   const { environmentId, id, projectId } = match.params
   const [_, setUpdate] = useState(Date.now())
   const [updateChangeRequest] = useUpdateChangeRequestMutation()
-  const error = ChangeRequestStore.error
-  const changeRequest = (
-    ChangeRequestStore.model as Record<string, ChangeRequest> | undefined
-  )?.[id]
-  const flags = (
-    ChangeRequestStore.flags as Record<
-      string,
-      {
-        environmentFlag: FeatureState
-        projectFlag: ProjectFlag
-      }
-    >
-  )[id]
-  const environmentFlag = flags?.environmentFlag
-  const projectFlag = flags && flags.projectFlag
+  const {
+    changeRequest,
+    environmentFlag,
+    isFetching,
+    loadError,
+    notFound,
+    projectFlag,
+  } = useChangeRequestDetail({ environmentId, id, projectId })
+  const { actionError, approve, commit, isActing, remove, updateAssignees } =
+    useChangeRequestActions(id)
+  const isUpdating = isFetching || isActing
+  const error = actionError || loadError
   const approvePermission = useHasPermission({
     id: environmentId,
     level: 'environment',
@@ -94,55 +92,41 @@ const ChangeRequestDetailPage: FC<ChangeRequestPageType> = ({ match }) => {
   })
 
   useEffect(() => {
-    AppActions.getChangeRequest(id, projectId, environmentId)
-  }, [id, projectId, environmentId])
-
-  useEffect(() => {
     const forceUpdate = () => {
       setUpdate(Date.now())
     }
-    ChangeRequestStore.on('change', forceUpdate)
     FeatureListStore.on('change', forceUpdate)
     OrganisationStore.on('change', forceUpdate)
 
     return () => {
-      ChangeRequestStore.off('change', forceUpdate)
       FeatureListStore.off('change', forceUpdate)
       OrganisationStore.off('change', forceUpdate)
     }
   }, [])
 
-  const addOwner = (id: number, isUser = true) => {
-    if (ChangeRequestStore.isLoading || !changeRequest) return
-    AppActions.updateChangeRequest({
-      approvals: isUser
-        ? changeRequest.approvals.concat([{ user: id }])
-        : changeRequest.approvals,
-      description: changeRequest.description,
-      feature_states: changeRequest.feature_states,
-      group_assignments: isUser
-        ? changeRequest.group_assignments
-        : changeRequest.group_assignments.concat([{ group: id }]),
-      id: changeRequest.id,
-      title: changeRequest.title,
-    })
+  const updateOwner = (id: number, isUser: boolean, add: boolean) => {
+    // The PUT sends the full lists, so only build them from a fresh load
+    if (!changeRequest || isUpdating || loadError) return
+    const { approvals, group_assignments } = changeRequest
+    updateAssignees(
+      isUser
+        ? {
+            approvals: add
+              ? [...approvals, { user: id }]
+              : approvals.filter((v) => v.user !== id),
+            group_assignments,
+          }
+        : {
+            approvals,
+            group_assignments: add
+              ? [...group_assignments, { group: id }]
+              : group_assignments.filter((v) => v.group !== id),
+          },
+    )
   }
-
-  const removeOwner = (id: number, isUser = true) => {
-    if (ChangeRequestStore.isLoading || !changeRequest) return
-    AppActions.updateChangeRequest({
-      approvals: isUser
-        ? changeRequest.approvals.filter((v) => v.user !== id)
-        : changeRequest.approvals,
-      description: changeRequest.description,
-      feature_states: changeRequest.feature_states,
-      group_assignments: isUser
-        ? changeRequest.group_assignments
-        : changeRequest.group_assignments.filter((v) => v.group !== id),
-      id: changeRequest.id,
-      title: changeRequest.title,
-    })
-  }
+  const addOwner = (id: number, isUser = true) => updateOwner(id, isUser, true)
+  const removeOwner = (id: number, isUser = true) =>
+    updateOwner(id, isUser, false)
 
   const deleteChangeRequest = () => {
     openConfirm({
@@ -153,12 +137,12 @@ const ChangeRequestDetailPage: FC<ChangeRequestPageType> = ({ match }) => {
         </div>
       ),
       destructive: true,
-      onYes: () => {
-        AppActions.deleteChangeRequest(id, () => {
+      onYes: async () => {
+        if (await remove()) {
           history.replace(
             `/project/${projectId}/environment/${environmentId}/change-requests`,
           )
-        })
+        }
       },
       title: 'Delete Change Request',
       yesText: 'Confirm',
@@ -231,10 +215,6 @@ const ChangeRequestDetailPage: FC<ChangeRequestPageType> = ({ match }) => {
     )
   }
 
-  const approveChangeRequest = () => {
-    AppActions.actionChangeRequest(id, 'approve')
-  }
-
   const publishChangeRequest = () => {
     if (!changeRequest) return
 
@@ -257,10 +237,10 @@ const ChangeRequestDetailPage: FC<ChangeRequestPageType> = ({ match }) => {
       environmentId: environment.id,
       isScheduled,
       onYes: (ignore_conflicts) => {
-        const commitChangeRequest = () => {
-          AppActions.actionChangeRequest(id, 'commit', () => {
+        const commitChangeRequest = async () => {
+          if (await commit()) {
             AppActions.refreshFeatures(projectId, environmentId)
-          })
+          }
         }
 
         if (ignore_conflicts) {
@@ -281,7 +261,7 @@ const ChangeRequestDetailPage: FC<ChangeRequestPageType> = ({ match }) => {
     })
   }
 
-  if (error && !changeRequest) {
+  if (notFound) {
     return (
       <div
         data-test='change-requests-page'
@@ -290,6 +270,17 @@ const ChangeRequestDetailPage: FC<ChangeRequestPageType> = ({ match }) => {
       >
         <h3>Change Request not Found</h3>
         <p>The Change Request may have been deleted.</p>
+      </div>
+    )
+  }
+  if (!changeRequest && error) {
+    return (
+      <div
+        data-test='change-requests-page'
+        id='change-requests-page'
+        className='app-container container'
+      >
+        <ErrorMessage error={error} />
       </div>
     )
   }
@@ -323,7 +314,7 @@ const ChangeRequestDetailPage: FC<ChangeRequestPageType> = ({ match }) => {
 
   return (
     <div
-      style={{ opacity: ChangeRequestStore.isLoading ? 0.25 : 1 }}
+      style={{ opacity: isUpdating ? 0.25 : 1 }}
       data-test='change-requests-page'
       id='change-requests-page'
       className='app-container container-fluid mt-1'
@@ -344,7 +335,7 @@ const ChangeRequestDetailPage: FC<ChangeRequestPageType> = ({ match }) => {
         canManageChangeRequests={isEnvironmentAdmin?.permission}
         publishChangeRequest={publishChangeRequest}
         approvePermission={approvePermission?.permission}
-        approveChangeRequest={approveChangeRequest}
+        approveChangeRequest={approve}
         publishPermission={publishPermission?.permission}
         isScheduled={isScheduled}
         changeRequest={changeRequest}
@@ -357,7 +348,7 @@ const ChangeRequestDetailPage: FC<ChangeRequestPageType> = ({ match }) => {
         scheduledDate={getChangeRequestLiveDate(changeRequest)}
         deleteChangeRequest={deleteChangeRequest}
         editChangeRequest={
-          !changeRequest?.committed_at
+          !changeRequest?.committed_at && projectFlag && environmentFlag
             ? () => editChangeRequest(projectFlag, environmentFlag)
             : undefined
         }

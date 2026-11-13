@@ -37,6 +37,7 @@ import { getVersionFeatureState } from 'common/services/useVersionFeatureState'
 import { getFeatureStates } from 'common/services/useFeatureState'
 import { getSegments } from 'common/services/useSegment'
 import {
+  actionChangeRequest,
   changeRequestService,
   updateChangeRequest,
 } from 'common/services/useChangeRequest'
@@ -666,7 +667,6 @@ const controller = {
             : `${Project.api}environments/${environmentId}/create-change-request/`
           return data[reqType](url, req).then(
             (updatedChangeRequest: ChangeRequest) => {
-              let prom = Promise.resolve()
               const shouldUpdateMv =
                 multivariate_options && updatedChangeRequest.feature_states?.[0]
               if (shouldUpdateMv) {
@@ -693,7 +693,7 @@ const controller = {
                   )
               }
 
-              prom = (
+              void (
                 shouldUpdateMv || (commit && ignore_conflicts)
                   ? updateChangeRequest(
                       getStore(),
@@ -705,32 +705,23 @@ const controller = {
                         : updatedChangeRequest,
                     )
                   : Promise.resolve()
-              ).then(() => {
+              ).then(async () => {
                 if (commit) {
-                  AppActions.actionChangeRequest(
-                    updatedChangeRequest.id,
-                    'commit',
-                    () => {
-                      AppActions.refreshFeatures(projectId, environmentId)
-                    },
-                  )
+                  const res = await actionChangeRequest(getStore(), {
+                    actionType: 'commit',
+                    id: `${updatedChangeRequest.id}`,
+                  })
+                  if ('error' in res) {
+                    toast(
+                      'The change request was saved but could not be published',
+                      'danger',
+                    )
+                  } else {
+                    AppActions.refreshFeatures(projectId, environmentId)
+                  }
                 } else {
                   getStore().dispatch(
                     changeRequestService.util.invalidateTags(['ChangeRequest']),
-                  )
-                  AppActions.getChangeRequest(
-                    updatedChangeRequest.id,
-                    projectId,
-                    environmentId,
-                  )
-                }
-              })
-              prom.then(() => {
-                if (featureStateId) {
-                  AppActions.getChangeRequest(
-                    changeRequestData.id,
-                    projectId,
-                    environmentId,
                   )
                 }
               })

@@ -35,6 +35,17 @@ export const featureStateService = service
             baseQuery,
           ),
       }),
+      getEnvironmentFeatureState: builder.query<
+        Res['environmentFeatureState'],
+        Req['getEnvironmentFeatureState']
+      >({
+        providesTags: [{ id: 'LIST', type: 'FeatureState' }],
+        query: ({ environmentId, feature }) => ({
+          url: `environments/${environmentId}/featurestates/?feature=${feature}`,
+        }),
+        transformResponse: (res: PagedResponse<FeatureState>) =>
+          res.results[0] ?? null,
+      }),
       getFeatureStates: builder.query<
         Res['featureStates'],
         Req['getFeatureStates']
@@ -108,6 +119,7 @@ export async function updateFeatureState(
 
 export const {
   useGetAllEnvironmentFeatureStatesQuery,
+  useGetEnvironmentFeatureStateQuery,
   useGetFeatureStatesQuery,
   useUpdateFeatureStateMutation,
 } = featureStateService

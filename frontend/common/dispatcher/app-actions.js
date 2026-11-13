@@ -8,14 +8,6 @@ const AppActions = Object.assign({}, BaseAppActions, {
       id,
     })
   },
-  actionChangeRequest(id, action, cb) {
-    Dispatcher.handleViewAction({
-      action,
-      actionType: Actions.ACTION_CHANGE_REQUEST,
-      cb,
-      id,
-    })
-  },
   changeUserFlag(identity) {
     Dispatcher.handleViewAction({
       actionType: Actions.CHANGE_USER_FLAG,
@@ -59,13 +51,6 @@ const AppActions = Object.assign({}, BaseAppActions, {
     })
   },
 
-  deleteChangeRequest(id, cb) {
-    Dispatcher.handleViewAction({
-      actionType: Actions.DELETE_CHANGE_REQUEST,
-      cb,
-      id,
-    })
-  },
   deleteEnv(env) {
     Dispatcher.handleViewAction({
       actionType: Actions.DELETE_ENVIRONMENT,
@@ -187,14 +172,6 @@ const AppActions = Object.assign({}, BaseAppActions, {
       actionType: Actions.ENABLE_TWO_FACTOR,
     })
   },
-  getChangeRequest(id, projectId, environmentId) {
-    Dispatcher.handleViewAction({
-      actionType: Actions.GET_CHANGE_REQUEST,
-      environmentId,
-      id,
-      projectId,
-    })
-  },
   getIdentity(envId, id) {
     Dispatcher.handleViewAction({
       actionType: Actions.GET_IDENTITY,
@@ -272,12 +249,6 @@ const AppActions = Object.assign({}, BaseAppActions, {
       actionType: Actions.TWO_FACTOR_LOGIN,
       onError,
       pin,
-    })
-  },
-  updateChangeRequest(changeRequest) {
-    Dispatcher.handleViewAction({
-      actionType: Actions.UPDATE_CHANGE_REQUEST,
-      changeRequest,
     })
   },
   updateSubscription(hostedPageId) {

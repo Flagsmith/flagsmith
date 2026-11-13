@@ -1691,6 +1691,9 @@ export type Res = {
   projectChangeRequests: PagedResponse<ChangeRequestSummary>
   projectChangeRequest: ProjectChangeRequest
   actionChangeRequest: {}
+  changeRequest: ChangeRequest
+  // null when the environment has no state for the feature
+  environmentFeatureState: FeatureState | null
   identityTrait: { id: string }
   identityTraits: IdentityTrait[]
   conversionEvents: PagedResponse<ConversionEvent>
