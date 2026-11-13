@@ -1,8 +1,17 @@
 
+### `api_usage.email.send_failed`
+
+Logged at `exception` from:
+ - `api/organisations/task_helpers.py:38`
+
+Attributes:
+ - `email.subject`
+ - `organisation.id`
+
 ### `api_usage.notification.evaluated`
 
 Logged at `info` from:
- - `api/organisations/task_helpers.py:157`
+ - `api/organisations/task_helpers.py:175`
 
 Attributes:
  - `allowed_api_calls`
@@ -16,7 +25,7 @@ Attributes:
 ### `api_usage.notification.missing_billing_starts_at`
 
 Logged at `error` from:
- - `api/organisations/task_helpers.py:122`
+ - `api/organisations/task_helpers.py:140`
 
 Attributes:
  - `organisation.id`
@@ -24,10 +33,97 @@ Attributes:
 ### `api_usage.notification.sent`
 
 Logged at `info` from:
- - `api/organisations/task_helpers.py:180`
+ - `api/organisations/task_helpers.py:198`
 
 Attributes:
  - `matched_threshold`
+ - `organisation.id`
+
+### `api_usage.overage.charge_failed`
+
+Logged at `exception` from:
+ - `api/organisations/tasks.py:331`
+
+Attributes:
+ - `api_overage`
+ - `organisation.id`
+
+### `api_usage.overage.charged`
+
+Logged at `info` from:
+ - `api/organisations/tasks.py:338`
+
+Attributes:
+ - `api_overage`
+ - `organisation.id`
+ - `quantity`
+
+### `api_usage.overage.missing_allowance`
+
+Logged at `error` from:
+ - `api/organisations/tasks.py:229`
+
+Attributes:
+ - `organisation.id`
+
+### `api_usage.overage.missing_subscription_id`
+
+Logged at `error` from:
+ - `api/organisations/tasks.py:310`
+
+Attributes:
+ - `organisation.id`
+
+### `api_usage.overage.skipped`
+
+Logged at `info` from:
+ - `api/organisations/tasks.py:256`
+ - `api/organisations/tasks.py:280`
+
+Attributes:
+ - `allowed_30d_api_calls`
+ - `api_limit`
+ - `api_usage`
+ - `organisation.id`
+ - `reason`
+
+### `api_usage.overage.unknown_plan`
+
+Logged at `error` from:
+ - `api/organisations/tasks.py:324`
+
+Attributes:
+ - `organisation.id`
+ - `subscription.plan`
+
+### `api_usage.restriction.applied`
+
+Logged at `info` from:
+ - `api/organisations/tasks.py:466`
+
+Attributes:
+ - `allowed_30d_api_calls`
+ - `api_usage`
+ - `block_access_to_admin`
+ - `organisation.id`
+ - `stop_serving_flags`
+
+### `api_usage.restriction.failed`
+
+Logged at `exception` from:
+ - `api/organisations/tasks.py:400`
+
+Attributes:
+ - `organisation.id`
+
+### `api_usage.restriction.skipped`
+
+Logged at `info` from:
+ - `api/organisations/tasks.py:447`
+
+Attributes:
+ - `allowed_30d_api_calls`
+ - `api_usage`
  - `organisation.id`
 
 ### `app_analytics.no_analytics_database_configured`

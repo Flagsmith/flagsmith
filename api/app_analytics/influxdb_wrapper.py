@@ -420,7 +420,7 @@ def get_current_api_usage(
 
     :return: number of current api calls
     """
-    bucket = InfluxDBWrapper.get_downsampled_bucket(DownsampleSize.FIFTEEN_MINUTES)
+    bucket = InfluxDBWrapper.select_downsampled_bucket(date_start)
     results = InfluxDBWrapper.influx_query_manager(
         date_start=date_start,
         bucket=bucket,
