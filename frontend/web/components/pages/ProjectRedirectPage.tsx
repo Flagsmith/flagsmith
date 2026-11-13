@@ -10,17 +10,20 @@ import { useRouteContext } from 'components/providers/RouteContext'
 
 const ProjectRedirectPage: FC = () => {
   const { projectId } = useRouteContext()
-  const { data, isError } = useGetAllEnvironmentsQuery(
+  const { currentData, isError } = useGetAllEnvironmentsQuery(
     projectId ? { projectId } : skipToken,
   )
 
   if (isError) {
     return <Redirect to={Utils.getOrganisationHomePage()} />
   }
-  if (projectId && data) {
+  if (projectId && currentData) {
     return (
       <Redirect
-        to={getProjectLandingPath(projectId, sortEnvironmentsByName(data))}
+        to={getProjectLandingPath(
+          projectId,
+          sortEnvironmentsByName(currentData),
+        )}
       />
     )
   }
