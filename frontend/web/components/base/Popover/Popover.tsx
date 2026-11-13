@@ -6,7 +6,6 @@ import {
   FloatingFocusManager,
   FloatingPortal,
   offset,
-  Placement,
   shift,
   size,
   useClick,
@@ -21,11 +20,18 @@ export type PopoverTriggerProps = Record<string, unknown> & {
   ref: (node: Element | null) => void
 }
 
+// Only these have a matching animation origin in Popover.scss.
+export type PopoverPlacement =
+  | 'bottom-start'
+  | 'bottom-end'
+  | 'top-start'
+  | 'top-end'
+
 export type PopoverProps = {
   'aria-label': string
   renderTrigger: (props: PopoverTriggerProps, isOpen: boolean) => ReactNode
   children: ReactNode | ((close: () => void) => ReactNode)
-  placement?: Placement
+  placement?: PopoverPlacement
   className?: string
 }
 
