@@ -1,11 +1,10 @@
-import React, { FC, Ref, useMemo, useState } from 'react'
-import { Project, Role, User, UserGroupSummary } from 'common/types/responses'
+import React, { FC, Ref, useState } from 'react'
+import { Role, User, UserGroupSummary } from 'common/types/responses'
 import Tabs from 'components/navigation/TabMenu/Tabs'
 import TabItem from 'components/navigation/TabMenu/TabItem'
 import Input from 'components/base/forms/Input'
 import Utils from 'common/utils/utils'
 import ProjectFilter from 'components/ProjectFilter'
-import OrganisationStore from 'common/stores/organisation-store'
 import PlanBasedAccess from 'components/PlanBasedAccess'
 import Permissions from './Permissions'
 import ProjectPermissions from './ProjectPermissions'
@@ -30,15 +29,7 @@ const InspectPermissions: FC<InspectPermissionsType> = ({
   value,
 }) => {
   const [searchEnv, setSearchEnv] = useState<string>('')
-  const projectData: Project[] = OrganisationStore.getProjects()
   const [project, setProject] = useState<string>('')
-
-  const environments = useMemo(() => {
-    if (!project || !projectData) {
-      return null
-    }
-    return projectData.find((p) => p.id === parseInt(project))?.environments
-  }, [project, projectData])
 
   if (!orgId) {
     return null
@@ -69,7 +60,7 @@ const InspectPermissions: FC<InspectPermissionsType> = ({
           tabLabel={<Row className='justify-content-center'>Project</Row>}
           data-test='project-permissions-tab'
         >
-          <ProjectPermissions userId={user?.id} />
+          <ProjectPermissions organisationId={orgId} userId={user?.id} />
         </TabItem>
         <TabItem
           tabLabel={<Row className='justify-content-center'>Environment</Row>}
@@ -95,13 +86,11 @@ const InspectPermissions: FC<InspectPermissionsType> = ({
             />
           </div>
           <div className='mt-2'>
-            {environments?.length !== 0 && (
-              <EnvironmentPermissions
-                userId={user?.id}
-                projectId={project}
-                searchEnvironment={searchEnv}
-              />
-            )}
+            <EnvironmentPermissions
+              userId={user?.id}
+              projectId={project}
+              searchEnvironment={searchEnv}
+            />
           </div>
         </TabItem>
       </Tabs>

@@ -18,7 +18,6 @@ import { IdentityTrait } from 'common/types/responses'
 import { EnvironmentPermission } from 'common/types/permissions.types'
 
 type IdentityTraitsType = {
-  projectId: string | number
   environmentId: string
   identityName: string
   identityId: string
@@ -28,7 +27,6 @@ const IdentityTraits: FC<IdentityTraitsType> = ({
   environmentId,
   identityId,
   identityName,
-  projectId,
 }) => {
   const use_edge_identities = Utils.getIsEdge()
 
@@ -60,7 +58,6 @@ const IdentityTraits: FC<IdentityTraitsType> = ({
         identity={identityId}
         identityName={decodeURIComponent(identityName)}
         environmentId={environmentId}
-        projectId={projectId}
       />,
       'p-0',
     )
@@ -76,7 +73,6 @@ const IdentityTraits: FC<IdentityTraitsType> = ({
         identity={identityId}
         identityName={decodeURIComponent(identityName)}
         environmentId={environmentId}
-        projectId={projectId}
       />,
       'p-0',
     )

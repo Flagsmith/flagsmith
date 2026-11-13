@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import IconButton from 'components/base/IconButton'
 import FieldLabel from 'components/base/forms/FieldLabel'
 import ConfirmRemoveEnvironment from 'components/modals/ConfirmRemoveEnvironment'
@@ -16,7 +16,6 @@ import ColourSelect from 'components/tags/ColourSelect'
 import Constants from 'common/constants'
 import Switch from 'components/Switch'
 import Icon from 'components/icons/Icon'
-import find from 'lodash/find'
 import PageTitle from 'components/PageTitle'
 import { getStore } from 'common/store'
 import { getRoles } from 'common/services/useRole'
@@ -77,13 +76,16 @@ const EnvironmentSettingsPage: React.FC = () => {
   const [environmentContentType, setEnvironmentContentType] =
     useState<any>(null)
 
-  const env = useMemo(() => {
-    return (
-      (ProjectStore?.getEnvs() as Environment[] | null | undefined)?.find(
-        (env: Environment) => env.api_key === match.params.environmentId,
-      ) ?? null
-    )
-  }, [match.params.environmentId])
+  // currentData, not data: data keeps the previous environment while the next one loads
+  const { currentData: env } = useGetEnvironmentQuery({
+    id: match.params.environmentId,
+  })
+
+  // Until the form holds the environment in the URL, saving would write the previous one
+  const saveDisabled =
+    ProjectStore.isSaving ||
+    !currentEnv?.name ||
+    currentEnv.api_key !== match.params.environmentId
 
   const { data: webhooks, isLoading: webhooksLoading } = useGetWebhooksQuery(
     { environmentId: match.params.environmentId },
@@ -111,7 +113,7 @@ const EnvironmentSettingsPage: React.FC = () => {
     isFetching: isFetchingEnvironment,
     isSuccess: isSuccessEnvironment,
   } = useGetEnvironmentQuery(
-    { id: env?.api_key ?? '' },
+    { id: match.params.environmentId },
     {
       pollingInterval: currentEnv?.use_v2_feature_versioning ? undefined : 2000,
       skip: isDirty || currentEnv?.use_v2_feature_versioning || !env?.api_key,
@@ -127,10 +129,24 @@ const EnvironmentSettingsPage: React.FC = () => {
       source.active,
   )
 
-  const getEnvironment = useCallback(async () => {
+  // Fill the form once per environment, so polling never overwrites edits
+  useEffect(() => {
     if (!env) return
+    setCurrentEnv({
+      ...env,
+      banner_colour: env.banner_colour || Constants.tagColors[0],
+      hide_disabled_flags: env.hide_disabled_flags || false,
+      minimum_change_request_approvals: Utils.changeRequestsEnabled(
+        env.minimum_change_request_approvals,
+      )
+        ? env.minimum_change_request_approvals
+        : null,
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [env?.api_key])
 
-    setCurrentEnv(env)
+  const getEnvironment = useCallback(async () => {
+    if (!env?.api_key) return
 
     const roles = await getRoles(
       store,
@@ -153,7 +169,7 @@ const EnvironmentSettingsPage: React.FC = () => {
       )
       setEnvironmentContentType(environmentContentType)
     }
-  }, [store, env])
+  }, [store, env?.api_key])
 
   useEffect(() => {
     AppActions.getProject(projectId)
@@ -252,7 +268,7 @@ const EnvironmentSettingsPage: React.FC = () => {
   }
 
   const saveEnv = (newEnv: Partial<Environment> = {}) => {
-    if (ProjectStore.isSaving || !currentEnv?.name) {
+    if (saveDisabled) {
       return
     }
     const editedEnv = { ...currentEnv, ...newEnv }
@@ -317,7 +333,6 @@ const EnvironmentSettingsPage: React.FC = () => {
       'Remove Webhook',
       <ConfirmRemoveWebhook
         environmentId={match.params.environmentId}
-        projectId={projectId}
         url={webhook.url}
         cb={() =>
           deleteWebhook({
@@ -329,8 +344,6 @@ const EnvironmentSettingsPage: React.FC = () => {
       'p-0',
     )
   }
-
-  const saveDisabled = ProjectStore.isSaving || !currentEnv?.name
 
   const confirmToggle = (
     title: string,
@@ -387,43 +400,7 @@ const EnvironmentSettingsPage: React.FC = () => {
         onRemove={onRemove}
         onSave={onSave}
       >
-        {({ deleteEnv, isLoading, isSaving, project }) => {
-          const env = find(project?.environments, {
-            api_key: match.params.environmentId,
-          })
-          if (
-            (env &&
-              typeof env?.minimum_change_request_approvals === 'undefined') ||
-            env?.api_key !== match.params.environmentId
-          ) {
-            setTimeout(() => {
-              const minimumChangeRequestApprovals = Utils.changeRequestsEnabled(
-                env?.minimum_change_request_approvals,
-              )
-              updateCurrentEnv(
-                {
-                  allow_client_traits: !!env?.allow_client_traits,
-                  banner_colour: env?.banner_colour || Constants.tagColors[0],
-                  banner_text: env?.banner_text,
-                  hide_disabled_flags: env?.hide_disabled_flags || false,
-                  hide_sensitive_data: !!env?.hide_sensitive_data,
-                  minimum_change_request_approvals:
-                    minimumChangeRequestApprovals
-                      ? env?.minimum_change_request_approvals
-                      : null,
-                  name: env?.name ?? '',
-                  use_identity_composite_key_for_hashing:
-                    !!env?.use_identity_composite_key_for_hashing,
-                  use_identity_overrides_in_local_eval:
-                    !!env?.use_identity_overrides_in_local_eval,
-                  use_v2_feature_versioning: !!env?.use_v2_feature_versioning,
-                },
-                false,
-                true,
-              )
-            }, 10)
-          }
-
+        {({ deleteEnv, isLoading, isSaving }) => {
           return (
             <>
               <DirtyFormModal />
@@ -613,13 +590,11 @@ const EnvironmentSettingsPage: React.FC = () => {
                           </p>
                           <Button
                             id='delete-env-btn'
+                            disabled={!env}
                             onClick={() => {
-                              const envToRemove = find(project?.environments, {
-                                api_key: match.params.environmentId,
-                              })
-                              if (!envToRemove) return
-                              confirmRemove(envToRemove, () => {
-                                deleteEnv(envToRemove)
+                              if (!env) return
+                              confirmRemove(env, () => {
+                                deleteEnv(env)
                               })
                             }}
                             theme='danger'

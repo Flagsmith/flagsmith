@@ -10,8 +10,6 @@ import Highlight from 'components/Highlight'
 import Constants from 'common/constants'
 import ErrorMessage from 'components/ErrorMessage'
 import ModalHR from './ModalHR'
-import find from 'lodash/find'
-import ProjectProvider from 'common/providers/ProjectProvider'
 import Button from 'components/base/forms/Button'
 import InputGroup from 'components/base/forms/InputGroup'
 import Utils from 'common/utils/utils'
@@ -20,6 +18,7 @@ import {
   useUpdateIdentityTraitMutation,
 } from 'common/services/useIdentityTrait'
 import { FlagsmithValue } from 'common/types/responses'
+import { useGetEnvironmentQuery } from 'common/services/useEnvironment'
 
 type CreateTraitProps = {
   id?: number
@@ -29,7 +28,6 @@ type CreateTraitProps = {
   onSave?: () => void
   identity: string
   isEdit: boolean
-  projectId: string | number
   environmentId: string
 }
 
@@ -40,12 +38,12 @@ const CreateTrait: FC<CreateTraitProps> = ({
   identityName,
   isEdit,
   onSave,
-  projectId,
   trait_key: initialTraitKey = '',
   trait_value: initialTraitValue = '',
 }) => {
   const [traitKey, setTraitKey] = useState<string>(initialTraitKey)
   const [traitValue, setTraitValue] = useState<any>(initialTraitValue)
+  const { data: environment } = useGetEnvironmentQuery({ id: environmentId })
   const use_edge_identities = Utils.getIsEdge()
 
   const [createTrait, { error: createError, isLoading: isCreating }] =
@@ -99,98 +97,85 @@ const CreateTrait: FC<CreateTraitProps> = ({
   const TRAITS_ID_MAXLENGTH = Constants.forms.maxLength.TRAITS_ID
 
   return (
-    <ProjectProvider id={parseInt(projectId?.toString())}>
-      {({ project }: { project: any }) => (
-        <form
-          id='create-trait-modal'
-          onSubmit={(e: FormEvent<HTMLFormElement>) => {
-            e.preventDefault()
-            handleSave()
-          }}
+    <form
+      id='create-trait-modal'
+      onSubmit={(e: FormEvent<HTMLFormElement>) => {
+        e.preventDefault()
+        handleSave()
+      }}
+    >
+      <div className='modal-body'>
+        <FormGroup className='mb-2'>
+          <InputGroup
+            ref={inputRef}
+            inputProps={{
+              className: 'full-width',
+              maxLength: TRAITS_ID_MAXLENGTH,
+              name: 'traitID',
+              readOnly: isEdit,
+            }}
+            value={traitKey}
+            onChange={(e: ChangeEvent<HTMLInputElement>) =>
+              setTraitKey(Utils.safeParseEventValue(e).replace(/ /g, '_'))
+            }
+            isValid={!!traitKey && traitKey.length > 0}
+            type='text'
+            title={isEdit ? 'Trait ID' : 'Trait ID*'}
+            placeholder='E.g. favourite_colour'
+          />
+        </FormGroup>
+        <FormGroup className='mb-2'>
+          <InputGroup
+            textarea
+            inputProps={{
+              className: 'full-width',
+              name: 'traitValue',
+            }}
+            value={traitValue}
+            title='Value'
+            onChange={(
+              e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+            ) =>
+              setTraitValue(Utils.getTypedValue(Utils.safeParseEventValue(e)))
+            }
+            type='text'
+            placeholder="e.g. 'big', true, 1 "
+          />
+        </FormGroup>
+
+        {error && <ErrorMessage error={error} />}
+
+        <p>
+          This will {isEdit ? 'update' : 'create'} a user trait{' '}
+          <strong>{traitKey || ''}</strong> for the user{' '}
+          <strong>{identityName}</strong> in
+          <strong> {environment?.name}</strong>
+        </p>
+
+        <FormGroup className='text-muted'>
+          <label>Example SDK response:</label>
+          <Highlight forceExpanded className='json no-pad'>
+            {JSON.stringify({
+              trait_key: traitKey,
+              trait_value: traitValue,
+            })}
+          </Highlight>
+        </FormGroup>
+      </div>
+      <ModalHR />
+      <div className='modal-footer'>
+        <Button onClick={closeModal} theme='secondary' className='mr-2'>
+          Cancel
+        </Button>
+        <Button
+          id={isEdit ? 'update-trait-btn' : 'create-trait-btn'}
+          type='submit'
+          disabled={isLoading || !traitKey}
         >
-          <div className='modal-body'>
-            <FormGroup className='mb-2'>
-              <InputGroup
-                ref={inputRef}
-                inputProps={{
-                  className: 'full-width',
-                  maxLength: TRAITS_ID_MAXLENGTH,
-                  name: 'traitID',
-                  readOnly: isEdit,
-                }}
-                value={traitKey}
-                onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                  setTraitKey(Utils.safeParseEventValue(e).replace(/ /g, '_'))
-                }
-                isValid={!!traitKey && traitKey.length > 0}
-                type='text'
-                title={isEdit ? 'Trait ID' : 'Trait ID*'}
-                placeholder='E.g. favourite_colour'
-              />
-            </FormGroup>
-            <FormGroup className='mb-2'>
-              <InputGroup
-                textarea
-                inputProps={{
-                  className: 'full-width',
-                  name: 'traitValue',
-                }}
-                value={traitValue}
-                title='Value'
-                onChange={(
-                  e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-                ) =>
-                  setTraitValue(
-                    Utils.getTypedValue(Utils.safeParseEventValue(e)),
-                  )
-                }
-                type='text'
-                placeholder="e.g. 'big', true, 1 "
-              />
-            </FormGroup>
-
-            {error && <ErrorMessage error={error} />}
-
-            <p>
-              This will {isEdit ? 'update' : 'create'} a user trait{' '}
-              <strong>{traitKey || ''}</strong> for the user{' '}
-              <strong>{identityName}</strong> in
-              <strong>
-                {' '}
-                {
-                  find(project.environments, {
-                    api_key: environmentId,
-                  })?.name
-                }
-              </strong>
-            </p>
-
-            <FormGroup className='text-muted'>
-              <label>Example SDK response:</label>
-              <Highlight forceExpanded className='json no-pad'>
-                {JSON.stringify({
-                  trait_key: traitKey,
-                  trait_value: traitValue,
-                })}
-              </Highlight>
-            </FormGroup>
-          </div>
-          <ModalHR />
-          <div className='modal-footer'>
-            <Button onClick={closeModal} theme='secondary' className='mr-2'>
-              Cancel
-            </Button>
-            <Button
-              id={isEdit ? 'update-trait-btn' : 'create-trait-btn'}
-              type='submit'
-              disabled={isLoading || !traitKey}
-            >
-              {isLoading ? 'Saving' : 'Save Trait'}
-            </Button>
-          </div>
-        </form>
-      )}
-    </ProjectProvider>
+          {isLoading ? 'Saving' : 'Save Trait'}
+        </Button>
+      </div>
+    </form>
   )
 }
 

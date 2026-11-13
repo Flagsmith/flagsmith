@@ -23,7 +23,6 @@ import { getStore } from 'common/store'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import AccountStore from 'common/stores/account-store'
 import OrganisationLimit from './OrganisationLimit'
-import OrganisationStore from 'common/stores/organisation-store'
 import ScrollToTop from './ScrollToTop'
 import AnnouncementPerPage from './AnnouncementPerPage'
 import Announcement from './Announcement'
@@ -99,7 +98,6 @@ const App = class extends Component {
     if (this.state.projectId) {
       AppActions.getProject(this.state.projectId)
     }
-    this.listenTo(OrganisationStore, 'change', () => this.forceUpdate())
     this.listenTo(ProjectStore, 'change', () => this.forceUpdate())
     if (AccountStore.model) {
       this.onLogin()
@@ -292,9 +290,6 @@ const App = class extends Component {
     ) {
       return <Maintenance />
     }
-    const activeProject = OrganisationStore.getProject(projectId)
-    const projectNotLoaded =
-      !activeProject && document.location.href.includes('project/')
 
     if (this.props.isLoading) {
       return (
@@ -384,19 +379,10 @@ const App = class extends Component {
                     )}
                   </>
                 }
-                activeProject={activeProject}
                 projectId={projectId}
                 environmentId={environmentId}
               >
-                <div>
-                  {projectNotLoaded ? (
-                    <div className='text-center'>
-                      <Loader />
-                    </div>
-                  ) : (
-                    this.props.children
-                  )}
-                </div>
+                <div>{this.props.children}</div>
               </Nav>
             )
           }}

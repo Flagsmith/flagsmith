@@ -18,7 +18,8 @@ type AddMetadataToEntityProps = {
   organisationId: number
   projectId: number
   entityContentType: number
-  entityId?: number
+  // Features and segments by id, environments by API key
+  entityId?: number | string
   entity: string
   envName?: string
   onChange?: (metadata: Metadata[]) => void
@@ -125,7 +126,7 @@ const AddMetadataToEntity: FC<AddMetadataToEntityProps> = ({
         name: envName,
         project: projectId,
       },
-      id: entityId,
+      id: String(entityId),
     })
 
     if ('error' in result) {

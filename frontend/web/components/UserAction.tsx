@@ -1,10 +1,12 @@
 import { FC, useCallback, useLayoutEffect, useRef, useState } from 'react'
+import { colorIconSecondary } from 'common/theme/tokens'
 import { createPortal } from 'react-dom'
 
 import useOutsideClick from 'common/useOutsideClick'
 import IconButton from './base/IconButton'
 import Icon from './icons/Icon'
 import ActionButton from './ActionButton'
+import BareButton from './base/forms/BareButton'
 
 interface UserActionProps {
   userName: string
@@ -69,41 +71,41 @@ const ActionDropdown = ({
   return createPortal(
     <div ref={dropDownRef} className='feature-action__list'>
       {!!canInspectPermissions && (
-        <div
-          className='feature-action__item'
+        <BareButton
+          className='feature-action__item w-100'
           onClick={(e) => {
             e.stopPropagation()
             onAction('inspect')
           }}
         >
-          <Icon name='search' width={18} fill='#9DA4AE' />
+          <Icon name='search' width={18} fill={colorIconSecondary} />
           <span>Inspect permissions</span>
-        </div>
+        </BareButton>
       )}
       {!!canEdit && (
-        <div
-          className='feature-action__item'
+        <BareButton
+          className='feature-action__item w-100'
           onClick={(e) => {
             e.stopPropagation()
             onAction('edit')
           }}
         >
-          <Icon name='edit' width={18} fill='#9DA4AE' />
+          <Icon name='edit' width={18} fill={colorIconSecondary} />
           <span>Manage user</span>
-        </div>
+        </BareButton>
       )}
 
       {!!canRemove && (
-        <div
-          className='feature-action__item'
+        <BareButton
+          className='feature-action__item w-100'
           onClick={(e) => {
             e.stopPropagation()
             onAction('remove')
           }}
         >
-          <Icon name='trash-2' width={18} fill='#9DA4AE' />
+          <Icon name='trash-2' width={18} fill={colorIconSecondary} />
           <span>Remove</span>
-        </div>
+        </BareButton>
       )}
     </div>,
     document.body,

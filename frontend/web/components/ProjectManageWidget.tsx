@@ -1,4 +1,5 @@
 import React, { FC, useCallback, useEffect, useMemo } from 'react'
+import { colorIconSecondary } from 'common/theme/tokens'
 import { Link } from 'react-router-dom'
 import { useHistory, useLocation } from 'react-router-dom'
 
@@ -115,7 +116,7 @@ const ProjectManageWidget: FC<SegmentsPageType> = ({ organisationId }) => {
                       </div>
                     }
                     items={projects}
-                    renderRow={({ environments, id, name }, i) => {
+                    renderRow={({ id, name }, i) => {
                       return (
                         <>
                           {i === 0 && (
@@ -137,7 +138,7 @@ const ProjectManageWidget: FC<SegmentsPageType> = ({ organisationId }) => {
                                       <Icon
                                         name='plus'
                                         width={32}
-                                        fill='#9DA4AE'
+                                        fill={colorIconSecondary}
                                       />
                                     </div>
                                     <div className='font-weight-medium btn-project-title'>
@@ -152,11 +153,7 @@ const ProjectManageWidget: FC<SegmentsPageType> = ({ organisationId }) => {
                             key={id}
                             id={`project-select-${i}`}
                             data-test={`project-${Utils.toKebabCase(name)}`}
-                            to={`/project/${id}/environment/${
-                              environments && environments[0]
-                                ? `${environments[0].api_key}/features`
-                                : 'create'
-                            }`}
+                            to={`/project/${id}`}
                             className='clickable col-md-6 col-xl-3'
                             style={{ minWidth: '190px' }}
                           >
@@ -210,7 +207,11 @@ const ProjectManageWidget: FC<SegmentsPageType> = ({ organisationId }) => {
                             >
                               <Row>
                                 <div className='btn-project-icon'>
-                                  <Icon name='plus' width={32} fill='#9DA4AE' />
+                                  <Icon
+                                    name='plus'
+                                    width={32}
+                                    fill={colorIconSecondary}
+                                  />
                                 </div>
                                 <div className='font-weight-medium'>
                                   Create Project

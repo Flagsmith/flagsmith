@@ -1,7 +1,8 @@
-import { useMemo } from 'react'
 import ExpandablePermissionsList from './ExpandablePermissionsList'
-import OrganisationStore from 'common/stores/organisation-store'
-import { Project } from 'common/types/responses'
+import { skipToken } from '@reduxjs/toolkit/query'
+import { useGetAllEnvironmentsQuery } from 'common/services/useEnvironment'
+import { sortEnvironmentsByName } from 'common/utils/sortEnvironmentsByName'
+import EmptyState from 'components/EmptyState'
 import PanelSearch from 'components/PanelSearch'
 
 type EnvironmentPermissionsProps = {
@@ -15,19 +16,33 @@ const EnvironmentPermissions = ({
   searchEnvironment = '',
   userId,
 }: EnvironmentPermissionsProps) => {
-  const projectData: Project[] = OrganisationStore.getProjects()
-  const environments = useMemo(() => {
-    if (!projectData || !projectId) {
-      return
-    }
-    return projectData.find((p) => p.id === parseInt(projectId))?.environments
-  }, [projectData, projectId])
+  const id = Number(projectId) || undefined
+  // currentData, not data: data keeps the previous project's list while the next one loads
+  const { currentData, isError, isFetching, refetch } =
+    useGetAllEnvironmentsQuery(id ? { projectId: id } : skipToken)
+  const environments = currentData && sortEnvironmentsByName(currentData)
+  const isLoading = isFetching && !currentData
 
   const filteredEnvironments = environments?.filter((v) => {
     const search = searchEnvironment?.toLowerCase()
     if (!search) return true
     return `${v.name}`.toLowerCase().includes(search)
   })
+  if (isLoading) {
+    return <Loader />
+  }
+  if (isError && !environments) {
+    return (
+      <EmptyState
+        status='error'
+        title='Could not load environments'
+        onRetry={refetch}
+      />
+    )
+  }
+  if (!environments?.length) {
+    return null
+  }
   return (
     <>
       <PanelSearch
@@ -44,7 +59,7 @@ const EnvironmentPermissions = ({
             item={env}
             level='environment'
             userId={userId}
-            projectId={parseInt(projectId ?? '')}
+            projectId={Number(projectId)}
             getItemName={(env) => env.name}
             getItemId={(env) => env.id}
             getLevelId={(env) => env.api_key}

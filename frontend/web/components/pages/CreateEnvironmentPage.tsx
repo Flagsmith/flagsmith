@@ -20,6 +20,7 @@ import FieldLabel from 'components/base/forms/FieldLabel'
 import InputGroup from 'components/base/forms/InputGroup'
 import { Environment, Role, User } from 'common/types/responses'
 import Button from 'components/base/forms/Button'
+import Banner from 'components/base/Banner'
 import UserSelect from 'components/UserSelect'
 import MyRoleSelect from 'components/MyRoleSelect'
 import SettingsButton from 'components/SettingsButton'
@@ -29,6 +30,9 @@ import { useGetRolesQuery } from 'common/services/useRole'
 import { useCreateEnvironmentUserPermissionMutation } from 'common/services/useUserPermissions'
 import { useCreateEnvironmentRolePermissionMutation } from 'common/services/useRolePermission'
 import { useRouteContext } from 'components/providers/RouteContext'
+import { skipToken } from '@reduxjs/toolkit/query'
+import { useGetAllEnvironmentsQuery } from 'common/services/useEnvironment'
+import { sortEnvironmentsByName } from 'common/utils/sortEnvironmentsByName'
 import { ProjectPermission } from 'common/types/permissions.types'
 
 const CreateEnvironmentPage: React.FC = () => {
@@ -47,6 +51,18 @@ const CreateEnvironmentPage: React.FC = () => {
 
   const history = useHistory()
   const { projectId } = useRouteContext()
+  const {
+    currentData: projectEnvironments,
+    isError: isEnvironmentsError,
+    refetch: refetchEnvironments,
+  } = useGetAllEnvironmentsQuery(projectId ? { projectId } : skipToken)
+  const environments = projectEnvironments
+    ? sortEnvironmentsByName(projectEnvironments)
+    : []
+  // A selection made under another project is ignored, so a clone never crosses projects
+  const cloneSource = environments.find(
+    (env) => env.api_key === selectedEnv?.api_key,
+  )
 
   // ProjectProvider wires onSave into a Flux listener once on mount, so any
   // state we read in the saved handler is stale. Mirror selections into refs.
@@ -166,7 +182,7 @@ const CreateEnvironmentPage: React.FC = () => {
       if (name && !busy && projectId) {
         createEnv({
           cloneFeatureStatesAsync: true,
-          cloneId: selectedEnv?.api_key,
+          cloneId: cloneSource?.api_key,
           description,
           metadata,
           name,
@@ -220,7 +236,7 @@ const CreateEnvironmentPage: React.FC = () => {
           const showAdminSelector = showUserSelector || showRoleSelector
           return (
             <ProjectProvider id={projectId} onSave={onSave}>
-              {({ createEnv, error, isSaving, project }) => {
+              {({ createEnv, error, isSaving }) => {
                 const busy = isSaving || assigningAdmins
                 return (
                   <form
@@ -260,7 +276,24 @@ const CreateEnvironmentPage: React.FC = () => {
                         />
                       </CondensedRow>
                       <CondensedRow>
-                        {!!project?.environments?.length && (
+                        {isEnvironmentsError && (
+                          <Banner
+                            type='error'
+                            action={
+                              <Button
+                                theme='outline'
+                                size='small'
+                                onClick={() => refetchEnvironments()}
+                              >
+                                Try again
+                              </Button>
+                            }
+                          >
+                            Could not load this project's environments to clone
+                            from.
+                          </Banner>
+                        )}
+                        {!!environments.length && (
                           <InputGroup
                             tooltip='This will copy feature enabled states and remote config values from the selected environment.'
                             title='Clone from environment'
@@ -268,20 +301,20 @@ const CreateEnvironmentPage: React.FC = () => {
                               <Select
                                 onChange={(env: { value: string }) => {
                                   setSelectedEnv(
-                                    project?.environments.find(
+                                    environments.find(
                                       (v) => v.api_key === env.value,
                                     ),
                                   )
                                 }}
-                                options={project.environments.map((env) => ({
+                                options={environments.map((env) => ({
                                   label: env.name,
                                   value: env.api_key,
                                 }))}
                                 value={
-                                  selectedEnv
+                                  cloneSource
                                     ? {
-                                        label: selectedEnv.name,
-                                        value: selectedEnv.api_key,
+                                        label: cloneSource.name,
+                                        value: cloneSource.api_key,
                                       }
                                     : { label: 'Please select an environment' }
                                 }
@@ -426,7 +459,7 @@ const CreateEnvironmentPage: React.FC = () => {
                                   AccountStore.getOrganisation().id
                                 }
                                 projectId={projectId}
-                                entityId={selectedEnv?.api_key}
+                                entityId={cloneSource?.api_key}
                                 envName={name}
                                 entityContentType={envContentType.id}
                                 entity={envContentType.model}

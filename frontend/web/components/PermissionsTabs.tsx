@@ -1,21 +1,19 @@
-import React, { FC, Ref, useEffect, useState } from 'react'
+import React, { FC, Ref, useState } from 'react'
 import { EditPermissionsModal } from './EditPermissions'
-import {
-  Environment,
-  Project,
-  Role,
-  User,
-  UserGroupSummary,
-} from 'common/types/responses'
+import { Role, User, UserGroupSummary } from 'common/types/responses'
 import Tabs from './navigation/TabMenu/Tabs'
 import TabItem from './navigation/TabMenu/TabItem'
 import Input from './base/forms/Input'
 import Utils from 'common/utils/utils'
 import RolePermissionsList from './RolePermissionsList'
 import ProjectFilter from './ProjectFilter'
-import OrganisationStore from 'common/stores/organisation-store'
+import { skipToken } from '@reduxjs/toolkit/query'
+import { useGetAllEnvironmentsQuery } from 'common/services/useEnvironment'
+import { sortEnvironmentsByName } from 'common/utils/sortEnvironmentsByName'
 import PlanBasedAccess from './PlanBasedAccess'
 import WarningMessage from './WarningMessage'
+import EmptyState from './EmptyState'
+import { useGetProjectsQuery } from 'common/services/useProject'
 
 type PermissionsTabsType = {
   orgId?: number
@@ -40,18 +38,19 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
 }) => {
   const [searchProject, setSearchProject] = useState<string>('')
   const [searchEnv, setSearchEnv] = useState<string>('')
-  const projectData: Project[] | undefined = OrganisationStore.getProjects()
+  const {
+    data: projects,
+    isError: isProjectsError,
+    isLoading: isLoadingProjects,
+    refetch: refetchProjects,
+  } = useGetProjectsQuery(orgId ? { organisationId: orgId } : skipToken)
   const [project, setProject] = useState<string>('')
-  const [environments, setEnvironments] = useState<Environment[]>([])
-
-  useEffect(() => {
-    if (project && projectData) {
-      const environments = projectData.find(
-        (p) => p.id === parseInt(project),
-      )?.environments
-      setEnvironments(environments || [])
-    }
-  }, [project, projectData])
+  const projectId = Number(project) || undefined
+  // currentData, not data: data keeps the previous project's list while the next one loads
+  const { currentData, isError, isFetching, refetch } =
+    useGetAllEnvironmentsQuery(projectId ? { projectId: projectId } : skipToken)
+  const environments = currentData && sortEnvironmentsByName(currentData)
+  const isLoading = isFetching && !currentData
 
   if (!orgId) {
     return
@@ -116,19 +115,29 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
               search
             />
           </Row>
-          <RolePermissionsList
-            user={user}
-            group={group}
-            orgId={orgId}
-            filter={searchProject}
-            mainItems={(projectData ?? []).map((v) => ({
-              ...v,
-              projectId: v.id,
-            }))}
-            role={role}
-            level={'project'}
-            ref={tabRef}
-          />
+          {isLoadingProjects && <Loader />}
+          {isProjectsError && !projects && (
+            <EmptyState
+              status='error'
+              title='Could not load projects'
+              onRetry={refetchProjects}
+            />
+          )}
+          {!!projects && (
+            <RolePermissionsList
+              user={user}
+              group={group}
+              orgId={orgId}
+              filter={searchProject}
+              mainItems={projects.map((v) => ({
+                ...v,
+                projectId: v.id,
+              }))}
+              role={role}
+              level={'project'}
+              ref={tabRef}
+            />
+          )}
         </TabItem>
         <TabItem
           tabLabel={<Row className='justify-content-center'>Environment</Row>}
@@ -154,13 +163,21 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
             />
           </div>
           <div className='mt-2'>
-            {environments.length > 0 && (
+            {isLoading && <Loader />}
+            {isError && !environments && (
+              <EmptyState
+                status='error'
+                title='Could not load environments'
+                onRetry={refetch}
+              />
+            )}
+            {!!environments?.length && (
               <RolePermissionsList
                 user={user}
                 orgId={orgId}
                 group={group}
                 filter={searchEnv}
-                mainItems={(environments || [])?.map((v) => {
+                mainItems={environments.map((v) => {
                   return {
                     id: role ? v.id : v.api_key,
                     name: v.name,

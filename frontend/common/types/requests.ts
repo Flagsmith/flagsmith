@@ -860,7 +860,8 @@ export type Req = {
     group_ids: number[]
   }
   createEnvironment: { name: string; project: number }
-  updateEnvironment: { id: number; body: Environment }
+  // The environments API looks environments up by API key
+  updateEnvironment: { id: string; body: Environment }
   createCloneIdentityFeatureStates: {
     environment_id: string
     identity_id: string

@@ -22,7 +22,8 @@ type EntityMetadataParams = {
   projectId: number
   entityContentType: number
   entityType: EntityType
-  entityId?: number
+  // Features and segments by id, environments by API key
+  entityId?: number | string
 }
 
 type EntityData = ProjectFlag | Segment | Environment
