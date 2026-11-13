@@ -20,6 +20,7 @@ import FieldLabel from 'components/base/forms/FieldLabel'
 import InputGroup from 'components/base/forms/InputGroup'
 import { Environment, Role, User } from 'common/types/responses'
 import Button from 'components/base/forms/Button'
+import Banner from 'components/base/Banner'
 import UserSelect from 'components/UserSelect'
 import MyRoleSelect from 'components/MyRoleSelect'
 import SettingsButton from 'components/SettingsButton'
@@ -50,9 +51,11 @@ const CreateEnvironmentPage: React.FC = () => {
 
   const history = useHistory()
   const { projectId } = useRouteContext()
-  const { data: projectEnvironments } = useGetAllEnvironmentsQuery(
-    projectId ? { projectId } : skipToken,
-  )
+  const {
+    currentData: projectEnvironments,
+    isError: isEnvironmentsError,
+    refetch: refetchEnvironments,
+  } = useGetAllEnvironmentsQuery(projectId ? { projectId } : skipToken)
   const environments = projectEnvironments
     ? sortEnvironmentsByName(projectEnvironments)
     : []
@@ -269,6 +272,23 @@ const CreateEnvironmentPage: React.FC = () => {
                         />
                       </CondensedRow>
                       <CondensedRow>
+                        {isEnvironmentsError && (
+                          <Banner
+                            type='error'
+                            action={
+                              <Button
+                                theme='outline'
+                                size='small'
+                                onClick={() => refetchEnvironments()}
+                              >
+                                Retry
+                              </Button>
+                            }
+                          >
+                            Could not load this project's environments to clone
+                            from.
+                          </Banner>
+                        )}
                         {!!environments.length && (
                           <InputGroup
                             tooltip='This will copy feature enabled states and remote config values from the selected environment.'

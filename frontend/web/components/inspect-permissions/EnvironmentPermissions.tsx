@@ -2,7 +2,8 @@ import ExpandablePermissionsList from './ExpandablePermissionsList'
 import { skipToken } from '@reduxjs/toolkit/query'
 import { useGetAllEnvironmentsQuery } from 'common/services/useEnvironment'
 import { sortEnvironmentsByName } from 'common/utils/sortEnvironmentsByName'
-import QueryLoadState from 'components/QueryLoadState'
+import Banner from 'components/base/Banner'
+import Button from 'components/base/forms/Button'
 import PanelSearch from 'components/PanelSearch'
 
 type EnvironmentPermissionsProps = {
@@ -18,9 +19,8 @@ const EnvironmentPermissions = ({
 }: EnvironmentPermissionsProps) => {
   const id = Number(projectId) || undefined
   // currentData, not data: data keeps the previous project's list while the next one loads
-  const { currentData, isError, isFetching } = useGetAllEnvironmentsQuery(
-    id ? { projectId: id } : skipToken,
-  )
+  const { currentData, isError, isFetching, refetch } =
+    useGetAllEnvironmentsQuery(id ? { projectId: id } : skipToken)
   const environments = currentData && sortEnvironmentsByName(currentData)
   const isLoading = isFetching && !currentData
 
@@ -29,14 +29,25 @@ const EnvironmentPermissions = ({
     if (!search) return true
     return `${v.name}`.toLowerCase().includes(search)
   })
-  if (!environments?.length) {
+  if (isLoading) {
+    return <Loader />
+  }
+  if (isError) {
     return (
-      <QueryLoadState
-        errorMessage='Could not load environments for this project.'
-        isError={isError}
-        isLoading={isLoading}
-      />
+      <Banner
+        type='error'
+        action={
+          <Button theme='outline' size='small' onClick={() => refetch()}>
+            Retry
+          </Button>
+        }
+      >
+        Could not load environments for this project.
+      </Banner>
     )
+  }
+  if (!environments?.length) {
+    return null
   }
   return (
     <>

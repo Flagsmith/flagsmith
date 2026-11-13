@@ -4,6 +4,8 @@ import AccountStore from 'common/stores/account-store'
 import EnvironmentAside from './EnvironmentAside'
 import { skipToken } from '@reduxjs/toolkit/query'
 import { useGetProjectQuery } from 'common/services/useProject'
+import Banner from 'components/base/Banner'
+import Button from 'components/base/forms/Button'
 import { AsyncStorage } from 'polyfill-react-native'
 import ProjectNavbar from './navbars/ProjectNavbar'
 import OrganisationNavbar from './navbars/OrganisationNavbar'
@@ -25,17 +27,39 @@ const Nav: FC<NavType> = ({ children, environmentId, header, projectId }) => {
   const location = useLocation()
   const pathname = location.pathname
 
-  const { currentData: activeProject } = useGetProjectQuery(
-    projectId ? { id: projectId } : skipToken,
-  )
-  const content =
-    !activeProject && pathname.includes('project/') ? (
+  const {
+    currentData: activeProject,
+    isError: isProjectError,
+    refetch: refetchProject,
+  } = useGetProjectQuery(projectId ? { id: projectId } : skipToken)
+  const isProjectPage = pathname.includes('project/')
+  let content = children
+  if (isProjectPage && isProjectError) {
+    content = (
+      <div className='container mt-4'>
+        <Banner
+          type='error'
+          action={
+            <Button
+              theme='outline'
+              size='small'
+              onClick={() => refetchProject()}
+            >
+              Retry
+            </Button>
+          }
+        >
+          Could not load this project.
+        </Banner>
+      </div>
+    )
+  } else if (isProjectPage && !activeProject) {
+    content = (
       <div className='text-center'>
         <Loader />
       </div>
-    ) : (
-      children
     )
+  }
 
   useEffect(() => {
     const updateLastViewed = () => {

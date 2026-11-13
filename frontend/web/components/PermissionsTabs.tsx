@@ -12,7 +12,8 @@ import { useGetAllEnvironmentsQuery } from 'common/services/useEnvironment'
 import { sortEnvironmentsByName } from 'common/utils/sortEnvironmentsByName'
 import PlanBasedAccess from './PlanBasedAccess'
 import WarningMessage from './WarningMessage'
-import QueryLoadState from './QueryLoadState'
+import Banner from './base/Banner'
+import Button from './base/forms/Button'
 import { useGetProjectsQuery } from 'common/services/useProject'
 
 type PermissionsTabsType = {
@@ -42,13 +43,13 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
     data: projects,
     isError: isProjectsError,
     isLoading: isLoadingProjects,
+    refetch: refetchProjects,
   } = useGetProjectsQuery(orgId ? { organisationId: orgId } : skipToken)
   const [project, setProject] = useState<string>('')
   const projectId = Number(project) || undefined
   // currentData, not data: data keeps the previous project's list while the next one loads
-  const { currentData, isError, isFetching } = useGetAllEnvironmentsQuery(
-    projectId ? { projectId: projectId } : skipToken,
-  )
+  const { currentData, isError, isFetching, refetch } =
+    useGetAllEnvironmentsQuery(projectId ? { projectId: projectId } : skipToken)
   const environments = currentData && sortEnvironmentsByName(currentData)
   const isLoading = isFetching && !currentData
 
@@ -115,11 +116,23 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
               search
             />
           </Row>
-          <QueryLoadState
-            errorMessage='Could not load projects.'
-            isError={isProjectsError}
-            isLoading={isLoadingProjects}
-          />
+          {isLoadingProjects && <Loader />}
+          {isProjectsError && (
+            <Banner
+              type='error'
+              action={
+                <Button
+                  theme='outline'
+                  size='small'
+                  onClick={() => refetchProjects()}
+                >
+                  Retry
+                </Button>
+              }
+            >
+              Could not load projects.
+            </Banner>
+          )}
           {!!projects && (
             <RolePermissionsList
               user={user}
@@ -160,11 +173,23 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
             />
           </div>
           <div className='mt-2'>
-            <QueryLoadState
-              errorMessage='Could not load environments for this project.'
-              isError={isError}
-              isLoading={isLoading}
-            />
+            {isLoading && <Loader />}
+            {isError && (
+              <Banner
+                type='error'
+                action={
+                  <Button
+                    theme='outline'
+                    size='small'
+                    onClick={() => refetch()}
+                  >
+                    Retry
+                  </Button>
+                }
+              >
+                Could not load environments for this project.
+              </Banner>
+            )}
             {!!environments?.length && (
               <RolePermissionsList
                 user={user}

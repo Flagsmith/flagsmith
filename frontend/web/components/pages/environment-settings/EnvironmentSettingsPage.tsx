@@ -76,9 +76,16 @@ const EnvironmentSettingsPage: React.FC = () => {
   const [environmentContentType, setEnvironmentContentType] =
     useState<any>(null)
 
-  const { data: env } = useGetEnvironmentQuery({
+  // currentData, not data: data keeps the previous environment while the next one loads
+  const { currentData: env } = useGetEnvironmentQuery({
     id: match.params.environmentId,
   })
+
+  // Until the form holds the environment in the URL, saving would write the previous one
+  const saveDisabled =
+    ProjectStore.isSaving ||
+    !currentEnv?.name ||
+    currentEnv.api_key !== match.params.environmentId
 
   const { data: webhooks, isLoading: webhooksLoading } = useGetWebhooksQuery(
     { environmentId: match.params.environmentId },
@@ -261,7 +268,7 @@ const EnvironmentSettingsPage: React.FC = () => {
   }
 
   const saveEnv = (newEnv: Partial<Environment> = {}) => {
-    if (ProjectStore.isSaving || !currentEnv?.name) {
+    if (saveDisabled) {
       return
     }
     const editedEnv = { ...currentEnv, ...newEnv }
@@ -337,8 +344,6 @@ const EnvironmentSettingsPage: React.FC = () => {
       'p-0',
     )
   }
-
-  const saveDisabled = ProjectStore.isSaving || !currentEnv?.name
 
   const confirmToggle = (
     title: string,

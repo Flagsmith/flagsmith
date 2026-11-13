@@ -4,7 +4,8 @@ import PanelSearch from 'components/PanelSearch'
 import Utils from 'common/utils/utils'
 
 import { useGetProjectsQuery } from 'common/services/useProject'
-import QueryLoadState from 'components/QueryLoadState'
+import Banner from 'components/base/Banner'
+import Button from 'components/base/forms/Button'
 import Input from 'components/base/forms/Input'
 import ExpandablePermissionsList from './ExpandablePermissionsList'
 
@@ -21,6 +22,7 @@ const ProjectPermissions = ({
     data: projects,
     isError,
     isLoading,
+    refetch,
   } = useGetProjectsQuery({ organisationId })
   const [searchProject, setSearchProject] = useState<string>('')
   const filteredProjects = projects?.filter((v) => {
@@ -44,11 +46,18 @@ const ProjectPermissions = ({
           search
         />
       </Row>
-      <QueryLoadState
-        errorMessage='Could not load projects.'
-        isError={isError}
-        isLoading={false}
-      />
+      {isError && (
+        <Banner
+          type='error'
+          action={
+            <Button theme='outline' size='small' onClick={() => refetch()}>
+              Retry
+            </Button>
+          }
+        >
+          Could not load projects.
+        </Banner>
+      )}
       <PanelSearch
         isLoading={isLoading}
         header={

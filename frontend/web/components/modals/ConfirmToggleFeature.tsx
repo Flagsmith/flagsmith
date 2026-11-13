@@ -1,6 +1,6 @@
 import React, { FC } from 'react'
 import Format from 'common/utils/format'
-import { Environment, FeatureState, ProjectFlag } from 'common/types/responses'
+import { FeatureState, ProjectFlag } from 'common/types/responses'
 import { useGetEnvironmentQuery } from 'common/services/useEnvironment'
 import Button from 'components/base/forms/Button'
 import ModalHR from './ModalHR'
@@ -11,7 +11,7 @@ type ConfirmToggleFeatureType = {
   environmentId: string
   identity?: string
   identityName?: string
-  cb: (environments: Environment[]) => void
+  cb: () => void
 }
 
 const ConfirmToggleFeature: FC<ConfirmToggleFeatureType> = ({
@@ -42,7 +42,7 @@ const ConfirmToggleFeature: FC<ConfirmToggleFeatureType> = ({
           )}{' '}
           for
           <br />
-          <strong>{environment?.name}</strong>
+          <strong>{environment?.name ?? 'this environment'}</strong>
           {identity && (
             <span>
               {' '}
@@ -58,11 +58,9 @@ const ConfirmToggleFeature: FC<ConfirmToggleFeatureType> = ({
           Cancel
         </Button>
         <Button
-          disabled={!environment}
           onClick={() => {
-            if (!environment) return
             closeModal()
-            cb([environment])
+            cb()
           }}
           className='btn btn-primary'
           id='confirm-toggle-feature-btn'
