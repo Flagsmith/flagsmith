@@ -9,7 +9,7 @@ jobs:
     environment: staging
     concurrency:
       group: e2e-tests-staging
-      cancel-in-progress: true
+      cancel-in-progress: false
 
     steps:
       - name: Cloning repo
