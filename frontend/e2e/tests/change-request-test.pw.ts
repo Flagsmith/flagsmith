@@ -2,7 +2,6 @@ import { test, expect } from '../test-setup'
 import { byId, getFlagsmith, log, createHelpers, visualSnapshot } from '../helpers'
 import {
   E2E_NON_ADMIN_USER_WITH_PROJECT_PERMISSIONS,
-  E2E_TEST_PROJECT,
   E2E_USER,
   PASSWORD,
 } from '../config'
@@ -23,6 +22,7 @@ test.describe('Change Request Tests', () => {
       gotoChangeRequests,
       gotoFeature,
       gotoFeatures,
+      createProject,
       gotoProject,
       login,
       logout,
@@ -43,15 +43,17 @@ test.describe('Change Request Tests', () => {
       return
     }
 
-    const projectName = E2E_TEST_PROJECT
+    // A project of its own, so its change request environment can't become
+    // the one other tests land on
+    const projectName = `CR Four Eyes ${Date.now()}`
     const environmentName = 'CR_Test_Env'
     const featureName = 'cr_test_feature'
 
     log('Login as admin')
     await login(E2E_USER, PASSWORD)
 
-    log('Navigate to test project')
-    await gotoProject(projectName)
+    log('Create test project')
+    await createProject(projectName)
 
     log('Create test environment')
     await page.click('text="Create Environment"')
@@ -159,7 +161,7 @@ test.describe('Change Request Tests', () => {
       gotoChangeRequests,
       gotoFeature,
       gotoFeatures,
-      gotoProject,
+      createProject,
       gotoSegments,
       login,
       openChangeRequest,
@@ -179,7 +181,7 @@ test.describe('Change Request Tests', () => {
 
     log('Login as admin')
     await login(E2E_USER, PASSWORD)
-    await gotoProject(E2E_TEST_PROJECT)
+    await createProject(`CR Versioned ${Date.now()}`)
 
     log('Create a versioned environment that requires change requests')
     await page.click('text="Create Environment"')
@@ -227,7 +229,7 @@ test.describe('Change Request Tests', () => {
       gotoChangeRequests,
       gotoFeature,
       gotoFeatures,
-      gotoProject,
+      createProject,
       login,
       openChangeRequest,
       setText,
@@ -244,7 +246,7 @@ test.describe('Change Request Tests', () => {
 
     log('Login as admin')
     await login(E2E_USER, PASSWORD)
-    await gotoProject(E2E_TEST_PROJECT)
+    await createProject(`CR Edit ${Date.now()}`)
 
     log('Create an environment that requires change requests')
     await page.click('text="Create Environment"')
@@ -283,7 +285,7 @@ test.describe('Change Request Tests', () => {
       gotoChangeRequests,
       gotoFeature,
       gotoFeatures,
-      gotoProject,
+      createProject,
       login,
       openChangeRequest,
       setText,
@@ -299,7 +301,7 @@ test.describe('Change Request Tests', () => {
 
     log('Login as admin')
     await login(E2E_USER, PASSWORD)
-    await gotoProject(E2E_TEST_PROJECT)
+    await createProject(`CR Schedule ${Date.now()}`)
 
     log('Create an environment that requires change requests')
     await page.click('text="Create Environment"')
