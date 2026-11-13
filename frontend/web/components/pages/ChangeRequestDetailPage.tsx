@@ -687,7 +687,8 @@ export const ChangeRequestPageInner: FC<ChangeRequestPageInnerType> = ({
               Approved by {approvedBy.join(', ')}
             </div>
           )}
-          {approvedBy.length < minApprovals && (
+          {/* Nothing to publish once the feature is gone */}
+          {!hidePublish && approvedBy.length < minApprovals && (
             <>
               {!!minApprovals && (
                 <div className='text-right mb-2 mr-2 font-weight-medium'>

@@ -187,7 +187,9 @@ export const projectFlagService = service
       }),
 
       removeProjectFlag: builder.mutation<void, Req['removeProjectFlag']>({
-        invalidatesTags: [
+        // The feature's own entry too, so a page holding it sees the delete
+        invalidatesTags: (_res, _error, { flag_id }) => [
+          { id: flag_id, type: 'ProjectFlag' },
           { id: 'LIST', type: 'ProjectFlag' },
           { id: 'LIST', type: 'FeatureList' },
           { id: 'METRICS', type: 'Environment' },

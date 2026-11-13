@@ -739,6 +739,18 @@ export class E2EHelpers {
     await this.waitForElementVisible(byId(`switch-environment-${name.toLowerCase()}-active`));
   }
 
+  // Create a project of the test's own, so environments it changes can't
+  // become the one other tests land on. Call it from the projects page,
+  // where login lands.
+  async createProject(name: string) {
+    log(`Create project ${name}`);
+    await this.click('.btn-project-create');
+    await this.waitForElementVisible(byId('projectName'));
+    await this.setText(byId('projectName'), name);
+    await this.click(byId('create-project-btn'));
+    await this.waitForElementVisible(byId('features-page'));
+  }
+
   // Create organisation and project
   async createOrganisationAndProject(organisationName: string, projectName: string) {
     log('Create Organisation');
