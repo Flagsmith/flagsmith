@@ -10,6 +10,8 @@ import data from 'common/data/base/_data'
 import filter from 'lodash/filter'
 import findIndex from 'lodash/findIndex'
 import keyBy from 'lodash/keyBy'
+import { getDefaultEnvironmentNames } from 'common/utils/defaultEnvironmentNames'
+import { sortOrganisationUsers } from 'common/utils/sortOrganisationUsers'
 
 const controller = {
   createProject: (name) => {
@@ -33,13 +35,11 @@ const controller = {
       API.trackEvent(Constants.events.CREATE_FIRST_PROJECT)
     }
     API.trackEvent(Constants.events.CREATE_PROJECT)
-    const defaultEnvironmentNames = Utils.getFlagsmithHasFeature(
-      'default_environment_names_for_new_project',
+    const defaultEnvironmentNames = getDefaultEnvironmentNames(
+      Utils.getFlagsmithHasFeature('default_environment_names_for_new_project')
+        ? Utils.getFlagsmithValue('default_environment_names_for_new_project')
+        : undefined,
     )
-      ? JSON.parse(
-          Utils.getFlagsmithValue('default_environment_names_for_new_project'),
-        )
-      : ['Development', 'Production']
     data
       .post(
         `${Project.api}projects/`,
@@ -97,21 +97,6 @@ const controller = {
       })
       .catch((e) => API.ajaxHandler(store, e))
   },
-  editOrganisation: (name) => {
-    store.saving()
-    data
-      .put(`${Project.api}organisations/${store.id}/`, { name })
-      .then((res) => {
-        const idx = findIndex(store.model.organisations, {
-          id: store.organisation.id,
-        })
-        if (idx !== -1) {
-          store.model.organisations[idx] = res
-          store.organisation = res
-        }
-        store.saved()
-      })
-  },
   getOrganisation: (id, force) => {
     if (`${id}` !== `${store.id}` || force) {
       store.id = id
@@ -142,15 +127,7 @@ const controller = {
             ...store.model,
             invites: invites && invites.results,
             subscriptionMeta,
-            users: sortBy(users, (user) => {
-              const isYou = user.id === AccountStore.getUser().id
-              if (isYou) {
-                return ``
-              }
-              return `${user.first_name || ''} ${
-                user.last_name || ''
-              }`.toLowerCase()
-            }),
+            users: sortOrganisationUsers(users, AccountStore.getUser()?.id),
           }
 
           if (Project.hideInviteLinks) {
