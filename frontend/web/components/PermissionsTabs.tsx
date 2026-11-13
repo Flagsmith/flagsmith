@@ -8,7 +8,9 @@ import Utils from 'common/utils/utils'
 import RolePermissionsList from './RolePermissionsList'
 import ProjectFilter from './ProjectFilter'
 import OrganisationStore from 'common/stores/organisation-store'
-import { useSortedProjectEnvironments } from 'common/hooks/useSortedProjectEnvironments'
+import { skipToken } from '@reduxjs/toolkit/query'
+import { useGetAllEnvironmentsQuery } from 'common/services/useEnvironment'
+import { sortEnvironmentsByName } from 'common/utils/sortEnvironmentsByName'
 import PlanBasedAccess from './PlanBasedAccess'
 import WarningMessage from './WarningMessage'
 import EnvironmentsLoadState from './EnvironmentsLoadState'
@@ -38,9 +40,13 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
   const [searchEnv, setSearchEnv] = useState<string>('')
   const projectData: Project[] | undefined = OrganisationStore.getProjects()
   const [project, setProject] = useState<string>('')
-  const { environments, isError, isLoading } = useSortedProjectEnvironments(
-    Number(project) || undefined,
+  const projectId = Number(project) || undefined
+  // currentData, not data: data keeps the previous project's list while the next one loads
+  const { currentData, isError, isFetching } = useGetAllEnvironmentsQuery(
+    projectId ? { projectId: projectId } : skipToken,
   )
+  const environments = currentData && sortEnvironmentsByName(currentData)
+  const isLoading = isFetching && !currentData
 
   if (!orgId) {
     return

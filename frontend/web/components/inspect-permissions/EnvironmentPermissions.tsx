@@ -1,5 +1,7 @@
 import ExpandablePermissionsList from './ExpandablePermissionsList'
-import { useSortedProjectEnvironments } from 'common/hooks/useSortedProjectEnvironments'
+import { skipToken } from '@reduxjs/toolkit/query'
+import { useGetAllEnvironmentsQuery } from 'common/services/useEnvironment'
+import { sortEnvironmentsByName } from 'common/utils/sortEnvironmentsByName'
 import EnvironmentsLoadState from 'components/EnvironmentsLoadState'
 import PanelSearch from 'components/PanelSearch'
 
@@ -14,9 +16,13 @@ const EnvironmentPermissions = ({
   searchEnvironment = '',
   userId,
 }: EnvironmentPermissionsProps) => {
-  const { environments, isError, isLoading } = useSortedProjectEnvironments(
-    Number(projectId) || undefined,
+  const id = Number(projectId) || undefined
+  // currentData, not data: data keeps the previous project's list while the next one loads
+  const { currentData, isError, isFetching } = useGetAllEnvironmentsQuery(
+    id ? { projectId: id } : skipToken,
   )
+  const environments = currentData && sortEnvironmentsByName(currentData)
+  const isLoading = isFetching && !currentData
 
   const filteredEnvironments = environments?.filter((v) => {
     const search = searchEnvironment?.toLowerCase()
