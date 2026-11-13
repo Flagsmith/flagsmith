@@ -89,7 +89,7 @@ def update_organisation_subscription_information_cache_recurring() -> None:
     update_organisation_subscription_information_cache()
 
 
-@register_recurring_task(run_every=timedelta(hours=1))
+@register_recurring_task(run_every=timedelta(hours=24))
 def push_usage_to_control_plane() -> None:
     push_usage_snapshots()
 

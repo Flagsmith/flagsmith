@@ -698,3 +698,14 @@ class OrganisationAPIBilling(models.Model):
 
     created_at = models.DateTimeField(null=True, auto_now_add=True)
     updated_at = models.DateTimeField(null=True, auto_now=True)
+
+
+class UsageReportingState(models.Model):
+    """
+    End of the last window pushed successfully
+    """
+
+    organisation = models.OneToOneField(
+        Organisation, on_delete=models.CASCADE, related_name="usage_reporting_state"
+    )
+    reported_until = models.DateTimeField()
