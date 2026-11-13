@@ -2,7 +2,7 @@ import ExpandablePermissionsList from './ExpandablePermissionsList'
 import { skipToken } from '@reduxjs/toolkit/query'
 import { useGetAllEnvironmentsQuery } from 'common/services/useEnvironment'
 import { sortEnvironmentsByName } from 'common/utils/sortEnvironmentsByName'
-import Banner from 'components/base/Banner'
+import EmptyState from 'components/EmptyState'
 import Button from 'components/base/forms/Button'
 import PanelSearch from 'components/PanelSearch'
 
@@ -32,18 +32,18 @@ const EnvironmentPermissions = ({
   if (isLoading) {
     return <Loader />
   }
-  if (isError) {
+  if (isError && !environments) {
     return (
-      <Banner
-        type='error'
+      <EmptyState
+        status='error'
+        title='Could not load environments'
+        description='Try again in a few moments.'
         action={
           <Button theme='outline' size='small' onClick={() => refetch()}>
-            Retry
+            Try again
           </Button>
         }
-      >
-        Could not load environments for this project.
-      </Banner>
+      />
     )
   }
   if (!environments?.length) {

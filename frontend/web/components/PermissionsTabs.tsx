@@ -12,7 +12,7 @@ import { useGetAllEnvironmentsQuery } from 'common/services/useEnvironment'
 import { sortEnvironmentsByName } from 'common/utils/sortEnvironmentsByName'
 import PlanBasedAccess from './PlanBasedAccess'
 import WarningMessage from './WarningMessage'
-import Banner from './base/Banner'
+import EmptyState from './EmptyState'
 import Button from './base/forms/Button'
 import { useGetProjectsQuery } from 'common/services/useProject'
 
@@ -117,21 +117,21 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
             />
           </Row>
           {isLoadingProjects && <Loader />}
-          {isProjectsError && (
-            <Banner
-              type='error'
+          {isProjectsError && !projects && (
+            <EmptyState
+              status='error'
+              title='Could not load projects'
+              description='Try again in a few moments.'
               action={
                 <Button
                   theme='outline'
                   size='small'
                   onClick={() => refetchProjects()}
                 >
-                  Retry
+                  Try again
                 </Button>
               }
-            >
-              Could not load projects.
-            </Banner>
+            />
           )}
           {!!projects && (
             <RolePermissionsList
@@ -174,21 +174,21 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
           </div>
           <div className='mt-2'>
             {isLoading && <Loader />}
-            {isError && (
-              <Banner
-                type='error'
+            {isError && !environments && (
+              <EmptyState
+                status='error'
+                title='Could not load environments'
+                description='Try again in a few moments.'
                 action={
                   <Button
                     theme='outline'
                     size='small'
                     onClick={() => refetch()}
                   >
-                    Retry
+                    Try again
                   </Button>
                 }
-              >
-                Could not load environments for this project.
-              </Banner>
+              />
             )}
             {!!environments?.length && (
               <RolePermissionsList

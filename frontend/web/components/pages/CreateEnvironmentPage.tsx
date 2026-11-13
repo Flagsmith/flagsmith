@@ -281,7 +281,7 @@ const CreateEnvironmentPage: React.FC = () => {
                                 size='small'
                                 onClick={() => refetchEnvironments()}
                               >
-                                Retry
+                                Try again
                               </Button>
                             }
                           >

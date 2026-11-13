@@ -4,7 +4,7 @@ import AccountStore from 'common/stores/account-store'
 import EnvironmentAside from './EnvironmentAside'
 import { skipToken } from '@reduxjs/toolkit/query'
 import { useGetProjectQuery } from 'common/services/useProject'
-import Banner from 'components/base/Banner'
+import EmptyState from 'components/EmptyState'
 import Button from 'components/base/forms/Button'
 import { AsyncStorage } from 'polyfill-react-native'
 import ProjectNavbar from './navbars/ProjectNavbar'
@@ -37,20 +37,20 @@ const Nav: FC<NavType> = ({ children, environmentId, header, projectId }) => {
   if (isProjectPage && isProjectError) {
     content = (
       <div className='container mt-4'>
-        <Banner
-          type='error'
+        <EmptyState
+          status='error'
+          title='Could not load this project'
+          description='Try again in a few moments.'
           action={
             <Button
               theme='outline'
               size='small'
               onClick={() => refetchProject()}
             >
-              Retry
+              Try again
             </Button>
           }
-        >
-          Could not load this project.
-        </Banner>
+        />
       </div>
     )
   } else if (isProjectPage && !activeProject) {
