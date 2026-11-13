@@ -9,7 +9,6 @@ from features.versioning.models import EnvironmentFeatureVersion
 from features.versioning.signals import environment_feature_version_published
 from features.versioning.tasks import trigger_update_version_webhooks
 from features.workflows.core.exceptions import (
-    CannotModifyManagedSegmentError,
     ChangeRequestNotApprovedError,
 )
 
@@ -26,16 +25,13 @@ class ChangeRequestCommitService:
 
     @transaction.atomic
     def commit(self, committed_by: "FFAdminUser") -> None:
-        from features.dependencies.services import (
-            validate_change_request_flag_dependencies,
-        )
 
         if not self.change_request.is_approved():
             raise ChangeRequestNotApprovedError(
                 "Change request has not been approved by all required approvers."
             )
-        self._validate_segments_are_not_cohort_managed()
-        validate_change_request_flag_dependencies(self.change_request)
+        # Runs before anything publishes: commit is not atomic as a whole, so
+        # raising any later would leave the change request half-applied.
 
         self._publish_feature_states()
         self._publish_environment_feature_versions(committed_by)
@@ -116,16 +112,7 @@ class ChangeRequestCommitService:
         for change_set in self.change_request.change_sets.all():
             change_set.publish(user=published_by)
 
-    def _validate_segments_are_not_cohort_managed(self) -> None:
-        for draft_segment in self.change_request.segments.all():
-            if (
-                live_segment := draft_segment.version_of
-            ) and live_segment.cohorts.exists():
-                raise CannotModifyManagedSegmentError(
-                    "Segments managed by a cohort cannot be changed "
-                    "via a change request."
-                )
-
+    @transaction.atomic
     def _publish_segments(self) -> None:
         for draft_segment in self.change_request.segments.all():
             live_segment = draft_segment.version_of
