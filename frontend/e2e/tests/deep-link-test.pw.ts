@@ -1,8 +1,12 @@
-import type { APIRequestContext } from '@playwright/test'
 import { test, expect } from '../test-setup'
-import { createHelpers, LONG_TIMEOUT, log } from '../helpers'
+import {
+  createEnvironmentThroughApi,
+  createHelpers,
+  createProjectThroughApi,
+  LONG_TIMEOUT,
+  log,
+} from '../helpers'
 import { E2E_USER, PASSWORD } from '../config'
-import Project from '../../common/project'
 
 const PAGE_SIZE = 50
 const FEATURE_COUNT = 60
@@ -11,61 +15,6 @@ const COMPARE_PREFIX = 'e2e_compare_'
 // One row per environment on the compare page, each serving a different value,
 // so the row that opened the slideout is identifiable from its value alone.
 const COMPARE_ENVIRONMENTS = ['Alpha', 'Beta', 'Gamma']
-
-type ApiList<T> = T[] | { results: T[] }
-
-const unwrap = <T>(body: ApiList<T>): T[] =>
-  Array.isArray(body) ? body : body.results
-
-// A project of our own per test, so a run never races another test's features
-// or an earlier iteration of this one under `E2E_REPEAT`.
-const createProject = async (request: APIRequestContext, name: string) => {
-  const api = Project.api
-
-  const loginRes = await request.post(`${api}auth/login/`, {
-    data: { email: E2E_USER, password: PASSWORD },
-  })
-  expect(loginRes.ok()).toBeTruthy()
-  const { key } = await loginRes.json()
-  const headers = { Authorization: `Token ${key}` }
-
-  // The seeded organisation from e2e_seed_data.py; other orgs may appear
-  // concurrently (e.g. the versioning test creates one), so match by name.
-  const organisation = unwrap<{ id: number; name: string }>(
-    await (await request.get(`${api}organisations/`, { headers })).json(),
-  ).find((o) => o.name === 'Bullet Train Ltd')!
-  expect(organisation).toBeTruthy()
-
-  // The seeded org is at its subscription's project cap; the E2E auth token
-  // header marks the request as E2E so the cap check is bypassed.
-  const e2eToken =
-    process.env.E2E_TEST_TOKEN ??
-    process.env[`E2E_TEST_TOKEN_${Project.env.toUpperCase()}`] ??
-    ''
-  const projectRes = await request.post(`${api}projects/`, {
-    data: { name, organisation: organisation.id },
-    headers: { ...headers, 'X-E2E-Test-Auth-Token': e2eToken.trim() },
-  })
-  expect(projectRes.ok()).toBeTruthy()
-  const project = (await projectRes.json()) as { id: number }
-
-  return { api, headers, project }
-}
-
-const createEnvironment = async (
-  request: APIRequestContext,
-  headers: Record<string, string>,
-  api: string,
-  name: string,
-  projectId: number,
-) => {
-  const res = await request.post(`${api}environments/`, {
-    data: { name, project: projectId },
-    headers,
-  })
-  expect(res.ok()).toBeTruthy()
-  return (await res.json()) as { id: number; api_key: string; name: string }
-}
 
 test.describe('Deep link to feature slideout', () => {
   test('opens the slideout for a feature on any page of the list @oss', async ({
@@ -79,11 +28,11 @@ test.describe('Deep link to feature slideout', () => {
     const runId = Date.now()
 
     log('Create a dedicated project and environment')
-    const { api, headers, project } = await createProject(
+    const { api, headers, project } = await createProjectThroughApi(
       request,
       `Deep Link Project ${runId}`,
     )
-    const environment = await createEnvironment(
+    const environment = await createEnvironmentThroughApi(
       request,
       headers,
       api,
@@ -151,14 +100,20 @@ test.describe('Deep link to feature slideout', () => {
     const runId = Date.now()
 
     log('Create a project with one environment per compared value')
-    const { api, headers, project } = await createProject(
+    const { api, headers, project } = await createProjectThroughApi(
       request,
       `Compare Project ${runId}`,
     )
     const environments = []
     for (const name of COMPARE_ENVIRONMENTS) {
       environments.push(
-        await createEnvironment(request, headers, api, name, project.id),
+        await createEnvironmentThroughApi(
+          request,
+          headers,
+          api,
+          name,
+          project.id,
+        ),
       )
     }
 
