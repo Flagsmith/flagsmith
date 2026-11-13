@@ -1,5 +1,4 @@
-import React, { FC, Ref, useMemo, useState } from 'react'
-import sortBy from 'lodash/sortBy'
+import React, { FC, Ref, useState } from 'react'
 import { EditPermissionsModal } from './EditPermissions'
 import { Project, Role, User, UserGroupSummary } from 'common/types/responses'
 import Tabs from './navigation/TabMenu/Tabs'
@@ -9,9 +8,10 @@ import Utils from 'common/utils/utils'
 import RolePermissionsList from './RolePermissionsList'
 import ProjectFilter from './ProjectFilter'
 import OrganisationStore from 'common/stores/organisation-store'
-import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
+import { useEnvironmentsByName } from 'common/hooks/useEnvironmentsByName'
 import PlanBasedAccess from './PlanBasedAccess'
 import WarningMessage from './WarningMessage'
+import ErrorMessage from './ErrorMessage'
 
 type PermissionsTabsType = {
   orgId?: number
@@ -38,13 +38,8 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
   const [searchEnv, setSearchEnv] = useState<string>('')
   const projectData: Project[] | undefined = OrganisationStore.getProjects()
   const [project, setProject] = useState<string>('')
-  const { data: environmentsData } = useGetEnvironmentsQuery(
-    { projectId: parseInt(project) },
-    { skip: !project },
-  )
-  const environments = useMemo(
-    () => sortBy(environmentsData?.results ?? [], 'name'),
-    [environmentsData],
+  const { environments, isError, isLoading } = useEnvironmentsByName(
+    Number(project) || undefined,
   )
 
   if (!orgId) {
@@ -148,13 +143,21 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
             />
           </div>
           <div className='mt-2'>
-            {environments.length > 0 && (
+            {isLoading && (
+              <div className='text-center'>
+                <Loader />
+              </div>
+            )}
+            {isError && (
+              <ErrorMessage error='Could not load environments for this project.' />
+            )}
+            {!!environments?.length && (
               <RolePermissionsList
                 user={user}
                 orgId={orgId}
                 group={group}
                 filter={searchEnv}
-                mainItems={(environments || [])?.map((v) => {
+                mainItems={environments.map((v) => {
                   return {
                     id: role ? v.id : v.api_key,
                     name: v.name,

@@ -1,7 +1,6 @@
-import { useMemo } from 'react'
-import sortBy from 'lodash/sortBy'
 import ExpandablePermissionsList from './ExpandablePermissionsList'
-import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
+import { useEnvironmentsByName } from 'common/hooks/useEnvironmentsByName'
+import ErrorMessage from 'components/ErrorMessage'
 import PanelSearch from 'components/PanelSearch'
 
 type EnvironmentPermissionsProps = {
@@ -15,13 +14,8 @@ const EnvironmentPermissions = ({
   searchEnvironment = '',
   userId,
 }: EnvironmentPermissionsProps) => {
-  const { data } = useGetEnvironmentsQuery(
-    { projectId: parseInt(projectId ?? '') },
-    { skip: !projectId },
-  )
-  const environments = useMemo(
-    () => data && sortBy(data.results, 'name'),
-    [data],
+  const { environments, isError, isLoading } = useEnvironmentsByName(
+    Number(projectId) || undefined,
   )
 
   const filteredEnvironments = environments?.filter((v) => {
@@ -29,7 +23,19 @@ const EnvironmentPermissions = ({
     if (!search) return true
     return `${v.name}`.toLowerCase().includes(search)
   })
-  if (environments?.length === 0) {
+  if (isLoading) {
+    return (
+      <div className='text-center'>
+        <Loader />
+      </div>
+    )
+  }
+  if (isError) {
+    return (
+      <ErrorMessage error='Could not load environments for this project.' />
+    )
+  }
+  if (!environments?.length) {
     return null
   }
   return (
@@ -48,7 +54,7 @@ const EnvironmentPermissions = ({
             item={env}
             level='environment'
             userId={userId}
-            projectId={parseInt(projectId ?? '')}
+            projectId={Number(projectId)}
             getItemName={(env) => env.name}
             getItemId={(env) => env.id}
             getLevelId={(env) => env.api_key}

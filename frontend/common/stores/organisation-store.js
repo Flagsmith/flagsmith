@@ -133,9 +133,10 @@ const controller = {
         ),
       ).then((res) => {
         if (`${id}` === `${store.id}`) {
-          // eslint-disable-next-line prefer-const
-          let [_projects, users, invites, subscriptionMeta] = res
-          let projects = sortBy(_projects, 'name')
+          const [_projects, users, invites, subscriptionMeta] = res
+          const projects = sortBy(_projects, (project) =>
+            project.name.toLowerCase(),
+          )
 
           store.model = {
             ...store.model,
@@ -191,14 +192,6 @@ const controller = {
               })
           }
 
-          projects.sort((a, b) => {
-            const textA = a.name.toLowerCase()
-            const textB = b.name.toLowerCase()
-            if (textA < textB) {
-              return -1
-            }
-            return textA > textB ? 1 : 0
-          })
           store.model.projects = projects
           store.model.keyedProjects = keyBy(store.model.projects, 'id')
           store.loaded()

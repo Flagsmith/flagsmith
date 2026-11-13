@@ -268,7 +268,7 @@ const CreateEnvironmentPage: React.FC = () => {
                               <Select
                                 onChange={(env: { value: string }) => {
                                   setSelectedEnv(
-                                    project?.environments.find(
+                                    project?.environments?.find(
                                       (v) => v.api_key === env.value,
                                     ),
                                   )
