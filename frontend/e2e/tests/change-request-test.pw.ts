@@ -209,6 +209,8 @@ test.describe('Change Request Tests', () => {
     await expect(
       page.getByRole('button', { name: /^Segment Overrides/ }),
     ).toHaveClass(/tab-active/)
+    await expect(page.getByText(segmentName, { exact: true })).toBeVisible()
+    await expect(page.getByText('pro_value', { exact: true })).toBeVisible()
   })
 
   test('An open change request can be edited from its page @enterprise', async ({
