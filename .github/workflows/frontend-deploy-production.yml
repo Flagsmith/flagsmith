@@ -70,9 +70,11 @@ jobs:
     runs-on: depot-ubuntu-latest
     name: Run E2E Tests
     environment: production
+    # Shared with the API deploy's E2E job: both suites tear down the same
+    # seeded E2E data, so they must not run at the same time.
     concurrency:
-      group: e2e-tests-prod
-      cancel-in-progress: true
+      group: e2e-tests-production
+      cancel-in-progress: false
 
     steps:
       - name: Cloning repo
