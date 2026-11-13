@@ -2,7 +2,8 @@ import React, { FC, ReactNode, useEffect, useState } from 'react'
 import { useHistory, useLocation } from 'react-router-dom'
 import AccountStore from 'common/stores/account-store'
 import EnvironmentAside from './EnvironmentAside'
-import { Project as ProjectType } from 'common/types/responses'
+import { skipToken } from '@reduxjs/toolkit/query'
+import { useGetProjectQuery } from 'common/services/useProject'
 import { AsyncStorage } from 'polyfill-react-native'
 import ProjectNavbar from './navbars/ProjectNavbar'
 import OrganisationNavbar from './navbars/OrganisationNavbar'
@@ -13,16 +14,9 @@ type NavType = {
   environmentId: string | undefined
   projectId: number
   header?: ReactNode
-  activeProject: ProjectType | undefined
 }
 
-const Nav: FC<NavType> = ({
-  activeProject,
-  children,
-  environmentId,
-  header,
-  projectId,
-}) => {
+const Nav: FC<NavType> = ({ children, environmentId, header, projectId }) => {
   const [lastEnvironmentId, setLastEnvironmentId] = useState()
   const [lastProjectId, setLastProjectId] = useState()
 
@@ -30,6 +24,18 @@ const Nav: FC<NavType> = ({
   const history = useHistory()
   const location = useLocation()
   const pathname = location.pathname
+
+  const { currentData: activeProject } = useGetProjectQuery(
+    projectId ? { id: projectId } : skipToken,
+  )
+  const content =
+    !activeProject && pathname.includes('project/') ? (
+      <div className='text-center'>
+        <Loader />
+      </div>
+    ) : (
+      children
+    )
 
   useEffect(() => {
     const updateLastViewed = () => {
@@ -107,14 +113,14 @@ const Nav: FC<NavType> = ({
               </div>
               <div className='aside-container'>
                 <div className='d-none d-md-block'>{header}</div>
-                {children}
+                {content}
               </div>
             </div>
           </>
         ) : (
           <div>
             <div>{header}</div>
-            {children}
+            {content}
           </div>
         )}
       </div>

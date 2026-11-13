@@ -5,16 +5,18 @@ import { IonIcon } from '@ionic/react'
 import { alarmOutline, lockClosed, warning } from 'ionicons/icons'
 import Tooltip from 'components/Tooltip'
 import { getTagColor } from './Tag'
-import OrganisationStore from 'common/stores/organisation-store'
+import { skipToken } from '@reduxjs/toolkit/query'
+import { useGetProjectQuery } from 'common/services/useProject'
 import Utils from 'common/utils/utils'
 import classNames from 'classnames'
 import Icon from 'components/icons/Icon'
-import Color from 'color'
 type TagContent = {
   tag: Partial<TTag>
 }
 function escapeHTML(unsafe: string) {
   return unsafe.replace(
+    // Escapes every non-alphanumeric character, control characters included
+    // eslint-disable-next-line no-control-regex
     /[\u0000-\u002F\u003A-\u0040\u005B-\u0060\u007B-\u00FF]/g,
     (c) => `&#${`000${c.charCodeAt(0)}`.slice(-4)};`,
   )
@@ -56,13 +58,13 @@ const renderIcon = (
   }
 }
 
-const getTooltip = (tag: TTag | undefined) => {
+const getTooltip = (
+  tag: TTag | undefined,
+  stale_flags_limit_days: number | undefined,
+) => {
   if (!tag) {
     return null
   }
-  const stale_flags_limit_days = OrganisationStore.getProject(
-    tag.project,
-  )?.stale_flags_limit_days
   const disabled = Utils.tagDisabled(tag)
   const truncated = Format.truncateText(tag.label, 12)
   const isTruncated = truncated !== tag.label ? tag.label : null
@@ -104,6 +106,10 @@ const getTooltip = (tag: TTag | undefined) => {
 }
 
 const TagContent: FC<TagContent> = ({ tag }) => {
+  // Only stale tags show the project's stale flag limit
+  const { data: project } = useGetProjectQuery(
+    tag.type === 'STALE' && tag.project ? { id: tag.project } : skipToken,
+  )
   const tagLabel = Format.truncateText(tag.label, 12)
 
   if (!tagLabel) {
@@ -125,7 +131,7 @@ const TagContent: FC<TagContent> = ({ tag }) => {
         </span>
       }
     >
-      {getTooltip(tag)}
+      {getTooltip(tag, project?.stale_flags_limit_days)}
     </Tooltip>
   )
 }

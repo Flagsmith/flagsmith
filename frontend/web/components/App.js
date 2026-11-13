@@ -292,9 +292,6 @@ const App = class extends Component {
     ) {
       return <Maintenance />
     }
-    const activeProject = OrganisationStore.getProject(projectId)
-    const projectNotLoaded =
-      !activeProject && document.location.href.includes('project/')
 
     if (this.props.isLoading) {
       return (
@@ -384,19 +381,10 @@ const App = class extends Component {
                     )}
                   </>
                 }
-                activeProject={activeProject}
                 projectId={projectId}
                 environmentId={environmentId}
               >
-                <div>
-                  {projectNotLoaded ? (
-                    <div className='text-center'>
-                      <Loader />
-                    </div>
-                  ) : (
-                    this.props.children
-                  )}
-                </div>
+                <div>{this.props.children}</div>
               </Nav>
             )
           }}
