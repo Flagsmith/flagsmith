@@ -1,4 +1,5 @@
 import Color from 'color'
+import orderBy from 'lodash/orderBy'
 
 // Not tokens: the Projects and Organisations pages colour tiles from this list.
 export const PROJECT_PALETTE = [
@@ -15,10 +16,13 @@ export const PROJECT_PALETTE = [
 export const getProjectColour = (index: number) =>
   PROJECT_PALETTE[index % (PROJECT_PALETTE.length - 1)]
 
-// Pass projects sorted by name, as the Projects page lists them.
-export const getProjectColourMap = (projects: { id: number }[]) =>
+// Same order as the Projects page tiles (capitals first), so colours match.
+export const getProjectColourMap = (projects: { id: number; name: string }[]) =>
   new Map(
-    projects.map((project, index) => [project.id, getProjectColour(index)]),
+    orderBy(projects, ['name'], ['asc']).map((project, index) => [
+      project.id,
+      getProjectColour(index),
+    ]),
   )
 
 type ContrastColour = 'black' | 'white'
