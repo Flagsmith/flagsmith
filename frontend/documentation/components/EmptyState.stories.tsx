@@ -40,7 +40,13 @@ const meta: Meta<EmptyStateProps> = {
     iconColour: {
       control: 'color',
       description:
-        'Icon fill colour. Defaults to a neutral grey when not provided.',
+        'Icon fill colour. Defaults to the secondary icon colour, or the danger colour for `status="error"`.',
+    },
+    status: {
+      control: 'inline-radio',
+      description:
+        '`error` is for content that failed to load: it defaults to a warning icon in the danger colour and is announced to screen readers. Pair it with a retry action.',
+      options: ['empty', 'error'],
     },
     title: {
       control: 'text',
@@ -92,4 +98,24 @@ export const WithDocsLink: Story = {
     icon: 'info',
     title: 'No projects yet',
   },
+}
+
+export const LoadError: Story = {
+  args: {
+    description: 'Try again in a few moments.',
+    // Clears the shared icon so the error status shows its warning icon
+    icon: undefined,
+    status: 'error',
+    title: 'Could not load projects',
+  },
+  render: (args: EmptyStateProps) => (
+    <EmptyState
+      {...args}
+      action={
+        <Button theme='outline' size='small'>
+          Try again
+        </Button>
+      }
+    />
+  ),
 }
