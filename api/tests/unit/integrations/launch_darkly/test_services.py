@@ -511,6 +511,73 @@ def test_process_import_request__ends_with_clause__matches_suffix_only(
     assert ("Dynamic List (Override for test)" in segment_names) is expected_in_segment
 
 
+@pytest.mark.parametrize(
+    "ld_operator, clause_value, version, expected_in_segment",
+    [
+        ("semVerGreaterThan", "1.0.0", "1.2.0", True),
+        ("semVerGreaterThan", "1.0", "1.2.0", True),
+        ("semVerGreaterThan", "1.0", "0.5.0", False),
+        ("semVerGreaterThan", "1", "2.0.0", True),
+        ("semVerGreaterThan", "1", "0.5.0", False),
+        ("semVerGreaterThan", "1.0-alpha", "1.0.0", True),
+        ("semVerEqual", "1.0", "1.0.0", True),
+        ("semVerEqual", "1.0", "1.1.0", False),
+        ("semVerLessThan", "2.0", "1.9.0", True),
+        ("semVerLessThan", "2.0", "2.5.0", False),
+    ],
+)
+@pytest.mark.django_db(transaction=True)
+def test_process_import_request__partial_semver_clause__evaluates_as_padded_version(
+    project: Project,
+    import_request: LaunchDarklyImportRequest,
+    ld_client_mock: MagicMock,
+    ld_operator: str,
+    clause_value: str,
+    version: str,
+    expected_in_segment: bool,
+) -> None:
+    # Given
+    segment = next(
+        segment
+        for segment in ld_client_mock.get_segments.return_value
+        if segment["rules"]
+    )
+    segment["included"] = []
+    segment["excluded"] = []
+    segment["rules"] = [
+        {
+            "_id": "rule-id",
+            "clauses": [
+                {
+                    "_id": "clause-id",
+                    "attribute": "version",
+                    "op": ld_operator,
+                    "values": [clause_value],
+                    "contextKind": "user",
+                    "negate": False,
+                }
+            ],
+        }
+    ]
+    process_import_request(import_request)
+    environment = Environment.objects.get(project=project, name="Test")
+    identity = Identity.objects.create(identifier="user", environment=environment)
+    Trait.objects.create(
+        identity=identity,
+        trait_key="version",
+        value_type="unicode",
+        string_value=version,
+    )
+
+    # When
+    segment_names = {segment.name for segment in identity.get_segments()}
+
+    # Then
+    assert (
+        f"{segment['name']} (Override for test)" in segment_names
+    ) is expected_in_segment
+
+
 @pytest.mark.django_db(transaction=True)
 def test_process_import_request__valid_segments__creates_identities_with_key_traits(
     project: Project,
