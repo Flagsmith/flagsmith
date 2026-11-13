@@ -1,0 +1,35 @@
+// The entry animation grows from the side nearest the trigger.
+.ds-popover {
+  // Bootstrap's popover layer, so it also sits above modals.
+  z-index: 1070;
+  max-width: calc(100vw - 16px);
+  max-height: var(--ds-popover-max-height, none);
+  overflow-y: auto;
+  background: var(--color-surface-default);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  transform-origin: top left;
+  animation: ds-popover-in var(--duration-normal) var(--easing-entrance);
+
+  &[data-placement$='end'] {
+    transform-origin: top right;
+  }
+  &[data-placement^='top'] {
+    transform-origin: bottom left;
+  }
+  &[data-placement^='top'][data-placement$='end'] {
+    transform-origin: bottom right;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+@keyframes ds-popover-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}

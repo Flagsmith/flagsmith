@@ -1,5 +1,6 @@
 import {
   getContrastColour,
+  getEnvironmentColour,
   getProjectColourMap,
   getProjectColour,
   PROJECT_PALETTE,
@@ -29,6 +30,18 @@ describe('getContrastColour', () => {
     [undefined, 'white'],
   ])('%s needs %s text', (background, expected) => {
     expect(getContrastColour(background)).toBe(expected)
+  })
+})
+
+describe('getEnvironmentColour', () => {
+  it('picks by id and uses the whole palette', () => {
+    expect(getEnvironmentColour(0)).toBe(PROJECT_PALETTE[0])
+    expect(getEnvironmentColour(PROJECT_PALETTE.length - 1)).toBe(
+      PROJECT_PALETTE[PROJECT_PALETTE.length - 1],
+    )
+    expect(getEnvironmentColour(PROJECT_PALETTE.length)).toBe(
+      PROJECT_PALETTE[0],
+    )
   })
 })
 

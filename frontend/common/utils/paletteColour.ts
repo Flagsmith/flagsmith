@@ -37,3 +37,7 @@ export const getContrastColour = (
     return 'white'
   }
 }
+
+// By id, not list position, so an environment keeps its colour everywhere.
+export const getEnvironmentColour = (environmentId: number) =>
+  PROJECT_PALETTE[environmentId % PROJECT_PALETTE.length]

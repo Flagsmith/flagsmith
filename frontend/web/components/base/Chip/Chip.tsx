@@ -1,7 +1,7 @@
 import React, { KeyboardEvent, ReactNode, Ref } from 'react'
 import classNames from 'classnames'
 import Icon from 'components/icons/Icon'
-import { colorIconSecondary } from 'common/theme/tokens'
+import { colorIconAction, colorIconSecondary } from 'common/theme/tokens'
 import './Chip.scss'
 
 export type ChipSize = 'default' | 'sm' | 'xs'
@@ -14,6 +14,10 @@ export type ChipProps = {
   truncate?: boolean
   onRemove?: () => void
   onClick?: () => void
+  // Passing onChange makes it a checkbox chip. Checked chips also show a tick,
+  // not just a colour.
+  checked?: boolean
+  onChange?: (checked: boolean) => void
   className?: string
   // Opt into membership of a keyboard group (e.g. a radiogroup): supply the
   // role, roving tabIndex, checked state, key handler and ref. These override
@@ -41,8 +45,10 @@ const VARIANT_UTILITIES: Record<ChipVariant, string> = {
 const Chip = ({
   'aria-checked': ariaChecked,
   'aria-expanded': ariaExpanded,
+  checked = false,
   children,
   className,
+  onChange,
   onClick,
   onKeyDown,
   onRemove,
@@ -53,21 +59,51 @@ const Chip = ({
   truncate = false,
   variant = 'neutral',
 }: ChipProps) => {
-  const interactive = !!onClick || !!role
+  const interactive = !!onClick || !!role || !!onChange
+  const shownVariant = onChange && checked ? 'accent' : variant
+  const chipClassName = classNames(
+    'ds-chip d-inline-flex align-items-center align-middle gap-1 rounded-sm',
+    VARIANT_UTILITIES[shownVariant],
+    {
+      'ds-chip--accent': shownVariant === 'accent',
+      'ds-chip--clickable': interactive,
+      [`ds-chip--${size}`]: size !== 'default',
+      'ds-chip--truncate': truncate,
+    },
+    className,
+  )
+  const content = truncate ? (
+    <span className='ds-chip__label'>{children}</span>
+  ) : (
+    children
+  )
+
+  if (onChange) {
+    return (
+      <label className={classNames(chipClassName, 'ds-chip--toggle mb-0')}>
+        <input
+          type='checkbox'
+          className='ds-chip__checkbox visually-hidden'
+          checked={checked}
+          onChange={(e) => onChange(e.target.checked)}
+        />
+        {checked && (
+          <Icon
+            name='checkmark'
+            width={16}
+            fill={colorIconAction}
+            aria-hidden
+          />
+        )}
+        {content}
+      </label>
+    )
+  }
+
   return (
     <span
       ref={ref}
-      className={classNames(
-        'ds-chip d-inline-flex align-items-center align-middle gap-1 rounded-sm',
-        VARIANT_UTILITIES[variant],
-        {
-          'ds-chip--accent': variant === 'accent',
-          'ds-chip--clickable': interactive,
-          [`ds-chip--${size}`]: size !== 'default',
-          'ds-chip--truncate': truncate,
-        },
-        className,
-      )}
+      className={chipClassName}
       onClick={onClick}
       role={role ?? (onClick ? 'button' : undefined)}
       tabIndex={interactive ? tabIndex ?? 0 : undefined}
@@ -87,7 +123,7 @@ const Chip = ({
           : undefined)
       }
     >
-      {truncate ? <span className='ds-chip__label'>{children}</span> : children}
+      {content}
       {onRemove && (
         <button
           type='button'
