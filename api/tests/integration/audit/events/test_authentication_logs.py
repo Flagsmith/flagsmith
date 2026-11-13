@@ -1,5 +1,6 @@
 import pyotp
 import pytest
+import responses
 from django.contrib.auth.hashers import make_password
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
@@ -223,6 +224,94 @@ def test_login__incorrect_2fa_code__creates_audit_log(
             "organisation_id": other_organisation.id,
             "author_id": user.id,
             "log": "User `alice@example.com` failed to log in: incorrect 2FA code.",
+        },
+    ]
+
+
+@responses.activate
+def test_login__with_google_sso__creates_audit_log(
+    api_client: APIClient,
+    organisation: Organisation,
+    other_organisation: Organisation,
+    user: FFAdminUser,
+) -> None:
+    # Given
+    responses.get(
+        "https://www.googleapis.com/oauth2/v1/userinfo",
+        json={"id": "google-user-id", "email": "alice@example.com"},
+    )
+
+    # When
+    response = api_client.post(
+        "/api/v1/auth/oauth/google/",
+        {"access_token": "google-access-token"},
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == 200
+    assert list(
+        AuditLog.objects.order_by("organisation_id", "created_date").values(
+            "organisation_id", "author_id", "log"
+        )
+    ) == [
+        {
+            "organisation_id": organisation.id,
+            "author_id": user.id,
+            "log": "User `alice@example.com` logged in with Google.",
+        },
+        {
+            "organisation_id": other_organisation.id,
+            "author_id": user.id,
+            "log": "User `alice@example.com` logged in with Google.",
+        },
+    ]
+
+
+@responses.activate
+def test_login__with_github_sso__creates_audit_log(
+    api_client: APIClient,
+    organisation: Organisation,
+    other_organisation: Organisation,
+    user: FFAdminUser,
+) -> None:
+    # Given
+    responses.post(
+        "https://github.com/login/oauth/access_token",
+        body="access_token=github-access-token&token_type=bearer",
+    )
+    responses.get(
+        "https://api.github.com/user",
+        json={"id": 12345, "name": "Alice Example"},
+    )
+    responses.get(
+        "https://api.github.com/user/emails",
+        json=[{"email": "alice@example.com", "primary": True, "verified": True}],
+    )
+
+    # When
+    response = api_client.post(
+        "/api/v1/auth/oauth/github/",
+        {"access_token": "github-code"},
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == 200
+    assert list(
+        AuditLog.objects.order_by("organisation_id", "created_date").values(
+            "organisation_id", "author_id", "log"
+        )
+    ) == [
+        {
+            "organisation_id": organisation.id,
+            "author_id": user.id,
+            "log": "User `alice@example.com` logged in with GitHub.",
+        },
+        {
+            "organisation_id": other_organisation.id,
+            "author_id": user.id,
+            "log": "User `alice@example.com` logged in with GitHub.",
         },
     ]
 

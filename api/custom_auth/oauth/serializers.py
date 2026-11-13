@@ -7,6 +7,7 @@ from django.db.models import F
 from rest_framework import serializers
 from rest_framework.authtoken.models import Token
 
+from custom_auth.signals import user_login_oauth_completed
 from integrations.lead_tracking.hubspot.services import (
     register_hubspot_tracker_and_track_user,
 )
@@ -68,6 +69,9 @@ class OAuthLoginSerializer(InviteLinkValidationMixin, serializers.Serializer):  
         user = self._get_user(user_info)
         user_logged_in.send(
             sender=UserModel, request=self.context.get("request"), user=user
+        )
+        user_login_oauth_completed.send(
+            sender=UserModel, user=user, auth_type=self.get_auth_type()
         )
         return Token.objects.get_or_create(user=user)[0]
 

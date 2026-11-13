@@ -12,6 +12,7 @@ from rest_framework import serializers
 from rest_framework.authtoken.models import Token
 from rest_framework.exceptions import PermissionDenied, ValidationError
 
+from custom_auth.signals import user_login_password_rejected
 from e2etests.helpers import is_e2e_request
 from organisations.invites.models import Invite, InviteLink
 from users.auth_type import AuthType
@@ -46,17 +47,18 @@ class CustomTokenCreateSerializer(TokenCreateSerializer):  # type: ignore[misc]
         try:
             return super().validate(attrs)  # type: ignore[no-any-return]
         except ValidationError:
-            self._raise_if_awaiting_activation(attrs)
+            self._handle_invalid_credentials(attrs)
             raise
 
-    def _raise_if_awaiting_activation(self, attrs: dict[str, Any]) -> None:
+    def _handle_invalid_credentials(self, attrs: dict[str, Any]) -> None:
         email = attrs.get(djoser_settings.LOGIN_FIELD) or ""
         user = FFAdminUser.objects.filter(email__iexact=email).first()
-        if (
-            user
-            and not user.is_active
-            and user.check_password(attrs.get("password") or "")
-        ):
+        if not user:
+            return
+        if not user.check_password(attrs.get("password") or ""):
+            user_login_password_rejected.send(sender=user.__class__, user=user)
+            return
+        if not user.is_active:
             raise ValidationError(
                 {EMAIL_NOT_VERIFIED_ERROR_KEY: [EMAIL_NOT_VERIFIED_ERROR]}
             )

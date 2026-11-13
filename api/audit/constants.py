@@ -1,3 +1,5 @@
+from users.auth_type import AuthType
+
 FEATURE_CREATED_MESSAGE = "New Flag / Remote Config created: %s"
 FEATURE_DELETED_MESSAGE = "Flag / Remote Config Deleted: %s"
 FEATURE_UPDATED_MESSAGE = "Flag / Remote Config updated: %s"
@@ -91,5 +93,12 @@ FEATURE_DEPENDENCY_DELETED_MESSAGE = (
     "Feature '%s' removed as a dependency for feature '%s'."
 )
 
+USER_LOGGED_IN_WITHOUT_2FA_MESSAGE = "User `%s` logged in without 2FA."
+USER_LOGGED_IN_WITH_2FA_MESSAGE = "User `%s` logged in with 2FA."
+USER_LOGGED_IN_WITH_OAUTH_MESSAGE = "User `%s` logged in with %s."
+OAUTH_PROVIDER_NAMES = {AuthType.GOOGLE: "Google", AuthType.GITHUB: "GitHub"}
+USER_LOGIN_REQUIRES_2FA_MESSAGE = "User `%s` has entered their password but needs 2FA."
+USER_LOGIN_PASSWORD_REJECTED_MESSAGE = "User `%s` failed to log in: incorrect password."
+USER_LOGIN_2FA_CODE_REJECTED_MESSAGE = "User `%s` failed to log in: incorrect 2FA code."
 USER_LOGGED_OUT_MESSAGE = "User `%s` logged out."
 USER_PASSWORD_CHANGED_MESSAGE = "User `%s` changed their password."
