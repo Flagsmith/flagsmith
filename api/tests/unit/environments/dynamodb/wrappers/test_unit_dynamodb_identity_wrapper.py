@@ -15,7 +15,9 @@ from edge_api.identities.search import (
     EdgeIdentitySearchType,
 )
 from environments.dynamodb import DynamoIdentityWrapper
+from environments.dynamodb.constants import BATCH_GET_ITEM_MAX_ATTEMPTS
 from environments.dynamodb.wrappers.exceptions import (
+    BatchGetItemAttemptsExhausted,
     CapacityBudgetExceeded,
     SystemTraitWriteRaceError,
 )
@@ -866,3 +868,73 @@ def test_unset_system_trait__trait_absent__no_error(
     document = dynamodb_identity_wrapper.get_item("api-key_user-1")
     assert document is not None
     assert document["system_traits"] == {"other": True}
+
+
+def test_iter_items_by_composite_keys__existing_and_missing_keys__yields_existing(
+    dynamodb_identity_wrapper: DynamoIdentityWrapper,
+) -> None:
+    # Given
+    dynamodb_identity_wrapper.put_item(
+        {
+            "composite_key": "api-key_user-1",
+            "identifier": "user-1",
+            "environment_api_key": "api-key",
+        }
+    )
+
+    # When
+    documents = list(
+        dynamodb_identity_wrapper.iter_items_by_composite_keys(
+            ["api-key_user-1", "api-key_does-not-exist"]
+        )
+    )
+
+    # Then
+    assert [document["composite_key"] for document in documents] == ["api-key_user-1"]
+
+
+def test_iter_items_by_composite_keys__consistent_read__reads_consistently(
+    dynamodb_identity_wrapper: DynamoIdentityWrapper,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    resource_mock = mocker.patch.object(
+        DynamoIdentityWrapper, "resource", new_callable=mocker.PropertyMock
+    ).return_value
+    resource_mock.batch_get_item.return_value = {"Responses": {}, "UnprocessedKeys": {}}
+
+    # When
+    list(
+        dynamodb_identity_wrapper.iter_items_by_composite_keys(
+            ["api-key_user-1"], consistent_read=True
+        )
+    )
+
+    # Then
+    request_items = resource_mock.batch_get_item.call_args.kwargs["RequestItems"]
+    assert request_items["flagsmith_identities"]["ConsistentRead"] is True
+
+
+def test_iter_items_by_composite_keys__keys_never_processed__raises_expected(
+    dynamodb_identity_wrapper: DynamoIdentityWrapper,
+    mocker: MockerFixture,
+) -> None:
+    """
+    Unprocessed keys must not be reported as absent — a caller that deletes data
+    on a document's absence would act on items DynamoDB never read.
+    """
+    # Given
+    mocker.patch("environments.dynamodb.wrappers.identity_wrapper.sleep")
+    resource_mock = mocker.patch.object(
+        DynamoIdentityWrapper, "resource", new_callable=mocker.PropertyMock
+    ).return_value
+    unprocessed = {"flagsmith_identities": {"Keys": [{"composite_key": "api-key_x"}]}}
+    resource_mock.batch_get_item.return_value = {
+        "Responses": {},
+        "UnprocessedKeys": unprocessed,
+    }
+
+    # When / Then
+    with pytest.raises(BatchGetItemAttemptsExhausted):
+        list(dynamodb_identity_wrapper.iter_items_by_composite_keys(["api-key_x"]))
+    assert resource_mock.batch_get_item.call_count == BATCH_GET_ITEM_MAX_ATTEMPTS
