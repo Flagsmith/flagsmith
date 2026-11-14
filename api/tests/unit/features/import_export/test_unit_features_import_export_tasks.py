@@ -6,12 +6,10 @@ from django.db.models import Q
 from django.utils import timezone
 from freezegun.api import FrozenDateTimeFactory
 from pytest_django.fixtures import SettingsWrapper
-from rest_framework.exceptions import ValidationError
 
 from environments.identities.models import Identity
 from environments.models import Environment
 from experimentation.models import Experiment, ExperimentStatus
-from features.constants import LIVE_EXPERIMENT_MV_OPTIONS_MESSAGE
 from features.feature_types import MULTIVARIATE, STANDARD
 from features.import_export.constants import (
     FAILED,
@@ -69,7 +67,7 @@ def _export_data(
 
 
 NEW_FEATURE_DATA: FeatureExportData = {
-    "name": "imported before the rejected feature",
+    "name": "imported alongside skipped feature",
     "default_enabled": False,
     "is_server_key_only": False,
     "initial_value": "initial",
@@ -83,7 +81,7 @@ NEW_FEATURE_DATA: FeatureExportData = {
 @pytest.mark.parametrize(
     "experiment_status", [ExperimentStatus.RUNNING, ExperimentStatus.PAUSED]
 )
-def test_import_features__experiment_in_target_environment__changes_nothing(
+def test_import_features__experiment_in_target_environment__skips_feature_and_imports_rest(
     db: None,
     environment: Environment,
     project: Project,
@@ -107,18 +105,12 @@ def test_import_features__experiment_in_target_environment__changes_nothing(
     )
 
     # When
-    with pytest.raises(ValidationError) as exc_info:
-        import_features_for_environment(feature_import.id)
+    import_features_for_environment(feature_import.id)
 
     # Then
-    assert exc_info.value.detail == {
-        "detail": LIVE_EXPERIMENT_MV_OPTIONS_MESSAGE.format(
-            environment=environment.name
-        )
-    }
     feature_import.refresh_from_db()
-    assert feature_import.status == FAILED
-    assert not Feature.objects.filter(
+    assert feature_import.status == SUCCESS
+    assert Feature.objects.filter(
         project=project, name=NEW_FEATURE_DATA["name"]
     ).exists()
     assert FeatureSegment.objects.filter(pk=feature_segment.pk).exists()
@@ -127,7 +119,49 @@ def test_import_features__experiment_in_target_environment__changes_nothing(
     assert feature_state.get_feature_state_value() == feature.initial_value
 
 
-def test_import_features__adds_variation_to_feature_in_experiment__changes_nothing(
+def test_import_features__experiments_in_multiple_environments__skips_target_environment(
+    db: None,
+    environment: Environment,
+    environment_two: Environment,
+    project: Project,
+    feature: Feature,
+    segment: Segment,
+) -> None:
+    # Given
+    segment_two = FeatureSegment.objects.create(
+        feature=feature, segment=segment, environment=environment_two
+    )
+    for env in (environment, environment_two):
+        Experiment.objects.create(
+            environment=env,
+            feature=feature,
+            name=f"live experiment {env.id}",
+            hypothesis="new option wins",
+            status=ExperimentStatus.RUNNING,
+        )
+    feature_import = _feature_import(
+        environment_two, [NEW_FEATURE_DATA, _export_data(feature, [])]
+    )
+
+    # When
+    import_features_for_environment(feature_import.id)
+
+    # Then
+    feature_import.refresh_from_db()
+    assert feature_import.status == SUCCESS
+    assert Feature.objects.filter(
+        project=project, name=NEW_FEATURE_DATA["name"]
+    ).exists()
+    assert FeatureSegment.objects.filter(pk=segment_two.pk).exists()
+    assert (
+        feature.feature_states.get(
+            environment=environment_two, identity=None, feature_segment=None
+        ).get_feature_state_value()
+        == feature.initial_value
+    )
+
+
+def test_import_features__adds_variation_to_feature_in_experiment__skips_feature_and_imports_rest(
     db: None,
     environment: Environment,
     environment_two: Environment,
@@ -167,18 +201,23 @@ def test_import_features__adds_variation_to_feature_in_experiment__changes_nothi
     )
 
     # When
-    with pytest.raises(ValidationError):
-        import_features_for_environment(feature_import.id)
+    import_features_for_environment(feature_import.id)
 
     # Then
     feature_import.refresh_from_db()
-    assert feature_import.status == FAILED
-    assert not Feature.objects.filter(
+    assert feature_import.status == SUCCESS
+    assert Feature.objects.filter(
         project=project, name=NEW_FEATURE_DATA["name"]
     ).exists()
     assert list(
         feature.multivariate_options.values_list("string_value", flat=True)
     ) == ["existing"]
+    assert (
+        feature.feature_states.get(
+            environment=environment_two, identity=None, feature_segment=None
+        ).get_feature_state_value()
+        == feature.initial_value
+    )
 
 
 def test_import_features__existing_variations_into_other_environment__succeeds(

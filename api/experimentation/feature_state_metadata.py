@@ -11,18 +11,19 @@ if TYPE_CHECKING:  # pragma: no cover
     from features.models import FeatureState
 
 
-def get_live_experiment(feature_id: int) -> Experiment | None:
+def get_live_experiment(
+    feature_id: int, environment_id: int | None = None
+) -> Experiment | None:
     # Multivariate options belong to the feature, not an environment, so an
     # experiment in any environment locks them. A paused experiment counts:
     # changing the variants before it resumes would skew its results.
-    return (  # type: ignore[no-any-return]
-        Experiment.objects.filter(
-            feature_id=feature_id,
-            status__in=(ExperimentStatus.RUNNING, ExperimentStatus.PAUSED),
-        )
-        .select_related("environment")
-        .first()
+    experiments = Experiment.objects.filter(
+        feature_id=feature_id,
+        status__in=(ExperimentStatus.RUNNING, ExperimentStatus.PAUSED),
     )
+    if environment_id is not None:
+        experiments = experiments.filter(environment_id=environment_id)
+    return experiments.select_related("environment").first()  # type: ignore[no-any-return]
 
 
 def live_experiment_error(experiment: Experiment) -> ValidationError:
