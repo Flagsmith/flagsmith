@@ -60,11 +60,8 @@ def launch_darkly_backoff(
     def _wait_gen() -> Generator[float, None, None]:
         exc: RequestException = yield  # type: ignore[misc,assignment]
 
-        while True:
-            if retry_after := _get_retry_after(exc):
-                yield retry_after
-            else:
-                return
+        while retry_after := _get_retry_after(exc):
+            exc = yield retry_after  # type: ignore[assignment]
 
     def _handle_giveup(
         details: Details,
