@@ -1,10 +1,9 @@
 import React, { FC, ReactNode, useEffect, useRef, useState } from 'react'
 import Utils from 'common/utils/utils'
-import { AuditLogItem, Environment } from 'common/types/responses'
+import { AuditLogItem } from 'common/types/responses'
 import { useGetAuditLogsQuery } from 'common/services/useAuditLog'
 import useDebouncedSearch from 'common/useDebouncedSearch'
 import { Link } from 'react-router-dom'
-import ProjectStore from 'common/stores/project-store'
 import Button from './base/forms/Button'
 import Tag from './tags/Tag'
 import PanelSearch from './PanelSearch'
@@ -15,6 +14,8 @@ import { useGetSubscriptionMetadataQuery } from 'common/services/useSubscription
 import AccountStore from 'common/stores/account-store'
 import { isVersionOverLimit } from 'common/services/useFeatureVersion'
 import Tooltip from './Tooltip'
+import { getEnvironmentColourIndex } from 'common/utils/getEnvironmentColourIndex'
+import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
 
 type AuditLogType = {
   environmentId: string
@@ -35,6 +36,10 @@ const AuditLog: FC<AuditLogType> = (props) => {
   const { data: subscriptionMeta } = useGetSubscriptionMetadataQuery({
     id: AccountStore.getOrganisation()?.id,
   })
+  const { data: environmentsData } = useGetEnvironmentsQuery({
+    projectId: `${props.projectId}`,
+  })
+  const environmentList = environmentsData?.results
   const [environments, setEnvironments] = useState(props.environmentId)
 
   useEffect(() => {
@@ -94,11 +99,8 @@ const AuditLog: FC<AuditLogType> = (props) => {
     related_object_type,
     related_object_uuid,
   }: AuditLogItem) => {
-    const environments = ProjectStore.getEnvs() as Environment[] | null
-    const index = environments?.findIndex((v) => {
-      return v.id === environment?.id
-    })
-    const colour = index === -1 ? 0 : index
+    // Use the same list and order as EnvironmentTagSelect so colours match
+    const colour = getEnvironmentColourIndex(environmentList, environment?.id)
     let link: ReactNode = null
     const date = moment(created_date)
     const isVersionEvent =
