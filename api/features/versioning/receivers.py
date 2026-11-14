@@ -13,6 +13,7 @@ from features.versioning.tasks import (
 from features.versioning.versioning_service import (
     get_updated_feature_states_for_version,
 )
+from projects.tags.models import TagType
 
 
 @receiver(post_save, sender=EnvironmentFeatureVersion)
@@ -81,3 +82,8 @@ def trigger_feature_state_change_went_live_signal(  # type: ignore[no-untyped-de
     """
     for fs in get_updated_feature_states_for_version(instance):
         feature_state_change_went_live.send(fs)
+
+
+@receiver(environment_feature_version_published, sender=EnvironmentFeatureVersion)
+def remove_stale_tag(instance: EnvironmentFeatureVersion, **kwargs) -> None:  # type: ignore[no-untyped-def]
+    instance.feature.tags.remove(*instance.feature.tags.filter(type=TagType.STALE))
