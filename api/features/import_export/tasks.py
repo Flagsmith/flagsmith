@@ -11,10 +11,7 @@ from task_processor.decorators import (
 )
 
 from environments.models import Environment
-from experimentation.feature_state_metadata import (
-    get_live_experiment,
-    live_experiment_error,
-)
+from experimentation.feature_state_metadata import get_live_experiment
 from features.import_export.constants import (
     FAILED,
     PROCESSING,
@@ -152,16 +149,18 @@ def _import_features_for_environment(feature_import: FeatureImport) -> None:
     input_data: list[FeatureExportData] = json.loads(feature_import.data)
     project = environment.project
 
-    if feature_import.strategy != SKIP:
-        _check_import_against_live_experiments(input_data, environment)
-
     for feature_data in input_data:
         existing_feature = Feature.objects.filter(
             name=feature_data["name"],
             project=project,
         ).first()
 
-        if existing_feature and feature_import.strategy == SKIP:
+        if existing_feature and (
+            feature_import.strategy == SKIP
+            or _should_skip_for_live_experiment(
+                feature_data, existing_feature, environment
+            )
+        ):
             continue
 
         if existing_feature is None:
@@ -174,29 +173,24 @@ def _import_features_for_environment(feature_import: FeatureImport) -> None:
     feature_import.save()
 
 
-def _check_import_against_live_experiments(
-    input_data: list[FeatureExportData], environment: Environment
-) -> None:
-    """
-    Reject the whole import, before anything is written, if it would add a
-    variation to a feature in an experiment, or overwrite the environment the
-    experiment runs in (which deletes its rollout segment override).
-    """
-    for feature_data in input_data:
-        feature = Feature.objects.filter(
-            name=feature_data["name"], project=environment.project
-        ).first()
-        if feature is None or not (experiment := get_live_experiment(feature.id)):
-            continue
-        existing_variations = {
-            (option.type, option.value) for option in feature.multivariate_options.all()
-        }
-        adds_variation = any(
-            (mv_data["type"], mv_data["value"]) not in existing_variations
-            for mv_data in feature_data["multivariate"]
-        )
-        if adds_variation or experiment.environment_id == environment.id:
-            raise live_experiment_error(experiment)
+def _should_skip_for_live_experiment(
+    feature_data: FeatureExportData,
+    existing_feature: Feature,
+    environment: Environment,
+) -> bool:
+    if get_live_experiment(existing_feature.id, environment.id):
+        return True
+    if not feature_data["multivariate"]:
+        return False
+    existing_variations = {
+        (option.type, option.value)
+        for option in existing_feature.multivariate_options.all()
+    }
+    adds_variation = any(
+        (mv_data["type"], mv_data["value"]) not in existing_variations
+        for mv_data in feature_data["multivariate"]
+    )
+    return bool(adds_variation and get_live_experiment(existing_feature.id))
 
 
 # Should only run on official flagsmith instance.
