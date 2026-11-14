@@ -70,12 +70,16 @@ def test_influxdb_wrapper_write__write_raises_error__handles_gracefully(
     mock_write_api.write.assert_called()
 
 
+@pytest.mark.parametrize(
+    "expected_exception",
+    [HTTPError("HTTP error occurred"), ApiException(status=500)],
+)
 def test_influx_db_wrapper_query__http_error__logs_expected(
     mock_influxdb_client: MagicMock,
     mocker: MockerFixture,
+    expected_exception: Exception,
 ) -> None:
     # Given
-    expected_exception = HTTPError("HTTP error occurred")
     mock_query_api = mock_influxdb_client.query_api.return_value
     mock_query_api.query.side_effect = expected_exception
     capture_exception_mock = mocker.patch(
