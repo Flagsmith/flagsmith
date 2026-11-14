@@ -2,18 +2,32 @@ from common.projects.permissions import (
     CREATE_FEATURE,
     VIEW_PROJECT,
 )
+from django.db import transaction
 from django.utils.decorators import method_decorator
 from drf_spectacular.utils import extend_schema
 from rest_framework import viewsets
 from rest_framework.decorators import api_view
+from rest_framework.exceptions import ValidationError
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 
+from experimentation.feature_state_metadata import check_no_live_experiment
 from features.models import Feature
 from projects.permissions import NestedProjectPermissions
 
 from .models import MultivariateFeatureOption
 from .serializers import MultivariateFeatureOptionSerializer
+
+# What makes a variation. `default_percentage_allocation` is left out: the
+# dashboard always sends it as 0, and it only seeds new environments.
+VARIATION_FIELDS = (
+    "type",
+    "string_value",
+    "integer_value",
+    "boolean_value",
+    "key",
+    "feature",
+)
 
 
 @method_decorator(
@@ -69,8 +83,56 @@ class MultivariateFeatureOptionViewSet(viewsets.ModelViewSet):  # type: ignore[t
     def create(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
         feature_pk = self.kwargs.get("feature_pk")
         project_pk = self.kwargs.get("project_pk")
-        get_object_or_404(Feature.objects.filter(project__id=project_pk), pk=feature_pk)
+        url_feature = get_object_or_404(
+            Feature.objects.filter(project__id=project_pk), pk=feature_pk
+        )
+        if "feature" in request.data and str(request.data.get("feature")) != str(
+            url_feature.id
+        ):
+            raise ValidationError({"feature": "Feature must match the URL."})
         return super().create(request, *args, **kwargs)
+
+    def perform_create(self, serializer):  # type: ignore[no-untyped-def]
+        url_feature = get_object_or_404(
+            Feature.objects.filter(project__id=self.kwargs["project_pk"]),
+            pk=self.kwargs["feature_pk"],
+        )
+        if serializer.validated_data["feature"] != url_feature:
+            raise ValidationError({"feature": "Feature must match the URL."})
+        with transaction.atomic():
+            Feature.objects.select_for_update().filter(pk=url_feature.pk).exists()
+            check_no_live_experiment(url_feature.id)
+            super().perform_create(serializer)
+
+    def perform_update(self, serializer):  # type: ignore[no-untyped-def]
+        instance = serializer.instance
+        data = serializer.validated_data
+        # The dashboard PUTs every option on each save, changed or not, so only
+        # a change to the variation itself is checked against experiments.
+        if not any(
+            field in data and data[field] != getattr(instance, field)
+            for field in VARIATION_FIELDS
+        ):
+            super().perform_update(serializer)
+            return
+
+        features = {instance.feature, data.get("feature", instance.feature)}
+        with transaction.atomic():
+            list(
+                Feature.objects.select_for_update()
+                .filter(pk__in=[feature.pk for feature in features])
+                .order_by("pk")
+                .values_list("pk", flat=True)
+            )
+            for feature in features:
+                check_no_live_experiment(feature.id)
+            super().perform_update(serializer)
+
+    def perform_destroy(self, instance):  # type: ignore[no-untyped-def]
+        with transaction.atomic():
+            Feature.objects.select_for_update().filter(pk=instance.feature_id).exists()
+            check_no_live_experiment(instance.feature_id)
+            super().perform_destroy(instance)
 
     def get_queryset(self):  # type: ignore[no-untyped-def]
         if getattr(self, "swagger_fake_view", False):

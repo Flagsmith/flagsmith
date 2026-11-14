@@ -12,7 +12,7 @@ from common.features.serializers import (
     FeatureStateValueSerializer,
 )
 from common.projects.permissions import VIEW_PROJECT
-from django.db import models
+from django.db import models, transaction
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
 from drf_writable_nested import (  # type: ignore[attr-defined]
@@ -31,6 +31,8 @@ from evaluation.results import get_split_weight
 from evaluation.types import EvaluatedFeatureState
 from experimentation.feature_state_metadata import (
     get_feature_state_metadata_builder,
+    get_live_experiment,
+    live_experiment_error,
 )
 from integrations.vcs.services import dispatch_vcs_on_feature_state_changed
 from metadata.serializers import MetadataSerializer, MetadataSerializerMixin
@@ -307,6 +309,19 @@ class CreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
                 }
             )
 
+    def update(self, instance: Feature, validated_data: dict[str, Any]) -> Feature:
+        with transaction.atomic():
+            Feature.objects.select_for_update().filter(pk=instance.pk).exists()
+            if "multivariate_options" in validated_data and (
+                experiment := get_live_experiment(instance.id)
+            ):
+                if self._changes_multivariate_options(
+                    validated_data["multivariate_options"], instance
+                ):
+                    raise live_experiment_error(experiment)
+                validated_data.pop("multivariate_options")
+            return super().update(instance, validated_data)  # type: ignore[no-any-return]
+
     def validate_multivariate_options(self, multivariate_options):  # type: ignore[no-untyped-def]
         if multivariate_options:
             user = self.context["request"].user
@@ -325,6 +340,32 @@ class CreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
             if total_percentage_allocation > 100:
                 raise serializers.ValidationError("Invalid percentage allocation")
         return multivariate_options
+
+    def _changes_multivariate_options(
+        self,
+        multivariate_options: list[dict[str, Any]] | None,
+        instance: Feature,
+    ) -> bool:
+        # The frontend resubmits the whole feature, so only a real change to
+        # writable option fields counts. Compare on content, not ids.
+        fields = (
+            "type",
+            "integer_value",
+            "string_value",
+            "boolean_value",
+            "default_percentage_allocation",
+        )
+        current = NestedMultivariateFeatureOptionSerializer(
+            instance.multivariate_options.all(), many=True
+        ).data
+
+        def signature(options) -> list[tuple[Any, ...]]:  # type: ignore[no-untyped-def]
+            return sorted(
+                (tuple(option.get(field) for field in fields) for option in options),
+                key=repr,
+            )
+
+        return signature(current) != signature(multivariate_options or [])
 
     def validate_owners(self, owners: list[FFAdminUser]) -> list[FFAdminUser]:
         project: Project = self.context["project"]

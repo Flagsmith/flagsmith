@@ -10,6 +10,8 @@ from task_processor.decorators import (
     register_task_handler,
 )
 
+from environments.models import Environment
+from experimentation.feature_state_metadata import get_live_experiment
 from features.import_export.constants import (
     FAILED,
     PROCESSING,
@@ -153,7 +155,12 @@ def _import_features_for_environment(feature_import: FeatureImport) -> None:
             project=project,
         ).first()
 
-        if existing_feature and feature_import.strategy == SKIP:
+        if existing_feature and (
+            feature_import.strategy == SKIP
+            or _should_skip_for_live_experiment(
+                feature_data, existing_feature, environment
+            )
+        ):
             continue
 
         if existing_feature is None:
@@ -164,6 +171,26 @@ def _import_features_for_environment(feature_import: FeatureImport) -> None:
 
     feature_import.status = SUCCESS
     feature_import.save()
+
+
+def _should_skip_for_live_experiment(
+    feature_data: FeatureExportData,
+    existing_feature: Feature,
+    environment: Environment,
+) -> bool:
+    if get_live_experiment(existing_feature.id, environment.id):
+        return True
+    if not feature_data["multivariate"]:
+        return False
+    existing_variations = {
+        (option.type, option.value)
+        for option in existing_feature.multivariate_options.all()
+    }
+    adds_variation = any(
+        (mv_data["type"], mv_data["value"]) not in existing_variations
+        for mv_data in feature_data["multivariate"]
+    )
+    return bool(adds_variation and get_live_experiment(existing_feature.id))
 
 
 # Should only run on official flagsmith instance.
