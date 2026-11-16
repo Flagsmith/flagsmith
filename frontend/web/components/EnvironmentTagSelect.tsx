@@ -2,6 +2,7 @@ import React, { FC, useMemo } from 'react'
 import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
 import ToggleChip from './base/ToggleChip'
 import { getEnvironmentColour } from 'common/utils/environmentColour'
+import { getNextEnvironmentSelection } from 'common/utils/environmentSelection'
 import Button from './base/forms/Button'
 
 type EnvironmentSelectType = {
@@ -41,22 +42,12 @@ const EnvironmentSelect: FC<EnvironmentSelectType> = ({
       })
   }, [data?.results, ignore, idField])
 
-  // Single mode picks one; clicking it again clears it only when allowEmpty.
   const toggle = (envValue: string) => {
-    if (multiple) {
-      const current = Array.isArray(value) ? value : []
-      onChange(
-        current.includes(envValue)
-          ? current.filter((v) => v !== envValue)
-          : [...current, envValue],
-      )
-      return
-    }
-    if (value !== envValue) {
-      onChange(envValue)
-    } else if (allowEmpty) {
-      onChange(undefined)
-    }
+    const next = getNextEnvironmentSelection(value, envValue, {
+      allowEmpty,
+      multiple,
+    })
+    if (next !== value) onChange(next)
   }
 
   const handleSelectAll = () => {
