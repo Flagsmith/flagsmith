@@ -3,8 +3,8 @@ import {
   getChipColourVars,
   getChipShades,
   getChipTextStrength,
-  parseHex,
-} from 'common/utils/chipColour'
+} from 'components/base/Chip/chipColour'
+import { parseHex } from 'common/utils/parseHex'
 import { TAG_COLOURS } from 'common/theme/tagColours'
 
 const HARD_CASES = ['#f5e1a4', '#1a1a2e', '#ffffff', '#000000', '#ffa500']

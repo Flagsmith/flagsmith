@@ -1,5 +1,5 @@
 import { TAG_COLOURS } from 'common/theme/tagColours'
-import { parseHex } from './chipColour'
+import { parseHex } from './parseHex'
 
 // The banner colour is the only colour a user picks for an environment. Without
 // one, fall back to the colour the rest of the UI gives its list position.

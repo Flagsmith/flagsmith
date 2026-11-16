@@ -1,4 +1,4 @@
-import { getNextEnvironmentSelection } from 'common/utils/environmentSelection'
+import { getNextEnvironmentSelection } from 'components/EnvironmentTagSelect/environmentSelection'
 
 describe('getNextEnvironmentSelection', () => {
   it.each`

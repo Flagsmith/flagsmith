@@ -1,7 +1,7 @@
 import type { CSSProperties } from 'react'
 import tokens from 'common/theme/tokens.json'
+import { parseHex, Rgb } from 'common/utils/parseHex'
 
-type Rgb = { r: number; g: number; b: number }
 export type ChipTheme = 'light' | 'dark'
 // CSS custom properties, typed as styles so they can go on `style`.
 export type ChipColourVars = CSSProperties & {
@@ -12,13 +12,6 @@ export type ChipColourVars = CSSProperties & {
 // Kept in step with Chip.scss, which mixes the same amounts in CSS.
 export const CHIP_TINT = { base: 0.12, selected: 0.22 }
 const MIN_TEXT_CONTRAST = 4.5
-
-export const parseHex = (hex: string): Rgb | null => {
-  const match = /^#?([0-9a-f]{6})$/i.exec(hex.trim())
-  if (!match) return null
-  const n = parseInt(match[1], 16)
-  return { b: n & 255, g: (n >> 8) & 255, r: (n >> 16) & 255 }
-}
 
 const themeColour = (
   token: { light: string; dark: string },

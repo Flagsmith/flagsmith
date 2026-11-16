@@ -1,9 +1,9 @@
 import React, { FC, useMemo } from 'react'
 import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
-import ToggleChip from './base/ToggleChip'
+import ToggleChip from 'components/base/ToggleChip'
 import { getEnvironmentColour } from 'common/utils/environmentColour'
-import { getNextEnvironmentSelection } from 'common/utils/environmentSelection'
-import Button from './base/forms/Button'
+import { getNextEnvironmentSelection } from './environmentSelection'
+import Button from 'components/base/forms/Button'
 
 type EnvironmentSelectType = {
   projectId: string | number | undefined

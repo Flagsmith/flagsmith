@@ -2,7 +2,7 @@ import React, { KeyboardEvent, ReactNode, Ref } from 'react'
 import classNames from 'classnames'
 import Icon from 'components/icons/Icon'
 import { colorIconSecondary } from 'common/theme/tokens'
-import { getChipColourVars } from 'common/utils/chipColour'
+import { getChipColourVars } from './chipColour'
 import './Chip.scss'
 
 export type ChipSize = 'default' | 'sm' | 'xs'
