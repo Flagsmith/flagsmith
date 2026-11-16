@@ -107,9 +107,8 @@ If something fails, stop and show me the exact error; don't guess or work around
 
 8. Offer to send test traffic with a short script that simulates a few hundred users, each with its own identifier:
    get the experiment flag for each one and track the event for some of them. The SDKs send events in batches, so
-   send what is left before the script exits: JavaScript `await flushEvents()`, Python
-   `EventProcessorConfig(max_buffer_items=1)`, Node.js `await close()`, Java `close()`, Go `FlushEvents(ctx)`,
-   Flutter `await flushEvents()`. About a minute later, call
+   send what is left before the script exits: JavaScript `await flushEvents()`, Python `close()`, Node.js
+   `await close()`, Java `close()`, Go `FlushEvents(ctx)`, Flutter `await flushEvents()`. About a minute later, call
    `POST api/v1/environments/<environment key>/experiments/<id>/results/refresh/` (allowed once every 5 minutes) and
    read `GET .../experiments/<id>/results/`. Finish with a link to the experiment:
    <dashboard>/project/<project id>/environment/<environment key>/experiments/<id>, where the dashboard is
