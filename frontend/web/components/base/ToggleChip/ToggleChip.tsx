@@ -1,6 +1,6 @@
 import { ReactNode } from 'react'
 import classNames from 'classnames'
-import Chip, { ChipSize } from 'components/base/Chip'
+import Chip, { ChipSize, ChipVariantProps } from 'components/base/Chip'
 import Icon from 'components/icons/Icon'
 import './ToggleChip.scss'
 
@@ -23,12 +23,9 @@ const ToggleChip = ({
   onChange,
   size,
 }: ToggleChipProps) => {
-  const content = (
-    <>
-      {checked && <Icon name='checkmark' width={16} aria-hidden />}
-      {children}
-    </>
-  )
+  const chipVariant: ChipVariantProps = colour
+    ? { colour, variant: 'tinted' }
+    : { variant: checked ? 'accent' : 'neutral' }
   return (
     <label
       className={classNames(
@@ -44,15 +41,10 @@ const ToggleChip = ({
         disabled={disabled}
         onChange={(e) => onChange(e.target.checked)}
       />
-      {colour ? (
-        <Chip variant='tinted' colour={colour} size={size}>
-          {content}
-        </Chip>
-      ) : (
-        <Chip variant={checked ? 'accent' : 'neutral'} size={size}>
-          {content}
-        </Chip>
-      )}
+      <Chip {...chipVariant} size={size}>
+        {checked && <Icon name='checkmark' width={16} aria-hidden />}
+        {children}
+      </Chip>
     </label>
   )
 }

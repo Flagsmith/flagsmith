@@ -10,7 +10,7 @@ export type ChipVariant = 'neutral' | 'accent' | 'tinted'
 type TokenVariant = Exclude<ChipVariant, 'tinted'>
 
 // 'tinted' takes a 6-digit hex colour; the token variants take none.
-type ChipVariantProps =
+export type ChipVariantProps =
   | { variant?: TokenVariant; colour?: never }
   | { variant: 'tinted'; colour: string }
 
