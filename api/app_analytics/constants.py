@@ -155,7 +155,6 @@ SDK_USER_AGENT_KNOWN_VERSIONS: dict[KnownClient, list[str]] = {
         "5.1.0",
         "5.2.0",
         "5.3.0",
-    
     ],
     "flagsmith-rust-sdk": [
         "unknown",
