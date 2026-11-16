@@ -27,7 +27,7 @@
   // A tag's or environment's own colour. The surface and text tokens switch
   // with the theme, so these mixes do too; --chip-text-strength (from
   // getChipColourVars) keeps the text at 4.5:1 in both.
-  &--coloured {
+  &--tinted {
     color: color-mix(
       in srgb,
       var(--chip-colour) var(--chip-text-strength),
@@ -41,7 +41,7 @@
     border-color: color-mix(in srgb, currentColor 40%, transparent);
   }
 
-  &--coloured#{&}--selected {
+  &--tinted#{&}--selected {
     background-color: color-mix(
       in srgb,
       var(--chip-colour) 22%,

@@ -76,8 +76,8 @@ const Chip = ({
         {
           'ds-chip--accent': !colourVars && shownVariant === 'accent',
           'ds-chip--clickable': interactive,
-          'ds-chip--coloured': !!colourVars,
           'ds-chip--selected': !!colourVars && selected,
+          'ds-chip--tinted': !!colourVars,
           [`ds-chip--${size}`]: size !== 'default',
           'ds-chip--truncate': truncate,
         },

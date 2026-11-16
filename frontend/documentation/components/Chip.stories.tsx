@@ -62,7 +62,7 @@ export const Group: Story = {
 }
 
 // A tag's or environment's own colour; the text stays at 4.5:1 in both themes.
-export const Coloured: Story = {
+export const Tinted: Story = {
   render: () => (
     <div className='d-flex flex-wrap gap-2'>
       {TAG_COLOURS.map((colour) => (
@@ -74,7 +74,7 @@ export const Coloured: Story = {
   ),
 }
 
-export const ColouredSelected: Story = {
+export const TintedSelected: Story = {
   render: () => (
     <div className='d-flex flex-wrap gap-2'>
       {TAG_COLOURS.slice(0, 6).map((colour) => (
