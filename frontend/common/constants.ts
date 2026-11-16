@@ -1,6 +1,7 @@
 import { OAuthType } from './types/requests'
 import { SegmentCondition } from './types/responses'
 import Utils from './utils/utils'
+import { TAG_COLOURS } from './theme/tagColours'
 import Project from './project'
 import { integrationCategories } from 'components/pages/IntegrationsPage'
 import {
@@ -723,28 +724,7 @@ const Constants = {
     WEBHOOKS_DESCRIPTION:
       'Receive a webhook for when feature values are changed.',
   },
-  tagColors: [
-    '#3d4db6',
-    '#ea5a45',
-    '#c6b215',
-    '#60bd4e',
-    '#fe5505',
-    '#1492f4',
-    '#14c0f4',
-    '#c277e0',
-    '#039587',
-    '#344562',
-    '#ffa500',
-    '#3cb371',
-    '#d3d3d3',
-    '#5D6D7E',
-    '#641E16',
-    '#5B2C6F',
-    '#D35400',
-    '#F08080',
-    '#AAC200',
-    '#DE3163',
-  ],
+  tagColors: TAG_COLOURS,
   untaggedTag: { color: '#dedede', label: 'Untagged' },
 }
 

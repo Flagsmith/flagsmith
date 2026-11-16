@@ -2,7 +2,7 @@ import React, { FC, useMemo } from 'react'
 import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
 import ToggleChip from './base/ToggleChip'
 import ColorSwatch from './ColorSwatch'
-import Utils from 'common/utils/utils'
+import { getEnvironmentColour } from 'common/utils/environmentColour'
 import Button from './base/forms/Button'
 
 type EnvironmentSelectType = {
@@ -28,7 +28,9 @@ const EnvironmentSelect: FC<EnvironmentSelectType> = ({
   const { data } = useGetEnvironmentsQuery({ projectId: `${projectId}` })
   const environments = useMemo(() => {
     return (data?.results || [])
-      ?.map((v) => ({
+      ?.map((v, i) => ({
+        // Position in the whole list, before `ignore`, as other screens use.
+        colour: getEnvironmentColour(v, i),
         label: v.name,
         value: `${v[idField]}`,
       }))
@@ -80,7 +82,7 @@ const EnvironmentSelect: FC<EnvironmentSelectType> = ({
         aria-label='Environments'
         className='flex-1 row-gap-1 gap-1'
       >
-        {environments.map((env, i) => (
+        {environments.map((env) => (
           <ToggleChip
             key={env.value}
             size='sm'
@@ -92,11 +94,7 @@ const EnvironmentSelect: FC<EnvironmentSelectType> = ({
             }
             onChange={() => toggle(env.value)}
           >
-            <ColorSwatch
-              color={Utils.getTagColour(i)}
-              shape='circle'
-              size='sm'
-            />
+            <ColorSwatch color={env.colour} shape='circle' size='sm' />
             {env.label}
           </ToggleChip>
         ))}
