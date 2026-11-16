@@ -15,6 +15,8 @@ export type RadioProps<T extends string> = {
   // 'end' puts the dot after the label, for a full-width row.
   indicatorPosition?: RadioIndicatorPosition
   disabled?: boolean
+  // Marks the option as failing validation: the ring turns danger.
+  invalid?: boolean
   className?: string
 }
 
@@ -24,6 +26,7 @@ const Radio = <T extends string>({
   className,
   disabled,
   indicatorPosition = 'start',
+  invalid,
   name,
   onChange,
   value,
@@ -44,6 +47,7 @@ const Radio = <T extends string>({
         value={value}
         checked={checked}
         disabled={disabled}
+        aria-invalid={invalid || undefined}
         onChange={() => onChange(value)}
       />
       {indicatorPosition === 'start' && dot}

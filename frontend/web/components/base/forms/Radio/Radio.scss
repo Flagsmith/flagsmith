@@ -34,12 +34,20 @@
     }
   }
 
+  &:hover input:not(:checked, :disabled, [aria-invalid='true']) ~ &__dot {
+    border-color: var(--color-border-action);
+  }
+
   input:checked ~ &__dot {
     border-color: var(--color-border-action);
 
     &::after {
       transform: scale(1);
     }
+  }
+
+  input[aria-invalid='true'] ~ &__dot {
+    border-color: var(--color-border-danger);
   }
 
   // High contrast mode drops backgrounds, which would hide the checked dot.

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useId, useState } from 'react'
 import type { Meta, StoryObj } from 'storybook'
 
 import Radio from 'components/base/forms/Radio'
@@ -16,16 +16,18 @@ type Option = 'a' | 'b'
 
 const Group = () => {
   const [value, setValue] = useState<Option>('a')
+  // Docs pages render a story more than once; a shared name would join the copies.
+  const name = useId()
   return (
     <div
       role='radiogroup'
       aria-label='Options'
       className='d-flex flex-column gap-1'
     >
-      <Radio name='story' value='a' checked={value === 'a'} onChange={setValue}>
+      <Radio name={name} value='a' checked={value === 'a'} onChange={setValue}>
         Option A
       </Radio>
-      <Radio name='story' value='b' checked={value === 'b'} onChange={setValue}>
+      <Radio name={name} value='b' checked={value === 'b'} onChange={setValue}>
         Option B
       </Radio>
     </div>
@@ -53,6 +55,18 @@ export const States: Story = {
         onChange={() => {}}
       >
         Disabled
+      </Radio>
+      <Radio
+        name='states-4'
+        value='a'
+        checked={false}
+        invalid
+        onChange={() => {}}
+      >
+        Invalid
+      </Radio>
+      <Radio name='states-5' value='a' checked invalid onChange={() => {}}>
+        Invalid, selected
       </Radio>
     </div>
   ),
