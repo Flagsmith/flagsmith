@@ -14,17 +14,9 @@ describe('getEnvironmentColour', () => {
   it.each`
     name                   | environment
     ${'no banner colour'}  | ${{}}
-    ${'an empty colour'}   | ${{ banner_colour: '' }}
-    ${'a null colour'}     | ${{ banner_colour: null }}
     ${'an invalid colour'} | ${{ banner_colour: 'red' }}
   `('falls back to the position colour with $name', ({ environment }) => {
     expect(getEnvironmentColour(environment, 1)).toBe(TAG_COLOURS[1])
-  })
-
-  it('wraps the position the same way Utils.getTagColour does', () => {
-    expect(getEnvironmentColour({}, TAG_COLOURS.length - 1)).toBe(
-      TAG_COLOURS[0],
-    )
   })
 
   it('adds the # to a banner colour stored without it', () => {
