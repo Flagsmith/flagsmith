@@ -33,6 +33,7 @@ import {
 import { FeatureExperimentFreeze } from 'common/hooks/useFeatureExperimentFreeze'
 import { useExperimentationEnabled } from 'common/hooks/useExperimentationEnabled'
 import ExperimentFreezeNotice from 'components/modals/create-feature/components/ExperimentFreezeNotice'
+import { BlockedBanner, PrerequisiteRow } from './FeatureDependenciesTab'
 import { useHasPermission } from 'common/providers/Permission'
 import { ProjectPermission } from 'common/types/permissions.types'
 
@@ -49,6 +50,11 @@ function isNegativeNumberString(str: any) {
 
 type FeatureValueTabProps = {
   error: any
+  // The flag's prerequisites in the environment, which serve it off while any
+  // is off. Undefined where they don't apply, e.g. to identity overrides.
+  prerequisites?: PrerequisiteRow[]
+  // Shows the flag's dependencies, where they can be changed.
+  onViewDependencies?: () => void
   projectId: number | string
   identity?: string
   noPermissions: boolean
@@ -105,7 +111,9 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
   onRemoveMultivariateOption,
   onSaveFeatureValue,
   onSaveVariationValues,
+  onViewDependencies,
   originalMultivariateOptions,
+  prerequisites,
   preventFlagDefaults,
   projectFlag,
   projectId,
@@ -367,6 +375,19 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
 
   return (
     <div className={`${identity ? 'mx-3' : ''}`}>
+      {prerequisites && environmentName && (
+        <BlockedBanner
+          environmentName={environmentName}
+          rows={prerequisites}
+          action={
+            onViewDependencies && (
+              <Button theme='text' size='small' onClick={onViewDependencies}>
+                View dependencies
+              </Button>
+            )
+          }
+        />
+      )}
       {freeze?.isFrozen && freeze.experiment && environmentId && (
         <ExperimentFreezeNotice
           experiment={freeze.experiment}

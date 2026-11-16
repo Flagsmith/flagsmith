@@ -1,5 +1,6 @@
 import { DependencyEdge, ProjectFlag } from 'common/types/responses'
 import {
+  countMet,
   describeOffCount,
   isBlocked,
   toPrerequisiteRow,
@@ -105,6 +106,26 @@ describe('isBlocked', () => {
 
   it('is not blocked with no prerequisites', () => {
     expect(isBlocked([])).toBe(false)
+  })
+})
+
+describe('countMet', () => {
+  it('counts the prerequisites met', () => {
+    expect(countMet([row(true, true), row(false, false)])).toEqual({
+      met: 1,
+      total: 2,
+    })
+  })
+
+  it('leaves out those that cannot be judged', () => {
+    expect(countMet([row(true, true), row(false, undefined)])).toEqual({
+      met: 1,
+      total: 1,
+    })
+  })
+
+  it('counts nothing with no prerequisites', () => {
+    expect(countMet([])).toEqual({ met: 0, total: 0 })
   })
 })
 

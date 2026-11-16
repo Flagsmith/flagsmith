@@ -75,6 +75,17 @@ export const withStagedChanges = (
 export const isBlocked = (rows: PrerequisiteRow[]): boolean =>
   rows.some((row) => row.isMet === false)
 
+// How many prerequisites are met, of those whose rule can be read.
+export const countMet = (
+  rows: PrerequisiteRow[],
+): { met: number; total: number } => {
+  const judged = rows.filter((row) => row.isMet !== undefined)
+  return {
+    met: judged.filter((row) => row.isMet).length,
+    total: judged.length,
+  }
+}
+
 export const describeOffCount = (rows: PrerequisiteRow[]): string => {
   const total = rows.length
   const offCount = rows.filter((row) => !row.isEnabled).length

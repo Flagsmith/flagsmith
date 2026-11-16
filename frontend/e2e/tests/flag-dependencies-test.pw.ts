@@ -1,5 +1,6 @@
 import { test, expect } from '../test-setup'
 import {
+  byId,
   createHelpers,
   log,
   LONG_TIMEOUT,
@@ -68,6 +69,18 @@ test.describe('Flag Dependencies', () => {
     await expect(page.getByText(/Serving off in/)).toBeVisible()
     await visualSnapshot(page, 'dependencies-blocked', testInfo)
 
+    log('The tab counts the prerequisites met, and the Value tab says why')
+    const metCount = page.locator(byId('dependencies-met-count'))
+    await expect(metCount).toHaveText('0/1')
+    await page.getByRole('button', { exact: true, name: 'Value' }).click()
+    await expect(page.getByText(/Serving off in/)).toBeVisible()
+    await visualSnapshot(page, 'dependencies-blocked-value', testInfo)
+    await page
+      .getByRole('button', { exact: true, name: 'View dependencies' })
+      .click()
+    await expect(page).toHaveURL(/tab=dependencies/)
+    await expect(row).toBeVisible()
+
     log('Turning the prerequisite on satisfies it')
     await closeModal()
     await waitForModalToClose()
@@ -76,6 +89,7 @@ test.describe('Flag Dependencies', () => {
     await expect(row.getByRole('img', { name: 'On' })).toBeVisible()
     await expect(row.getByText('Yes', { exact: true })).toBeVisible()
     await expect(page.getByText(/Serving off in/)).toBeHidden()
+    await expect(metCount).toHaveText('1/1')
     await visualSnapshot(page, 'dependencies-satisfied', testInfo)
 
     log('The prerequisite names its dependent and cannot take one of its own')
