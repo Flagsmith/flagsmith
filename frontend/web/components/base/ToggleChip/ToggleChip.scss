@@ -1,7 +1,7 @@
 .ds-toggle-chip {
   // The global input[type='checkbox'] rule sets display: none, which would
-  // take the checkbox out of the tab order. Nesting outranks it.
-  & input {
+  // take the checkbox out of the tab order. The class makes this outrank it.
+  & input[type='checkbox'] {
     display: block;
   }
 
