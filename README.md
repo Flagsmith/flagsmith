@@ -8,7 +8,7 @@
 [![License](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 <a href="https://depot.dev?utm_source=Flagsmith"><img src="https://depot.dev/badges/built-with-depot.svg" alt="Built with Depot" height="20"></a>
 
-# Flagsmith: The most flexible and complete open-source feature flag management solution
+# Flagsmith: The most flexible and complete open-source feature flag management and experimentation solution
 
 ## What is Flagsmith?
 
