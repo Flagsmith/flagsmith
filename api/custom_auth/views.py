@@ -229,7 +229,18 @@ class FFAdminUserViewSet(UserViewSet):  # type: ignore[misc]
         return Response({"token": token, "email": user.email})
 
     @action(["post"], detail=False)
+    def set_password(self, request: Request, *args: Any, **kwargs: Any) -> Response:
+        """Update the user password"""
+        user = request.user
+        assert isinstance(user, FFAdminUser)
+        response: Response = super().set_password(request, *args, **kwargs)
+        blacklist_user_tokens(user)
+        user_password_changed.send(sender=user.__class__, request=request, user=user)
+        return response
+
+    @action(["post"], detail=False)
     def reset_password(self, request: Request, *args: Any, **kwargs: Any) -> Response:
+        """Request a password reset email"""
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.get_user()
@@ -240,18 +251,10 @@ class FFAdminUserViewSet(UserViewSet):  # type: ignore[misc]
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(["post"], detail=False)
-    def set_password(self, request: Request, *args: Any, **kwargs: Any) -> Response:
-        user = request.user
-        assert isinstance(user, FFAdminUser)
-        response: Response = super().set_password(request, *args, **kwargs)
-        blacklist_user_tokens(user)
-        user_password_changed.send(sender=user.__class__, request=request, user=user)
-        return response
-
-    @action(["post"], detail=False)
     def reset_password_confirm(
         self, request: Request, *args: Any, **kwargs: Any
     ) -> Response:
+        """Update the user password from a password reset URL"""
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.user
