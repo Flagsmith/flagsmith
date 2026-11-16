@@ -24,29 +24,18 @@
     font-size: 0.6875rem;
   }
 
-  // The surface and text tokens switch with the theme, so these mixes do too.
+  // The surface and text tokens follow the theme, so these mixes do too.
   // --chip-text-strength (getChipColourVars) keeps the text at 4.5:1 in both.
   &--tinted {
-    color: color-mix(
-      in srgb,
-      var(--chip-colour) var(--chip-text-strength),
-      var(--color-text-default)
-    );
-    background-color: color-mix(
-      in srgb,
-      var(--chip-colour) 12%,
-      var(--color-surface-default)
-    );
+    --chip-tint: 12%;
+    color: color-mix(in srgb, var(--chip-colour) var(--chip-text-strength), var(--color-text-default));
+    background-color: color-mix(in srgb, var(--chip-colour) var(--chip-tint), var(--color-surface-default));
     border-color: color-mix(in srgb, currentColor 40%, transparent);
-  }
 
-  &--tinted#{&}--selected {
-    background-color: color-mix(
-      in srgb,
-      var(--chip-colour) 22%,
-      var(--color-surface-default)
-    );
-    border-color: currentColor;
+    &.ds-chip--selected {
+      --chip-tint: 22%;
+      border-color: currentColor;
+    }
   }
 
   &--clickable {
