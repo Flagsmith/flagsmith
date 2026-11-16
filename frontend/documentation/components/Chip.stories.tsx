@@ -2,6 +2,7 @@ import React from 'react'
 import type { Meta, StoryObj } from 'storybook'
 
 import Chip from 'components/base/Chip'
+import { TAG_COLOURS } from 'common/theme/tagColours'
 
 const meta: Meta<typeof Chip> = {
   args: { children: 'Production' },
@@ -56,6 +57,31 @@ export const Group: Story = {
       <Chip>Development</Chip>
       <Chip variant='accent'>Staging</Chip>
       <Chip onRemove={() => undefined}>Production</Chip>
+    </div>
+  ),
+}
+
+// A tag's or environment's own colour; the text stays at 4.5:1 in both themes.
+export const Coloured: Story = {
+  render: () => (
+    <div className='d-flex flex-wrap gap-2'>
+      {TAG_COLOURS.map((colour) => (
+        <Chip key={colour} colour={colour}>
+          {colour}
+        </Chip>
+      ))}
+    </div>
+  ),
+}
+
+export const ColouredSelected: Story = {
+  render: () => (
+    <div className='d-flex flex-wrap gap-2'>
+      {TAG_COLOURS.slice(0, 6).map((colour) => (
+        <Chip key={colour} colour={colour} selected>
+          {colour}
+        </Chip>
+      ))}
     </div>
   ),
 }

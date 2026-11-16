@@ -2,7 +2,6 @@ import { ReactNode } from 'react'
 import classNames from 'classnames'
 import Chip, { ChipSize } from 'components/base/Chip'
 import Icon from 'components/icons/Icon'
-import { colorIconAction } from 'common/theme/tokens'
 import './ToggleChip.scss'
 
 export type ToggleChipProps = {
@@ -10,6 +9,8 @@ export type ToggleChipProps = {
   onChange: (checked: boolean) => void
   children: ReactNode
   size?: ChipSize
+  // A tag's or environment's own colour; see Chip.
+  colour?: string
   disabled?: boolean
   className?: string
 }
@@ -20,6 +21,7 @@ const ToggleChip = ({
   checked,
   children,
   className,
+  colour,
   disabled,
   onChange,
   size,
@@ -38,10 +40,8 @@ const ToggleChip = ({
       disabled={disabled}
       onChange={(e) => onChange(e.target.checked)}
     />
-    <Chip variant={checked ? 'accent' : 'neutral'} size={size}>
-      {checked && (
-        <Icon name='checkmark' width={16} fill={colorIconAction} aria-hidden />
-      )}
+    <Chip colour={colour} selected={checked} size={size}>
+      {checked && <Icon name='checkmark' width={16} aria-hidden />}
       {children}
     </Chip>
   </label>

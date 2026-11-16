@@ -2,6 +2,7 @@ import React, { KeyboardEvent, ReactNode, Ref } from 'react'
 import classNames from 'classnames'
 import Icon from 'components/icons/Icon'
 import { colorIconSecondary } from 'common/theme/tokens'
+import { getChipColourVars } from 'common/utils/chipColour'
 import './Chip.scss'
 
 export type ChipSize = 'default' | 'sm' | 'xs'
@@ -12,6 +13,11 @@ export type ChipProps = {
   variant?: ChipVariant
   size?: ChipSize
   truncate?: boolean
+  // A tag's or environment's own colour (6-digit hex). Replaces the variant;
+  // the text is adjusted to stay readable in both themes.
+  colour?: string
+  // Stronger look for a picked chip; ToggleChip sets it from its checkbox.
+  selected?: boolean
   onRemove?: () => void
   onClick?: () => void
   className?: string
@@ -43,26 +49,35 @@ const Chip = ({
   'aria-expanded': ariaExpanded,
   children,
   className,
+  colour,
   onClick,
   onKeyDown,
   onRemove,
   ref,
   role,
+  selected = false,
   size = 'default',
   tabIndex,
   truncate = false,
   variant = 'neutral',
 }: ChipProps) => {
   const interactive = !!onClick || !!role
+  const colourVars = colour ? getChipColourVars(colour) : null
+  // Without a colour, selected shows as the accent variant.
+  const shownVariant = selected ? 'accent' : variant
   return (
     <span
       ref={ref}
+      // Data-driven colour: Chip.scss derives every shade from these.
+      style={colourVars ?? undefined}
       className={classNames(
         'ds-chip d-inline-flex align-items-center align-middle gap-1 rounded-sm',
-        VARIANT_UTILITIES[variant],
+        !colourVars && VARIANT_UTILITIES[shownVariant],
         {
-          'ds-chip--accent': variant === 'accent',
+          'ds-chip--accent': !colourVars && shownVariant === 'accent',
           'ds-chip--clickable': interactive,
+          'ds-chip--coloured': !!colourVars,
+          'ds-chip--selected': !!colourVars && selected,
           [`ds-chip--${size}`]: size !== 'default',
           'ds-chip--truncate': truncate,
         },

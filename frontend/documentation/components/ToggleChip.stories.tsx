@@ -2,12 +2,7 @@ import React, { useState } from 'react'
 import type { Meta, StoryObj } from 'storybook'
 
 import ToggleChip from 'components/base/ToggleChip'
-import ColorSwatch from 'components/ColorSwatch'
-import {
-  colorIconDanger,
-  colorIconSuccess,
-  colorIconWarning,
-} from 'common/theme/tokens'
+import { TAG_COLOURS } from 'common/theme/tagColours'
 
 const meta: Meta<typeof ToggleChip> = {
   component: ToggleChip,
@@ -33,12 +28,8 @@ const Group = () => {
                 : selected.filter((s) => s !== name),
             )
           }
+          colour={TAG_COLOURS[i + 1]}
         >
-          <ColorSwatch
-            color={[colorIconSuccess, colorIconWarning, colorIconDanger][i]}
-            shape='circle'
-            size='sm'
-          />
           {name}
         </ToggleChip>
       ))}
