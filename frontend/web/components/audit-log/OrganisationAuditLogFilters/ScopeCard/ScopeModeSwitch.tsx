@@ -1,5 +1,6 @@
 import { KeyboardEvent, useRef } from 'react'
 import classNames from 'classnames'
+import BareButton from 'components/base/forms/BareButton'
 
 const ARROW_STEPS: Record<string, number> = {
   ArrowDown: 1,
@@ -55,20 +56,19 @@ const ScopeModeSwitch = <T extends string>({
       onKeyDown={onKeyDown}
     >
       {options.map((option, i) => (
-        <button
+        <BareButton
           key={option.value}
           ref={(el) => {
             refs.current[i] = el
           }}
-          type='button'
           role='radio'
           aria-checked={i === index}
           tabIndex={i === index ? 0 : -1}
-          className='scope-mode-switch__option border-0 rounded-sm fw-semibold fs-caption'
+          className='scope-mode-switch__option justify-content-center rounded-sm fw-semibold fs-caption'
           onClick={() => onChange(option.value)}
         >
           {option.label}
-        </button>
+        </BareButton>
       ))}
     </div>
   )

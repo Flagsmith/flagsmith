@@ -62,10 +62,5 @@
         var(--shadow-sm),
         inset 0 0 0 1px var(--color-border-strong);
     }
-
-    &:focus-visible {
-      outline: 2px solid var(--color-border-action);
-      outline-offset: 1px;
-    }
   }
 }
