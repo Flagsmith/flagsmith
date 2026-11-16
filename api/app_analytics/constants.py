@@ -179,6 +179,7 @@ SDK_USER_AGENT_KNOWN_VERSIONS: dict[KnownClient, list[str]] = {
         "3.10.0",
         "3.10.1",
         "3.11.0",
+        "3.12.0",
     ],
 }
 
