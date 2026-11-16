@@ -10,7 +10,7 @@ const colourLiterals = [
   {
     message: 'Use a colour token, not a hex, rgb or hsl literal.',
     selector:
-      'TemplateElement[value.raw=/#[0-9a-fA-F]{6}\\b|(rgba?|hsla?)\\(/]',
+      'TemplateElement[value.raw=/#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})\\b|(rgba?|hsla?)\\(/]',
   },
 ]
 
