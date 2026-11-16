@@ -751,13 +751,22 @@ def test_change_request_commit__v2_versioning__defers_side_effects_until_transac
     environment.use_v2_feature_versioning = True
     environment.save()
 
+    another_feature = Feature.objects.create(
+        name="another_feature", project=environment.project
+    )
+
     change_request = ChangeRequest.objects.create(
         title="Test CR", environment=environment, user=admin_user
     )
-    environment_feature_version = EnvironmentFeatureVersion.objects.create(
-        environment=environment, feature=feature
+    first_live_from = now + timedelta(days=1)
+    second_live_from = now + timedelta(days=2)
+    first_version = EnvironmentFeatureVersion.objects.create(
+        environment=environment, feature=feature, live_from=first_live_from
     )
-    change_request.environment_feature_versions.add(environment_feature_version)
+    second_version = EnvironmentFeatureVersion.objects.create(
+        environment=environment, feature=another_feature, live_from=second_live_from
+    )
+    change_request.environment_feature_versions.add(first_version, second_version)
 
     mock_rebuild_environment_document_task = mocker.patch(
         "core.workflows_services.rebuild_environment_document"
@@ -781,18 +790,41 @@ def test_change_request_commit__v2_versioning__defers_side_effects_until_transac
     for callback in callbacks:
         callback()
 
-    mock_rebuild_environment_document_task.delay.assert_called_once_with(
-        kwargs={"environment_id": environment.id},
-        delay_until=now,
+    assert mock_rebuild_environment_document_task.delay.call_count == 2
+    mock_rebuild_environment_document_task.delay.assert_has_calls(
+        [
+            mocker.call(
+                kwargs={"environment_id": environment.id},
+                delay_until=first_live_from,
+            ),
+            mocker.call(
+                kwargs={"environment_id": environment.id},
+                delay_until=second_live_from,
+            ),
+        ],
+        any_order=True,
     )
-    mock_trigger_update_version_webhooks.delay.assert_called_once_with(
-        kwargs={
-            "environment_feature_version_uuid": str(environment_feature_version.uuid)
-        },
-        delay_until=now,
+    assert mock_trigger_update_version_webhooks.delay.call_count == 2
+    mock_trigger_update_version_webhooks.delay.assert_has_calls(
+        [
+            mocker.call(
+                kwargs={"environment_feature_version_uuid": str(first_version.uuid)},
+                delay_until=first_live_from,
+            ),
+            mocker.call(
+                kwargs={"environment_feature_version_uuid": str(second_version.uuid)},
+                delay_until=second_live_from,
+            ),
+        ],
+        any_order=True,
     )
-    mock_environment_feature_version_published.send.assert_called_once_with(
-        EnvironmentFeatureVersion, instance=environment_feature_version
+    assert mock_environment_feature_version_published.send.call_count == 2
+    mock_environment_feature_version_published.send.assert_has_calls(
+        [
+            mocker.call(EnvironmentFeatureVersion, instance=first_version),
+            mocker.call(EnvironmentFeatureVersion, instance=second_version),
+        ],
+        any_order=True,
     )
 
 
