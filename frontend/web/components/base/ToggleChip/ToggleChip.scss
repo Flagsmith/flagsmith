@@ -16,7 +16,8 @@
     opacity: 0.5;
   }
 
-  // A checked tinted chip: stronger tint, border in the text colour.
+  // A checked tinted chip: stronger tint, border in the text colour. If you
+  // change the tint, update tintedContrast.test.
   & input:checked ~ .ds-chip--tinted {
     --chip-tint: 22%;
     border-color: currentColor;

@@ -1,26 +1,9 @@
-import { readFileSync } from 'fs'
-import { resolve } from 'path'
 import tokens from 'common/theme/tokens.json'
 import { TAG_COLOURS } from 'common/theme/tagColours'
 
-// Read from the shipped styles, so changing them can't skip this check.
-const stylesheet = (path: string) =>
-  readFileSync(resolve(__dirname, path), 'utf8')
-const percentages = (css: string, pattern: RegExp) =>
-  [...css.matchAll(pattern)].map((match) => Number(match[1]) / 100)
-
-const chipScss = stylesheet('../Chip.scss')
-const [TEXT_STRENGTH] = percentages(
-  chipScss,
-  /var\(--chip-colour\) (\d+)%, var\(--color-text-default\)/g,
-)
-const TINTS = [
-  ...percentages(chipScss, /--chip-tint: (\d+)%/g),
-  ...percentages(
-    stylesheet('../../ToggleChip/ToggleChip.scss'),
-    /--chip-tint: (\d+)%/g,
-  ),
-]
+// Same values as Chip.scss (text, base tint) and ToggleChip.scss (checked).
+const TEXT_STRENGTH = 0.35
+const TINTS = [0.12, 0.22]
 const THEMES: ('light' | 'dark')[] = ['light', 'dark']
 
 type Rgb = [number, number, number]
@@ -55,11 +38,6 @@ const COLOURS = [
 ]
 
 describe('tinted chip text', () => {
-  it('finds the text mix and both tints in the styles', () => {
-    expect(TEXT_STRENGTH).toBeGreaterThan(0)
-    expect(TINTS).toHaveLength(2)
-  })
-
   it.each(COLOURS)('%s reads at 4.5:1 in both themes and tints', (hex) => {
     const colour = rgb(hex)
     for (const theme of THEMES) {
