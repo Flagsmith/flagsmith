@@ -31,9 +31,8 @@ class ScopedNestedRelationsMixin:
         instance: Model | None = self.instance  # type: ignore[attr-defined]
         initial_data: dict[str, Any] = self.initial_data  # type: ignore[attr-defined]
         for field_name, (field, field_source) in relations.items():
-            data = initial_data.get(field_name)
-            if not isinstance(data, Mapping):
-                continue
+            # Only non-null, validated nested objects reach `relations`.
+            data: Mapping[str, Any] = initial_data[field_name]
             current = getattr(instance, field_source, None) if instance else None
             model: type[Model] = field.Meta.model
             pk_names = {"pk", model._meta.pk.attname}
