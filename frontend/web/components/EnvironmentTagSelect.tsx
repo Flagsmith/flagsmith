@@ -1,7 +1,6 @@
 import React, { FC, useMemo } from 'react'
 import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
 import ToggleChip from './base/ToggleChip'
-import ColorSwatch from './ColorSwatch'
 import { getEnvironmentColour } from 'common/utils/environmentColour'
 import Button from './base/forms/Button'
 
@@ -92,9 +91,9 @@ const EnvironmentSelect: FC<EnvironmentSelectType> = ({
                 ? Array.isArray(value) && value.includes(env.value)
                 : value === env.value
             }
+            colour={env.colour}
             onChange={() => toggle(env.value)}
           >
-            <ColorSwatch color={env.colour} shape='circle' size='sm' />
             {env.label}
           </ToggleChip>
         ))}

@@ -7,7 +7,7 @@ import { Link } from 'react-router-dom'
 import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
 import { getEnvironmentColour } from 'common/utils/environmentColour'
 import Button from './base/forms/Button'
-import Tag from './tags/Tag'
+import Chip from './base/Chip'
 import PanelSearch from './PanelSearch'
 import JSONReference from './JSONReference'
 import moment from 'moment'
@@ -173,12 +173,7 @@ const AuditLog: FC<AuditLogType> = (props) => {
             style={{ width: widths[2] }}
             to={`/project/${props.projectId}/environment/${environment?.api_key}/features/`}
           >
-            <Tag
-              tag={{
-                color: colour,
-                label: environment?.name,
-              }}
-            />
+            <Chip colour={colour}>{environment.name}</Chip>
           </Link>
         ) : (
           <div className='table-column' style={{ width: widths[2] }} />
