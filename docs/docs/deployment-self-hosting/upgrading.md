@@ -176,7 +176,10 @@ Treat a rollback as a restore. These steps worked in the test:
    helm rollback flagsmith <revision> -n flagsmith --wait --timeout 20m
    ```
 
-2. Stop the API, so nothing is connected to the database, and wait until no `flagsmith-api` pod is listed:
+2. Stop the API, so nothing is connected to the database, and wait until no `flagsmith-api` pod is listed: Stop
+   everything that connects to the database, and wait until none of those pods is listed. In the default install only
+   the API connects. If you enabled the task processor, scale it to 0 as well, and wait for any migration Job to finish.
+   These setups were not tested.
 
    ```bash
    kubectl -n flagsmith scale deployment flagsmith-api --replicas=0
@@ -192,7 +195,9 @@ Treat a rollback as a restore. These steps worked in the test:
    ```
 
 4. Delete the database and create an empty one. This destroys the current data, so only do it once you have a backup you
-   have verified:
+   have verified: Run these commands one at a time, and check each one finishes without an error before you run the
+   next. If dropdb fails because the database is in use, stop. Do not run createdb or pg_restore until you have found
+   what is still connected.
 
    ```bash
    kubectl -n flagsmith exec flagsmith-dev-postgresql-0 -- sh -c \
