@@ -29,6 +29,10 @@ const otherPatterns = [
       "JSXAttribute[name.name='style'] > JSXExpressionContainer > ObjectExpression > :not(Property[key.value=/^--/])",
   },
   {
+    message: "Use BareButton instead of role='button'.",
+    selector: "JSXAttribute[name.name='role'][value.value='button']",
+  },
+  {
     message: 'Give the element a role or accessible name instead of data-test.',
     selector: "JSXAttribute[name.name='data-test']",
   },
