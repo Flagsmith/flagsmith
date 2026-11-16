@@ -86,6 +86,7 @@ Then paste your API key into the code below:
 <script>
  flagsmith.init({
   environmentID: '<add your API key here!>',
+  // api: 'https://flagsmith.example.com/api/v1/', // Self-hosted or private cloud only
   onChange: (oldFlags, params) => {},
  });
 </script>
@@ -106,6 +107,7 @@ Let's hook this value up to our button, so that the value of the flag controls w
 <script>
  flagsmith.init({
   environmentID: '<add your API key here!>',
+  // api: 'https://flagsmith.example.com/api/v1/', // Self-hosted or private cloud only
   onChange: (oldFlags, params) => {
    if (flagsmith.hasFeature('show_demo_button')) {
     var submit_button = document.getElementById('submit_button');
@@ -131,6 +133,7 @@ Our entire web page now reads like this:
   <script>
    flagsmith.init({
     environmentID: 'ZfmJTbLQZrhZVHkVhXbsNi',
+    // api: 'https://flagsmith.example.com/api/v1/', // Self-hosted or private cloud only
     onChange: (oldFlags, params) => {
      if (flagsmith.hasFeature('show_demo_button')) {
       var submit_button = document.getElementById('submit_button');
