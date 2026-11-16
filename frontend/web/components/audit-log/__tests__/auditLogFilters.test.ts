@@ -59,6 +59,14 @@ describe('toOrganisationAuditLogParams', () => {
     ).toBe('a'.repeat(256))
   })
 
+  it('sends nothing when the capped search is too short once trimmed', () => {
+    expect(
+      toOrganisationAuditLogParams(
+        filters({ type: 'all' }, `ab${' '.repeat(254)}c`),
+      ).search,
+    ).toBeUndefined()
+  })
+
   it('never cuts an emoji in half at the cap', () => {
     expect(
       toOrganisationAuditLogParams(
