@@ -1,6 +1,8 @@
 import React, { FC, useEffect, useRef, useState } from 'react'
 import { Identity } from 'common/types/responses'
 import { useUpdateIdentityMutation } from 'common/services/useIdentity'
+import { useHasPermission } from 'common/providers/Permission'
+import { EnvironmentPermission } from 'common/types/permissions.types'
 import Button from './base/forms/Button'
 import { Icon } from './icons'
 import ErrorMessage from './ErrorMessage'
@@ -22,12 +24,18 @@ const EditIdentity: FC<EditIdentityType> = ({ data, environmentId }) => {
 
   const [updateIdentity, { error, isLoading }] = useUpdateIdentityMutation({})
 
+  const { permission: canEditAlias } = useHasPermission({
+    id: environmentId,
+    level: 'environment',
+    permission: EnvironmentPermission.ADMIN,
+  })
+
   const handleBlur = () => {
     onSubmit(alias)
   }
 
   const onSubmit = (updatedAlias?: string) => {
-    if (!isLoading) {
+    if (canEditAlias && !isLoading) {
       updateIdentity({
         data: { ...data, dashboard_alias: updatedAlias },
         environmentId,
@@ -47,6 +55,7 @@ const EditIdentity: FC<EditIdentityType> = ({ data, environmentId }) => {
   }
 
   const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!canEditAlias) return
     const newValue = e.target.value.toLowerCase()
     setAlias(newValue.replace(/\n/g, ' ').trim())
   }
@@ -61,15 +70,17 @@ const EditIdentity: FC<EditIdentityType> = ({ data, environmentId }) => {
         onKeyDown={handleKeyDown}
         placeholder='None'
       />
-      <Button
-        disabled={!data}
-        theme='text'
-        className='text-action'
-        onClick={handleFocus}
-      >
-        Edit
-        <Icon name='edit' width={16} />
-      </Button>
+      {canEditAlias && (
+        <Button
+          disabled={!data}
+          theme='text'
+          className='text-action'
+          onClick={handleFocus}
+        >
+          Edit
+          <Icon name='edit' width={16} />
+        </Button>
+      )}
       <ErrorMessage error={error} />
     </>
   )
