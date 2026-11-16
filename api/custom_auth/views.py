@@ -258,4 +258,5 @@ class FFAdminUserViewSet(UserViewSet):  # type: ignore[misc]
         response: Response = super().reset_password_confirm(request, *args, **kwargs)
         Token.objects.filter(user=user).delete()
         blacklist_user_tokens(user)
+        user_password_changed.send(sender=user.__class__, request=request, user=user)
         return response
