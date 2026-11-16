@@ -20232,7 +20232,10 @@ components:
         - name
         - project
     CreateFeature:
-      description: Adds nested create feature
+      description: |-
+        drf-writable-nested resolves nested `id`s against the whole table, so a
+        payload can take over rows belonging to any other object. Only resolve
+        them against the parent's own children; anything else is treated as new.
       type: object
       properties:
         id:
@@ -22631,7 +22634,10 @@ components:
             - $ref: '#/components/schemas/BlankEnum'
           readOnly: true
     FeatureStateSerializerBasic:
-      description: Adds nested create feature
+      description: |-
+        drf-writable-nested resolves nested `id`s against the whole table, so a
+        payload can take over rows belonging to any other object. Only resolve
+        them against the parent's own children; anything else is treated as new.
       type: object
       properties:
         id:
@@ -22744,7 +22750,10 @@ components:
         enabled:
           type: boolean
     FeatureStateSerializerWithIdentity:
-      description: Adds nested create feature
+      description: |-
+        drf-writable-nested resolves nested `id`s against the whole table, so a
+        payload can take over rows belonging to any other object. Only resolve
+        them against the parent's own children; anything else is treated as new.
       type: object
       properties:
         id:
@@ -23684,7 +23693,10 @@ components:
         - any
         - all
     MetaDataModelField:
-      description: Adds nested create feature
+      description: |-
+        drf-writable-nested resolves nested `id`s against the whole table, so a
+        payload can take over rows belonging to any other object. Only resolve
+        them against the parent's own children; anything else is treated as new.
       type: object
       properties:
         id:
@@ -25997,7 +26009,10 @@ components:
           type: string
           readOnly: true
     PatchedMetaDataModelField:
-      description: Adds nested create feature
+      description: |-
+        drf-writable-nested resolves nested `id`s against the whole table, so a
+        payload can take over rows belonging to any other object. Only resolve
+        them against the parent's own children; anything else is treated as new.
       type: object
       properties:
         id:
@@ -27226,7 +27241,10 @@ components:
           type: string
           maxLength: 255
     PatchedWritableNestedFeatureState:
-      description: Adds nested create feature
+      description: |-
+        drf-writable-nested resolves nested `id`s against the whole table, so a
+        payload can take over rows belonging to any other object. Only resolve
+        them against the parent's own children; anything else is treated as new.
       type: object
       properties:
         id:
@@ -28644,7 +28662,10 @@ components:
           format: date-time
           readOnly: true
     SegmentRule:
-      description: Adds nested create feature
+      description: |-
+        drf-writable-nested resolves nested `id`s against the whole table, so a
+        payload can take over rows belonging to any other object. Only resolve
+        them against the parent's own children; anything else is treated as new.
       type: object
       properties:
         id:
@@ -30671,7 +30692,10 @@ components:
       required:
         - message
     WritableNestedFeatureState:
-      description: Adds nested create feature
+      description: |-
+        drf-writable-nested resolves nested `id`s against the whole table, so a
+        payload can take over rows belonging to any other object. Only resolve
+        them against the parent's own children; anything else is treated as new.
       type: object
       properties:
         id:
@@ -30839,7 +30863,10 @@ components:
         - multivariate_feature_option
         - percentage_allocation
     _NestedSegmentRule:
-      description: Adds nested create feature
+      description: |-
+        drf-writable-nested resolves nested `id`s against the whole table, so a
+        payload can take over rows belonging to any other object. Only resolve
+        them against the parent's own children; anything else is treated as new.
       type: object
       properties:
         id:
