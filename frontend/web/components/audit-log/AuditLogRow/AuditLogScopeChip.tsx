@@ -28,7 +28,12 @@ const AuditLogScopeChip: FC<AuditLogScopeChipProps> = ({
       {item.project && projectColour && (
         <ProjectInitial name={item.project.name} colour={projectColour} />
       )}
-      <span className='text-truncate'>{scope}</span>
+      <span className='text-truncate'>
+        {scope.name}
+        {scope.environment && (
+          <span className='text-secondary'> · {scope.environment}</span>
+        )}
+      </span>
     </Chip>
   )
 }

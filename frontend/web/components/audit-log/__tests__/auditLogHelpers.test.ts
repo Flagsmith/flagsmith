@@ -62,19 +62,19 @@ describe('groupAuditLogsByDay', () => {
 describe('getAuditLogScopeLabel', () => {
   it.each`
     hasProject | hasEnvironment | label
-    ${false}   | ${false}       | ${'Organisation'}
-    ${false}   | ${true}        | ${'Production'}
-    ${true}    | ${false}       | ${'Website'}
-    ${true}    | ${true}        | ${'Website · Production'}
+    ${false}   | ${false}       | ${{ name: 'Organisation' }}
+    ${false}   | ${true}        | ${{ name: 'Production' }}
+    ${true}    | ${false}       | ${{ environment: undefined, name: 'Website' }}
+    ${true}    | ${true}        | ${{ environment: 'Production', name: 'Website' }}
   `(
-    'project $hasProject, environment $hasEnvironment: $label',
+    'project $hasProject, environment $hasEnvironment',
     ({ hasEnvironment, hasProject, label }) => {
       expect(
         getAuditLogScopeLabel({
           environment: hasEnvironment ? environment : null,
           project: hasProject ? project : null,
         }),
-      ).toBe(label)
+      ).toEqual(label)
     },
   )
 })
