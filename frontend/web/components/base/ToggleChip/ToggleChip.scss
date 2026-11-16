@@ -1,0 +1,18 @@
+.ds-toggle-chip {
+  // The global input[type='checkbox'] rule sets display: none, which would
+  // take the checkbox out of the tab order. Nesting outranks it.
+  & input {
+    display: block;
+  }
+
+  // The checkbox is visually hidden, so the chip shows its focus.
+  &:has(input:focus-visible) .ds-chip {
+    outline: 2px solid var(--color-border-action);
+    outline-offset: 2px;
+  }
+
+  &--disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+}

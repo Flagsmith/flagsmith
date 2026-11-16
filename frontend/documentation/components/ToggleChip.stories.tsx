@@ -1,50 +1,67 @@
 import React, { useState } from 'react'
 import type { Meta, StoryObj } from 'storybook'
 
-import ToggleChip from 'components/ToggleChip'
+import ToggleChip from 'components/base/ToggleChip'
+import ColorSwatch from 'components/ColorSwatch'
 import {
-  colorChart2,
-  colorChart3,
-  colorSurfaceAction,
+  colorIconDanger,
+  colorIconSuccess,
+  colorIconWarning,
 } from 'common/theme/tokens'
 
 const meta: Meta<typeof ToggleChip> = {
-  argTypes: {
-    color: { control: 'color' },
-  },
-  args: { active: false, children: 'Feature flag', color: colorSurfaceAction },
   component: ToggleChip,
   parameters: { layout: 'centered' },
-  title: 'Components/Data Display/ToggleChip',
+  title: 'Components/Forms/ToggleChip',
 }
 export default meta
 
 type Story = StoryObj<typeof ToggleChip>
 
-const Interactive = (args: React.ComponentProps<typeof ToggleChip>) => {
-  const [active, setActive] = useState(args.active ?? false)
+const Group = () => {
+  const [selected, setSelected] = useState<string[]>(['Production'])
   return (
-    <ToggleChip {...args} active={active} onClick={() => setActive(!active)} />
+    <div role='group' aria-label='Environments' className='d-flex gap-2'>
+      {['Production', 'Staging', 'Development'].map((name, i) => (
+        <ToggleChip
+          key={name}
+          checked={selected.includes(name)}
+          onChange={(checked) =>
+            setSelected(
+              checked
+                ? [...selected, name]
+                : selected.filter((s) => s !== name),
+            )
+          }
+        >
+          <ColorSwatch
+            color={[colorIconSuccess, colorIconWarning, colorIconDanger][i]}
+            shape='circle'
+            size='sm'
+          />
+          {name}
+        </ToggleChip>
+      ))}
+    </div>
   )
 }
 
 export const Default: Story = {
-  render: (args: React.ComponentProps<typeof ToggleChip>) => (
-    <Interactive {...args} />
-  ),
+  render: () => <Group />,
 }
 
-export const AllStates: Story = {
+export const States: Story = {
   render: () => (
     <div className='d-flex gap-2'>
-      <ToggleChip color={colorSurfaceAction} active>
-        Active
+      <ToggleChip checked={false} onChange={() => {}}>
+        Unchecked
       </ToggleChip>
-      <ToggleChip color={colorSurfaceAction}>Inactive</ToggleChip>
-      <ToggleChip color={colorChart2} active>
-        Danger
+      <ToggleChip checked onChange={() => {}}>
+        Checked
       </ToggleChip>
-      <ToggleChip color={colorChart3}>Success</ToggleChip>
+      <ToggleChip checked={false} disabled onChange={() => {}}>
+        Disabled
+      </ToggleChip>
     </div>
   ),
 }
