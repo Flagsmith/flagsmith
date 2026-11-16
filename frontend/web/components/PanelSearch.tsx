@@ -9,6 +9,7 @@ import React, {
   CSSProperties,
 } from 'react'
 import { AutoSizer, List } from 'react-virtualized'
+import classNames from 'classnames'
 import Popover from './base/Popover'
 import BareButton from './base/forms/BareButton'
 import Input from './base/forms/Input'
@@ -22,6 +23,7 @@ import find from 'lodash/find'
 import orderBy from 'lodash/orderBy'
 import Panel from './base/grid/Panel'
 import Utils from 'common/utils/utils'
+import { colorIconAction, colorIconSecondary } from 'common/theme/tokens'
 import { SortOrder } from 'common/types/requests'
 
 export type SortOption = {
@@ -277,13 +279,15 @@ const PanelSearch = <T,>(props: PanelSearchProps<T>): ReactElement => {
                   renderTrigger={(triggerProps, isActive) => (
                     <BareButton
                       {...triggerProps}
-                      className='flex-row'
-                      style={{ color: isActive ? '#6837FC' : '#656d7b' }}
+                      className={classNames(
+                        'flex-row',
+                        isActive ? 'text-action' : 'text-secondary',
+                      )}
                     >
                       <span className='mr-1'>
                         <Icon
                           name='height'
-                          fill={isActive ? '#6837FC' : '#656d7b'}
+                          fill={isActive ? colorIconAction : colorIconSecondary}
                         />
                       </span>
                       {currentSort ? currentSort.label : 'Unsorted'}
