@@ -1,7 +1,6 @@
 import { RefObject, useLayoutEffect } from 'react'
 
-// Centres the selected row when the list first shows, so it isn't hidden
-// below the scroll. rowCount re-runs it once the rows have loaded.
+// rowCount re-runs it once the rows have loaded.
 export default function useScrollSelectedIntoView(
   listRef: RefObject<HTMLElement | null>,
   rowCount: number,

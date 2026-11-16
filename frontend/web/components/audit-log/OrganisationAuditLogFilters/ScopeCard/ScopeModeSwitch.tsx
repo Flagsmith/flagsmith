@@ -17,7 +17,6 @@ type ScopeModeSwitchProps = {
   onChange: (value: ScopeMode) => void
 }
 
-// A radio group: Tab reaches the checked option, arrow keys move and select.
 const ScopeModeSwitch: FC<ScopeModeSwitchProps> = ({
   onChange,
   options,
