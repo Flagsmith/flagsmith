@@ -1,28 +1,30 @@
 import React, { FC, useState } from 'react'
 import { Environment, FeatureExport } from 'common/types/responses'
-import ProjectStore from 'common/stores/project-store'
+import { getEnvironmentColour } from 'common/utils/environmentColour'
 import moment from 'moment'
 import Button from 'components/base/forms/Button'
 import Format from 'common/utils/format'
-import Tag from 'components/tags/Tag'
-import Utils from 'common/utils/utils'
+import Chip from 'components/base/Chip'
 import { getFeatureExport } from 'common/services/useFeatureExport'
 import { getStore } from 'common/store'
 
 type FeatureExportItemType = {
   data: FeatureExport
+  // The project's environments, fetched by the export page.
+  environments: Environment[]
 }
 
-const FeatureExportItem: FC<FeatureExportItemType> = ({ data }) => {
+const FeatureExportItem: FC<FeatureExportItemType> = ({
+  data,
+  environments,
+}) => {
   const [isLoading, setIsLoading] = useState(false)
 
-  const environment: Environment | null = ProjectStore.getEnvironmentById(
-    data.environment_id,
-  ) as Environment | null
-  const index = ProjectStore.getEnvs()?.findIndex?.(
-    (env) => env.id === data.environment_id,
+  const envIndex = environments.findIndex(
+    (env) => `${env.id}` === `${data.environment_id}`,
   )
-  const colour = index === -1 ? 0 : index
+  const environment = envIndex === -1 ? undefined : environments[envIndex]
+  const colour = getEnvironmentColour(environment ?? {}, Math.max(envIndex, 0))
 
   const download = () => {
     setIsLoading(true)
@@ -46,13 +48,11 @@ const FeatureExportItem: FC<FeatureExportItemType> = ({ data }) => {
         {moment(data?.created_at).format('Do MMM YYYY HH:mma')}
       </div>
       <Flex className='table-column'>
-        <Tag
-          tag={{
-            color: Utils.getTagColour(colour),
-            label: environment?.name,
-          }}
-          className='chip--sm'
-        />
+        {!!environment && (
+          <Chip colour={colour} size='sm'>
+            {environment.name}
+          </Chip>
+        )}
       </Flex>
       <div className='table-column text-right'>
         {data.status === 'SUCCESS' ? (

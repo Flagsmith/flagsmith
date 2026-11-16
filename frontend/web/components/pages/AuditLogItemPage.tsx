@@ -5,13 +5,13 @@ import Breadcrumb from 'components/Breadcrumb'
 import PageTitle from 'components/PageTitle'
 import Panel from 'components/base/grid/Panel'
 import moment from 'moment'
-import ProjectStore from 'common/stores/project-store'
-import Utils from 'common/utils/utils'
-import Tag from 'components/tags/Tag'
+import { skipToken } from '@reduxjs/toolkit/query'
+import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
+import { getEnvironmentColour } from 'common/utils/environmentColour'
+import Chip from 'components/base/Chip'
 import DiffString from 'components/diff/DiffString'
 import DiffEnabled from 'components/diff/DiffEnabled'
 import Format from 'common/utils/format'
-import { Environment } from 'common/types/responses'
 import { Link, useRouteMatch } from 'react-router-dom'
 import Button from 'components/base/forms/Button'
 import { useRouteContext } from 'components/providers/RouteContext'
@@ -32,12 +32,15 @@ const AuditLogItemPage: FC = () => {
     projectId: projectId?.toString() || '',
   })
 
-  const index = (ProjectStore.getEnvs() as Environment[] | null)?.findIndex(
-    (v) => {
-      return v.id === data?.environment?.id
-    },
+  const { data: environments } = useGetEnvironmentsQuery(
+    projectId ? { projectId: Number(projectId) } : skipToken,
   )
-  const colour = index === -1 ? 0 : index
+  const envList = environments?.results ?? []
+  const envIndex = Math.max(
+    0,
+    envList.findIndex((v) => v.id === data?.environment?.id),
+  )
+  const colour = getEnvironmentColour(envList[envIndex] ?? {}, envIndex)
 
   return (
     <div className='app-container container-fluid mt-1'>
@@ -56,13 +59,9 @@ const AuditLogItemPage: FC = () => {
             Log #{match.params.id}
             {!!data?.environment && (
               <div className='ms-2'>
-                <Tag
-                  tag={{
-                    color: Utils.getTagColour(colour),
-                    label: data.environment?.name,
-                  }}
-                  className='chip--sm'
-                />
+                <Chip colour={colour} size='sm'>
+                  {data.environment.name}
+                </Chip>
               </div>
             )}
           </Row>

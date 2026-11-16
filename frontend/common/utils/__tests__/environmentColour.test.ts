@@ -9,10 +9,11 @@ describe('getEnvironmentColour', () => {
   })
 
   it.each`
-    name                  | environment
-    ${'no banner colour'} | ${{}}
-    ${'an empty colour'}  | ${{ banner_colour: '' }}
-    ${'a null colour'}    | ${{ banner_colour: null }}
+    name                   | environment
+    ${'no banner colour'}  | ${{}}
+    ${'an empty colour'}   | ${{ banner_colour: '' }}
+    ${'a null colour'}     | ${{ banner_colour: null }}
+    ${'an invalid colour'} | ${{ banner_colour: 'red' }}
   `('falls back to the position colour with $name', ({ environment }) => {
     expect(getEnvironmentColour(environment, 1)).toBe(TAG_COLOURS[1])
   })
