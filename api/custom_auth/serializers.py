@@ -35,7 +35,6 @@ class CustomTokenSerializer(serializers.ModelSerializer):  # type: ignore[type-a
 
 
 class CustomTokenCreateSerializer(TokenCreateSerializer):  # type: ignore[misc]
-
     def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
         """Validate credentials input.
 
@@ -48,7 +47,9 @@ class CustomTokenCreateSerializer(TokenCreateSerializer):  # type: ignore[misc]
             user = FFAdminUser.objects.filter(email__iexact=email).first()
             if not user:
                 raise
-            if not (password := attrs.get("password")) or not user.check_password(password):
+            if not (password := attrs.get("password")) or not user.check_password(
+                password
+            ):
                 user_login_password_rejected.send(sender=user.__class__, user=user)
                 raise
             if not user.is_active:
