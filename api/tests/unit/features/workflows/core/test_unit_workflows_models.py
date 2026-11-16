@@ -9,6 +9,7 @@ from django.db.models import Q
 from django.utils import timezone
 from flag_engine.segments.constants import EQUAL, PERCENTAGE_SPLIT
 from freezegun.api import FrozenDateTimeFactory
+from pytest_django import DjangoCaptureOnCommitCallbacks
 from pytest_mock import MockerFixture
 from pytest_structlog import StructuredLogCapture
 
@@ -23,6 +24,7 @@ from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
 from cohorts.models import Cohort
 from core.helpers import get_current_site_url
+from core.workflows_services import ChangeRequestCommitService
 from environments.identities.models import Identity
 from environments.models import Environment
 from features.models import Feature, FeatureSegment, FeatureState
@@ -687,6 +689,7 @@ def test_change_request_commit__v2_versioning__publishes_environment_feature_ver
     feature: Feature,
     admin_user: FFAdminUser,
     mocker: MockerFixture,
+    django_capture_on_commit_callbacks: DjangoCaptureOnCommitCallbacks,
 ):
     # Given
     environment.use_v2_feature_versioning = True
@@ -715,7 +718,8 @@ def test_change_request_commit__v2_versioning__publishes_environment_feature_ver
     )
 
     # When
-    change_request.commit(admin_user)
+    with django_capture_on_commit_callbacks(execute=True):
+        change_request.commit(admin_user)
 
     # Then
     environment_feature_version.refresh_from_db()
@@ -733,6 +737,112 @@ def test_change_request_commit__v2_versioning__publishes_environment_feature_ver
         },
         delay_until=environment_feature_version.live_from,
     )
+
+
+@pytest.mark.freeze_time(now)
+def test_change_request_commit__v2_versioning__defers_side_effects_until_transaction_commits(
+    environment: Environment,
+    feature: Feature,
+    admin_user: FFAdminUser,
+    mocker: MockerFixture,
+    django_capture_on_commit_callbacks: DjangoCaptureOnCommitCallbacks,
+) -> None:
+    # Given
+    environment.use_v2_feature_versioning = True
+    environment.save()
+
+    change_request = ChangeRequest.objects.create(
+        title="Test CR", environment=environment, user=admin_user
+    )
+    environment_feature_version = EnvironmentFeatureVersion.objects.create(
+        environment=environment, feature=feature
+    )
+    change_request.environment_feature_versions.add(environment_feature_version)
+
+    mock_rebuild_environment_document_task = mocker.patch(
+        "core.workflows_services.rebuild_environment_document"
+    )
+    mock_trigger_update_version_webhooks = mocker.patch(
+        "core.workflows_services.trigger_update_version_webhooks"
+    )
+    mock_environment_feature_version_published = mocker.patch(
+        "core.workflows_services.environment_feature_version_published"
+    )
+
+    # When
+    with django_capture_on_commit_callbacks() as callbacks:
+        change_request.commit(admin_user)
+
+        # Then
+        mock_rebuild_environment_document_task.delay.assert_not_called()
+        mock_trigger_update_version_webhooks.delay.assert_not_called()
+        mock_environment_feature_version_published.send.assert_not_called()
+
+    for callback in callbacks:
+        callback()
+
+    mock_rebuild_environment_document_task.delay.assert_called_once_with(
+        kwargs={"environment_id": environment.id},
+        delay_until=now,
+    )
+    mock_trigger_update_version_webhooks.delay.assert_called_once_with(
+        kwargs={
+            "environment_feature_version_uuid": str(environment_feature_version.uuid)
+        },
+        delay_until=now,
+    )
+    mock_environment_feature_version_published.send.assert_called_once_with(
+        EnvironmentFeatureVersion, instance=environment_feature_version
+    )
+
+
+def test_change_request_commit__v2_versioning_and_commit_fails__does_not_run_side_effects(
+    environment: Environment,
+    feature: Feature,
+    admin_user: FFAdminUser,
+    mocker: MockerFixture,
+    django_capture_on_commit_callbacks: DjangoCaptureOnCommitCallbacks,
+) -> None:
+    # Given
+    environment.use_v2_feature_versioning = True
+    environment.save()
+
+    change_request = ChangeRequest.objects.create(
+        title="Test CR", environment=environment, user=admin_user
+    )
+    environment_feature_version = EnvironmentFeatureVersion.objects.create(
+        environment=environment, feature=feature
+    )
+    change_request.environment_feature_versions.add(environment_feature_version)
+
+    mock_rebuild_environment_document_task = mocker.patch(
+        "core.workflows_services.rebuild_environment_document"
+    )
+    mock_trigger_update_version_webhooks = mocker.patch(
+        "core.workflows_services.trigger_update_version_webhooks"
+    )
+    mock_environment_feature_version_published = mocker.patch(
+        "core.workflows_services.environment_feature_version_published"
+    )
+    mocker.patch.object(
+        ChangeRequestCommitService,
+        "_publish_segments",
+        side_effect=RuntimeError("Segment publishing failed"),
+    )
+
+    # When
+    with django_capture_on_commit_callbacks(execute=True) as callbacks:
+        with pytest.raises(RuntimeError):
+            change_request.commit(admin_user)
+
+    # Then
+    assert callbacks == []
+    mock_rebuild_environment_document_task.delay.assert_not_called()
+    mock_trigger_update_version_webhooks.delay.assert_not_called()
+    mock_environment_feature_version_published.send.assert_not_called()
+
+    environment_feature_version.refresh_from_db()
+    assert not environment_feature_version.published
 
 
 def test_change_request_delete__committed__raises_deletion_error(
@@ -803,7 +913,10 @@ def test_change_request_delete__scheduled_with_environment_feature_versions__del
 
 
 def test_change_request_commit__with_environment_feature_versions__creates_publish_audit_log(
-    feature: Feature, environment_v2_versioning: Environment, admin_user: FFAdminUser
+    feature: Feature,
+    environment_v2_versioning: Environment,
+    admin_user: FFAdminUser,
+    django_capture_on_commit_callbacks: DjangoCaptureOnCommitCallbacks,
 ) -> None:
     # Given
     change_request = ChangeRequest.objects.create(
@@ -819,7 +932,8 @@ def test_change_request_commit__with_environment_feature_versions__creates_publi
     )
 
     # When
-    change_request.commit(admin_user)
+    with django_capture_on_commit_callbacks(execute=True):
+        change_request.commit(admin_user)
 
     # Then
     assert AuditLog.objects.filter(

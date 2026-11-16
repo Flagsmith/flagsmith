@@ -1,3 +1,4 @@
+from functools import partial
 from typing import TYPE_CHECKING
 
 import structlog
@@ -96,21 +97,33 @@ class ChangeRequestCommitService:
             )
 
             for environment_feature_version in environment_feature_versions:
-                trigger_update_version_webhooks.delay(
-                    kwargs={
-                        "environment_feature_version_uuid": str(
-                            environment_feature_version.uuid
-                        )
-                    },
-                    delay_until=environment_feature_version.live_from,
+                # Defer side effects until the commit transaction succeeds, so
+                # nothing runs against a version whose publishing is rolled back.
+                transaction.on_commit(
+                    partial(
+                        self._on_environment_feature_version_published,
+                        environment_feature_version,
+                    )
                 )
-                rebuild_environment_document.delay(
-                    kwargs={"environment_id": self.change_request.environment_id},
-                    delay_until=environment_feature_version.live_from,
+
+    def _on_environment_feature_version_published(
+        self, environment_feature_version: EnvironmentFeatureVersion
+    ) -> None:
+        trigger_update_version_webhooks.delay(
+            kwargs={
+                "environment_feature_version_uuid": str(
+                    environment_feature_version.uuid
                 )
-                environment_feature_version_published.send(
-                    EnvironmentFeatureVersion, instance=environment_feature_version
-                )
+            },
+            delay_until=environment_feature_version.live_from,
+        )
+        rebuild_environment_document.delay(
+            kwargs={"environment_id": self.change_request.environment_id},
+            delay_until=environment_feature_version.live_from,
+        )
+        environment_feature_version_published.send(
+            EnvironmentFeatureVersion, instance=environment_feature_version
+        )
 
     def _publish_change_sets(self, published_by: "FFAdminUser") -> None:
         for change_set in self.change_request.change_sets.all():
