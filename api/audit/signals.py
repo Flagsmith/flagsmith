@@ -7,7 +7,7 @@ from django.contrib.auth.signals import user_logged_out
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.http import HttpRequest
-from oauth2_provider.models import AccessToken
+from oauth2_provider.models import AccessToken, Application
 from oauth2_provider.signals import app_authorized
 
 from audit.constants import (
@@ -20,6 +20,7 @@ from audit.constants import (
     USER_LOGGED_IN_WITH_SSO_MESSAGE,
     USER_LOGGED_IN_WITHOUT_2FA_MESSAGE,
     USER_LOGGED_OUT_MESSAGE,
+    USER_LOGGED_OUT_OF_OAUTH_APPLICATION_MESSAGE,
     USER_LOGIN_2FA_CODE_REJECTED_MESSAGE,
     USER_LOGIN_PASSWORD_REJECTED_MESSAGE,
     USER_LOGIN_REQUIRES_2FA_MESSAGE,
@@ -52,6 +53,7 @@ from integrations.new_relic.new_relic import NewRelicWrapper
 from integrations.sentry.change_tracking import SentryChangeTracking
 from integrations.sentry.models import SentryChangeTrackingConfiguration
 from integrations.slack.slack import SlackWrapper
+from oauth2_metadata.signals import oauth_session_revoked
 from organisations.models import OrganisationWebhook
 from users.auth_type import AuthType
 from users.models import FFAdminUser
@@ -357,6 +359,19 @@ def create_user_oauth_login_audit_logs(
         user,
         USER_LOGGED_IN_TO_OAUTH_APPLICATION_MESSAGE
         % (user.email, token.application.name),
+    )
+
+
+@receiver(oauth_session_revoked)
+def create_user_oauth_logout_audit_logs(
+    sender: object,
+    user: FFAdminUser,
+    application: Application,
+    **kwargs: Any,
+) -> None:
+    _create_user_audit_logs(
+        user,
+        USER_LOGGED_OUT_OF_OAUTH_APPLICATION_MESSAGE % (user.email, application.name),
     )
 
 

@@ -1,12 +1,14 @@
+import hashlib
 from typing import Any
 from urllib.parse import urlencode, urlparse, urlunparse
 
 import structlog
-from django.http import HttpRequest, JsonResponse, QueryDict
+from django.http import HttpRequest, HttpResponse, JsonResponse, QueryDict
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET
 from oauth2_provider.exceptions import OAuthToolkitError
-from oauth2_provider.models import get_application_model
+from oauth2_provider.models import RefreshToken, get_application_model
+from oauth2_provider.views import RevokeTokenView
 from oauth2_provider.views.mixins import OAuthLibMixin
 from rest_framework import status
 from rest_framework import status as drf_status
@@ -28,6 +30,7 @@ from oauth2_metadata.serializers import (
     OAuthConsentSerializer,
 )
 from oauth2_metadata.services import create_oauth2_application
+from oauth2_metadata.signals import oauth_session_revoked
 
 logger = structlog.get_logger("oauth2_metadata")
 
@@ -219,3 +222,36 @@ class DynamicClientRegistrationView(APIView):
         flagsmith_oauth2_dcr_registrations_total.labels(
             token_endpoint_auth_method=auth_method, outcome=outcome
         ).inc()
+
+
+class OAuthRevokeTokenView(RevokeTokenView):  # type: ignore[misc]
+    """Revoke an OAuth 2.0 token, per RFC 7009."""
+
+    def post(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
+        session_refresh_token = self._get_session_refresh_token(request)
+        response: HttpResponse = super().post(request, *args, **kwargs)
+        if session_refresh_token and self._is_revoked(session_refresh_token):
+            oauth_session_revoked.send(
+                sender=self.__class__,
+                user=session_refresh_token.user,
+                application=session_refresh_token.application,
+            )
+        return response
+
+    def _get_session_refresh_token(self, request: HttpRequest) -> RefreshToken | None:
+        """Identify the session to end, as revocation requests carry no user."""
+        token: str = request.POST.get("token", "")
+        refresh_token: RefreshToken | None = (
+            RefreshToken.objects.filter(
+                token_checksum=hashlib.sha256(token.encode("utf-8")).hexdigest(),
+                revoked__isnull=True,
+            )
+            .select_related("user", "application")
+            .first()
+        )
+        return refresh_token
+
+    def _is_revoked(self, refresh_token: RefreshToken) -> bool:
+        """Confirm revocation, as RFC 7009 responds 200 to tokens it did not revoke."""
+        refresh_token.refresh_from_db(fields=["revoked"])
+        return refresh_token.revoked is not None

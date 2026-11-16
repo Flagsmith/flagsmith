@@ -1,5 +1,6 @@
 import base64
 import hashlib
+from datetime import timedelta
 from urllib.parse import parse_qs, urlparse
 
 import pyotp
@@ -7,7 +8,8 @@ import pytest
 import responses
 from axes.models import AccessAttempt  # type: ignore[import-untyped]
 from django.contrib.auth.hashers import make_password
-from oauth2_provider.models import Application
+from django.utils import timezone
+from oauth2_provider.models import AccessToken, Application, RefreshToken
 from pytest_django.fixtures import SettingsWrapper
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
@@ -624,9 +626,51 @@ def test_oauth_login__authorised__creates_audit_log(
     ]
 
 
-def test_cli_logout__completed__creates_audit_log():
-    raise NotImplementedError
+def test_oauth_logout__token_revoked__creates_audit_log(
+    api_client: APIClient,
+    oauth_application: Application,
+    organisation: Organisation,
+    other_organisation: Organisation,
+    user: FFAdminUser,
+) -> None:
+    # Given
+    RefreshToken.objects.create(
+        user=user,
+        application=oauth_application,
+        token="refresh-token",
+        access_token=AccessToken.objects.create(
+            user=user,
+            application=oauth_application,
+            token="access-token",
+            expires=timezone.now() + timedelta(minutes=15),
+        ),
+    )
 
+    # When
+    response = api_client.post(
+        "/o/revoke_token/",
+        {
+            "token": "refresh-token",
+            "token_type_hint": "refresh_token",
+            "client_id": oauth_application.client_id,
+        },
+    )
 
-def test_revoke_token__completed__creates_audit_log():
-    raise NotImplementedError
+    # Then
+    assert response.status_code == 200
+    assert list(
+        AuditLog.objects.order_by("organisation_id", "created_date").values(
+            "organisation_id", "author_id", "log"
+        )
+    ) == [
+        {
+            "organisation_id": organisation.id,
+            "author_id": user.id,
+            "log": "User `alice@example.com` logged out of Acme Agent.",
+        },
+        {
+            "organisation_id": other_organisation.id,
+            "author_id": user.id,
+            "log": "User `alice@example.com` logged out of Acme Agent.",
+        },
+    ]
