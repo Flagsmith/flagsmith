@@ -56,6 +56,7 @@ describe('toOrganisationAuditLogParams', () => {
     name                     | search             | sent
     ${'256 characters'}      | ${'a'.repeat(256)} | ${'a'.repeat(256)}
     ${'over 256 characters'} | ${'a'.repeat(257)} | ${undefined}
+    ${'two emoji'}           | ${'🚀🔥'}          | ${undefined}
   `('sends a search of $name only within the limit', ({ search, sent }) => {
     expect(
       toOrganisationAuditLogParams(filters({ type: 'all' }, search)).search,

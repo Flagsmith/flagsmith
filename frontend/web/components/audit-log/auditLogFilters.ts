@@ -38,8 +38,8 @@ export const serialiseAuditLogFilters = ({
 
 export const getSentSearch = (search: string): string | undefined => {
   const trimmed = search.trim()
-  return trimmed.length >= MIN_SEARCH_LENGTH &&
-    trimmed.length <= MAX_SEARCH_LENGTH
+  const length = [...trimmed].length // characters, as the API counts them
+  return length >= MIN_SEARCH_LENGTH && length <= MAX_SEARCH_LENGTH
     ? trimmed
     : undefined
 }
