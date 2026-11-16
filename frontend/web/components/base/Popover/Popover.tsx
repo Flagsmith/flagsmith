@@ -29,9 +29,6 @@ export type PopoverPlacement =
 
 const TRIGGER_GAP = 6
 const WINDOW_PADDING = 8
-// Floor for very short windows: a shorter panel is too small to use, so it
-// may overflow the window instead.
-const MIN_HEIGHT = 120
 
 export type PopoverProps = {
   'aria-label': string
@@ -61,7 +58,7 @@ const Popover: FC<PopoverProps> = ({
         apply({ availableHeight, elements }) {
           elements.floating.style.setProperty(
             '--ds-popover-max-height',
-            `${Math.max(availableHeight, MIN_HEIGHT)}px`,
+            `${availableHeight}px`,
           )
         },
         padding: WINDOW_PADDING,
