@@ -11,7 +11,7 @@ export const getEnvironmentColour = (
 ) => {
   return (
     toHexColour(environment.banner_colour) ??
-    TAG_COLOURS[index % (TAG_COLOURS.length - 1)]
+    TAG_COLOURS[index % TAG_COLOURS.length]
   )
 }
 

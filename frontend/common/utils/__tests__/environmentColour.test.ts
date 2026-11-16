@@ -19,6 +19,12 @@ describe('getEnvironmentColour', () => {
     expect(getEnvironmentColour(environment, 1)).toBe(TAG_COLOURS[1])
   })
 
+  it('uses every palette colour before wrapping', () => {
+    const last = TAG_COLOURS.length - 1
+    expect(getEnvironmentColour({}, last)).toBe(TAG_COLOURS[last])
+    expect(getEnvironmentColour({}, last + 1)).toBe(TAG_COLOURS[0])
+  })
+
   it('adds the # to a banner colour stored without it', () => {
     expect(getEnvironmentColour({ banner_colour: ' 123456 ' }, 0)).toBe(
       '#123456',
