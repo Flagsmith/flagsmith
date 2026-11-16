@@ -27,6 +27,12 @@ export type PopoverPlacement =
   | 'top-start'
   | 'top-end'
 
+const TRIGGER_GAP = 6
+const WINDOW_PADDING = 8
+// Floor for very short windows: a shorter panel is too small to use, so it
+// may overflow the window instead.
+const MIN_HEIGHT = 120
+
 export type PopoverProps = {
   'aria-label': string
   renderTrigger: (props: PopoverTriggerProps, isOpen: boolean) => ReactNode
@@ -47,18 +53,18 @@ const Popover: FC<PopoverProps> = ({
 
   const { context, floatingStyles, refs } = useFloating({
     middleware: [
-      offset(6),
+      offset(TRIGGER_GAP),
       flip(),
-      shift({ padding: 8 }),
+      shift({ padding: WINDOW_PADDING }),
       // Caps the panel at the space left in the window; it scrolls past that.
       size({
         apply({ availableHeight, elements }) {
           elements.floating.style.setProperty(
             '--ds-popover-max-height',
-            `${Math.max(availableHeight, 120)}px`,
+            `${Math.max(availableHeight, MIN_HEIGHT)}px`,
           )
         },
-        padding: 8,
+        padding: WINDOW_PADDING,
       }),
     ],
     onOpenChange: setIsOpen,
