@@ -13,10 +13,8 @@ export type ChipProps = {
   variant?: ChipVariant
   size?: ChipSize
   truncate?: boolean
-  // A tag's or environment's own colour (6-digit hex). Replaces the variant;
-  // the text is adjusted to stay readable in both themes.
+  // 6-digit hex. Replaces the variant.
   colour?: string
-  // Stronger look for a picked chip; ToggleChip sets it from its checkbox.
   selected?: boolean
   onRemove?: () => void
   onClick?: () => void
@@ -63,12 +61,11 @@ const Chip = ({
 }: ChipProps) => {
   const interactive = !!onClick || !!role
   const colourVars = colour ? getChipColourVars(colour) : null
-  // Without a colour, selected shows as the accent variant.
   const shownVariant = selected ? 'accent' : variant
   return (
     <span
       ref={ref}
-      // Data-driven colour: Chip.scss derives every shade from these.
+      // Data, not styling: Chip.scss derives the shades from these.
       style={colourVars ?? undefined}
       className={classNames(
         'ds-chip d-inline-flex align-items-center align-middle gap-1 rounded-sm',

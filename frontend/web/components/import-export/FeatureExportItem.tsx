@@ -10,7 +10,6 @@ import { getStore } from 'common/store'
 
 type FeatureExportItemType = {
   data: FeatureExport
-  // The project's environments, fetched by the export page.
   environments: Environment[]
 }
 

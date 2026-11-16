@@ -36,7 +36,6 @@ export const contrastRatio = (a: Rgb, b: Rgb) => {
   return (light + 0.05) / (dark + 0.05)
 }
 
-// What Chip.scss renders for a colour in one theme.
 export const getChipShades = (
   colour: Rgb,
   theme: ChipTheme,
@@ -64,8 +63,7 @@ const readsInBothThemes = (colour: Rgb, textStrength: number) =>
     )
   })
 
-// The most of the colour the text can keep while reading at 4.5:1 in both
-// themes; the rest is the theme's default text colour.
+// The most colour the text keeps while reading at 4.5:1 in both themes.
 export const getChipTextStrength = (colour: Rgb) => {
   for (let step = 50; step > 0; step--) {
     if (readsInBothThemes(colour, step / 50)) return step / 50
@@ -73,8 +71,6 @@ export const getChipTextStrength = (colour: Rgb) => {
   return 0
 }
 
-// Returns null for anything that isn't a 6-digit hex, so the chip keeps its
-// variant.
 export const getChipColourVars = (hex: string): ChipColourVars | null => {
   const colour = parseHex(hex)
   if (!colour) return null

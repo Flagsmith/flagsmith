@@ -3,9 +3,8 @@ import { parseHex } from './parseHex'
 
 type ColourSource = { banner_colour?: string | null }
 
-// The banner colour is the only colour a user picks for an environment. Without
-// a valid one, fall back to the colour the rest of the UI gives its list
-// position. Always returns #RRGGBB: the API stores the banner colour unchecked.
+// The banner colour, else the list position's colour. Normalised to #RRGGBB
+// because the API doesn't validate the banner colour.
 export const getEnvironmentColour = (
   environment: ColourSource,
   index: number,
@@ -15,9 +14,7 @@ export const getEnvironmentColour = (
   return TAG_COLOURS[index % (TAG_COLOURS.length - 1)]
 }
 
-// The colour of the environment with this id. One missing from the list (for
-// example without access) gets the first position's colour, never another
-// environment's banner colour.
+// One missing from the list never borrows another environment's banner colour.
 export const getEnvironmentColourById = (
   environments: (ColourSource & { id: number | string })[],
   id: number | string | undefined,

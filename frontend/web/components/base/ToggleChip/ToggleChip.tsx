@@ -9,14 +9,11 @@ export type ToggleChipProps = {
   onChange: (checked: boolean) => void
   children: ReactNode
   size?: ChipSize
-  // A tag's or environment's own colour; see Chip.
   colour?: string
   disabled?: boolean
   className?: string
 }
 
-// A checkbox shown as a chip. Checked chips turn accent and show a tick, so
-// the state never relies on colour alone.
 const ToggleChip = ({
   checked,
   children,

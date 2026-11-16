@@ -36,7 +36,7 @@ const AuditLog: FC<AuditLogType> = (props) => {
   const { data: subscriptionMeta } = useGetSubscriptionMetadataQuery({
     id: AccountStore.getOrganisation()?.id,
   })
-  // The same list the environment filter uses, so a row and its filter chip match.
+  // Same list as the environment filter, so the colours match.
   const { data: projectEnvironments } = useGetEnvironmentsQuery({
     projectId: Number(props.projectId),
   })
@@ -171,7 +171,7 @@ const AuditLog: FC<AuditLogType> = (props) => {
             style={{ width: widths[2] }}
             to={`/project/${props.projectId}/environment/${environment?.api_key}/features/`}
           >
-            {/* Truncated to the column, which is narrower than a chip's cap. */}
+            {/* mw-100: the column is narrower than the chip's own cap. */}
             <Chip colour={colour} truncate className='mw-100'>
               {environment.name}
             </Chip>

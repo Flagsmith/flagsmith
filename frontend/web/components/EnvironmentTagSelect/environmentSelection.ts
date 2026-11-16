@@ -5,8 +5,7 @@ type SelectionOptions = {
   allowEmpty: boolean
 }
 
-// The selection after clicking one environment. Single mode picks one, and
-// clicking it again clears it only when allowEmpty.
+// In single mode, clicking the picked one clears it only with allowEmpty.
 export const getNextEnvironmentSelection = (
   value: EnvironmentSelection,
   clicked: string,

@@ -1,4 +1,3 @@
-// Tag colours, also used for environments that have no colour of their own.
 export const TAG_COLOURS = [
   '#3d4db6',
   '#ea5a45',

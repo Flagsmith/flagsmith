@@ -24,9 +24,8 @@
     font-size: 0.6875rem;
   }
 
-  // A tag's or environment's own colour. The surface and text tokens switch
-  // with the theme, so these mixes do too; --chip-text-strength (from
-  // getChipColourVars) keeps the text at 4.5:1 in both.
+  // The surface and text tokens switch with the theme, so these mixes do too.
+  // --chip-text-strength (getChipColourVars) keeps the text at 4.5:1 in both.
   &--tinted {
     color: color-mix(
       in srgb,

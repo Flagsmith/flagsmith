@@ -1,6 +1,5 @@
 export type Rgb = { r: number; g: number; b: number }
 
-// A 6-digit hex colour, with or without the #; null for anything else.
 export const parseHex = (hex: string): Rgb | null => {
   const match = /^#?([0-9a-f]{6})$/i.exec(hex.trim())
   if (!match) return null
