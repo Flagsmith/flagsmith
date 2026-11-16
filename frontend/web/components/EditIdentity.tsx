@@ -1,4 +1,5 @@
 import React, { FC, useEffect, useRef, useState } from 'react'
+import classNames from 'classnames'
 import { Identity } from 'common/types/responses'
 import { useUpdateIdentityMutation } from 'common/services/useIdentity'
 import { useHasPermission } from 'common/providers/Permission'
@@ -35,7 +36,7 @@ const EditIdentity: FC<EditIdentityType> = ({ data, environmentId }) => {
   }
 
   const onSubmit = (updatedAlias?: string) => {
-    if (canEditAlias && !isLoading) {
+    if (!isLoading) {
       updateIdentity({
         data: { ...data, dashboard_alias: updatedAlias },
         environmentId,
@@ -55,31 +56,36 @@ const EditIdentity: FC<EditIdentityType> = ({ data, environmentId }) => {
   }
 
   const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!canEditAlias) return
     const newValue = e.target.value.toLowerCase()
     setAlias(newValue.replace(/\n/g, ' ').trim())
   }
 
   return (
     <>
-      <GhostInput
-        ref={aliasRef}
-        value={alias}
-        onChange={handleInput}
-        onBlur={handleBlur}
-        onKeyDown={handleKeyDown}
-        placeholder='None'
-      />
-      {canEditAlias && (
-        <Button
-          disabled={!data}
-          theme='text'
-          className='text-action'
-          onClick={handleFocus}
-        >
-          Edit
-          <Icon name='edit' width={16} />
-        </Button>
+      {canEditAlias ? (
+        <>
+          <GhostInput
+            ref={aliasRef}
+            value={alias}
+            onChange={handleInput}
+            onBlur={handleBlur}
+            onKeyDown={handleKeyDown}
+            placeholder='None'
+          />
+          <Button
+            disabled={!data}
+            theme='text'
+            className='text-action'
+            onClick={handleFocus}
+          >
+            Edit
+            <Icon name='edit' width={16} />
+          </Button>
+        </>
+      ) : (
+        <span className={classNames('fw-normal', { 'text-muted': !alias })}>
+          {alias || 'None'}
+        </span>
       )}
       <ErrorMessage error={error} />
     </>
