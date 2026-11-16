@@ -58,7 +58,7 @@ const Popover: FC<PopoverProps> = ({
         apply({ availableHeight, elements }) {
           elements.floating.style.setProperty(
             '--ds-popover-max-height',
-            `${availableHeight}px`,
+            `${Math.max(0, availableHeight)}px`,
           )
         },
         padding: WINDOW_PADDING,
