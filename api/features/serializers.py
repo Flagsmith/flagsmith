@@ -15,9 +15,6 @@ from common.projects.permissions import VIEW_PROJECT
 from django.db import models
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
-from drf_writable_nested import (  # type: ignore[attr-defined]
-    WritableNestedModelSerializer,
-)
 from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 
@@ -46,6 +43,7 @@ from users.serializers import (
 )
 from util.drf_writable_nested.serializers import (
     DeleteBeforeUpdateWritableNestedModelSerializer,
+    WritableNestedModelSerializer,
 )
 
 from .constants import CONTROL_VARIANT_KEY, INTERSECTION, UNION
