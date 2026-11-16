@@ -37,13 +37,11 @@ export const serialiseAuditLogFilters = ({
 }
 
 export const getSentSearch = (search: string): string | undefined => {
-  // By character, not UTF-16 unit, so an emoji is never cut in half. Trimmed
-  // again after the cap, as the API trims before checking the minimum.
-  const sent = Array.from(search.trim())
-    .slice(0, MAX_SEARCH_LENGTH)
-    .join('')
-    .trim()
-  return Array.from(sent).length >= MIN_SEARCH_LENGTH ? sent : undefined
+  const trimmed = search.trim()
+  return trimmed.length >= MIN_SEARCH_LENGTH &&
+    trimmed.length <= MAX_SEARCH_LENGTH
+    ? trimmed
+    : undefined
 }
 
 export const toOrganisationAuditLogParams = ({

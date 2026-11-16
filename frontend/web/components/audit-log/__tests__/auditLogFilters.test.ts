@@ -52,27 +52,14 @@ describe('toOrganisationAuditLogParams', () => {
     ).toBe(sent)
   })
 
-  it('caps a long search at the 256 characters the API accepts', () => {
+  it.each`
+    name                     | search             | sent
+    ${'256 characters'}      | ${'a'.repeat(256)} | ${'a'.repeat(256)}
+    ${'over 256 characters'} | ${'a'.repeat(257)} | ${undefined}
+  `('sends a search of $name only within the limit', ({ search, sent }) => {
     expect(
-      toOrganisationAuditLogParams(filters({ type: 'all' }, 'a'.repeat(300)))
-        .search,
-    ).toBe('a'.repeat(256))
-  })
-
-  it('sends nothing when the capped search is too short once trimmed', () => {
-    expect(
-      toOrganisationAuditLogParams(
-        filters({ type: 'all' }, `ab${' '.repeat(254)}c`),
-      ).search,
-    ).toBeUndefined()
-  })
-
-  it('never cuts an emoji in half at the cap', () => {
-    expect(
-      toOrganisationAuditLogParams(
-        filters({ type: 'all' }, `${'a'.repeat(255)}😀b`),
-      ).search,
-    ).toBe(`${'a'.repeat(255)}😀`)
+      toOrganisationAuditLogParams(filters({ type: 'all' }, search)).search,
+    ).toBe(sent)
   })
 })
 
