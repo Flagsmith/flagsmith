@@ -12,14 +12,13 @@ from drf_writable_nested import (  # type: ignore[attr-defined]
 from rest_framework import serializers
 
 
+# drf-writable-nested resolves nested `id`s against the whole table. Only
+# resolve them against the parent's own related objects; anything else is
+# treated as new.
+#
+# No docstring: drf-spectacular uses the first docstring in a serializer's MRO
+# as its OpenAPI description.
 class ScopedNestedRelationsMixin:
-    """
-    drf-writable-nested resolves nested `id`s against the whole table, so a
-    payload can take over rows belonging to any other object. Only resolve
-    them against the parent's own related objects; anything else is treated
-    as new.
-    """
-
     _nested_parent_lookups: dict[serializers.ModelSerializer[Any], dict[str, Model]]
 
     def update_or_create_direct_relations(
