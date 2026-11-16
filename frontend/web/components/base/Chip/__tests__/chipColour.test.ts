@@ -1,4 +1,5 @@
 import {
+  CHIP_THEMES,
   contrastRatio,
   getChipColourVars,
   getChipShades,
@@ -8,10 +9,9 @@ import { parseHex } from 'common/utils/parseHex'
 import { TAG_COLOURS } from 'common/theme/tagColours'
 
 const HARD_CASES = ['#f5e1a4', '#1a1a2e', '#ffffff', '#000000', '#ffa500']
-const CASES = [...TAG_COLOURS, ...HARD_CASES].flatMap((hex) => [
-  { hex, theme: 'light' as const },
-  { hex, theme: 'dark' as const },
-])
+const CASES = [...TAG_COLOURS, ...HARD_CASES].flatMap((hex) =>
+  CHIP_THEMES.map((theme) => ({ hex, theme })),
+)
 
 describe('getChipTextStrength', () => {
   it.each(CASES)(

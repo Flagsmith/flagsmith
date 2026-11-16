@@ -3,6 +3,7 @@ import tokens from 'common/theme/tokens.json'
 import { parseHex, Rgb } from 'common/utils/parseHex'
 
 export type ChipTheme = 'light' | 'dark'
+export const CHIP_THEMES: ChipTheme[] = ['light', 'dark']
 // CSS custom properties, typed as styles so they can go on `style`.
 export type ChipColourVars = CSSProperties & {
   '--chip-colour': string
@@ -51,7 +52,7 @@ export const getChipShades = (
 }
 
 const readsInBothThemes = (colour: Rgb, textStrength: number) =>
-  (['light', 'dark'] as const).every((theme) => {
+  CHIP_THEMES.every((theme) => {
     const { background, selectedBackground, text } = getChipShades(
       colour,
       theme,
