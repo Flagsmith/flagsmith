@@ -6,6 +6,7 @@ import AuditLogDay from './AuditLogDay'
 import AuditLogListEmpty from './AuditLogListEmpty'
 import AuditLogListError from './AuditLogListError'
 import LoadingRows from './LoadingRows'
+import { getAuditLogListView } from './auditLogListView'
 import './AuditLogList.scss'
 
 export type AuditLogListProps = {
@@ -34,9 +35,9 @@ const AuditLogList: FC<AuditLogListProps> = ({
 
   if (error) return <AuditLogListError error={error} onRetry={onRetry} />
 
-  const isFirstLoad = isLoading && !items
+  const view = getAuditLogListView(isLoading, items?.length)
 
-  if (!isFirstLoad && !items?.length) {
+  if (view === 'empty') {
     return (
       <AuditLogListEmpty
         hasFilters={hasFilters}
@@ -50,7 +51,7 @@ const AuditLogList: FC<AuditLogListProps> = ({
       className='audit-log-list rounded-lg overflow-hidden'
       aria-busy={isLoading}
     >
-      {!items && <LoadingRows />}
+      {view === 'loading' && <LoadingRows />}
       {groupAuditLogsByDay(items ?? []).map((day) => (
         <AuditLogDay key={day.key} dayKey={day.key} label={day.label}>
           {day.items.map((item) => {

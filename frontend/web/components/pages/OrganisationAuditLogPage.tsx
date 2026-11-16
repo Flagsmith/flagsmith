@@ -77,54 +77,56 @@ const OrganisationAuditLogPage: FC = () => {
       {/* Only after a successful check, so a failed one never reads as no access. */}
       {isAdminChecked && !isAdmin && <AuditLogNoAccess />}
       {isAdmin && (
-        <div className='d-flex flex-column gap-3'>
-          {!!auditLimitDays && (
-            <PlanBasedBanner
-              force
-              feature='AUDIT_DAYS'
-              theme='description'
-              title={
-                <>
-                  Unlock your audit log history. Currently limited to{' '}
-                  <strong>{auditLimitDays} days</strong>.
-                </>
-              }
-            />
-          )}
-          <OrganisationAuditLogFilters
-            filters={filters}
-            searchInput={searchInput}
-            setSearchInput={setSearchInput}
-            onClearAll={clearFilters}
-          />
-          <AuditLogList
-            items={data?.results}
-            projectColours={projectColours}
-            isLoading={isLoading || isFetching}
-            error={error}
-            hasFilters={hasActiveAuditLogFilters(filters)}
-            onClearFilters={clearFilters}
-            onRetry={refetch}
-            renderDetails={(item) => (
-              <OrganisationAuditLogChanges
-                organisationId={organisationId}
-                id={item.id}
-                versionLimitDays={
-                  subscriptionMeta?.feature_history_visibility_days
+        <PlanBasedBanner feature='AUDIT' theme='page'>
+          <div className='d-flex flex-column gap-3'>
+            {!!auditLimitDays && (
+              <PlanBasedBanner
+                force
+                feature='AUDIT_DAYS'
+                theme='description'
+                title={
+                  <>
+                    Unlock your audit log history. Currently limited to{' '}
+                    <strong>{auditLimitDays} days</strong>.
+                  </>
                 }
               />
             )}
-          />
-          {!!data && !error && (
-            <Paging
-              paging={data}
-              isLoading={isFetching}
-              nextPage={() => goToPage(page + 1)}
-              prevPage={() => goToPage(page - 1)}
-              goToPage={goToPage}
+            <OrganisationAuditLogFilters
+              filters={filters}
+              searchInput={searchInput}
+              setSearchInput={setSearchInput}
+              onClearAll={clearFilters}
             />
-          )}
-        </div>
+            <AuditLogList
+              items={data?.results}
+              projectColours={projectColours}
+              isLoading={isLoading || isFetching}
+              error={error}
+              hasFilters={hasActiveAuditLogFilters(filters)}
+              onClearFilters={clearFilters}
+              onRetry={refetch}
+              renderDetails={(item) => (
+                <OrganisationAuditLogChanges
+                  organisationId={organisationId}
+                  id={item.id}
+                  versionLimitDays={
+                    subscriptionMeta?.feature_history_visibility_days
+                  }
+                />
+              )}
+            />
+            {!!data && !error && (
+              <Paging
+                paging={data}
+                isLoading={isFetching}
+                nextPage={() => goToPage(page + 1)}
+                prevPage={() => goToPage(page - 1)}
+                goToPage={goToPage}
+              />
+            )}
+          </div>
+        </PlanBasedBanner>
       )}
     </div>
   )

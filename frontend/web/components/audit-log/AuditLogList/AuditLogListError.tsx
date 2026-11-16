@@ -21,9 +21,7 @@ const AuditLogListError: FC<AuditLogListErrorProps> = ({ error, onRetry }) => {
         </Button>
       }
     >
-      {kind === 'timeout'
-        ? 'This search took too long. Try a more specific term.'
-        : "Couldn't load the audit log."}
+      Couldn't load the audit log.
     </Banner>
   )
 }
