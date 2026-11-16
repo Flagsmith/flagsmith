@@ -83,7 +83,7 @@ const ConnectedFeatureOverrideRow: FC<ConnectedFeatureOverrideRowProps> = ({
   }
   return (
     <div
-      className='rounded border-1'
+      className='rounded border'
       onClick={openInNewTab ? handleClick : undefined}
     >
       <FeatureOverrideRow

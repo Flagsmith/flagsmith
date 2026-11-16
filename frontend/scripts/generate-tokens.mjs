@@ -478,8 +478,17 @@ function generateUtilities() {
   ]
 
   // Colour utilities
+  // Border colours go to Bootstrap's border-color utility (see
+  // 3rdParty/_bootstrap.scss), so `.border-*` beats `.border`'s !important.
+  lines.push('// Border colours, consumed by 3rdParty/_bootstrap.scss')
+  lines.push('$token-border-colors: (')
+  for (const [key, e] of sorted(json.color.border)) {
+    lines.push(`  "${key}": var(${e.cssVar}),`)
+  }
+  lines.push(');')
+  lines.push('')
+
   const colourMappings = {
-    border: { prefix: 'border', property: 'border-color' },
     icon: { prefix: 'icon', property: null }, // special: color + fill
     surface: { prefix: 'bg-surface', property: 'background-color' },
     text: { prefix: 'text', property: 'color' },

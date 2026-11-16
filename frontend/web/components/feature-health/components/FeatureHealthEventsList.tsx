@@ -59,7 +59,7 @@ const FeatureHealthEventsList: React.FC<FeatureHealthEventsListProps> = ({
         )}
         {unhealthyEvents?.map((event) => (
           <div
-            className='border-1 p-3'
+            className='border p-3'
             style={{
               borderRadius: 6,
             }}

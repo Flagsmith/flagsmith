@@ -1,4 +1,4 @@
-import React, { FC, useMemo } from 'react'
+import React, { useMemo } from 'react'
 import moment from 'moment'
 import { PagedResponse } from 'common/types/responses'
 import groupBy from 'lodash/groupBy'
@@ -59,15 +59,15 @@ const DateList = <T extends { [key: string]: any }>({
           >
             <div className='ps-8 d-flex flex-column gap-1 align-items-center'>
               {(!!items?.previous || index > 0) && (
-                <div style={{ height: 15, width: 1 }} className='border-1' />
+                <div style={{ height: 15, width: 1 }} className='border' />
               )}
               <Icon name='clock' fill='#9DA4AE' />
-              <div style={{ height: 15, width: 1 }} className='border-1' />
+              <div style={{ height: 15, width: 1 }} className='border' />
             </div>
             <div className='text-muted py-1 fs-caption'>{formatDate(date)}</div>
           </div>
 
-          <div className='border-1 rounded'>
+          <div className='border rounded'>
             {dateItems.map((item, i) => {
               const isLastItem = i + 1 === dateItems.length
               const inner = renderRow(item, itemIndex)

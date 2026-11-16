@@ -9,7 +9,7 @@ const GettingStartedResource: FC<Resource> = ({
 }) => {
   return (
     <a href={url} target='_blank' className='' rel='noreferrer'>
-      <div className='card bg-card p-0 h-100 border-1 rounded'>
+      <div className='card bg-card p-0 h-100 border rounded'>
         <div className='d-flex align-items-center'>
           <div>
             <img

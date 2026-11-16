@@ -33,7 +33,7 @@ const Step: FC<StepProps> = ({
     width: 33,
   }
   const numberClassName =
-    'd-flex border-1 justify-content-center align-items-center'
+    'd-flex border justify-content-center align-items-center'
 
   return (
     <Card
@@ -44,7 +44,7 @@ const Step: FC<StepProps> = ({
         'offset-2',
         'py-2',
         'position-relative',
-        'border-1',
+        'border',
         'px-4',
         {
           'bg-surface-default': isActive || isComplete,

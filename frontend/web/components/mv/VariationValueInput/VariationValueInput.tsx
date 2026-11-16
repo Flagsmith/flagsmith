@@ -40,7 +40,7 @@ export const VariationValueInput: React.FC<VariationValueProps> = ({
   weightTitle,
 }) => {
   return (
-    <div className='variant-card rounded border-1 shadow-sm p-3 mb-3'>
+    <div className='variant-card rounded border shadow-sm p-3 mb-3'>
       <Row className='justify-content-between align-items-start mb-3'>
         <VariationKeyLabel
           value={value.key}

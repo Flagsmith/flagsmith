@@ -142,7 +142,7 @@ const CreatePipelineStage = ({
 
   return (
     <div
-      className='p-3 border-1 rounded position-relative'
+      className='p-3 border rounded position-relative'
       style={{ minWidth: '360px' }}
     >
       {showRemoveButton && (

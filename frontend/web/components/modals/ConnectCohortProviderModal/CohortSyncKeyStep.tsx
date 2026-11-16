@@ -148,7 +148,7 @@ const CohortSyncKeyStep: FC<CohortSyncKeyStepProps> = ({
 
     return (
       <>
-        <div className='rounded border-1 d-flex flex-column'>
+        <div className='rounded border d-flex flex-column'>
           {syncKeys?.map((syncKey: CohortSyncKey) => (
             <div
               key={syncKey.prefix}

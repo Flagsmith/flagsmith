@@ -49,7 +49,7 @@ const GettingStartedItem: FC<GettingStartedItemType> = (data) => {
       className='cursor-pointer'
     >
       <div
-        className={classNames('card h-100 bg-card border-1 rounded', {
+        className={classNames('card h-100 bg-card border rounded', {
           'border-primary': complete,
         })}
       >
@@ -68,7 +68,7 @@ const GettingStartedItem: FC<GettingStartedItemType> = (data) => {
                 <div
                   style={{ height: 34, width: 34 }}
                   className={
-                    'd-flex rounded border-1 align-items-center justify-content-center flex-shrink-0'
+                    'd-flex rounded border align-items-center justify-content-center flex-shrink-0'
                   }
                 >
                   {complete ? (

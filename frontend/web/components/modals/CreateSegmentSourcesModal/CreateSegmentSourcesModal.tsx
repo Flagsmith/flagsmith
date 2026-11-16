@@ -144,7 +144,7 @@ const CreateSegmentSourcesModal: FC<CreateSegmentSourcesModalType> = ({
       <BareButton
         data-test='create-segment-manually'
         onClick={openManual}
-        className='create-segment-sources__manual w-100 rounded border-1 border-primary p-3 d-flex align-items-start gap-3 mb-3'
+        className='create-segment-sources__manual w-100 rounded border border-primary p-3 d-flex align-items-start gap-3 mb-3'
       >
         <span className='mt-1 flex-shrink-0 d-inline-flex'>
           <Icon name='options-2' width={24} fill={colorIconAction} />
@@ -167,7 +167,7 @@ const CreateSegmentSourcesModal: FC<CreateSegmentSourcesModalType> = ({
                 aria-pressed={isSelected}
                 onClick={() => selectSource(source)}
                 className={classNames(
-                  'create-segment-sources__source w-100 rounded border-1 p-3 h-100 d-flex align-items-start gap-3',
+                  'create-segment-sources__source w-100 rounded border p-3 h-100 d-flex align-items-start gap-3',
                   { 'border-primary bg-primary-opacity-5': isSelected },
                 )}
               >

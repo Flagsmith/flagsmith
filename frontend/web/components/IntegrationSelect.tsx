@@ -196,7 +196,7 @@ const IntegrationSelect: FC<IntegrationSelectType> = ({ onComplete }) => {
                         <div className='mb-2'>
                           <div
                             className={classNames(
-                              'rounded outline border-1 bg-white',
+                              'rounded outline border bg-white',
                               {
                                 'border-primary': isSelected,
                               },

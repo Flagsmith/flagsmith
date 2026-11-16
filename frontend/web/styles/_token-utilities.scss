@@ -5,6 +5,18 @@
 // :root vs .dark, so no dark-prefixed classes are needed.
 // =============================================================================
 
+// Border colours, consumed by 3rdParty/_bootstrap.scss
+$token-border-colors: (
+  "action": var(--color-border-action),
+  "danger": var(--color-border-danger),
+  "default": var(--color-border-default),
+  "disabled": var(--color-border-disabled),
+  "info": var(--color-border-info),
+  "strong": var(--color-border-strong),
+  "success": var(--color-border-success),
+  "warning": var(--color-border-warning),
+);
+
 // Surface
 .bg-surface-action { background-color: var(--color-surface-action); }
 .bg-surface-action-active { background-color: var(--color-surface-action-active); }
@@ -33,16 +45,6 @@
 .text-success { color: var(--color-text-success); }
 .text-tertiary { color: var(--color-text-tertiary); }
 .text-warning { color: var(--color-text-warning); }
-
-// Border
-.border-action { border-color: var(--color-border-action); }
-.border-danger { border-color: var(--color-border-danger); }
-.border-default { border-color: var(--color-border-default); }
-.border-disabled { border-color: var(--color-border-disabled); }
-.border-info { border-color: var(--color-border-info); }
-.border-strong { border-color: var(--color-border-strong); }
-.border-success { border-color: var(--color-border-success); }
-.border-warning { border-color: var(--color-border-warning); }
 
 // Icon
 .icon-action { color: var(--color-icon-action); fill: var(--color-icon-action); }

@@ -375,7 +375,7 @@ function CreateReleasePipeline() {
                       }
                     />
                     {index === pipelineData.stages.length - 1 && (
-                      <div className='m-auto p-2 border-1 rounded border-primary '>
+                      <div className='m-auto p-2 border rounded border-primary '>
                         <Icon
                           width={30}
                           name='checkmark-circle'
