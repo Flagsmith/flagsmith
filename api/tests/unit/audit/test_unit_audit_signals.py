@@ -11,12 +11,12 @@ from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
 from audit.signals import (
     call_webhooks,
-    create_user_logged_out_audit_logs,
     send_audit_log_event_to_dynatrace,
     send_audit_log_event_to_grafana,
     send_feature_flag_went_live_signal,
     trigger_feature_state_change_webhooks,
 )
+from audit.signals.authentication import create_user_logged_out_audit_logs
 from environments.models import Environment
 from features.models import Feature, FeatureState
 from features.versioning.models import EnvironmentFeatureVersion
