@@ -1,12 +1,13 @@
 import React, { FC, ReactNode, useEffect, useRef, useState } from 'react'
 import Utils from 'common/utils/utils'
-import { AuditLogItem, Environment } from 'common/types/responses'
+import { AuditLogItem } from 'common/types/responses'
 import { useGetAuditLogsQuery } from 'common/services/useAuditLog'
 import useDebouncedSearch from 'common/useDebouncedSearch'
 import { Link } from 'react-router-dom'
-import ProjectStore from 'common/stores/project-store'
+import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
+import { getEnvironmentColourById } from 'common/utils/environmentColour'
 import Button from './base/forms/Button'
-import Tag from './tags/Tag'
+import Chip from './base/Chip'
 import PanelSearch from './PanelSearch'
 import JSONReference from './JSONReference'
 import moment from 'moment'
@@ -34,6 +35,10 @@ const AuditLog: FC<AuditLogType> = (props) => {
   )
   const { data: subscriptionMeta } = useGetSubscriptionMetadataQuery({
     id: AccountStore.getOrganisation()?.id,
+  })
+  // Same list as the environment filter, so the colours match.
+  const { data: projectEnvironments } = useGetEnvironmentsQuery({
+    projectId: Number(props.projectId),
   })
   const [environments, setEnvironments] = useState(props.environmentId)
 
@@ -93,11 +98,10 @@ const AuditLog: FC<AuditLogType> = (props) => {
     related_object_type,
     related_object_uuid,
   }: AuditLogItem) => {
-    const environments = ProjectStore.getEnvs() as Environment[] | null
-    const index = environments?.findIndex((v) => {
-      return v.id === environment?.id
-    })
-    const colour = index === -1 ? 0 : index
+    const colour = getEnvironmentColourById(
+      projectEnvironments?.results ?? [],
+      environment?.id,
+    )
     let link: ReactNode = null
     const date = moment(created_date)
     const isVersionEvent =
@@ -167,12 +171,10 @@ const AuditLog: FC<AuditLogType> = (props) => {
             style={{ width: widths[2] }}
             to={`/project/${props.projectId}/environment/${environment?.api_key}/features/`}
           >
-            <Tag
-              tag={{
-                color: Utils.getTagColour(colour),
-                label: environment?.name,
-              }}
-            />
+            {/* mw-100: the column is narrower than the chip's own cap. */}
+            <Chip variant='tinted' colour={colour} truncate className='mw-100'>
+              {environment.name}
+            </Chip>
           </Link>
         ) : (
           <div className='table-column' style={{ width: widths[2] }} />

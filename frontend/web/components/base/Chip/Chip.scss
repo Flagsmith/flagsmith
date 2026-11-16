@@ -24,6 +24,17 @@
     font-size: 0.6875rem;
   }
 
+  // The surface and text tokens follow the theme, so these mixes do too.
+  // Text at 35% colour reads at 4.5:1 for any colour. If you change it or
+  // the tint, update tintedContrast.test.
+  // --chip-tint: the tint's strength; ToggleChip raises it when checked.
+  &--tinted {
+    --chip-tint: 12%;
+    color: color-mix(in srgb, var(--chip-colour) 35%, var(--color-text-default));
+    background-color: color-mix(in srgb, var(--chip-colour) var(--chip-tint), var(--color-surface-default));
+    border-color: color-mix(in srgb, currentColor 40%, transparent);
+  }
+
   &--clickable {
     cursor: pointer;
   }
