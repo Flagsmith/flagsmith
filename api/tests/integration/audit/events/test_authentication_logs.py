@@ -1,8 +1,13 @@
+import base64
+import hashlib
+from urllib.parse import parse_qs, urlparse
+
 import pyotp
 import pytest
 import responses
 from axes.models import AccessAttempt  # type: ignore[import-untyped]
 from django.contrib.auth.hashers import make_password
+from oauth2_provider.models import Application
 from pytest_django.fixtures import SettingsWrapper
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
@@ -52,6 +57,17 @@ def user_totp(user: FFAdminUser) -> pyotp.TOTP:
         is_active=True,
     )
     return pyotp.TOTP(secret)
+
+
+@pytest.fixture
+def oauth_application(db: None) -> Application:
+    return Application.objects.create(
+        client_id="acme-agent",
+        name="Acme Agent",
+        client_type=Application.CLIENT_PUBLIC,
+        authorization_grant_type=Application.GRANT_AUTHORIZATION_CODE,
+        redirect_uris="http://127.0.0.1:53682/callback",
+    )
 
 
 @pytest.fixture
@@ -547,12 +563,65 @@ def test_login__attempt_while_locked_out__creates_audit_log(
     ]
 
 
-def test_cli_login__correct_credentials__creates_audit_log():
-    raise NotImplementedError
+def test_oauth_login__authorised__creates_audit_log(
+    api_client: APIClient,
+    oauth_application: Application,
+    organisation: Organisation,
+    other_organisation: Organisation,
+    user: FFAdminUser,
+    user_client: APIClient,
+) -> None:
+    # Given
+    code_verifier = "pkce-code-verifier-of-at-least-43-characters"
+    code_challenge = (
+        base64.urlsafe_b64encode(hashlib.sha256(code_verifier.encode()).digest())
+        .rstrip(b"=")
+        .decode()
+    )
+    redirect_uri = user_client.post(
+        "/api/v1/oauth/authorize/",
+        {
+            "allow": True,
+            "client_id": oauth_application.client_id,
+            "response_type": "code",
+            "redirect_uri": "http://127.0.0.1:53682/callback",
+            "code_challenge": code_challenge,
+            "code_challenge_method": "S256",
+        },
+        format="json",
+    ).json()["redirect_uri"]
+    code = parse_qs(urlparse(redirect_uri).query)["code"][0]
 
+    # When
+    response = api_client.post(
+        "/o/token/",
+        {
+            "grant_type": "authorization_code",
+            "code": code,
+            "redirect_uri": "http://127.0.0.1:53682/callback",
+            "client_id": oauth_application.client_id,
+            "code_verifier": code_verifier,
+        },
+    )
 
-def test_mcp_login__correct_credentials__creates_audit_log():
-    raise NotImplementedError
+    # Then
+    assert response.status_code == 200
+    assert list(
+        AuditLog.objects.order_by("organisation_id", "created_date").values(
+            "organisation_id", "author_id", "log"
+        )
+    ) == [
+        {
+            "organisation_id": organisation.id,
+            "author_id": user.id,
+            "log": "User `alice@example.com` logged in to Acme Agent.",
+        },
+        {
+            "organisation_id": other_organisation.id,
+            "author_id": user.id,
+            "log": "User `alice@example.com` logged in to Acme Agent.",
+        },
+    ]
 
 
 def test_cli_logout__completed__creates_audit_log():

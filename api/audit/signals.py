@@ -6,12 +6,16 @@ from django.conf import settings
 from django.contrib.auth.signals import user_logged_out
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.http import HttpRequest
+from oauth2_provider.models import AccessToken
+from oauth2_provider.signals import app_authorized
 
 from audit.constants import (
     SSO_PROVIDER_NAMES,
     USER_2FA_DISABLED_MESSAGE,
     USER_2FA_ENABLED_MESSAGE,
     USER_LOCKED_OUT_MESSAGE,
+    USER_LOGGED_IN_TO_OAUTH_APPLICATION_MESSAGE,
     USER_LOGGED_IN_WITH_2FA_MESSAGE,
     USER_LOGGED_IN_WITH_SSO_MESSAGE,
     USER_LOGGED_IN_WITHOUT_2FA_MESSAGE,
@@ -336,6 +340,23 @@ def create_user_login_sso_completed_audit_logs(
     provider_name = SSO_PROVIDER_NAMES[auth_type]
     _create_user_audit_logs(
         user, USER_LOGGED_IN_WITH_SSO_MESSAGE % (user.email, provider_name)
+    )
+
+
+@receiver(app_authorized)
+def create_user_oauth_login_audit_logs(
+    sender: object,
+    request: HttpRequest,
+    token: AccessToken,
+    **kwargs: Any,
+) -> None:
+    if request.POST.get("grant_type") != "authorization_code":
+        return  # pragma: no cover
+    user: FFAdminUser = token.user
+    _create_user_audit_logs(
+        user,
+        USER_LOGGED_IN_TO_OAUTH_APPLICATION_MESSAGE
+        % (user.email, token.application.name),
     )
 
 

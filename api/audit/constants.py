@@ -96,6 +96,7 @@ FEATURE_DEPENDENCY_DELETED_MESSAGE = (
 USER_LOGGED_IN_WITHOUT_2FA_MESSAGE = "User `%s` logged in without 2FA."
 USER_LOGGED_IN_WITH_2FA_MESSAGE = "User `%s` logged in with 2FA."
 USER_LOGGED_IN_WITH_SSO_MESSAGE = "User `%s` logged in with %s."
+USER_LOGGED_IN_TO_OAUTH_APPLICATION_MESSAGE = "User `%s` logged in to %s."
 SSO_PROVIDER_NAMES = {
     AuthType.GOOGLE: "Google",
     AuthType.GITHUB: "GitHub",
