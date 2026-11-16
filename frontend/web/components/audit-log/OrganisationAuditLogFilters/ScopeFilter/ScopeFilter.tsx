@@ -9,9 +9,7 @@ import ScopeCard, {
 } from 'components/audit-log/OrganisationAuditLogFilters/ScopeCard'
 import './ScopeFilter.scss'
 
-export type ScopeFilterProps = ScopeCardProps
-
-const ScopeFilter: FC<ScopeFilterProps> = (props) => {
+const ScopeFilter: FC<ScopeCardProps> = (props) => {
   const { onChange, projects, scope } = props
   const isFiltered = scope.type !== 'all'
   const projectName =

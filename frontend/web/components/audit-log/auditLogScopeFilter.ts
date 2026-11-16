@@ -46,3 +46,19 @@ export const getScopeDisplayLabel = (
   if (!count) return name
   return `${name} · ${count} ${count === 1 ? 'environment' : 'environments'}`
 }
+
+// Drops environment ids that aren't the project's (hand-edited or since
+// deleted), once its environments are known, so the label and request agree
+// with the chips.
+export const keepKnownEnvironments = (
+  scope: AuditLogScopeFilter,
+  knownIds: number[] | undefined,
+): AuditLogScopeFilter =>
+  scope.type === 'project' && knownIds
+    ? {
+        ...scope,
+        environmentIds: scope.environmentIds.filter((id) =>
+          knownIds.includes(id),
+        ),
+      }
+    : scope

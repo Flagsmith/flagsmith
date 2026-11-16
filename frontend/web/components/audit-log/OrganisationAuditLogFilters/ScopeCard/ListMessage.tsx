@@ -13,7 +13,7 @@ type ListMessageProps = {
   emptyText: string
 }
 
-export const getListMessage = ({ emptyText, list, noun }: ListMessageProps) => {
+const getListMessage = ({ emptyText, list, noun }: ListMessageProps) => {
   if (list.failed) return { isError: true, text: `Couldn't load ${noun}` }
   if (list.loading) return { isError: false, text: `Loading ${noun}…` }
   if (!list.items.length) return { isError: false, text: emptyText }

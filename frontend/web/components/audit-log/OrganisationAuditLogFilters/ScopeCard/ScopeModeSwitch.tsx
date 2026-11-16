@@ -1,5 +1,5 @@
-import { KeyboardEvent, useRef } from 'react'
-import classNames from 'classnames'
+import { FC, KeyboardEvent, useRef } from 'react'
+import { AuditLogScopeFilter } from 'components/audit-log/auditLogScopeFilter'
 import BareButton from 'components/base/forms/BareButton'
 
 const ARROW_STEPS: Record<string, number> = {
@@ -9,27 +9,20 @@ const ARROW_STEPS: Record<string, number> = {
   ArrowUp: -1,
 }
 
-export type ScopeModeOption<T extends string> = {
-  value: T
-  label: string
-}
+export type ScopeMode = AuditLogScopeFilter['type']
 
-export type ScopeModeSwitchProps<T extends string> = {
-  options: ScopeModeOption<T>[]
-  value: T
-  onChange: (value: T) => void
-  'aria-label': string
-  className?: string
+type ScopeModeSwitchProps = {
+  options: { value: ScopeMode; label: string }[]
+  value: ScopeMode
+  onChange: (value: ScopeMode) => void
 }
 
 // A radio group: Tab reaches the checked option, arrow keys move and select.
-const ScopeModeSwitch = <T extends string>({
-  'aria-label': ariaLabel,
-  className,
+const ScopeModeSwitch: FC<ScopeModeSwitchProps> = ({
   onChange,
   options,
   value,
-}: ScopeModeSwitchProps<T>) => {
+}) => {
   const refs = useRef<(HTMLButtonElement | null)[]>([])
   const index = Math.max(
     0,
@@ -48,11 +41,8 @@ const ScopeModeSwitch = <T extends string>({
   return (
     <div
       role='radiogroup'
-      aria-label={ariaLabel}
-      className={classNames(
-        'scope-mode-switch d-flex p-1 rounded-md bg-surface-muted',
-        className,
-      )}
+      aria-label='Scope type'
+      className='scope-mode-switch d-flex p-1 rounded-md bg-surface-muted'
       onKeyDown={onKeyDown}
     >
       {options.map((option, i) => (

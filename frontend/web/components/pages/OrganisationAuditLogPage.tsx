@@ -15,7 +15,9 @@ import OrganisationAuditLogFilters from 'components/audit-log/OrganisationAuditL
 import OrganisationAuditLogChanges from 'components/audit-log/OrganisationAuditLogChanges'
 import useAuditLogFilters from 'components/audit-log/useAuditLogFilters'
 import useAuditLogScopeData from 'components/audit-log/useAuditLogScopeData'
+import { keepKnownEnvironments } from 'components/audit-log/auditLogScopeFilter'
 import {
+  AuditLogFilters,
   hasActiveAuditLogFilters,
   serialiseAuditLogFilters,
   toOrganisationAuditLogParams,
@@ -45,6 +47,14 @@ const OrganisationAuditLogPage: FC = () => {
     filters.scope,
     isEnabled && isAdmin,
   )
+  const knownEnvironmentIds =
+    environmentList.loading || environmentList.failed
+      ? undefined
+      : environmentList.items.map((environment) => environment.id)
+  const shownFilters: AuditLogFilters = {
+    ...filters,
+    scope: keepKnownEnvironments(filters.scope, knownEnvironmentIds),
+  }
 
   // Back to page 1 whenever the organisation or filters change. Stored, so
   // undoing the change doesn't bring the old page back.
@@ -62,7 +72,7 @@ const OrganisationAuditLogPage: FC = () => {
             organisationId,
             page,
             page_size: PAGE_SIZE,
-            ...toOrganisationAuditLogParams(filters),
+            ...toOrganisationAuditLogParams(shownFilters),
           }
         : skipToken,
     )
@@ -94,7 +104,7 @@ const OrganisationAuditLogPage: FC = () => {
               />
             )}
             <OrganisationAuditLogFilters
-              filters={filters}
+              filters={shownFilters}
               searchInput={searchInput}
               projects={projectList}
               environments={environmentList}
@@ -107,7 +117,7 @@ const OrganisationAuditLogPage: FC = () => {
               projectColours={projectColours}
               isLoading={isLoading || isFetching}
               error={error}
-              hasFilters={hasActiveAuditLogFilters(filters)}
+              hasFilters={hasActiveAuditLogFilters(shownFilters)}
               onClearFilters={clearFilters}
               onRetry={refetch}
               renderDetails={(item) => (

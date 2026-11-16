@@ -1,5 +1,7 @@
 import {
+  AuditLogScopeFilter,
   getScopeDisplayLabel,
+  keepKnownEnvironments,
   writeScopeParams,
 } from 'components/audit-log/auditLogScopeFilter'
 
@@ -25,5 +27,25 @@ describe('writeScopeParams', () => {
     const params = new URLSearchParams('search=role&project=12&environment=4')
     writeScopeParams(params, { type: 'organisation' })
     expect(params.toString()).toBe('search=role&scope=organisation')
+  })
+})
+
+describe('keepKnownEnvironments', () => {
+  const scope: AuditLogScopeFilter = {
+    environmentIds: [3, 99],
+    projectId: 12,
+    type: 'project',
+  }
+
+  it("drops ids that aren't the project's", () => {
+    expect(keepKnownEnvironments(scope, [3, 4])).toEqual({
+      environmentIds: [3],
+      projectId: 12,
+      type: 'project',
+    })
+  })
+
+  it('keeps every id while the environments are unknown', () => {
+    expect(keepKnownEnvironments(scope, undefined)).toBe(scope)
   })
 })

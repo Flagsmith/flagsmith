@@ -5,11 +5,9 @@ import ScopeEnvironmentChips, {
   ScopeCardEnvironment,
 } from './ScopeEnvironmentChips'
 import ScopeProjectList, { ScopeCardProject } from './ScopeProjectList'
-import ScopeModeSwitch from './ScopeModeSwitch'
+import ScopeModeSwitch, { ScopeMode } from './ScopeModeSwitch'
 import ScopeSection from './ScopeSection'
 import './ScopeCard.scss'
-
-type ScopeMode = AuditLogScopeFilter['type']
 
 export type ScopeCardProps = {
   scope: AuditLogScopeFilter
@@ -50,12 +48,7 @@ const ScopeCard: FC<ScopeCardProps> = ({
 
   return (
     <div className='scope-card d-flex flex-column p-2'>
-      <ScopeModeSwitch
-        aria-label='Scope'
-        options={MODES}
-        value={mode}
-        onChange={changeMode}
-      />
+      <ScopeModeSwitch options={MODES} value={mode} onChange={changeMode} />
       <ScopeSection open={mode === 'project'}>
         <ScopeProjectList
           projects={projects}
