@@ -40,6 +40,7 @@ import { SDKKeysPage } from './components/pages/sdk-keys'
 import { ParameterizedRoute } from './components/base/higher-order/ParameterizedRoute'
 import FeatureHistoryDetailPage from './components/pages/FeatureHistoryDetailPage'
 import OrganisationIntegrationsPage from './components/pages/OrganisationIntegrationsPage'
+import OrganisationAuditLogPage from './components/pages/OrganisationAuditLogPage'
 import ProjectChangeRequestsPage from './components/pages/ProjectChangeRequestsPage'
 import ProjectChangeRequestPage from './components/pages/ProjectChangeRequestDetailPage'
 import GettingStartedGate from './components/pages/onboarding/GettingStartedGate'
@@ -115,6 +116,7 @@ export const routes = {
   'not-found': '/404',
   'oauth': '/oauth/:type',
   'oauth-authorize': '/oauth/authorize',
+  'organisation-audit-log': '/organisation/:organisationId/audit-log',
   'organisation-integrations': '/organisation/:organisationId/integrations',
   'organisation-permissions': '/organisation/:organisationId/permissions',
   'organisation-projects': '/organisation/:organisationId/projects',
@@ -250,6 +252,11 @@ export default (
           path={routes['organisation-integrations']}
           exact
           component={OrganisationIntegrationsPage}
+        />
+        <ParameterizedRoute
+          path={routes['organisation-audit-log']}
+          exact
+          component={OrganisationAuditLogPage}
         />
         <ParameterizedRoute
           path={routes.identities}

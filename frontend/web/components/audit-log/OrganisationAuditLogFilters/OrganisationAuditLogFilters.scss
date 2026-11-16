@@ -1,0 +1,6 @@
+// Grows to fill a phone-width row (flex-grow-1) and stays at this width from
+// sm up (flex-sm-grow-0).
+.audit-log-filters__search {
+  flex-basis: 320px;
+  min-width: 0;
+}

@@ -1,7 +1,7 @@
-import { AccountModel, User } from 'common/types/responses'
+import { User } from 'common/types/responses'
 
 export default function (
-  user: AccountModel | User | undefined,
+  user: Pick<User, 'first_name' | 'last_name' | 'email'> | undefined,
   defaultName = 'Unknown',
 ) {
   if (!user) {

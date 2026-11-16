@@ -26,6 +26,7 @@ import { getDefaultVariantKey } from './multivariate'
 import { featureStateToValue } from './featureStateToValue'
 import { defaultFlags } from 'common/stores/default-flags'
 import Color from 'color'
+import { getContrastColour, getProjectColour } from './paletteColour'
 import { selectBuildVersion } from 'common/services/useBuildVersion'
 import { getStore } from 'common/store'
 import { TRACKED_UTMS, UtmsType } from 'common/types/utms'
@@ -197,15 +198,7 @@ const Utils = Object.assign({}, BaseUtils, {
   ) {
     return contentTypes?.find((c: ContentType) => c[model] === type) || null
   },
-  getContrastColour(backgroundColor: string | null | undefined): string {
-    if (!backgroundColor) return 'white'
-
-    try {
-      return Color(backgroundColor).luminosity() > 0.179 ? 'black' : 'white'
-    } catch {
-      return 'white'
-    }
-  },
+  getContrastColour,
   getCreateProjectPermission(organisation: Organisation) {
     if (organisation?.restrict_project_create_to_admin) {
       return OrganisationPermission.ADMIN
@@ -503,9 +496,7 @@ const Utils = Object.assign({}, BaseUtils, {
     return !!found
   },
 
-  getProjectColour(index: number) {
-    return Constants.projectColors[index % (Constants.projectColors.length - 1)]
-  },
+  getProjectColour,
 
   getRequiredPlan: (feature: PaidFeature) => {
     let plan
