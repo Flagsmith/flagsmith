@@ -1394,6 +1394,7 @@ paths:
   /api/v1/auth/users/reset_password/:
     post:
       operationId: api_v1_auth_users_reset_password_create
+      description: Request a password reset email
       requestBody:
         required: true
         content:
@@ -1422,6 +1423,7 @@ paths:
   /api/v1/auth/users/reset_password_confirm/:
     post:
       operationId: api_v1_auth_users_reset_password_confirm_create
+      description: Update the user password from a password reset URL
       requestBody:
         required: true
         content:
@@ -1477,6 +1479,7 @@ paths:
   /api/v1/auth/users/set_password/:
     post:
       operationId: api_v1_auth_users_set_password_create
+      description: Update the user password
       requestBody:
         required: true
         content:
@@ -20577,12 +20580,6 @@ components:
       required:
         - feature_state_value
     CustomTokenCreate:
-      description: |-
-        Tells a user with correct credentials that their account is not yet
-        activated, instead of the generic invalid credentials error.
-
-        The password is verified first, so an address cannot be probed for its
-        activation state by anyone who does not already know the password.
       type: object
       properties:
         password:
