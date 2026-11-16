@@ -104,6 +104,7 @@ SSO_PROVIDER_NAMES = {
 USER_LOGIN_REQUIRES_2FA_MESSAGE = "User `%s` has entered their password but needs 2FA."
 USER_LOGIN_PASSWORD_REJECTED_MESSAGE = "User `%s` failed to log in: incorrect password."
 USER_LOGIN_2FA_CODE_REJECTED_MESSAGE = "User `%s` failed to log in: incorrect 2FA code."
+USER_LOCKED_OUT_MESSAGE = "User `%s` was locked out after too many failed logins."
 USER_LOGGED_OUT_MESSAGE = "User `%s` logged out."
 USER_2FA_ENABLED_MESSAGE = "User `%s` enabled 2FA."
 USER_2FA_DISABLED_MESSAGE = "User `%s` disabled 2FA."

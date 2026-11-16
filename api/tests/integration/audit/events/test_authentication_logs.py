@@ -2,6 +2,7 @@ import pyotp
 import pytest
 import responses
 from django.contrib.auth.hashers import make_password
+from pytest_django.fixtures import SettingsWrapper
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 
@@ -456,3 +457,70 @@ def test_disable_2fa__completed__creates_audit_log(
             "log": "User `alice@example.com` disabled 2FA.",
         },
     ]
+
+
+def test_login__locked_out__creates_audit_log(
+    api_client: APIClient,
+    organisation: Organisation,
+    other_organisation: Organisation,
+    settings: SettingsWrapper,
+    user: FFAdminUser,
+) -> None:
+    # Given
+    settings.AXES_FAILURE_LIMIT = 1
+
+    # When
+    response = api_client.post(
+        "/api/v1/auth/login/",
+        {"email": "alice@example.com", "password": "incorrect"},
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == 400
+    assert list(
+        AuditLog.objects.order_by("organisation_id", "created_date").values(
+            "organisation_id", "author_id", "log"
+        )
+    ) == [
+        {
+            "organisation_id": organisation.id,
+            "author_id": user.id,
+            "log": "User `alice@example.com` was locked out after too many failed logins.",
+        },
+        {
+            "organisation_id": organisation.id,
+            "author_id": user.id,
+            "log": "User `alice@example.com` failed to log in: incorrect password.",
+        },
+        {
+            "organisation_id": other_organisation.id,
+            "author_id": user.id,
+            "log": "User `alice@example.com` was locked out after too many failed logins.",
+        },
+        {
+            "organisation_id": other_organisation.id,
+            "author_id": user.id,
+            "log": "User `alice@example.com` failed to log in: incorrect password.",
+        },
+    ]
+
+
+def test_login__attempt_while_locked_out__creates_audit_log():
+    raise NotImplementedError
+
+
+def test_cli_login__correct_credentials__creates_audit_log():
+    raise NotImplementedError
+
+
+def test_mcp_login__correct_credentials__creates_audit_log():
+    raise NotImplementedError
+
+
+def test_cli_logout__completed__creates_audit_log():
+    raise NotImplementedError
+
+
+def test_revoke_token__completed__creates_audit_log():
+    raise NotImplementedError

@@ -1,6 +1,7 @@
 import logging
 from typing import TYPE_CHECKING, Any, Callable, Literal, Protocol, Type
 
+from axes.signals import user_locked_out  # type: ignore[import-untyped]
 from django.conf import settings
 from django.contrib.auth.signals import user_logged_out
 from django.db.models.signals import post_save
@@ -10,6 +11,7 @@ from audit.constants import (
     SSO_PROVIDER_NAMES,
     USER_2FA_DISABLED_MESSAGE,
     USER_2FA_ENABLED_MESSAGE,
+    USER_LOCKED_OUT_MESSAGE,
     USER_LOGGED_IN_WITH_2FA_MESSAGE,
     USER_LOGGED_IN_WITH_SSO_MESSAGE,
     USER_LOGGED_IN_WITHOUT_2FA_MESSAGE,
@@ -303,6 +305,16 @@ def create_user_login_2fa_code_rejected_audit_logs(
     **kwargs: Any,
 ) -> None:
     _create_user_audit_logs(user, USER_LOGIN_2FA_CODE_REJECTED_MESSAGE % user.email)
+
+
+@receiver(user_locked_out)
+def create_user_locked_out_audit_logs(
+    sender: str,
+    username: str,
+    **kwargs: Any,
+) -> None:
+    if user := FFAdminUser.objects.filter(email__iexact=username).first():
+        _create_user_audit_logs(user, USER_LOCKED_OUT_MESSAGE % user.email)
 
 
 @receiver(user_login_sso_completed)
