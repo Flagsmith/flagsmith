@@ -1,6 +1,7 @@
+from collections.abc import Mapping
 from typing import Any
 
-from django.db.models import Model
+from django.db.models import Field, Model
 from drf_writable_nested import (  # type: ignore[attr-defined]
     NestedCreateMixin,
     NestedUpdateMixin,
@@ -18,8 +19,14 @@ class ScopedNestedRelationsMixin:
     them against the parent's own children; anything else is treated as new.
     """
 
-    def update_or_create_reverse_relations(  # type: ignore[no-untyped-def]
-        self, instance: Model, reverse_relations
+    _nested_parent_lookups: dict[serializers.ModelSerializer[Any], dict[str, Model]]
+
+    def update_or_create_reverse_relations(
+        self,
+        instance: Model,
+        reverse_relations: Mapping[
+            str, tuple[Field[Any, Any], serializers.ModelSerializer[Any], str]
+        ],
     ) -> None:
         self._nested_parent_lookups = {
             field: {related_field.name: instance}
@@ -27,11 +34,14 @@ class ScopedNestedRelationsMixin:
         }
         super().update_or_create_reverse_relations(instance, reverse_relations)  # type: ignore[misc]
 
-    def _prefetch_related_instances(  # type: ignore[no-untyped-def]
-        self, field, related_data
+    def _prefetch_related_instances(
+        self,
+        field: serializers.ModelSerializer[Any],
+        related_data: list[dict[str, Any]],
     ) -> dict[str, Model]:
-        pks = self._extract_related_pks(field, related_data)  # type: ignore[attr-defined]
-        queryset = field.Meta.model.objects.filter(
+        pks: list[str] = self._extract_related_pks(field, related_data)  # type: ignore[attr-defined]
+        model: type[Model] = field.Meta.model
+        queryset = model._default_manager.filter(
             pk__in=pks, **self._nested_parent_lookups[field]
         )
         return {str(obj.pk): obj for obj in queryset}
