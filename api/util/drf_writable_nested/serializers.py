@@ -1,6 +1,7 @@
 from collections.abc import Mapping
 from typing import Any
 
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db.models import Field, Model
 from drf_writable_nested import (  # type: ignore[attr-defined]
     NestedCreateMixin,
@@ -10,6 +11,16 @@ from drf_writable_nested import (  # type: ignore[attr-defined]
     WritableNestedModelSerializer as _WritableNestedModelSerializer,
 )
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
+
+
+def _is_pk_of(model: type[Model], pk: str | None, obj: Model | None) -> bool:
+    if pk is None or obj is None:
+        return False
+    try:
+        return bool(model._meta.pk.to_python(pk) == obj.pk)
+    except DjangoValidationError:
+        return False
 
 
 # drf-writable-nested resolves nested `id`s against the whole table. Only
@@ -26,24 +37,31 @@ class ScopedNestedRelationsMixin:
         attrs: dict[str, Any],
         relations: Mapping[str, tuple[serializers.ModelSerializer[Any], str]],
     ) -> None:
-        # The library looks these up by `filter(pk=pk)`: only keep a nested
-        # id that refers to the instance's current related object.
+        # Adapted from drf-writable-nested 0.6.4, which resolves the nested id
+        # with `filter(pk=pk)`. Here it can only refer to the instance's
+        # current related object.
         instance: Model | None = self.instance  # type: ignore[attr-defined]
-        initial_data: dict[str, Any] = self.initial_data  # type: ignore[attr-defined]
         for field_name, (field, field_source) in relations.items():
-            # Only non-null, validated nested objects reach `relations`.
-            data: Mapping[str, Any] = initial_data[field_name]
-            current = getattr(instance, field_source, None) if instance else None
+            data = self.get_initial()[field_name]  # type: ignore[attr-defined]
             model: type[Model] = field.Meta.model
-            pk_names = {"pk", model._meta.pk.attname}
-            if any(
-                current is None or str(data[name]) != str(current.pk)
-                for name in pk_names & data.keys()
-            ):
-                initial_data[field_name] = {
-                    key: value for key, value in data.items() if key not in pk_names
-                }
-        super().update_or_create_direct_relations(attrs, relations)  # type: ignore[misc]
+            pk = self._get_related_pk(data, model)  # type: ignore[attr-defined]
+            current: Model | None = (
+                getattr(instance, field_source, None) if instance else None
+            )
+            serializer = self._get_serializer_for_field(  # type: ignore[attr-defined]
+                field,
+                instance=current if _is_pk_of(model, pk, current) else None,
+                data=data,
+            )
+            try:
+                serializer.is_valid(raise_exception=True)
+                attrs[field_source] = serializer.save(
+                    **self._get_save_kwargs(field_name)  # type: ignore[attr-defined]
+                )
+            except ValidationError as exc:  # pragma: no cover
+                # Already validated as part of the parent; kept to match the
+                # library's error shape.
+                raise ValidationError({field_name: exc.detail})
 
     def update_or_create_reverse_relations(
         self,

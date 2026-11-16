@@ -20,6 +20,7 @@ from metadata.models import (
 from organisations.models import Organisation
 from projects.models import Project
 from segments.models import Condition, Segment, SegmentRule
+from util.drf_writable_nested.serializers import _is_pk_of
 
 
 @pytest.fixture()
@@ -314,3 +315,116 @@ def test_create_version_feature_state__other_project_feature_segment_and_multiva
     ) == other_feature_segment_before
     assert other_mv_value.feature_state == other_feature_state
     assert response.json()["feature_segment"]["id"] != other_feature_segment.id
+
+
+def test_create_version_feature_state__form_encoded_other_project_feature_segment_id__leaves_it_untouched(
+    admin_client: APIClient,
+    environment_v2_versioning: Environment,
+    feature: Feature,
+    segment: Segment,
+    other_project: Project,
+) -> None:
+    # Given
+    other_environment = Environment.objects.create(name="Other", project=other_project)
+    other_feature_segment = FeatureSegment.objects.create(
+        feature=Feature.objects.create(name="other", project=other_project),
+        segment=Segment.objects.create(name="other", project=other_project),
+        environment=other_environment,
+    )
+    version = EnvironmentFeatureVersion.objects.create(
+        environment=environment_v2_versioning, feature=feature
+    )
+
+    # When
+    response = admin_client.post(
+        f"/api/v1/environments/{environment_v2_versioning.id}/features/{feature.id}"
+        f"/versions/{version.uuid}/featurestates/",
+        data={
+            "enabled": True,
+            "feature_state_value.type": "unicode",
+            "feature_state_value.string_value": "x",
+            "feature_segment.id": other_feature_segment.id,
+            "feature_segment.segment": segment.id,
+            "feature_segment.priority": 0,
+        },
+    )
+
+    # Then
+    assert response.status_code == 201
+    other_feature_segment.refresh_from_db()
+    assert other_feature_segment.environment == other_environment
+    assert response.json()["feature_segment"]["id"] != other_feature_segment.id
+
+
+def test_update_version_feature_state__own_feature_segment_id_as_padded_string__updates_it_in_place(
+    admin_client: APIClient,
+    environment_v2_versioning: Environment,
+    feature: Feature,
+    segment: Segment,
+) -> None:
+    # Given
+    version = EnvironmentFeatureVersion.objects.create(
+        environment=environment_v2_versioning, feature=feature
+    )
+    url = (
+        f"/api/v1/environments/{environment_v2_versioning.id}/features/{feature.id}"
+        f"/versions/{version.uuid}/featurestates/"
+    )
+    created = admin_client.post(
+        url,
+        data=json.dumps(
+            {
+                "enabled": True,
+                "feature_state_value": {"type": "unicode", "string_value": "x"},
+                "feature_segment": {"segment": segment.id, "priority": 0},
+            }
+        ),
+        content_type="application/json",
+    ).json()
+    feature_segment_id = created["feature_segment"]["id"]
+
+    # When
+    response = admin_client.put(
+        f"{url}{created['id']}/",
+        data=json.dumps(
+            {
+                "enabled": False,
+                "feature_state_value": {"type": "unicode", "string_value": "y"},
+                "feature_segment": {
+                    "id": f"0{feature_segment_id}",
+                    "segment": segment.id,
+                    "priority": 1,
+                },
+            }
+        ),
+        content_type="application/json",
+    )
+
+    # Then
+    assert response.status_code == 200
+    assert response.json()["feature_segment"]["id"] == feature_segment_id
+    assert FeatureSegment.objects.get(id=feature_segment_id).priority == 1
+
+
+@pytest.mark.parametrize(
+    "pk, obj, expected",
+    [
+        ("42", FeatureSegment(id=42), True),
+        ("042", FeatureSegment(id=42), True),
+        ("43", FeatureSegment(id=42), False),
+        ("not-a-pk", FeatureSegment(id=42), False),
+        (None, FeatureSegment(id=42), False),
+        ("42", None, False),
+    ],
+)
+def test_is_pk_of__given_pk__returns_whether_it_refers_to_obj(
+    pk: str | None, obj: FeatureSegment | None, expected: bool
+) -> None:
+    # Given
+    model = FeatureSegment
+
+    # When
+    result = _is_pk_of(model, pk, obj)
+
+    # Then
+    assert result is expected
