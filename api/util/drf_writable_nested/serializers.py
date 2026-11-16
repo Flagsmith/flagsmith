@@ -16,10 +16,36 @@ class ScopedNestedRelationsMixin:
     """
     drf-writable-nested resolves nested `id`s against the whole table, so a
     payload can take over rows belonging to any other object. Only resolve
-    them against the parent's own children; anything else is treated as new.
+    them against the parent's own related objects; anything else is treated
+    as new.
     """
 
     _nested_parent_lookups: dict[serializers.ModelSerializer[Any], dict[str, Model]]
+
+    def update_or_create_direct_relations(
+        self,
+        attrs: dict[str, Any],
+        relations: Mapping[str, tuple[serializers.ModelSerializer[Any], str]],
+    ) -> None:
+        # The library looks these up by `filter(pk=pk)`: only keep a nested
+        # id that refers to the instance's current related object.
+        instance: Model | None = self.instance  # type: ignore[attr-defined]
+        initial_data: dict[str, Any] = self.initial_data  # type: ignore[attr-defined]
+        for field_name, (field, field_source) in relations.items():
+            data = initial_data.get(field_name)
+            if not isinstance(data, Mapping):
+                continue
+            current = getattr(instance, field_source, None) if instance else None
+            model: type[Model] = field.Meta.model
+            pk_names = {"pk", model._meta.pk.attname}
+            if any(
+                current is None or str(data[name]) != str(current.pk)
+                for name in pk_names & data.keys()
+            ):
+                initial_data[field_name] = {
+                    key: value for key, value in data.items() if key not in pk_names
+                }
+        super().update_or_create_direct_relations(attrs, relations)  # type: ignore[misc]
 
     def update_or_create_reverse_relations(
         self,

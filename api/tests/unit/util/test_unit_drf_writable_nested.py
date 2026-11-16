@@ -6,11 +6,12 @@ from django.contrib.contenttypes.models import ContentType
 from rest_framework.test import APIClient
 
 from environments.models import Environment
-from features.models import Feature, FeatureState
+from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import (
     MultivariateFeatureOption,
     MultivariateFeatureStateValue,
 )
+from features.versioning.models import EnvironmentFeatureVersion
 from metadata.models import (
     MetadataField,
     MetadataModelField,
@@ -250,3 +251,66 @@ def test_update_metadata_model_field__other_organisation_requirement_id__leaves_
         other_project.id,
     )
     assert model_field.is_required_for.get().object_id == project.id
+
+
+def test_create_version_feature_state__other_project_feature_segment_and_multivariate_value_ids__leaves_them_untouched(
+    admin_client: APIClient,
+    environment_v2_versioning: Environment,
+    feature: Feature,
+    segment: Segment,
+    other_mv_value: MultivariateFeatureStateValue,
+) -> None:
+    # Given
+    other_feature_state = other_mv_value.feature_state
+    other_feature_segment = FeatureSegment.objects.create(
+        feature=other_feature_state.feature,
+        segment=Segment.objects.create(
+            name="other", project=other_feature_state.feature.project
+        ),
+        environment=other_feature_state.environment,
+    )
+    other_feature_segment_before = (
+        other_feature_segment.environment_id,
+        other_feature_segment.feature_id,
+        other_feature_segment.segment_id,
+    )
+    version = EnvironmentFeatureVersion.objects.create(
+        environment=environment_v2_versioning, feature=feature
+    )
+
+    # When
+    response = admin_client.post(
+        f"/api/v1/environments/{environment_v2_versioning.id}/features/{feature.id}"
+        f"/versions/{version.uuid}/featurestates/",
+        data=json.dumps(
+            {
+                "enabled": True,
+                "feature_state_value": {"type": "unicode", "string_value": "x"},
+                "feature_segment": {
+                    "id": other_feature_segment.id,
+                    "segment": segment.id,
+                    "priority": 0,
+                },
+                "multivariate_feature_state_values": [
+                    {
+                        "id": other_mv_value.id,
+                        "multivariate_feature_option": other_mv_value.multivariate_feature_option_id,
+                        "percentage_allocation": 1,
+                    }
+                ],
+            }
+        ),
+        content_type="application/json",
+    )
+
+    # Then
+    assert response.status_code == 201
+    other_feature_segment.refresh_from_db()
+    other_mv_value.refresh_from_db()
+    assert (
+        other_feature_segment.environment_id,
+        other_feature_segment.feature_id,
+        other_feature_segment.segment_id,
+    ) == other_feature_segment_before
+    assert other_mv_value.feature_state == other_feature_state
+    assert response.json()["feature_segment"]["id"] != other_feature_segment.id
