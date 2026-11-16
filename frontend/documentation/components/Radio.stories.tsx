@@ -3,7 +3,8 @@ import type { Meta, StoryObj } from 'storybook'
 
 import Radio from 'components/base/forms/Radio'
 
-const meta: Meta = {
+const meta: Meta<typeof Radio> = {
+  component: Radio,
   parameters: { layout: 'centered' },
   title: 'Components/Forms/Radio',
 }

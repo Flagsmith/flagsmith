@@ -1,3 +1,8 @@
+// Rounds the focus ring. Zero specificity, so a consumer's rounded-* wins.
+:where(.ds-radio) {
+  border-radius: var(--radius-sm);
+}
+
 .ds-radio {
   // The input is visually hidden, so the label shows its focus.
   &:has(input:focus-visible) {
@@ -34,6 +39,14 @@
 
     &::after {
       transform: scale(1);
+    }
+  }
+
+  // High contrast mode drops backgrounds, which would hide the checked dot.
+  @media (forced-colors: active) {
+    &__dot::after {
+      forced-color-adjust: none;
+      background: CanvasText;
     }
   }
 
