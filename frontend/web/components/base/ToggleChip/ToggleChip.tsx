@@ -22,26 +22,39 @@ const ToggleChip = ({
   disabled,
   onChange,
   size,
-}: ToggleChipProps) => (
-  <label
-    className={classNames(
-      'ds-toggle-chip d-inline-flex mb-0',
-      disabled ? 'ds-toggle-chip--disabled' : 'cursor-pointer',
-      className,
-    )}
-  >
-    <input
-      type='checkbox'
-      className='visually-hidden'
-      checked={checked}
-      disabled={disabled}
-      onChange={(e) => onChange(e.target.checked)}
-    />
-    <Chip colour={colour} selected={checked} size={size}>
+}: ToggleChipProps) => {
+  const content = (
+    <>
       {checked && <Icon name='checkmark' width={16} aria-hidden />}
       {children}
-    </Chip>
-  </label>
-)
+    </>
+  )
+  return (
+    <label
+      className={classNames(
+        'ds-toggle-chip d-inline-flex mb-0',
+        disabled ? 'ds-toggle-chip--disabled' : 'cursor-pointer',
+        className,
+      )}
+    >
+      <input
+        type='checkbox'
+        className='visually-hidden'
+        checked={checked}
+        disabled={disabled}
+        onChange={(e) => onChange(e.target.checked)}
+      />
+      {colour ? (
+        <Chip variant='tinted' colour={colour} size={size}>
+          {content}
+        </Chip>
+      ) : (
+        <Chip variant={checked ? 'accent' : 'neutral'} size={size}>
+          {content}
+        </Chip>
+      )}
+    </label>
+  )
+}
 
 export default ToggleChip

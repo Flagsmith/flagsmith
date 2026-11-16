@@ -47,7 +47,7 @@ const FeatureExportItem: FC<FeatureExportItemType> = ({
       </div>
       <Flex className='table-column'>
         {!!environment && (
-          <Chip colour={colour} size='sm'>
+          <Chip variant='tinted' colour={colour} size='sm'>
             {environment.name}
           </Chip>
         )}

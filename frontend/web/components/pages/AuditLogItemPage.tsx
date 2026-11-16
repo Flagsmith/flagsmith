@@ -57,7 +57,7 @@ const AuditLogItemPage: FC = () => {
             Log #{match.params.id}
             {!!data?.environment && (
               <div className='ms-2'>
-                <Chip colour={colour} size='sm'>
+                <Chip variant='tinted' colour={colour} size='sm'>
                   {data.environment.name}
                 </Chip>
               </div>

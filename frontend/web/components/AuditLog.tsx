@@ -172,7 +172,7 @@ const AuditLog: FC<AuditLogType> = (props) => {
             to={`/project/${props.projectId}/environment/${environment?.api_key}/features/`}
           >
             {/* mw-100: the column is narrower than the chip's own cap. */}
-            <Chip colour={colour} truncate className='mw-100'>
+            <Chip variant='tinted' colour={colour} truncate className='mw-100'>
               {environment.name}
             </Chip>
           </Link>

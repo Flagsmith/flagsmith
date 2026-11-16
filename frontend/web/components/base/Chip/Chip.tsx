@@ -6,16 +6,18 @@ import { getChipColourVars } from './chipColour'
 import './Chip.scss'
 
 export type ChipSize = 'default' | 'sm' | 'xs'
-export type ChipVariant = 'neutral' | 'accent'
+export type ChipVariant = 'neutral' | 'accent' | 'tinted'
+type TokenVariant = Exclude<ChipVariant, 'tinted'>
 
-export type ChipProps = {
+// 'tinted' takes a 6-digit hex colour; the token variants take none.
+type ChipVariantProps =
+  | { variant?: TokenVariant; colour?: never }
+  | { variant: 'tinted'; colour: string }
+
+export type ChipProps = ChipVariantProps & {
   children: ReactNode
-  variant?: ChipVariant
   size?: ChipSize
   truncate?: boolean
-  // 6-digit hex. Replaces the variant.
-  colour?: string
-  selected?: boolean
   onRemove?: () => void
   onClick?: () => void
   className?: string
@@ -32,7 +34,7 @@ export type ChipProps = {
 }
 
 // bg + text come from token utilities; the variant border lives in Chip.scss.
-const VARIANT_UTILITIES: Record<ChipVariant, string> = {
+const VARIANT_UTILITIES: Record<TokenVariant, string> = {
   accent: 'bg-surface-action-subtle text-action',
   neutral: 'bg-surface-subtle text-default',
 }
@@ -53,15 +55,17 @@ const Chip = ({
   onRemove,
   ref,
   role,
-  selected = false,
   size = 'default',
   tabIndex,
   truncate = false,
   variant = 'neutral',
 }: ChipProps) => {
   const interactive = !!onClick || !!role
-  const colourVars = colour ? getChipColourVars(colour) : null
-  const shownVariant = selected ? 'accent' : variant
+  // An invalid colour falls back to the neutral look.
+  const colourVars =
+    variant === 'tinted' && colour ? getChipColourVars(colour) : null
+  const tokenVariant: TokenVariant = variant === 'tinted' ? 'neutral' : variant
+
   return (
     <span
       ref={ref}
@@ -69,11 +73,10 @@ const Chip = ({
       style={colourVars ?? undefined}
       className={classNames(
         'ds-chip d-inline-flex align-items-center align-middle gap-1 rounded-sm',
-        !colourVars && VARIANT_UTILITIES[shownVariant],
+        !colourVars && VARIANT_UTILITIES[tokenVariant],
         {
-          'ds-chip--accent': !colourVars && shownVariant === 'accent',
+          'ds-chip--accent': !colourVars && tokenVariant === 'accent',
           'ds-chip--clickable': interactive,
-          'ds-chip--selected': !!colourVars && selected,
           'ds-chip--tinted': !!colourVars,
           [`ds-chip--${size}`]: size !== 'default',
           'ds-chip--truncate': truncate,

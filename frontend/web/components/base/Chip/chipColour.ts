@@ -10,8 +10,8 @@ export type ChipColourVars = CSSProperties & {
   '--chip-text-strength': string
 }
 
-// Kept in step with Chip.scss, which mixes the same amounts in CSS.
-export const CHIP_TINT = { base: 0.12, selected: 0.22 }
+// Kept in step with Chip.scss and ToggleChip.scss (checked).
+export const CHIP_TINT = { base: 0.12, checked: 0.22 }
 const MIN_TEXT_CONTRAST = 4.5
 
 const themeColour = (
@@ -46,21 +46,21 @@ export const getChipShades = (
   const textDefault = themeColour(tokens.color.text.default, theme)
   return {
     background: mix(colour, surface, CHIP_TINT.base),
-    selectedBackground: mix(colour, surface, CHIP_TINT.selected),
+    checkedBackground: mix(colour, surface, CHIP_TINT.checked),
     text: mix(colour, textDefault, textStrength),
   }
 }
 
 const readsInBothThemes = (colour: Rgb, textStrength: number) =>
   CHIP_THEMES.every((theme) => {
-    const { background, selectedBackground, text } = getChipShades(
+    const { background, checkedBackground, text } = getChipShades(
       colour,
       theme,
       textStrength,
     )
     return (
       contrastRatio(text, background) >= MIN_TEXT_CONTRAST &&
-      contrastRatio(text, selectedBackground) >= MIN_TEXT_CONTRAST
+      contrastRatio(text, checkedBackground) >= MIN_TEXT_CONTRAST
     )
   })
 

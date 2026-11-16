@@ -26,7 +26,7 @@ describe('getChipTextStrength', () => {
         contrastRatio(shades.text, shades.background),
       ).toBeGreaterThanOrEqual(4.5)
       expect(
-        contrastRatio(shades.text, shades.selectedBackground),
+        contrastRatio(shades.text, shades.checkedBackground),
       ).toBeGreaterThanOrEqual(4.5)
     },
   )

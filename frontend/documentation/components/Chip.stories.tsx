@@ -65,19 +65,7 @@ export const Tinted: Story = {
   render: () => (
     <div className='d-flex flex-wrap gap-2'>
       {TAG_COLOURS.map((colour) => (
-        <Chip key={colour} colour={colour}>
-          {colour}
-        </Chip>
-      ))}
-    </div>
-  ),
-}
-
-export const TintedSelected: Story = {
-  render: () => (
-    <div className='d-flex flex-wrap gap-2'>
-      {TAG_COLOURS.slice(0, 6).map((colour) => (
-        <Chip key={colour} colour={colour} selected>
+        <Chip key={colour} variant='tinted' colour={colour}>
           {colour}
         </Chip>
       ))}
