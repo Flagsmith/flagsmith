@@ -35,33 +35,27 @@ class CustomTokenSerializer(serializers.ModelSerializer):  # type: ignore[type-a
 
 
 class CustomTokenCreateSerializer(TokenCreateSerializer):  # type: ignore[misc]
-    """
-    Tells a user with correct credentials that their account is not yet
-    activated, instead of the generic invalid credentials error.
-
-    The password is verified first, so an address cannot be probed for its
-    activation state by anyone who does not already know the password.
-    """
 
     def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
+        """Validate credentials input.
+
+        Overrides djoser so that activation state can't be probed without a valid password."""
         try:
             return super().validate(attrs)  # type: ignore[no-any-return]
         except ValidationError:
-            self._handle_invalid_credentials(attrs)
+            if not (email := attrs.get(djoser_settings.LOGIN_FIELD)):
+                raise
+            user = FFAdminUser.objects.filter(email__iexact=email).first()
+            if not user:
+                raise
+            if not (password := attrs.get("password")) or not user.check_password(password):
+                user_login_password_rejected.send(sender=user.__class__, user=user)
+                raise
+            if not user.is_active:
+                raise ValidationError(
+                    {EMAIL_NOT_VERIFIED_ERROR_KEY: [EMAIL_NOT_VERIFIED_ERROR]}
+                )
             raise
-
-    def _handle_invalid_credentials(self, attrs: dict[str, Any]) -> None:
-        email = attrs.get(djoser_settings.LOGIN_FIELD) or ""
-        user = FFAdminUser.objects.filter(email__iexact=email).first()
-        if not user:
-            return
-        if not user.check_password(attrs.get("password") or ""):
-            user_login_password_rejected.send(sender=user.__class__, user=user)
-            return
-        if not user.is_active:
-            raise ValidationError(
-                {EMAIL_NOT_VERIFIED_ERROR_KEY: [EMAIL_NOT_VERIFIED_ERROR]}
-            )
 
 
 class InviteLinkValidationMixin:
