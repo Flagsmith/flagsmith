@@ -1,6 +1,7 @@
 import React, { FC, useMemo } from 'react'
 import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
-import Tag from './tags/Tag'
+import ToggleChip from './base/ToggleChip'
+import ColorSwatch from './ColorSwatch'
 import Utils from 'common/utils/utils'
 import Button from './base/forms/Button'
 
@@ -39,6 +40,24 @@ const EnvironmentSelect: FC<EnvironmentSelectType> = ({
       })
   }, [data?.results, ignore, idField])
 
+  // Single mode picks one; clicking it again clears it only when allowEmpty.
+  const toggle = (envValue: string) => {
+    if (multiple) {
+      const current = Array.isArray(value) ? value : []
+      onChange(
+        current.includes(envValue)
+          ? current.filter((v) => v !== envValue)
+          : [...current, envValue],
+      )
+      return
+    }
+    if (value !== envValue) {
+      onChange(envValue)
+    } else if (allowEmpty) {
+      onChange(undefined)
+    }
+  }
+
   const handleSelectAll = () => {
     if (multiple) {
       onChange(environments.map((env) => env.value))
@@ -56,39 +75,30 @@ const EnvironmentSelect: FC<EnvironmentSelectType> = ({
 
   return (
     <div className='d-flex align-items-center mb-2'>
-      <Row className='flex-1 row-gap-1 gap-1'>
+      <Row
+        role='group'
+        aria-label='Environments'
+        className='flex-1 row-gap-1 gap-1'
+      >
         {environments.map((env, i) => (
-          <Tag
-            tag={{
-              color: Utils.getTagColour(i),
-              label: env.label,
-            }}
+          <ToggleChip
             key={env.value}
-            selected={
+            size='sm'
+            className='mb-2'
+            checked={
               multiple
                 ? Array.isArray(value) && value.includes(env.value)
                 : value === env.value
             }
-            onClick={() => {
-              if (multiple) {
-                if (Array.isArray(value) && value.includes(env.value)) {
-                  const newValue = value.filter((v) => v !== env.value)
-                  onChange(allowEmpty && newValue.length === 0 ? [] : newValue)
-                } else {
-                  onChange(((value as string[]) || []).concat([env.value]))
-                }
-              } else {
-                onChange(
-                  value === env.value
-                    ? allowEmpty
-                      ? undefined
-                      : value
-                    : env.value,
-                )
-              }
-            }}
-            className='mb-2 chip--xs'
-          />
+            onChange={() => toggle(env.value)}
+          >
+            <ColorSwatch
+              color={Utils.getTagColour(i)}
+              shape='circle'
+              size='sm'
+            />
+            {env.label}
+          </ToggleChip>
         ))}
       </Row>
       {multiple && environments.length > 0 && (
