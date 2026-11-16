@@ -1,14 +1,18 @@
 // Patterns we keep catching in review. Warnings only, on changed lines only
 // (CI and pre-commit), so they never block a PR. For a real exception,
 // disable the rule on that line and say why.
+const colourMessage = 'Use a colour token, not a hex, rgb or hsl literal.'
+const fetchMessage =
+  'Add an RTK Query endpoint in common/services/ instead of fetch().'
+
 const colourLiterals = [
   {
-    message: 'Use a colour token, not a hex, rgb or hsl literal.',
+    message: colourMessage,
     selector:
       'Literal[value=/^\\s*(#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$|(rgba?|hsla?)\\()/]',
   },
   {
-    message: 'Use a colour token, not a hex, rgb or hsl literal.',
+    message: colourMessage,
     selector:
       'TemplateElement[value.raw=/#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})\\b|(rgba?|hsla?)\\(/]',
   },
@@ -37,8 +41,7 @@ const otherPatterns = [
     selector: "JSXAttribute[name.name='data-test']",
   },
   {
-    message:
-      'Add an RTK Query endpoint in common/services/ instead of fetch().',
+    message: fetchMessage,
     selector:
       "CallExpression[callee.object.name=/^(window|globalThis|self)$/][callee.property.name='fetch']",
   },
@@ -220,8 +223,7 @@ module.exports = {
     'no-restricted-globals': [
       'warn',
       {
-        message:
-          'Add an RTK Query endpoint in common/services/ instead of fetch().',
+        message: fetchMessage,
         name: 'fetch',
       },
     ],
