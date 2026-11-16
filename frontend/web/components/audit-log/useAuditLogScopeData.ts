@@ -1,6 +1,6 @@
 import { skipToken } from '@reduxjs/toolkit/query'
 import { useGetProjectsQuery } from 'common/services/useProject'
-import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
+import { useGetAllEnvironmentsQuery } from 'common/services/useEnvironment'
 import { getEnvironmentColour } from 'common/utils/environmentColour'
 import { getProjectColourMap } from 'common/utils/paletteColour'
 import { AuditLogScopeFilter } from './auditLogScopeFilter'
@@ -16,7 +16,7 @@ export default function useAuditLogScopeData(
   enabled: boolean,
 ) {
   const projects = useGetProjectsQuery(enabled ? { organisationId } : skipToken)
-  const environments = useGetEnvironmentsQuery(
+  const environments = useGetAllEnvironmentsQuery(
     enabled && scope.type === 'project'
       ? { projectId: scope.projectId }
       : skipToken,
@@ -25,7 +25,7 @@ export default function useAuditLogScopeData(
   // project's environments never show as loaded.
   const projectItems = projects.currentData
   const projectColours = getProjectColourMap(projectItems ?? [])
-  const environmentItems = environments.currentData?.results
+  const environmentItems = environments.currentData
 
   const projectList: ScopeList<ScopeCardProject> = {
     failed: projects.isError,

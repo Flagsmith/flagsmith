@@ -1,6 +1,13 @@
 import { KeyboardEvent, useRef } from 'react'
 import classNames from 'classnames'
 
+const ARROW_STEPS: Record<string, number> = {
+  ArrowDown: 1,
+  ArrowLeft: -1,
+  ArrowRight: 1,
+  ArrowUp: -1,
+}
+
 export type ScopeModeOption<T extends string> = {
   value: T
   label: string
@@ -29,9 +36,7 @@ const ScopeModeSwitch = <T extends string>({
   )
 
   const onKeyDown = (e: KeyboardEvent) => {
-    const step = { ArrowDown: 1, ArrowLeft: -1, ArrowRight: 1, ArrowUp: -1 }[
-      e.key
-    ]
+    const step = ARROW_STEPS[e.key]
     if (!step) return
     e.preventDefault()
     const next = (index + step + options.length) % options.length

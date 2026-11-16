@@ -21,7 +21,7 @@ const ScopeProjectList: FC<ScopeProjectListProps> = ({
 }) => {
   const name = useId()
   const listRef = useRef<HTMLDivElement>(null)
-  useScrollSelectedIntoView(listRef)
+  useScrollSelectedIntoView(listRef, projects.items.length)
 
   return (
     <div

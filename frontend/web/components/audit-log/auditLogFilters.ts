@@ -15,8 +15,9 @@ export const DEFAULT_AUDIT_LOG_FILTERS: AuditLogFilters = {
   search: '',
 }
 
-// audit/serializers.py: search has min_length=3, shorter answers 400.
+// audit/serializers.py: search is 3 to 256 characters, anything else answers 400.
 const MIN_SEARCH_LENGTH = 3
+const MAX_SEARCH_LENGTH = 256
 
 export const parseAuditLogFilters = (
   params: URLSearchParams,
@@ -35,10 +36,12 @@ export const serialiseAuditLogFilters = ({
   return params
 }
 
-// The search the API will use, or nothing while it's too short to send.
+// The search the API will use: nothing while too short, capped at its maximum.
 export const getSentSearch = (search: string): string | undefined => {
   const trimmed = search.trim()
-  return trimmed.length >= MIN_SEARCH_LENGTH ? trimmed : undefined
+  return trimmed.length >= MIN_SEARCH_LENGTH
+    ? trimmed.slice(0, MAX_SEARCH_LENGTH)
+    : undefined
 }
 
 export const toOrganisationAuditLogParams = ({

@@ -51,6 +51,13 @@ describe('toOrganisationAuditLogParams', () => {
       toOrganisationAuditLogParams(filters({ type: 'all' }, search)).search,
     ).toBe(sent)
   })
+
+  it('caps a long search at the 256 characters the API accepts', () => {
+    expect(
+      toOrganisationAuditLogParams(filters({ type: 'all' }, 'a'.repeat(300)))
+        .search,
+    ).toBe('a'.repeat(256))
+  })
 })
 
 describe('URL round trip', () => {
