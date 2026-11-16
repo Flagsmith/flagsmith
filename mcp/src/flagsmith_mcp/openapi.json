@@ -5314,7 +5314,7 @@
         }
       },
       "FeatureStateSerializerBasic": {
-        "description": "drf-writable-nested resolves nested `id`s against the whole table, so a\npayload can take over rows belonging to any other object. Only resolve\nthem against the parent's own children; anything else is treated as new.",
+        "description": "Adds nested create feature",
         "type": "object",
         "properties": {
           "id": {
@@ -7413,7 +7413,7 @@
         }
       },
       "SegmentRule": {
-        "description": "drf-writable-nested resolves nested `id`s against the whole table, so a\npayload can take over rows belonging to any other object. Only resolve\nthem against the parent's own children; anything else is treated as new.",
+        "description": "Adds nested create feature",
         "type": "object",
         "properties": {
           "id": {
@@ -7990,7 +7990,7 @@
         ]
       },
       "WritableNestedFeatureState": {
-        "description": "drf-writable-nested resolves nested `id`s against the whole table, so a\npayload can take over rows belonging to any other object. Only resolve\nthem against the parent's own children; anything else is treated as new.",
+        "description": "Adds nested create feature",
         "type": "object",
         "properties": {
           "id": {
@@ -8192,7 +8192,7 @@
         ]
       },
       "_NestedSegmentRule": {
-        "description": "drf-writable-nested resolves nested `id`s against the whole table, so a\npayload can take over rows belonging to any other object. Only resolve\nthem against the parent's own children; anything else is treated as new.",
+        "description": "Adds nested create feature",
         "type": "object",
         "properties": {
           "id": {
