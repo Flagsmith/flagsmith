@@ -1,22 +1,17 @@
 import { FC, KeyboardEvent } from 'react'
 import ToggleChip from 'components/base/ToggleChip'
 import ListMessage, { ScopeList } from './ListMessage'
-
-const ARROW_STEPS: Record<string, number> = {
-  ArrowDown: 1,
-  ArrowLeft: -1,
-  ArrowRight: 1,
-  ArrowUp: -1,
-}
+import { getArrowTarget } from './arrowTarget'
 
 // Arrows move focus between the chips; Tab and Space still work as usual.
 const moveFocus = (e: KeyboardEvent<HTMLDivElement>) => {
-  const step = ARROW_STEPS[e.key]
   const inputs = [...e.currentTarget.querySelectorAll('input')]
   const index = inputs.findIndex((input) => input === document.activeElement)
-  if (!step || index === -1) return
+  const target =
+    index === -1 ? null : getArrowTarget(e.key, index, inputs.length)
+  if (target === null) return
   e.preventDefault()
-  inputs[(index + step + inputs.length) % inputs.length].focus()
+  inputs[target].focus()
 }
 
 export type ScopeCardEnvironment = { id: number; name: string; colour: string }

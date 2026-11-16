@@ -1,13 +1,7 @@
 import { FC, KeyboardEvent, useRef } from 'react'
 import { AuditLogScopeFilter } from 'components/audit-log/auditLogScopeFilter'
 import BareButton from 'components/base/forms/BareButton'
-
-const ARROW_STEPS: Record<string, number> = {
-  ArrowDown: 1,
-  ArrowLeft: -1,
-  ArrowRight: 1,
-  ArrowUp: -1,
-}
+import { getArrowTarget } from './arrowTarget'
 
 export type ScopeMode = AuditLogScopeFilter['type']
 
@@ -29,10 +23,9 @@ const ScopeModeSwitch: FC<ScopeModeSwitchProps> = ({
   )
 
   const onKeyDown = (e: KeyboardEvent) => {
-    const step = ARROW_STEPS[e.key]
-    if (!step) return
+    const next = getArrowTarget(e.key, index, options.length)
+    if (next === null) return
     e.preventDefault()
-    const next = (index + step + options.length) % options.length
     onChange(options[next].value)
     refs.current[next]?.focus()
   }
