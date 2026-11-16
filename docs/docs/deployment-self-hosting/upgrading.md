@@ -81,7 +81,7 @@ kubectl -n flagsmith exec flagsmith-dev-postgresql-0 -- sh -c \
   'PGPASSWORD=$POSTGRES_PASSWORD psql -U postgres -d $POSTGRES_DB -c \\dt | grep -c table'
 ```
 
-Then remove the scratch database:
+Then remove the scratch database. Run this command only if createdb succeeded. If createdb failed, the database already existed, so do not drop it.
 
 ```bash
 kubectl -n flagsmith exec flagsmith-dev-postgresql-0 -- sh -c \
