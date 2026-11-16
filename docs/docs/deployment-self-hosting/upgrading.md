@@ -22,49 +22,99 @@ difference matters most when you need to roll back.
    helm history -n flagsmith flagsmith
    ```
 
-3. Back up the database, check the backup can be read, and store a copy outside the cluster. The commands below show how
-   to do this for the PostgreSQL instance deployed by the chart.
+3. Note how many replicas the API runs. Look at the `READY` column, for example `2/2`, and write the number down: If
+   your API uses autoscaling, the autoscaler can change the replica count on its own. This page did not test
+   autoscaling.
+
+   ```bash
+   kubectl -n flagsmith get deployment flagsmith-api
+   ```
+
+4. Back up the database, verify the backup, and store a copy outside the cluster. The commands below show how to do this
+   for the PostgreSQL instance deployed by the chart.
 
 ### Back up the PostgreSQL instance deployed by the chart
 
 :::info
 
 These commands use the pod name `flagsmith-dev-postgresql-0`, the `postgres` user and the `POSTGRES_PASSWORD` and
-`POSTGRES_DB` variables that were set in that pod during testing. Check them with
-`kubectl -n flagsmith exec flagsmith-dev-postgresql-0 -- env`. If you use an external or managed database, use your
-provider's snapshot or dump tools instead.
+`POSTGRES_DB` variables that were set in that pod during testing. Find your PostgreSQL pod name with
+`kubectl -n flagsmith get pods` , then check the variables with `kubectl -n flagsmith exec <postgres-pod> -- env`. If
+you use an external or managed database, use your provider's snapshot or dump tools instead.
 
 :::
+
+The dump is written inside the PostgreSQL pod first, so check there is enough free space:
+
+```bash
+kubectl -n flagsmith exec flagsmith-dev-postgresql-0 -- df -h /tmp
+```
+
+Create the backup:
 
 ```bash
 kubectl -n flagsmith exec flagsmith-dev-postgresql-0 -- sh -c \
   'PGPASSWORD=$POSTGRES_PASSWORD pg_dump -U postgres -Fc -f /tmp/backup.dump $POSTGRES_DB'
 ```
 
-Check the backup can be read. A number greater than zero means the file contains your tables:
-
-```bash
-kubectl -n flagsmith exec flagsmith-dev-postgresql-0 -- sh -c 'pg_restore -l /tmp/backup.dump | grep -c TABLE'
-```
-
-Copy the backup out of the cluster:
+Copy it out of the cluster, so it survives if the pod is replaced:
 
 ```bash
 kubectl cp flagsmith/flagsmith-dev-postgresql-0:/tmp/backup.dump ./backup.dump
 ```
 
+Verify the backup by restoring it into a scratch database. If this prints no errors, the backup can be restored:
+
+```bash
+kubectl -n flagsmith exec flagsmith-dev-postgresql-0 -- sh -c \
+  'PGPASSWORD=$POSTGRES_PASSWORD createdb -U postgres flagsmith_verify'
+kubectl -n flagsmith exec flagsmith-dev-postgresql-0 -- sh -c \
+  'PGPASSWORD=$POSTGRES_PASSWORD pg_restore -U postgres -d flagsmith_verify --single-transaction /tmp/backup.dump'
+```
+
+Compare the number of tables in the scratch database with the live one. The two numbers should match:
+
+```bash
+kubectl -n flagsmith exec flagsmith-dev-postgresql-0 -- sh -c \
+  'PGPASSWORD=$POSTGRES_PASSWORD psql -U postgres -d flagsmith_verify -c \\dt | grep -c table'
+kubectl -n flagsmith exec flagsmith-dev-postgresql-0 -- sh -c \
+  'PGPASSWORD=$POSTGRES_PASSWORD psql -U postgres -d $POSTGRES_DB -c \\dt | grep -c table'
+```
+
+Then remove the scratch database:
+
+```bash
+kubectl -n flagsmith exec flagsmith-dev-postgresql-0 -- sh -c \
+  'PGPASSWORD=$POSTGRES_PASSWORD dropdb -U postgres flagsmith_verify'
+```
+
 ## Upgrade with Helm
 
 ```bash
-helm upgrade -n flagsmith flagsmith flagsmith/flagsmith --version <chart-version> -f values.yaml --wait --timeout 20m
+helm upgrade -n flagsmith flagsmith flagsmith/flagsmith --version <chart-version> --reset-then-reuse-values \
+  --wait --timeout 20m
 ```
 
-Pass the same values file you installed with. Without `-f` or `--reuse-values`, Helm applies the chart defaults and
-discards values you set earlier. The test used default values only, so this behaviour was not tested here.
+`--reset-then-reuse-values` needs Helm 3.14 or later. It keeps the values you set when you installed and applies the new
+chart's defaults for everything else. Avoid plain `--reuse-values`, which ignores defaults introduced by the new chart
+version and can make an upgrade across versions fail. Values you pass with -f or --set are applied on top of the values
+from your install, so only pass the ones you want to change. The test used default values only, so this behaviour was
+not tested with custom values.
 
-`--wait` prints nothing until every pod is ready. Downloading images can take several minutes on a slow connection. In
-the test, a first install with a 10 minute timeout failed because the PostgreSQL image took more than five minutes to
-download, even though the pods were healthy shortly afterwards.
+`--wait` prints nothing until the rollout is ready. Helm treats a Deployment as ready when the minimum number of
+replicas is available (the desired count minus `maxUnavailable`), so check `kubectl -n flagsmith get pods` to confirm
+that every replica is ready. Downloading images can take several minutes on a slow connection. In the test, a first
+install with a 10 minute timeout failed because the PostgreSQL image took more than five minutes to download, even
+though the pods were healthy shortly afterwards.
+
+:::warning
+
+During a rolling upgrade, old API pods keep serving requests while the new pod runs its migrations. If a migration
+removes something the old version needs, requests handled by an old pod can fail until it is replaced. In the test,
+migration `code_references.0003` dropped a table that Flagsmith 2.222.0 reads. If you cannot accept errors during this
+window, schedule the upgrade for a quiet period. This was not tested.
+
+:::
 
 ## How migrations run
 
@@ -133,25 +183,39 @@ Treat a rollback as a restore. These steps worked in the test:
    kubectl -n flagsmith get pods
    ```
 
-3. Delete the database and create an empty one. This destroys the current data, so only do it once you have a backup you
-   have checked:
+3. Copy the backup into the PostgreSQL pod and check it is there. The pod may have been replaced since you took the
+   backup, so do this even if you think the file is still in `/tmp`:
 
    ```bash
-   kubectl -n flagsmith exec flagsmith-dev-postgresql-0 -- sh -c 'PGPASSWORD=$POSTGRES_PASSWORD dropdb -U postgres $POSTGRES_DB'
-   kubectl -n flagsmith exec flagsmith-dev-postgresql-0 -- sh -c 'PGPASSWORD=$POSTGRES_PASSWORD createdb -U postgres $POSTGRES_DB'
+   kubectl cp ./backup.dump flagsmith/flagsmith-dev-postgresql-0:/tmp/backup.dump
+   kubectl -n flagsmith exec flagsmith-dev-postgresql-0 -- ls -l /tmp/backup.dump
    ```
 
-4. Restore the backup:
+4. Delete the database and create an empty one. This destroys the current data, so only do it once you have a backup you
+   have verified:
 
    ```bash
    kubectl -n flagsmith exec flagsmith-dev-postgresql-0 -- sh -c \
-     'PGPASSWORD=$POSTGRES_PASSWORD pg_restore -U postgres -d $POSTGRES_DB --no-owner /tmp/backup.dump'
+     'PGPASSWORD=$POSTGRES_PASSWORD dropdb -U postgres $POSTGRES_DB'
+   kubectl -n flagsmith exec flagsmith-dev-postgresql-0 -- sh -c \
+     'PGPASSWORD=$POSTGRES_PASSWORD createdb -U postgres $POSTGRES_DB'
    ```
 
-5. Start the API and wait for it to become ready:
+5. Restore the backup. `--single-transaction` makes the restore all or nothing, so a failure cannot leave a half
+   restored database. If the command reports any error, do not start the API. Fix the cause and run it again:
 
    ```bash
-   kubectl -n flagsmith scale deployment flagsmith-api --replicas=1
+   kubectl -n flagsmith exec flagsmith-dev-postgresql-0 -- sh -c \
+     'PGPASSWORD=$POSTGRES_PASSWORD pg_restore -U postgres -d $POSTGRES_DB --single-transaction /tmp/backup.dump'
+   ```
+
+   `pg_restore` recreates the original table owners, so the database roles must already exist. They do when you restore
+   into the same database server.
+
+6. Start the API with the replica count you noted before the upgrade, and wait for it to become ready:
+
+   ```bash
+   kubectl -n flagsmith scale deployment flagsmith-api --replicas=<replica-count>
    kubectl -n flagsmith rollout status deployment flagsmith-api
    ```
 
@@ -181,11 +245,12 @@ the real cause was the missing table above.
 
 Chart 0.85.0 no longer deploys the bundled InfluxDB. The notes printed by `helm upgrade` list the alternatives:
 configure an external InfluxDB with `influxdbExternal`, or store analytics in PostgreSQL with `UsePostgresForAnalytics`
-(which requires `taskProcessor.enabled`). To move existing analytics data to PostgreSQL, enable
-`jobs.migrateAnalyticsData`.
+(which requires `taskProcessor.enabled`). The notes also mention `jobs.migrateAnalyticsData` for moving existing
+analytics data.
 
 These notes appear only in the terminal output, so check them if you upgrade through CI or a GitOps tool. This page did
-not test what happens to existing analytics data.
+not test the analytics migration or what happens to existing analytics data, so check the chart values for the settings
+that job needs, including the connection to the source InfluxDB.
 
 ## What was tested
 
@@ -194,4 +259,4 @@ not test what happens to existing analytics data.
 - A database containing one organisation, one project and a few flags.
 
 Not tested: custom values, an external or managed database, the `jobs.migrateDb` Job, the analytics migration, other
-version pairs, and downtime during the upgrade.
+version pairs, and the behaviour of the API and downtime during a rolling upgrade.
