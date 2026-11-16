@@ -103,29 +103,19 @@ describe('URL round trip', () => {
   })
 })
 
-describe('hasActiveAuditLogFilters', () => {
+describe('filter state', () => {
+  // Organisation with no search is a filter, but the scope pill clears it
+  // itself, so Clear all stays hidden.
   it.each`
-    search   | scope                       | active
-    ${''}    | ${{ type: 'all' }}          | ${false}
-    ${'  '}  | ${{ type: 'all' }}          | ${false}
-    ${'ch'}  | ${{ type: 'all' }}          | ${false}
-    ${'che'} | ${{ type: 'all' }}          | ${true}
-    ${''}    | ${{ type: 'organisation' }} | ${true}
-  `('"$search" with $scope.type: $active', ({ active, scope, search }) => {
+    search   | scope                       | active   | clearAll
+    ${''}    | ${{ type: 'all' }}          | ${false} | ${false}
+    ${'  '}  | ${{ type: 'all' }}          | ${false} | ${false}
+    ${'ch'}  | ${{ type: 'all' }}          | ${false} | ${false}
+    ${'che'} | ${{ type: 'all' }}          | ${true}  | ${true}
+    ${''}    | ${{ type: 'organisation' }} | ${true}  | ${false}
+    ${'che'} | ${{ type: 'organisation' }} | ${true}  | ${true}
+  `('"$search" with $scope.type', ({ active, clearAll, scope, search }) => {
     expect(hasActiveAuditLogFilters({ scope, search })).toBe(active)
-  })
-})
-
-describe('showsClearAll', () => {
-  it.each`
-    search   | scope                       | shows
-    ${''}    | ${{ type: 'all' }}          | ${false}
-    ${''}    | ${{ type: 'organisation' }} | ${false}
-    ${'  '}  | ${{ type: 'organisation' }} | ${false}
-    ${'ch'}  | ${{ type: 'all' }}          | ${false}
-    ${'che'} | ${{ type: 'all' }}          | ${true}
-    ${'che'} | ${{ type: 'organisation' }} | ${true}
-  `('"$search" with $scope.type: $shows', ({ scope, search, shows }) => {
-    expect(showsClearAll({ scope, search })).toBe(shows)
+    expect(showsClearAll({ scope, search })).toBe(clearAll)
   })
 })
