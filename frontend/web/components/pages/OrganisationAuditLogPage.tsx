@@ -46,9 +46,10 @@ const OrganisationAuditLogPage: FC = () => {
     isEnabled && isAdmin,
   )
 
-  // Back to page 1 whenever the filters change. Stored, so undoing the
-  // change doesn't bring the old page back.
-  const filtersKey = `${organisationId}?${serialiseAuditLogFilters(filters)}`
+  // Back to page 1 whenever the organisation or filters change. Stored, so
+  // undoing the change doesn't bring the old page back.
+  const filtersQuery = serialiseAuditLogFilters(filters).toString()
+  const filtersKey = `${organisationId}:${filtersQuery}`
   const [paging, setPaging] = useState({ key: filtersKey, page: 1 })
   if (paging.key !== filtersKey) setPaging({ key: filtersKey, page: 1 })
   const page = paging.key === filtersKey ? paging.page : 1
