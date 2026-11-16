@@ -42,10 +42,6 @@ def other_mv_value(other_project: Project) -> MultivariateFeatureStateValue:
     return feature_state.multivariate_feature_state_values.get()  # type: ignore[no-any-return]
 
 
-def _put(client: APIClient, url: str, data: dict[str, Any]) -> Any:
-    return client.put(url, data=json.dumps(data), content_type="application/json")
-
-
 def test_update_segment__other_project_rule_and_condition_ids__leaves_them_untouched(
     admin_client: APIClient,
     project: Project,
@@ -62,28 +58,30 @@ def test_update_segment__other_project_rule_and_condition_ids__leaves_them_untou
     )
 
     # When
-    response = _put(
-        admin_client,
+    response = admin_client.put(
         f"/api/v1/projects/{project.id}/segments/{segment.id}/",
-        {
-            "name": segment.name,
-            "project": project.id,
-            "rules": [
-                {
-                    "id": other_rule.id,
-                    "type": "ALL",
-                    "rules": [],
-                    "conditions": [
-                        {
-                            "id": other_condition.id,
-                            "property": "q",
-                            "operator": "EQUAL",
-                            "value": "w",
-                        }
-                    ],
-                }
-            ],
-        },
+        data=json.dumps(
+            {
+                "name": segment.name,
+                "project": project.id,
+                "rules": [
+                    {
+                        "id": other_rule.id,
+                        "type": "ALL",
+                        "rules": [],
+                        "conditions": [
+                            {
+                                "id": other_condition.id,
+                                "property": "q",
+                                "operator": "EQUAL",
+                                "value": "w",
+                            }
+                        ],
+                    }
+                ],
+            }
+        ),
+        content_type="application/json",
     )
 
     # Then
@@ -105,21 +103,23 @@ def test_update_feature__other_project_multivariate_option_id__leaves_it_untouch
     other_option = other_mv_value.multivariate_feature_option
 
     # When
-    response = _put(
-        admin_client,
+    response = admin_client.put(
         f"/api/v1/projects/{project.id}/features/{multivariate_feature.id}/",
-        {
-            "name": multivariate_feature.name,
-            "type": "MULTIVARIATE",
-            "multivariate_options": [
-                {
-                    "id": other_option.id,
-                    "type": "unicode",
-                    "string_value": "mine",
-                    "default_percentage_allocation": 10,
-                }
-            ],
-        },
+        data=json.dumps(
+            {
+                "name": multivariate_feature.name,
+                "type": "MULTIVARIATE",
+                "multivariate_options": [
+                    {
+                        "id": other_option.id,
+                        "type": "unicode",
+                        "string_value": "mine",
+                        "default_percentage_allocation": 10,
+                    }
+                ],
+            }
+        ),
+        content_type="application/json",
     )
 
     # Then
@@ -161,30 +161,32 @@ def test_update_feature_state__other_project_multivariate_value_id__leaves_it_un
     other_feature_state_id = other_mv_value.feature_state_id
 
     # When
-    response = _put(
-        admin_client,
+    response = admin_client.put(
         url.format(api_key=environment.api_key, id=feature_state.id),
-        {
-            "feature": multivariate_feature.id,
-            "environment": environment.id,
-            "enabled": True,
-            "feature_state_value": feature_state_value,
-            "multivariate_feature_state_values": [
-                {
-                    "id": value.id,
-                    "multivariate_feature_option": value.multivariate_feature_option_id,
-                    "percentage_allocation": 20,
-                }
-                for value in own_values
-            ]
-            + [
-                {
-                    "id": other_mv_value.id,
-                    "multivariate_feature_option": other_mv_value.multivariate_feature_option_id,
-                    "percentage_allocation": 1,
-                }
-            ],
-        },
+        data=json.dumps(
+            {
+                "feature": multivariate_feature.id,
+                "environment": environment.id,
+                "enabled": True,
+                "feature_state_value": feature_state_value,
+                "multivariate_feature_state_values": [
+                    {
+                        "id": value.id,
+                        "multivariate_feature_option": value.multivariate_feature_option_id,
+                        "percentage_allocation": 20,
+                    }
+                    for value in own_values
+                ]
+                + [
+                    {
+                        "id": other_mv_value.id,
+                        "multivariate_feature_option": other_mv_value.multivariate_feature_option_id,
+                        "percentage_allocation": 1,
+                    }
+                ],
+            }
+        ),
+        content_type="application/json",
     )
 
     # Then
@@ -222,20 +224,22 @@ def test_update_metadata_model_field__other_organisation_requirement_id__leaves_
     )
 
     # When
-    response = _put(
-        admin_client,
+    response = admin_client.put(
         f"/api/v1/organisations/{organisation.id}/metadata-model-fields/{model_field.id}/",
-        {
-            "field": field.id,
-            "content_type": feature_type.id,
-            "is_required_for": [
-                {
-                    "id": other_requirement.id,
-                    "content_type": project_type.id,
-                    "object_id": project.id,
-                }
-            ],
-        },
+        data=json.dumps(
+            {
+                "field": field.id,
+                "content_type": feature_type.id,
+                "is_required_for": [
+                    {
+                        "id": other_requirement.id,
+                        "content_type": project_type.id,
+                        "object_id": project.id,
+                    }
+                ],
+            }
+        ),
+        content_type="application/json",
     )
 
     # Then
