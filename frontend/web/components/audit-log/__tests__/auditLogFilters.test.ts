@@ -58,6 +58,14 @@ describe('toOrganisationAuditLogParams', () => {
         .search,
     ).toBe('a'.repeat(256))
   })
+
+  it('never cuts an emoji in half at the cap', () => {
+    expect(
+      toOrganisationAuditLogParams(
+        filters({ type: 'all' }, `${'a'.repeat(255)}😀b`),
+      ).search,
+    ).toBe(`${'a'.repeat(255)}😀`)
+  })
 })
 
 describe('URL round trip', () => {
