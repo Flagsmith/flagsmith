@@ -25,8 +25,8 @@
   }
 
   // The surface and text tokens follow the theme, so these mixes do too.
-  // Text at 35% colour reads at 4.5:1 for any colour. If you change it or
-  // the tint, update tintedContrast.test.
+  // Text at 35% colour keeps 4.5:1 for any colour at a 12% or 22% tint, in
+  // both themes (checked across the RGB space). Recheck if these change.
   // --chip-tint: the tint's strength; ToggleChip raises it when checked.
   &--tinted {
     --chip-tint: 12%;
