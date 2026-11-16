@@ -177,10 +177,8 @@ Treat a rollback as a restore. These steps worked in the test:
    helm rollback flagsmith <revision> -n flagsmith --wait --timeout 20m
    ```
 
-2. Stop the API, so nothing is connected to the database, and wait until no `flagsmith-api` pod is listed: Stop
-   everything that connects to the database, and wait until none of those pods is listed. In the default install only
-   the API connects. If you enabled the task processor, scale it to 0 as well, and wait for any migration Job to finish.
-   These setups were not tested.
+2. Stop the API, so nothing is connected to the database, and wait until no `flagsmith-api` pod is listed: 
+   Stop everything that connects to the database, and wait until none of those pods is listed. In the default install only the API connects. If you enabled the task processor, note its replica count, then scale it to 0 as well, and wait for any migration Job to finish. These setups were not tested.
 
    ```bash
    kubectl -n flagsmith scale deployment flagsmith-api --replicas=0
@@ -224,7 +222,7 @@ Treat a rollback as a restore. These steps worked in the test:
    kubectl -n flagsmith scale deployment flagsmith-api --replicas=<replica-count>
    kubectl -n flagsmith rollout status deployment flagsmith-api
    ```
-
+If you stopped the task processor, scale it back to the replica count you noted, so background tasks run again. This was not tested.
 Recreate the database rather than restoring over the existing one. Tables created by the newer version would otherwise
 be left behind, and a later upgrade could fail when it tries to create them again.
 
