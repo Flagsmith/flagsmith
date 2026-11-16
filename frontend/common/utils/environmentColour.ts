@@ -1,5 +1,5 @@
 import { TAG_COLOURS } from 'common/theme/tagColours'
-import { parseHex } from './parseHex'
+import { toHexColour } from './hexColour'
 
 type ColourSource = { banner_colour?: string | null }
 
@@ -9,9 +9,10 @@ export const getEnvironmentColour = (
   environment: ColourSource,
   index: number,
 ) => {
-  const banner = environment.banner_colour?.trim()
-  if (banner && parseHex(banner)) return `#${banner.replace(/^#/, '')}`
-  return TAG_COLOURS[index % (TAG_COLOURS.length - 1)]
+  return (
+    toHexColour(environment.banner_colour) ??
+    TAG_COLOURS[index % (TAG_COLOURS.length - 1)]
+  )
 }
 
 // One missing from the list never borrows another environment's banner colour.

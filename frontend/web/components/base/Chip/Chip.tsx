@@ -1,8 +1,8 @@
-import React, { KeyboardEvent, ReactNode, Ref } from 'react'
+import React, { CSSProperties, KeyboardEvent, ReactNode, Ref } from 'react'
 import classNames from 'classnames'
 import Icon from 'components/icons/Icon'
 import { colorIconSecondary } from 'common/theme/tokens'
-import { getChipColourVars } from './chipColour'
+import { toHexColour } from 'common/utils/hexColour'
 import './Chip.scss'
 
 export type ChipSize = 'default' | 'sm' | 'xs'
@@ -62,22 +62,23 @@ const Chip = ({
 }: ChipProps) => {
   const interactive = !!onClick || !!role
   // An invalid colour falls back to the neutral look.
-  const colourVars =
-    variant === 'tinted' && colour ? getChipColourVars(colour) : null
+  const tint = variant === 'tinted' ? toHexColour(colour) : null
+  const tintStyle: (CSSProperties & { '--chip-colour': string }) | undefined =
+    tint ? { '--chip-colour': tint } : undefined
   const tokenVariant: TokenVariant = variant === 'tinted' ? 'neutral' : variant
 
   return (
     <span
       ref={ref}
       // Data, not styling: Chip.scss derives the shades from these.
-      style={colourVars ?? undefined}
+      style={tintStyle}
       className={classNames(
         'ds-chip d-inline-flex align-items-center align-middle gap-1 rounded-sm',
-        !colourVars && VARIANT_UTILITIES[tokenVariant],
+        !tint && VARIANT_UTILITIES[tokenVariant],
         {
-          'ds-chip--accent': !colourVars && tokenVariant === 'accent',
+          'ds-chip--accent': !tint && tokenVariant === 'accent',
           'ds-chip--clickable': interactive,
-          'ds-chip--tinted': !!colourVars,
+          'ds-chip--tinted': !!tint,
           [`ds-chip--${size}`]: size !== 'default',
           'ds-chip--truncate': truncate,
         },
