@@ -1,10 +1,11 @@
 import React, { FC, ReactNode, useEffect, useRef, useState } from 'react'
 import Utils from 'common/utils/utils'
-import { AuditLogItem, Environment } from 'common/types/responses'
+import { AuditLogItem } from 'common/types/responses'
 import { useGetAuditLogsQuery } from 'common/services/useAuditLog'
 import useDebouncedSearch from 'common/useDebouncedSearch'
 import { Link } from 'react-router-dom'
-import ProjectStore from 'common/stores/project-store'
+import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
+import { getEnvironmentColour } from 'common/utils/environmentColour'
 import Button from './base/forms/Button'
 import Tag from './tags/Tag'
 import PanelSearch from './PanelSearch'
@@ -34,6 +35,10 @@ const AuditLog: FC<AuditLogType> = (props) => {
   )
   const { data: subscriptionMeta } = useGetSubscriptionMetadataQuery({
     id: AccountStore.getOrganisation()?.id,
+  })
+  // The same list the environment filter uses, so a row and its filter chip match.
+  const { data: projectEnvironments } = useGetEnvironmentsQuery({
+    projectId: Number(props.projectId),
   })
   const [environments, setEnvironments] = useState(props.environmentId)
 
@@ -93,11 +98,12 @@ const AuditLog: FC<AuditLogType> = (props) => {
     related_object_type,
     related_object_uuid,
   }: AuditLogItem) => {
-    const environments = ProjectStore.getEnvs() as Environment[] | null
-    const index = environments?.findIndex((v) => {
-      return v.id === environment?.id
-    })
-    const colour = index === -1 ? 0 : index
+    const envList = projectEnvironments?.results ?? []
+    const envIndex = Math.max(
+      0,
+      envList.findIndex((v) => v.id === environment?.id),
+    )
+    const colour = getEnvironmentColour(envList[envIndex] ?? {}, envIndex)
     let link: ReactNode = null
     const date = moment(created_date)
     const isVersionEvent =
@@ -169,7 +175,7 @@ const AuditLog: FC<AuditLogType> = (props) => {
           >
             <Tag
               tag={{
-                color: Utils.getTagColour(colour),
+                color: colour,
                 label: environment?.name,
               }}
             />

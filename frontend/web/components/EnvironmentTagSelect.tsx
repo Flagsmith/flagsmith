@@ -25,7 +25,7 @@ const EnvironmentSelect: FC<EnvironmentSelectType> = ({
   projectId,
   value,
 }) => {
-  const { data } = useGetEnvironmentsQuery({ projectId: `${projectId}` })
+  const { data } = useGetEnvironmentsQuery({ projectId: Number(projectId) })
   const environments = useMemo(() => {
     return (data?.results || [])
       ?.map((v, i) => ({
