@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import Color from 'color'
-import { getEnvironmentColour } from 'common/utils/environmentColour'
+import { getEnvironmentColourById } from 'common/utils/environmentColour'
 import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
 
 type UseEnvChartPropsArgs = {
@@ -21,7 +21,7 @@ type UseEnvChartPropsResult = {
  * Chart-series config for environment-grouped charts.
  *
  * Resolves every value recharts needs per env: its colour (the same as the
- * env chip, via `getEnvironmentColour`), its display
+ * env chip, via `getEnvironmentColourById`), its display
  * name (for the tooltip), and a stable sort order (project-list position so
  * stack order doesn't shift with selection order).
  *
@@ -49,9 +49,8 @@ export function useEnvChartProps({
     const colorMap: Record<string, string> = {}
     const seriesLabels: Record<string, string> = {}
     series.forEach((id) => {
-      const index = Math.max(findIndexById(id), 0)
       const env = envList.find((candidate) => `${candidate.id}` === id)
-      colorMap[id] = `${Color(getEnvironmentColour(env ?? {}, index))
+      colorMap[id] = `${Color(getEnvironmentColourById(envList, id))
         .alpha(0.75)
         .rgb()}`
       if (env) seriesLabels[id] = env.name

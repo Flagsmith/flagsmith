@@ -5,7 +5,7 @@ import { useGetAuditLogsQuery } from 'common/services/useAuditLog'
 import useDebouncedSearch from 'common/useDebouncedSearch'
 import { Link } from 'react-router-dom'
 import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
-import { getEnvironmentColour } from 'common/utils/environmentColour'
+import { getEnvironmentColourById } from 'common/utils/environmentColour'
 import Button from './base/forms/Button'
 import Chip from './base/Chip'
 import PanelSearch from './PanelSearch'
@@ -98,12 +98,10 @@ const AuditLog: FC<AuditLogType> = (props) => {
     related_object_type,
     related_object_uuid,
   }: AuditLogItem) => {
-    const envList = projectEnvironments?.results ?? []
-    const envIndex = Math.max(
-      0,
-      envList.findIndex((v) => v.id === environment?.id),
+    const colour = getEnvironmentColourById(
+      projectEnvironments?.results ?? [],
+      environment?.id,
     )
-    const colour = getEnvironmentColour(envList[envIndex] ?? {}, envIndex)
     let link: ReactNode = null
     const date = moment(created_date)
     const isVersionEvent =
@@ -173,7 +171,10 @@ const AuditLog: FC<AuditLogType> = (props) => {
             style={{ width: widths[2] }}
             to={`/project/${props.projectId}/environment/${environment?.api_key}/features/`}
           >
-            <Chip colour={colour}>{environment.name}</Chip>
+            {/* Truncated to the column, which is narrower than a chip's cap. */}
+            <Chip colour={colour} truncate className='mw-100'>
+              {environment.name}
+            </Chip>
           </Link>
         ) : (
           <div className='table-column' style={{ width: widths[2] }} />

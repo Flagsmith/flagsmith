@@ -1,4 +1,7 @@
-import { getEnvironmentColour } from 'common/utils/environmentColour'
+import {
+  getEnvironmentColour,
+  getEnvironmentColourById,
+} from 'common/utils/environmentColour'
 import { TAG_COLOURS } from 'common/theme/tagColours'
 
 describe('getEnvironmentColour', () => {
@@ -22,5 +25,30 @@ describe('getEnvironmentColour', () => {
     expect(getEnvironmentColour({}, TAG_COLOURS.length - 1)).toBe(
       TAG_COLOURS[0],
     )
+  })
+
+  it('adds the # to a banner colour stored without it', () => {
+    expect(getEnvironmentColour({ banner_colour: ' 123456 ' }, 0)).toBe(
+      '#123456',
+    )
+  })
+})
+
+describe('getEnvironmentColourById', () => {
+  const environments = [
+    { banner_colour: '#111111', id: 1 },
+    { banner_colour: null, id: 2 },
+  ]
+
+  it('uses the banner colour of the matching environment', () => {
+    expect(getEnvironmentColourById(environments, '1')).toBe('#111111')
+  })
+
+  it('uses the position colour when it has none', () => {
+    expect(getEnvironmentColourById(environments, 2)).toBe(TAG_COLOURS[1])
+  })
+
+  it("never borrows another environment's banner colour", () => {
+    expect(getEnvironmentColourById(environments, 99)).toBe(TAG_COLOURS[0])
   })
 })

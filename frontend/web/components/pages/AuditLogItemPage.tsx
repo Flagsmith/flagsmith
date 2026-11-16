@@ -7,7 +7,7 @@ import Panel from 'components/base/grid/Panel'
 import moment from 'moment'
 import { skipToken } from '@reduxjs/toolkit/query'
 import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
-import { getEnvironmentColour } from 'common/utils/environmentColour'
+import { getEnvironmentColourById } from 'common/utils/environmentColour'
 import Chip from 'components/base/Chip'
 import DiffString from 'components/diff/DiffString'
 import DiffEnabled from 'components/diff/DiffEnabled'
@@ -35,12 +35,10 @@ const AuditLogItemPage: FC = () => {
   const { data: environments } = useGetEnvironmentsQuery(
     projectId ? { projectId: Number(projectId) } : skipToken,
   )
-  const envList = environments?.results ?? []
-  const envIndex = Math.max(
-    0,
-    envList.findIndex((v) => v.id === data?.environment?.id),
+  const colour = getEnvironmentColourById(
+    environments?.results ?? [],
+    data?.environment?.id,
   )
-  const colour = getEnvironmentColour(envList[envIndex] ?? {}, envIndex)
 
   return (
     <div className='app-container container-fluid mt-1'>

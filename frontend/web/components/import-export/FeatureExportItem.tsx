@@ -1,6 +1,6 @@
 import React, { FC, useState } from 'react'
 import { Environment, FeatureExport } from 'common/types/responses'
-import { getEnvironmentColour } from 'common/utils/environmentColour'
+import { getEnvironmentColourById } from 'common/utils/environmentColour'
 import moment from 'moment'
 import Button from 'components/base/forms/Button'
 import Format from 'common/utils/format'
@@ -20,11 +20,10 @@ const FeatureExportItem: FC<FeatureExportItemType> = ({
 }) => {
   const [isLoading, setIsLoading] = useState(false)
 
-  const envIndex = environments.findIndex(
+  const environment = environments.find(
     (env) => `${env.id}` === `${data.environment_id}`,
   )
-  const environment = envIndex === -1 ? undefined : environments[envIndex]
-  const colour = getEnvironmentColour(environment ?? {}, Math.max(envIndex, 0))
+  const colour = getEnvironmentColourById(environments, data.environment_id)
 
   const download = () => {
     setIsLoading(true)
