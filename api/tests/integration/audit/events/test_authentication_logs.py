@@ -1,6 +1,7 @@
 import pyotp
 import pytest
 import responses
+from axes.models import AccessAttempt  # type: ignore[import-untyped]
 from django.contrib.auth.hashers import make_password
 from pytest_django.fixtures import SettingsWrapper
 from rest_framework.authtoken.models import Token
@@ -506,8 +507,44 @@ def test_login__locked_out__creates_audit_log(
     ]
 
 
-def test_login__attempt_while_locked_out__creates_audit_log():
-    raise NotImplementedError
+def test_login__attempt_while_locked_out__creates_audit_log(
+    api_client: APIClient,
+    organisation: Organisation,
+    other_organisation: Organisation,
+    settings: SettingsWrapper,
+    user: FFAdminUser,
+) -> None:
+    # Given
+    AccessAttempt.objects.create(
+        username="alice@example.com",
+        failures_since_start=settings.AXES_FAILURE_LIMIT,
+    )
+
+    # When
+    response = api_client.post(
+        "/api/v1/auth/login/",
+        {"email": "alice@example.com", "password": "password"},
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == 400
+    assert list(
+        AuditLog.objects.order_by("organisation_id", "created_date").values(
+            "organisation_id", "author_id", "log"
+        )
+    ) == [
+        {
+            "organisation_id": organisation.id,
+            "author_id": user.id,
+            "log": "User `alice@example.com` failed to log in: locked out.",
+        },
+        {
+            "organisation_id": other_organisation.id,
+            "author_id": user.id,
+            "log": "User `alice@example.com` failed to log in: locked out.",
+        },
+    ]
 
 
 def test_cli_login__correct_credentials__creates_audit_log():

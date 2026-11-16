@@ -1,6 +1,10 @@
-from typing import Literal, TypedDict
+from typing import Literal, Protocol, TypedDict
 
 ChangeType = Literal["CREATE", "UPDATE", "DELETE", "UNKNOWN"]
+
+
+class AxesLoginRequest(Protocol):
+    axes_failures_since_start: int
 
 
 class AuditLogChangeDetail(TypedDict):

@@ -19,12 +19,14 @@ from audit.constants import (
     USER_LOGIN_2FA_CODE_REJECTED_MESSAGE,
     USER_LOGIN_PASSWORD_REJECTED_MESSAGE,
     USER_LOGIN_REQUIRES_2FA_MESSAGE,
+    USER_LOGIN_WHILE_LOCKED_OUT_MESSAGE,
     USER_PASSWORD_CHANGED_MESSAGE,
 )
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
 from audit.serializers import AuditLogListSerializer
 from audit.services import get_audited_instance_from_audit_log_record
+from audit.types import AxesLoginRequest
 from custom_auth.signals import (
     user_2fa_disabled,
     user_2fa_enabled,
@@ -310,11 +312,18 @@ def create_user_login_2fa_code_rejected_audit_logs(
 @receiver(user_locked_out)
 def create_user_locked_out_audit_logs(
     sender: str,
+    request: AxesLoginRequest,
     username: str,
     **kwargs: Any,
 ) -> None:
-    if user := FFAdminUser.objects.filter(email__iexact=username).first():
-        _create_user_audit_logs(user, USER_LOCKED_OUT_MESSAGE % user.email)
+    if not (user := FFAdminUser.objects.filter(email__iexact=username).first()):
+        return
+    message = (
+        USER_LOGIN_WHILE_LOCKED_OUT_MESSAGE
+        if request.axes_failures_since_start > settings.AXES_FAILURE_LIMIT
+        else USER_LOCKED_OUT_MESSAGE
+    )
+    _create_user_audit_logs(user, message % user.email)
 
 
 @receiver(user_login_sso_completed)
