@@ -49,6 +49,7 @@ The dump is written inside the PostgreSQL pod first, so check there is enough fr
 ```bash
 kubectl -n flagsmith exec flagsmith-dev-postgresql-0 -- df -h /tmp
 ```
+This checks the space for the dump file. The scratch restore below also creates a full second copy of the database on the volume where PostgreSQL stores its data, so check that volume has more free space than the database uses. If it does not, skip the scratch restore or run it on a separate PostgreSQL server. This was not tested.
 
 Create the backup:
 
@@ -81,7 +82,7 @@ kubectl -n flagsmith exec flagsmith-dev-postgresql-0 -- sh -c \
   'PGPASSWORD=$POSTGRES_PASSWORD psql -U postgres -d $POSTGRES_DB -c \\dt | grep -c table'
 ```
 
-Then remove the scratch database. Run this command only if createdb succeeded. If createdb failed, the database already existed, so do not drop it.
+Then remove the scratch database. Run this command only if `createdb` succeeded. If `createdb` failed, the database already existed, so do not drop it.
 
 ```bash
 kubectl -n flagsmith exec flagsmith-dev-postgresql-0 -- sh -c \
