@@ -34,7 +34,7 @@ const otherPatterns = [
   },
   {
     message: "Use BareButton instead of role='button'.",
-    selector: "JSXAttribute[name.name='role'][value.value='button']",
+    selector: "JSXAttribute[name.name='role'] Literal[value='button']",
   },
   {
     message: 'Give the element a role or accessible name instead of data-test.',
