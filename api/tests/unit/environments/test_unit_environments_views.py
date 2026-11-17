@@ -1398,7 +1398,7 @@ def test_create_environment__required_metadata_on_other_project__returns_201(
     assert response.status_code == status.HTTP_201_CREATED
 
 
-def test_list_environments__returns_paginated_response(
+def test_list_environments__default_request__returns_paginated_response(
     admin_client_new: APIClient,
     project: Project,
 ) -> None:
@@ -1428,7 +1428,7 @@ def test_list_environments__returns_paginated_response(
     }
 
 
-def test_list_environments__page_size_param_is_respected(
+def test_list_environments__page_size_param__respects_limit_and_max(
     admin_client_new: APIClient,
     project: Project,
     mocker: MockerFixture,
