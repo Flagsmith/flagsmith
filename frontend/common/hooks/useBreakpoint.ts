@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 // Add a size when a component needs it.
 export const BREAKPOINT_QUERIES = {
   isPhone: '(max-width: 767.98px)', // below md
-} as const
+}
 
 export type Breakpoint = keyof typeof BREAKPOINT_QUERIES
 
