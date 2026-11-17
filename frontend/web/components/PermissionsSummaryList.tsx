@@ -2,7 +2,7 @@ import React, { FC, useMemo } from 'react'
 import Tooltip from './Tooltip'
 import { RolePermission } from 'common/types/responses'
 import Format from 'common/utils/format'
-import classNames from 'classnames'
+import Chip, { chipClassName } from './base/Chip'
 import { sortBy } from 'lodash'
 
 type PermissionsSummaryListType = {
@@ -40,49 +40,36 @@ const PermissionsSummaryList: FC<PermissionsSummaryListType> = ({
   const getPermissionString = (v: RolePermission['permissions'][number]) =>
     `${Format.enumeration.get(v.permission_key)}${v.tags?.length ? `*` : ''}`
 
+  // Tag-scoped permissions grant limited access.
+  const getVariant = (v: RolePermission['permissions'][number]) =>
+    v.tags?.length ? 'warning' : 'success'
+
   const truncatedHasLimitedAccess = truncatedItems?.find((v) => v.tags?.length)
   return (
     <div className='flex-row gap-1 align-items-center'>
       {items.map((value, i) => (
-        <div
-          key={i}
-          className={classNames('chip chip--xs', {
-            'bg-white text-success border-success bg-opacity-10':
-              !value.tags?.length,
-            'bg-white text-warning border-warning bg-opacity-10':
-              value.tags?.length,
-          })}
-        >
+        <Chip key={i} size='xs' variant={getVariant(value)}>
           {getPermissionString(value)}
-        </div>
+        </Chip>
       ))}
       {!!truncatedItems.length && (
         <Tooltip
           title={
-            <span
-              className={classNames('chip chip--xs', {
-                'bg-white text-success border-success bg-opacity-10':
-                  !truncatedHasLimitedAccess,
-                'bg-white text-warning border-warning bg-opacity-10':
-                  truncatedHasLimitedAccess,
-              })}
+            <Chip
+              size='xs'
+              variant={truncatedHasLimitedAccess ? 'warning' : 'success'}
             >
               +{truncatedItems.length}
-            </span>
+            </Chip>
           }
         >
           {`<div class='d-flex flex-wrap gap-1'>${truncatedItems
             .map(
-              (v) => `<div
-              class='${classNames('chip chip--xs', {
-                'bg-success text-success border-success bg-opacity-10':
-                  !v.tags?.length,
-                'bg-warning text-warning border-warning bg-opacity-10':
-                  v.tags?.length,
-              })}'
-          >
-            ${getPermissionString(v)}
-          </div>`,
+              (v) =>
+                `<span class='${chipClassName({
+                  size: 'xs',
+                  variant: getVariant(v),
+                })}'>${getPermissionString(v)}</span>`,
             )
             .join('')}</div>`}
         </Tooltip>

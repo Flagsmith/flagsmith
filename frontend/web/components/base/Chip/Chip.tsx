@@ -46,6 +46,23 @@ const VARIANT_UTILITIES: Record<TokenVariant, string> = {
   warning: 'bg-surface-warning text-warning',
 }
 
+// The classes for a token chip, for markup built as an HTML string (tooltips).
+export const chipClassName = ({
+  size = 'default',
+  variant = 'neutral',
+}: {
+  size?: ChipSize
+  variant?: ChipVariant
+}) =>
+  classNames(
+    'ds-chip d-inline-flex align-items-center align-middle gap-1 rounded-sm',
+    variant !== 'tinted' && VARIANT_UTILITIES[variant],
+    {
+      [`ds-chip--${variant}`]: variant !== 'neutral',
+      [`ds-chip--${size}`]: size !== 'default',
+    },
+  )
+
 // Token-based chip primitive. Uses `ds-chip` rather than the legacy `.chip`
 // (old SCSS vars + a manual `.dark {}` block, ~35 usages) so the two coexist
 // until those migrate under #6606. Clickable on its own (role=button), or a
@@ -80,16 +97,10 @@ const Chip = ({
       // Data, not styling: Chip.scss derives the shades from these.
       style={tintStyle}
       className={classNames(
-        'ds-chip d-inline-flex align-items-center align-middle gap-1 rounded-sm',
-        !tint && VARIANT_UTILITIES[tokenVariant],
+        chipClassName({ size, variant: tint ? 'tinted' : tokenVariant }),
         {
-          'ds-chip--accent': !tint && tokenVariant === 'accent',
           'ds-chip--clickable': interactive,
-          'ds-chip--success': !tint && tokenVariant === 'success',
-          'ds-chip--tinted': !!tint,
           'ds-chip--truncate': truncate,
-          [`ds-chip--${size}`]: size !== 'default',
-          'ds-chip--warning': !tint && tokenVariant === 'warning',
         },
         className,
       )}
