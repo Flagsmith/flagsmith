@@ -185,8 +185,7 @@ const Tabs: React.FC<TabsProps> = ({
             aria-label='Sections'
             trigger={
               isPhone ? (
-                // Phones: the current section as a title, since the tabs no
-                // longer fit
+                // Tabs don't fit on phones, so the trigger shows the current section
                 <BareButton className='d-flex align-items-center justify-content-between gap-2 w-100 px-0 py-2 text-start'>
                   <span className='h5 mb-0 text-truncate'>
                     {activeTab.props.tabLabel}

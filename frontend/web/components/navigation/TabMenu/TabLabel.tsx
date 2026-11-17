@@ -5,7 +5,6 @@ import { TabItemProps } from './TabItem'
 
 type TabLabelProps = Pick<TabItemProps, 'tabLabel' | 'isDirty'>
 
-// A tab's label, with a dot when the tab has unsaved changes
 const TabLabel: FC<TabLabelProps> = ({ isDirty, tabLabel }) => (
   <>
     {tabLabel}
