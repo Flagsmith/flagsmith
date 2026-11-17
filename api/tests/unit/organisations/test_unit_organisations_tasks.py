@@ -1,5 +1,5 @@
 import uuid
-from datetime import timedelta
+from datetime import datetime, timedelta
 from unittest.mock import MagicMock, call
 
 import pytest
@@ -1230,6 +1230,115 @@ def test_charge_for_api_call_count_overages__usage_under_api_limit__does_not_cha
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+def test_charge_for_api_call_count_overages__zero_allowed_api_calls__does_not_charge(
+    organisation: Organisation,
+    mocker: MockerFixture,
+    enable_features: EnableFeaturesFixture,
+    log: StructuredLogCapture,
+) -> None:
+    """
+    A zero allowance used to raise a ZeroDivisionError, failing the whole run.
+    """
+    # Given
+    now = timezone.now()
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        allowed_seats=10,
+        allowed_projects=3,
+        allowed_30d_api_calls=0,
+        chargebee_email="test@example.com",
+        current_billing_term_starts_at=now - timedelta(days=30),
+        current_billing_term_ends_at=now + timedelta(minutes=30),
+    )
+    organisation.subscription.subscription_id = "fancy_sub_id23"
+    organisation.subscription.plan = "scale-up-v2"
+    organisation.subscription.save()
+    OrganisationAPIUsageNotification.objects.create(
+        organisation=organisation,
+        percent_usage=100,
+        notified_at=now,
+    )
+
+    enable_features("api_usage_overage_charges")
+
+    mocker.patch(
+        "organisations.chargebee.chargebee.chargebee_client.Subscription.retrieve",
+        autospec=True,
+    )
+    mock_chargebee_update = mocker.patch(
+        "organisations.chargebee.chargebee.chargebee_client.Subscription.update",
+        autospec=True,
+    )
+    mocker.patch(
+        "organisations.tasks.get_current_api_usage",
+        return_value=2_000_000,
+    )
+
+    # When
+    charge_for_api_call_count_overages()  # type: ignore[no-untyped-call]
+
+    # Then
+    mock_chargebee_update.assert_not_called()
+    assert OrganisationAPIBilling.objects.count() == 0
+    assert log.has(
+        "overage.missing_allowance",
+        organisation__id=organisation.id,
+        level="error",
+    )
+
+
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+def test_charge_for_api_call_count_overages__no_subscription_id__does_not_charge(
+    organisation: Organisation,
+    mocker: MockerFixture,
+    enable_features: EnableFeaturesFixture,
+    log: StructuredLogCapture,
+) -> None:
+    # Given
+    now = timezone.now()
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        allowed_seats=10,
+        allowed_projects=3,
+        allowed_30d_api_calls=10_000,
+        chargebee_email="test@example.com",
+        current_billing_term_starts_at=now - timedelta(days=30),
+        current_billing_term_ends_at=now + timedelta(minutes=30),
+    )
+    organisation.subscription.subscription_id = None
+    organisation.subscription.plan = "scale-up-v2"
+    organisation.subscription.save()
+    OrganisationAPIUsageNotification.objects.create(
+        organisation=organisation,
+        percent_usage=100,
+        notified_at=now,
+    )
+
+    enable_features("api_usage_overage_charges")
+
+    mock_chargebee_update = mocker.patch(
+        "organisations.chargebee.chargebee.chargebee_client.Subscription.update",
+        autospec=True,
+    )
+    mocker.patch(
+        "organisations.tasks.get_current_api_usage",
+        return_value=2_000_000,
+    )
+
+    # When
+    charge_for_api_call_count_overages()  # type: ignore[no-untyped-call]
+
+    # Then
+    mock_chargebee_update.assert_not_called()
+    assert OrganisationAPIBilling.objects.count() == 0
+    assert log.has(
+        "overage.missing_subscription_id",
+        organisation__id=organisation.id,
+        level="error",
+    )
+
+
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
 def test_charge_for_api_call_count_overages__startup_plan__charges_correct_addon_quantity(
     organisation: Organisation,
     mocker: MockerFixture,
@@ -1322,7 +1431,7 @@ def test_charge_for_api_call_count_overages__startup_plan__charges_correct_addon
 def test_charge_for_api_call_count_overages__non_standard_plan__logs_unknown_plan_warning(
     organisation: Organisation,
     mocker: MockerFixture,
-    caplog: pytest.LogCaptureFixture,
+    log: StructuredLogCapture,
     enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given
@@ -1366,11 +1475,12 @@ def test_charge_for_api_call_count_overages__non_standard_plan__logs_unknown_pla
 
     # Then
     mock_chargebee_update.assert_not_called()
-    assert caplog.messages == [
-        "Unknown subscription plan when trying to bill for overages "
-        f"organisation.id={organisation.id} "
-        "organisation.subscription.plan='nonstandard-v2'"
-    ]
+    assert log.has(
+        "overage.unknown_plan",
+        organisation__id=organisation.id,
+        subscription__plan="nonstandard-v2",
+        level="error",
+    )
 
     assert OrganisationAPIBilling.objects.count() == 0
 
@@ -1379,7 +1489,7 @@ def test_charge_for_api_call_count_overages__non_standard_plan__logs_unknown_pla
 def test_charge_for_api_call_count_overages__billing_exception__logs_error_and_does_not_charge(
     organisation: Organisation,
     mocker: MockerFixture,
-    caplog: pytest.LogCaptureFixture,
+    log: StructuredLogCapture,
     enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given
@@ -1426,8 +1536,10 @@ def test_charge_for_api_call_count_overages__billing_exception__logs_error_and_d
     charge_for_api_call_count_overages()  # type: ignore[no-untyped-call]
 
     # Then
-    assert caplog.messages[0].startswith(
-        f"Unable to charge organisation {organisation.id} due to billing error"
+    assert log.has(
+        "overage.charge_failed",
+        organisation__id=organisation.id,
+        level="error",
     )
     mock_chargebee_update.assert_not_called()
     assert OrganisationAPIBilling.objects.count() == 0
@@ -1958,7 +2070,7 @@ def test_restrict_use_due_to_api_limit_grace_period_over__reduced_api_usage__doe
     organisation: Organisation,
     freezer: FrozenDateTimeFactory,
     mailoutbox: list[EmailMultiAlternatives],
-    caplog: pytest.LogCaptureFixture,
+    log: StructuredLogCapture,
     enable_features: EnableFeaturesFixture,
     settings: SettingsWrapper,
 ) -> None:
@@ -2009,9 +2121,287 @@ def test_restrict_use_due_to_api_limit_grace_period_over__reduced_api_usage__doe
     assert organisation.block_access_to_admin is False
     assert not hasattr(organisation, "api_limit_access_block")
     assert len(mailoutbox) == 0
-    assert caplog.messages == [
-        f"API use for organisation {organisation.id} has fallen to below limit, so not restricting use."
-    ]
+    assert log.has(
+        "restriction.skipped",
+        organisation__id=organisation.id,
+        api_usage=8000,
+        allowed_30d_api_calls=10_000,
+        level="info",
+    )
+
+
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+def test_restrict_use_due_to_api_limit_grace_period_over__organisation_errors__restricts_the_others(
+    mocker: MockerFixture,
+    organisation: Organisation,
+    freezer: FrozenDateTimeFactory,
+    enable_features: EnableFeaturesFixture,
+    settings: SettingsWrapper,
+    log: StructuredLogCapture,
+) -> None:
+    """
+    An organisation that cannot be processed used to abort the whole run, and
+    repeated runs then disabled the task altogether.
+    """
+    # Given
+    settings.ENABLE_API_USAGE_ALERTING = True
+    enable_features(
+        "api_limiting_stop_serving_flags",
+        "api_limiting_block_access_to_admin",
+    )
+
+    now = timezone.now()
+    # `Organisation` orders by id, so this one is visited after the failure.
+    surviving_organisation = Organisation.objects.create(name="Surviving Org")
+
+    for org in [organisation, surviving_organisation]:
+        OrganisationSubscriptionInformationCache.objects.create(
+            organisation=org,
+            allowed_30d_api_calls=10_000,
+        )
+        org.subscription.plan = FREE_PLAN_ID
+        org.subscription.save()
+        OrganisationAPIUsageNotification.objects.create(
+            notified_at=now,
+            organisation=org,
+            percent_usage=120,
+        )
+
+    def _get_current_api_usage(organisation_id: int, date_start: datetime) -> int:
+        if organisation_id == organisation.id:
+            raise RuntimeError("Influx is unavailable")
+        return 12_005
+
+    mocker.patch(
+        "organisations.tasks.get_current_api_usage",
+        side_effect=_get_current_api_usage,
+    )
+
+    freezer.move_to(now + timedelta(days=API_USAGE_GRACE_PERIOD + 1))
+
+    # When
+    restrict_use_due_to_api_limit_grace_period_over()
+
+    # Then
+    organisation.refresh_from_db()
+    surviving_organisation.refresh_from_db()
+
+    # The organisation that could not be processed is left untouched...
+    assert organisation.stop_serving_flags is False
+    assert organisation.block_access_to_admin is False
+
+    # ...and the run carries on to the organisations after it.
+    assert surviving_organisation.stop_serving_flags is True
+    assert surviving_organisation.block_access_to_admin is True
+
+    # Asserted so a swallowed failure cannot pass unnoticed.
+    assert log.has(
+        "restriction.failed",
+        organisation__id=organisation.id,
+        level="error",
+    )
+
+
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+def test_restrict_use_due_to_api_limit_grace_period_over__restriction_fails_to_save__sends_no_notification(
+    mocker: MockerFixture,
+    organisation: Organisation,
+    freezer: FrozenDateTimeFactory,
+    mailoutbox: list[EmailMultiAlternatives],
+    enable_features: EnableFeaturesFixture,
+    settings: SettingsWrapper,
+    log: StructuredLogCapture,
+) -> None:
+    """
+    The notification is not revocable, so it must follow the restriction it
+    announces rather than precede it.
+    """
+    # Given
+    settings.ENABLE_API_USAGE_ALERTING = True
+    enable_features(
+        "api_limiting_stop_serving_flags",
+        "api_limiting_block_access_to_admin",
+    )
+
+    # The organisation fixture already has admin and staff members, so the
+    # notification would have recipients were it sent.
+    now = timezone.now()
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        allowed_30d_api_calls=10_000,
+    )
+    organisation.subscription.plan = FREE_PLAN_ID
+    organisation.subscription.save()
+    OrganisationAPIUsageNotification.objects.create(
+        notified_at=now,
+        organisation=organisation,
+        percent_usage=120,
+    )
+    mocker.patch("organisations.tasks.get_current_api_usage", return_value=12_005)
+    mocker.patch.object(
+        Organisation,
+        "save",
+        side_effect=RuntimeError("the restriction could not be persisted"),
+    )
+
+    freezer.move_to(now + timedelta(days=API_USAGE_GRACE_PERIOD + 1))
+
+    # When
+    restrict_use_due_to_api_limit_grace_period_over()
+
+    # Then
+    assert mailoutbox == []
+    # Asserted so the absent notification cannot be a vacuous pass.
+    assert log.has(
+        "restriction.failed",
+        organisation__id=organisation.id,
+        level="error",
+    )
+
+
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+def test_restrict_use_due_to_api_limit_grace_period_over__access_block_fails__rolls_back_restriction(
+    mocker: MockerFixture,
+    organisation: Organisation,
+    freezer: FrozenDateTimeFactory,
+    enable_features: EnableFeaturesFixture,
+    settings: SettingsWrapper,
+    log: StructuredLogCapture,
+) -> None:
+    """
+    A restriction without its access block can never be lifted, by either the
+    unrestrict task or a plan upgrade, so the two must be written together.
+    """
+    # Given
+    settings.ENABLE_API_USAGE_ALERTING = True
+    enable_features(
+        "api_limiting_stop_serving_flags",
+        "api_limiting_block_access_to_admin",
+    )
+
+    now = timezone.now()
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        allowed_30d_api_calls=10_000,
+    )
+    organisation.subscription.plan = FREE_PLAN_ID
+    organisation.subscription.save()
+    OrganisationAPIUsageNotification.objects.create(
+        notified_at=now,
+        organisation=organisation,
+        percent_usage=120,
+    )
+    mocker.patch("organisations.tasks.get_current_api_usage", return_value=12_005)
+    mocker.patch.object(
+        APILimitAccessBlock.objects,
+        "create",
+        side_effect=RuntimeError("the access block could not be created"),
+    )
+
+    freezer.move_to(now + timedelta(days=API_USAGE_GRACE_PERIOD + 1))
+
+    # When
+    restrict_use_due_to_api_limit_grace_period_over()
+
+    # Then
+    # The restriction is rolled back with the access block, leaving the
+    # organisation eligible to be restricted again on the next run.
+    organisation.refresh_from_db()
+    assert organisation.stop_serving_flags is False
+    assert organisation.block_access_to_admin is False
+    # Asserted so the unrestricted organisation cannot be a vacuous pass.
+    assert log.has(
+        "restriction.failed",
+        organisation__id=organisation.id,
+        level="error",
+    )
+
+
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+def test_restrict_use_due_to_api_limit_grace_period_over__zero_allowed_api_calls__blocks_organisation(
+    mocker: MockerFixture,
+    organisation: Organisation,
+    freezer: FrozenDateTimeFactory,
+    enable_features: EnableFeaturesFixture,
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    settings.ENABLE_API_USAGE_ALERTING = True
+    enable_features(
+        "api_limiting_stop_serving_flags",
+        "api_limiting_block_access_to_admin",
+    )
+
+    now = timezone.now()
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        allowed_30d_api_calls=0,
+    )
+    organisation.subscription.plan = FREE_PLAN_ID
+    organisation.subscription.save()
+    OrganisationAPIUsageNotification.objects.create(
+        notified_at=now,
+        organisation=organisation,
+        percent_usage=120,
+    )
+    mocker.patch(
+        "organisations.tasks.get_current_api_usage",
+        return_value=MAX_API_CALLS_IN_FREE_PLAN + 1,
+    )
+
+    freezer.move_to(now + timedelta(days=API_USAGE_GRACE_PERIOD + 1))
+
+    # When
+    restrict_use_due_to_api_limit_grace_period_over()
+
+    # Then
+    # A zero allowance falls back to the free plan maximum rather than raising.
+    organisation.refresh_from_db()
+    assert organisation.stop_serving_flags is True
+    assert organisation.block_access_to_admin is True
+    assert organisation.api_limit_access_block
+
+
+def test_handle_api_usage_notification_for_organisation__email_fails__still_records_notification(
+    mocker: MockerFixture,
+    organisation: Organisation,
+    log: StructuredLogCapture,
+) -> None:
+    """
+    An unsendable email used to prevent the notification being recorded, so the
+    organisation never became eligible for restriction.
+    """
+    # Given
+    organisation.subscription.plan = FREE_PLAN_ID
+    organisation.subscription.max_api_calls = 100
+    organisation.subscription.save()
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        allowed_30d_api_calls=100,
+    )
+    mocker.patch(
+        "organisations.task_helpers.get_current_api_usage",
+        return_value=200,
+    )
+    mocker.patch.object(
+        EmailMultiAlternatives,
+        "send",
+        side_effect=RuntimeError("provider rejected the message"),
+    )
+
+    # When
+    handle_api_usage_notification_for_organisation(organisation)
+
+    # Then
+    assert OrganisationAPIUsageNotification.objects.filter(
+        organisation=organisation,
+        percent_usage=200,
+    ).exists()
+    assert log.has(
+        "email.send_failed",
+        organisation__id=organisation.id,
+        level="error",
+    )
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")

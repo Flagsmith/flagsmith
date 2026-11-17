@@ -746,6 +746,14 @@ export const AllTokens: StoryObj = {
               <code>var(--slate-0)</code>
             </td>
           </tr>
+          <tr>
+            <td>
+              <code>--always-black</code>
+            </td>
+            <td>
+              <code>var(--slate-1000)</code>
+            </td>
+          </tr>
         </tbody>
       </table>
       <h3>Chart colours</h3>

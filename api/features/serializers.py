@@ -8,16 +8,13 @@ from common.features.multivariate.serializers import (
     MultivariateFeatureStateValueSerializer,
 )
 from common.features.serializers import (
-    CreateSegmentOverrideFeatureStateSerializer,
+    CreateSegmentOverrideFeatureSegmentSerializer,
     FeatureStateValueSerializer,
 )
 from common.projects.permissions import VIEW_PROJECT
 from django.db import models
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
-from drf_writable_nested import (  # type: ignore[attr-defined]
-    WritableNestedModelSerializer,
-)
 from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 
@@ -46,6 +43,7 @@ from users.serializers import (
 )
 from util.drf_writable_nested.serializers import (
     DeleteBeforeUpdateWritableNestedModelSerializer,
+    WritableNestedModelSerializer,
 )
 
 from .constants import CONTROL_VARIANT_KEY, INTERSECTION, UNION
@@ -844,6 +842,48 @@ class EnvironmentFeatureStatesQuerySerializer(serializers.Serializer):  # type: 
         required=False,
         help_text="ID of the segment to filter segment overrides by.",
     )
+
+
+class CreateSegmentOverrideFeatureStateSerializer(WritableNestedModelSerializer):
+    feature_state_value = FeatureStateValueSerializer()
+    feature_segment = CreateSegmentOverrideFeatureSegmentSerializer(
+        required=False, allow_null=True
+    )
+    multivariate_feature_state_values = MultivariateFeatureStateValueSerializer(
+        many=True, required=False
+    )
+
+    class Meta:
+        model = FeatureState
+        fields = (
+            "id",
+            "feature",
+            "enabled",
+            "feature_state_value",
+            "feature_segment",
+            "deleted_at",
+            "uuid",
+            "created_at",
+            "updated_at",
+            "live_from",
+            "environment",
+            "identity",
+            "change_request",
+            "multivariate_feature_state_values",
+        )
+
+        read_only_fields = (
+            "id",
+            "deleted_at",
+            "uuid",
+            "created_at",
+            "updated_at",
+            "live_from",
+            "environment",
+            "identity",
+            "change_request",
+            "feature",
+        )
 
 
 class CustomCreateSegmentOverrideFeatureStateSerializer(

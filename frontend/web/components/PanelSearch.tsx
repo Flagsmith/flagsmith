@@ -9,7 +9,9 @@ import React, {
   CSSProperties,
 } from 'react'
 import { AutoSizer, List } from 'react-virtualized'
+import classNames from 'classnames'
 import Popover from './base/Popover'
+import BareButton from './base/forms/BareButton'
 import Input from './base/forms/Input'
 import Icon from './icons/Icon'
 import { IonIcon } from '@ionic/react'
@@ -21,6 +23,7 @@ import find from 'lodash/find'
 import orderBy from 'lodash/orderBy'
 import Panel from './base/grid/Panel'
 import Utils from 'common/utils/utils'
+import { colorIconAction, colorIconSecondary } from 'common/theme/tokens'
 import { SortOrder } from 'common/types/requests'
 
 export type SortOption = {
@@ -271,23 +274,27 @@ const PanelSearch = <T,>(props: PanelSearchProps<T>): ReactElement => {
             {sorting && (
               <Row className='mr-3 position-relative'>
                 <Popover
-                  renderTitle={(toggle: () => void, isActive: boolean) => (
-                    <a
-                      onClick={toggle}
-                      className='flex-row'
-                      style={{ color: isActive ? '#6837FC' : '#656d7b' }}
+                  aria-label='Sort'
+                  className='inline-modal--sm'
+                  renderTrigger={(triggerProps, isActive) => (
+                    <BareButton
+                      {...triggerProps}
+                      className={classNames(
+                        'flex-row',
+                        isActive ? 'text-action' : 'text-secondary',
+                      )}
                     >
                       <span className='mr-1'>
                         <Icon
                           name='height'
-                          fill={isActive ? '#6837FC' : '#656d7b'}
+                          fill={isActive ? colorIconAction : colorIconSecondary}
                         />
                       </span>
                       {currentSort ? currentSort.label : 'Unsorted'}
-                    </a>
+                    </BareButton>
                   )}
                 >
-                  {(toggle: () => void) => (
+                  {(close) => (
                     <div>
                       {sorting.map((sortOption, i) => (
                         <a
@@ -296,7 +303,7 @@ const PanelSearch = <T,>(props: PanelSearchProps<T>): ReactElement => {
                           href='#'
                           onClick={(e) => {
                             handleSort(e, sortOption)
-                            toggle()
+                            close()
                           }}
                         >
                           <Row space className='px-3 align-items-center py-2'>

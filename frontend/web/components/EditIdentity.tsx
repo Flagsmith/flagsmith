@@ -1,6 +1,9 @@
 import React, { FC, useEffect, useRef, useState } from 'react'
+import classNames from 'classnames'
 import { Identity } from 'common/types/responses'
 import { useUpdateIdentityMutation } from 'common/services/useIdentity'
+import { useHasPermission } from 'common/providers/Permission'
+import { EnvironmentPermission } from 'common/types/permissions.types'
 import Button from './base/forms/Button'
 import { Icon } from './icons'
 import ErrorMessage from './ErrorMessage'
@@ -21,6 +24,12 @@ const EditIdentity: FC<EditIdentityType> = ({ data, environmentId }) => {
   }, [data])
 
   const [updateIdentity, { error, isLoading }] = useUpdateIdentityMutation({})
+
+  const { permission: canEditAlias } = useHasPermission({
+    id: environmentId,
+    level: 'environment',
+    permission: EnvironmentPermission.ADMIN,
+  })
 
   const handleBlur = () => {
     onSubmit(alias)
@@ -49,6 +58,14 @@ const EditIdentity: FC<EditIdentityType> = ({ data, environmentId }) => {
   const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value.toLowerCase()
     setAlias(newValue.replace(/\n/g, ' ').trim())
+  }
+
+  if (!canEditAlias) {
+    return (
+      <span className={classNames('fw-normal', { 'text-muted': !alias })}>
+        {alias || 'None'}
+      </span>
+    )
   }
 
   return (

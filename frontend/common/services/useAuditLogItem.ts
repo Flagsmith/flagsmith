@@ -15,6 +15,15 @@ export const auditLogItemService = service
           url: `projects/${query.projectId}/audit/${query.id}/`,
         }),
       }),
+      getOrganisationAuditLogItem: builder.query<
+        Res['organisationAuditLogItem'],
+        Req['getOrganisationAuditLogItem']
+      >({
+        providesTags: (res) => [{ id: res?.id, type: 'AuditLogItem' }],
+        query: ({ id, organisationId }) => ({
+          url: `organisations/${organisationId}/audit/${id}/`,
+        }),
+      }),
       // END OF ENDPOINTS
     }),
   })
@@ -34,6 +43,7 @@ export async function getAuditLogItem(
 
 export const {
   useGetAuditLogItemQuery,
+  useGetOrganisationAuditLogItemQuery,
   // END OF EXPORTS
 } = auditLogItemService
 

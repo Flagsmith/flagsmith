@@ -1,3 +1,5 @@
+from collections.abc import Mapping
+
 import jsonpath_rfc9535
 from jsonpath_rfc9535.exceptions import JSONPathError
 from jsonpath_rfc9535.segments import JSONPathChildSegment, JSONPathSegment
@@ -9,10 +11,33 @@ from features.dependencies.types import (
     FeatureName,
     ReferencingSegment,
 )
-from features.models import Feature
+from features.models import Feature, FeatureState
+from segments.models import Segment, SegmentManagedBy
 from segments.types import SegmentRule
 
 _JSONPathStr = str
+
+
+def map_override_to_value_source(
+    override: FeatureState,
+    *,
+    segment: Segment,
+    environment_defaults: Mapping[int, FeatureState],
+) -> FeatureState:
+    """Return the feature state to serve the segment override's value from.
+
+    A dependency override only disables its feature, so its value, variants
+    and variant bucketing follow the feature's environment default. Every
+    other override serves its own.
+
+    :param environment_defaults: the environment defaults, by feature id.
+    """
+    if (
+        segment.managed_by == SegmentManagedBy.DEPENDENCY
+        and segment.feature_id == override.feature_id
+    ):
+        return environment_defaults.get(override.feature_id, override)
+    return override
 
 
 def map_rules_to_prerequisite_feature_names(

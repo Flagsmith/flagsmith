@@ -17,7 +17,7 @@ from evaluation.mappers import (
 from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureStateValue
 from projects.models import Project
-from segments.models import Condition, Segment, SegmentRule
+from segments.models import Condition, Segment, SegmentManagedBy, SegmentRule
 from util.engine_models.features.models import (
     FeatureModel,
     FeatureStateModel,
@@ -541,3 +541,60 @@ def test_map_engine_feature_state_to_feature_context__multivariate_override__ret
         ],
         "metadata": {"edge_feature_state": feature_state},
     }
+
+
+def test_map_environment_to_evaluation_context__dependency_override__serves_environment_default(
+    environment: Environment,
+    identity: Identity,
+    multivariate_feature: Feature,
+) -> None:
+    # Given
+    environment_default = FeatureState.objects.get(
+        environment=environment,
+        feature=multivariate_feature,
+        identity=None,
+        feature_segment=None,
+    )
+    environment_default.mv_hashing_salt = 999
+    environment_default.save()
+    segment = Segment.objects.create(
+        name="feature-depends-on-prerequisite",
+        project=multivariate_feature.project,
+        feature=multivariate_feature,
+        is_system_segment=True,
+        managed_by=SegmentManagedBy.DEPENDENCY,
+    )
+    override = FeatureState.objects.create(
+        feature=multivariate_feature,
+        environment=environment,
+        enabled=False,
+        feature_segment=FeatureSegment.objects.create(
+            feature=multivariate_feature, segment=segment, environment=environment
+        ),
+    )
+    override.feature_state_value.string_value = "stale"
+    override.feature_state_value.save()
+    MultivariateFeatureStateValue.objects.filter(feature_state=override).update(
+        percentage_allocation=0
+    )
+
+    # When
+    context = map_environment_to_evaluation_context(
+        environment=environment,
+        identity=identity,
+        segments=[segment],
+    )
+
+    # Then
+    environment_default_context = context["features"][multivariate_feature.name]
+    assert context["segments"][str(segment.pk)]["overrides"] == [
+        {
+            "key": "999",
+            "name": multivariate_feature.name,
+            "enabled": False,
+            "value": "control",
+            "variants": environment_default_context["variants"],
+            "priority": override.feature_segment.priority,
+            "metadata": {"feature_state": override},
+        }
+    ]
