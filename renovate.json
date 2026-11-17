@@ -68,10 +68,11 @@
       "rangeStrategy": "bump"
     },
     {
-      "description": "Bump packages in docs jsDelivr snippets and recompute their SRI hashes. TODO: once Renovate's html manager supports jsDelivr (https://github.com/renovatebot/renovate/pull/45015, https://github.com/renovatebot/renovate/issues/26937), switch to it and drop this post-upgrade task (and RENOVATE_ALLOWED_COMMANDS in .github/workflows/renovate.yml).",
+      "description": "Bump packages in docs jsDelivr snippets and recompute their SRI hashes. Releases must be 3 days old, so a compromised release is more likely to be caught before its hash is pinned. TODO: once Renovate's html manager supports jsDelivr (https://github.com/renovatebot/renovate/pull/45015, https://github.com/renovatebot/renovate/issues/26937), switch to it and drop this post-upgrade task (and RENOVATE_ALLOWED_COMMANDS in .github/workflows/renovate.yml).",
       "matchManagers": ["custom.regex"],
       "matchFileNames": ["docs/docs/**"],
       "enabled": true,
+      "minimumReleaseAge": "3 days",
       "addLabels": ["docs", "dependencies"],
       "semanticCommitScope": "Docs",
       "postUpgradeTasks": {
