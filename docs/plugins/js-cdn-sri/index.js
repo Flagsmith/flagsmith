@@ -1,9 +1,8 @@
 import { fileURLToPath } from 'node:url';
-import { algorithmOf, fetchIntegrity, findScripts, isImmutable, listDocs, readText } from './sri.mjs';
+import { algorithmOf, fetchIntegrity, findSnippets, listDocs, readText, snippetFormat } from './sri.mjs';
 
-// Fails the build if a jsDelivr `<script>` snippet in the docs doesn't load an exact version and file, is missing
-// `integrity` or `crossorigin`, or has a hash that doesn't match the file jsDelivr serves.
-// Fix hashes with `npm run update-cdn-sri`.
+// Fails the build if a jsDelivr URL in the docs isn't in a Renovate-marked snippet (see sri.mjs), or if a snippet's
+// hash doesn't match the file jsDelivr serves. Fix hashes with `npm run update-cdn-sri`.
 export default async function jsCdnSri() {
     return {
         name: 'js-cdn-sri',
@@ -11,28 +10,21 @@ export default async function jsCdnSri() {
             const errors = [];
             let fixable = false;
             for (const file of await listDocs()) {
-                for (const { src, integrity, hasCrossorigin } of findScripts(await readText(file))) {
-                    const where = `${fileURLToPath(file)}: ${src}`;
-                    if (!isImmutable(src)) {
-                        errors.push(`${where} must load an exact version and file path, e.g. pkg@1.2.3/index.js`);
-                        continue;
-                    }
-                    if (!integrity || !hasCrossorigin) {
-                        fixable = true;
-                        errors.push(`${where} needs both integrity and crossorigin attributes`);
-                        continue;
-                    }
+                const path = fileURLToPath(file);
+                const { snippets, unmarked } = findSnippets(await readText(file));
+                if (unmarked > 0) errors.push(`${path}: ${snippetFormat}`);
+                for (const { src, integrity } of snippets) {
                     let served;
                     try {
                         served = await fetchIntegrity(src, algorithmOf(integrity));
                     } catch (e) {
                         if (process.env.CI) throw e;
-                        console.error(`Could not verify SRI hash for ${where}: ${e}`);
+                        console.error(`Could not verify SRI hash for ${path}: ${src}: ${e}`);
                         continue;
                     }
                     if (served !== integrity) {
                         fixable = true;
-                        errors.push(`${where} pins ${integrity}, but jsDelivr serves ${served}`);
+                        errors.push(`${path}: ${src} pins ${integrity}, but jsDelivr serves ${served}`);
                     }
                 }
             }

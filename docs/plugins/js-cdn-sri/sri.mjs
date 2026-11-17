@@ -4,55 +4,53 @@ import { readdir, readFile } from 'node:fs/promises';
 // Docs pages whose jsDelivr `<script>` snippets must carry a Subresource Integrity hash.
 export const docsDir = new URL('../../docs/', import.meta.url);
 
-// Opening `<script>` tags, and their attributes in any order.
-const scriptTag = /<script\b[^>]*>/gi;
-const attr = (name) => new RegExp(`\\s${name}\\s*=\\s*(["'])(.*?)\\1`, 'i');
-const srcAttr = attr('src');
-const integrityAttr = attr('integrity');
-// `crossorigin` may be a bare attribute, which means `anonymous`.
-const crossoriginAttr = /\scrossorigin(?=[\s=>/])/i;
-
-const jsDelivrNpm = /^https:\/\/cdn\.jsdelivr\.net\/npm\//;
-// jsDelivr only serves a fixed file for an exact version and an explicit file path. Ranges, `latest` and default
-// files can change, so they can't be pinned with SRI: https://www.jsdelivr.com/using-sri-with-dynamic-files
-const immutableUrl =
-    /^https:\/\/cdn\.jsdelivr\.net\/npm\/(?:@[^/@]+\/)?[^/@]+@\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?\/[^?#]+$/;
-export const isImmutable = (src) => immutableUrl.test(src);
+// jsDelivr snippets are marked with the comment Renovate uses to bump them (see `customManagers` in renovate.json),
+// directly above the code block (in an .mdx file, so Prettier keeps the comment intact):
+//
+//   {/* renovate: datasource=npm depName=@flagsmith/flagsmith */}
+//
+//   ```html
+//   <script src="https://cdn.jsdelivr.net/npm/@flagsmith/flagsmith@1.2.3/index.js" integrity="sha384-..." crossorigin="anonymous"></script>
+//   ```
+//
+// Inside a marked block the tag must have exactly this form: an exact version and file path, so the file can't change
+// under the hash (https://www.jsdelivr.com/using-sri-with-dynamic-files), then `integrity` and `crossorigin`.
+const markedBlock = /\{\/\* renovate: datasource=npm depName=(\S+) \*\/\}\n\s*```[^\n]*\n([\s\S]*?)\n```/g;
+const escape = (s) => s.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&');
+const snippetTag = (depName) =>
+    new RegExp(
+        `<script src="(https://cdn\\.jsdelivr\\.net/npm/${escape(depName)}@\\d+\\.\\d+\\.\\d+(?:-[0-9A-Za-z.-]+)?/[^"?#]+)"` +
+            ` integrity="((?:sha256|sha384|sha512)-[A-Za-z0-9+/=]+)" crossorigin="anonymous"></script>`,
+        'g',
+    );
+const jsDelivr = /cdn\.jsdelivr\.net/g;
+export const snippetFormat =
+    'jsDelivr snippets must sit in a code block directly below `{/* renovate: datasource=npm depName=<package> */}` ' +
+    'and use `<script src="https://cdn.jsdelivr.net/npm/<package>@<x.y.z>/<file>" integrity="..." crossorigin="anonymous"></script>`';
 
 export const listDocs = async () =>
     (await readdir(docsDir, { recursive: true }))
         .filter((file) => /\.mdx?$/.test(file))
         .map((file) => new URL(file, docsDir));
 
-// Finds every jsDelivr npm `<script>` tag in a file, with its `integrity` value (or null if missing) and whether it
-// has a `crossorigin` attribute.
-export const findScripts = (text) =>
-    [...text.matchAll(scriptTag)]
-        .map(([tag]) => ({
-            tag,
-            src: tag.match(srcAttr)?.[2],
-            integrity: tag.match(integrityAttr)?.[2] ?? null,
-            hasCrossorigin: crossoriginAttr.test(tag),
-        }))
-        .filter(({ src }) => src && jsDelivrNpm.test(src));
-
-// Returns `tag` with its `integrity` set to `hash`, adding `crossorigin="anonymous"` if missing.
-export const withIntegrity = (tag, hash) => {
-    let fixed = integrityAttr.test(tag)
-        ? tag.replace(integrityAttr, (_, quote) => ` integrity=${quote}${hash}${quote}`)
-        : tag.replace(srcAttr, (match) => `${match} integrity="${hash}"`);
-    if (!crossoriginAttr.test(fixed)) {
-        fixed = fixed.replace(integrityAttr, (match) => `${match} crossorigin="anonymous"`);
+// Finds the marked jsDelivr snippets in a file. `unmarked` counts jsDelivr URLs that aren't in one, which the build
+// rejects so no snippet escapes the check.
+export const findSnippets = (text) => {
+    const snippets = [];
+    for (const [, depName, block] of text.matchAll(markedBlock)) {
+        for (const [tag, src, integrity] of block.matchAll(snippetTag(depName))) {
+            snippets.push({ tag, src, integrity });
+        }
     }
-    return fixed;
+    const unmarked = (text.match(jsDelivr)?.length ?? 0) - snippets.length;
+    return { snippets, unmarked };
 };
 
-// Algorithm of an SRI value such as `sha384-...`, defaulting to sha384 for new hashes.
-export const algorithmOf = (integrity) => integrity?.match(/^(sha256|sha384|sha512)-/)?.[1] ?? 'sha384';
+export const algorithmOf = (integrity) => integrity.split('-')[0];
 
 // SRI hash of a file as served by jsDelivr. Files are fetched once per URL.
 const files = new Map();
-export const fetchIntegrity = async (src, algorithm = 'sha384') => {
+export const fetchIntegrity = async (src, algorithm) => {
     if (!files.has(src)) files.set(src, fetchFile(src));
     return `${algorithm}-${createHash(algorithm)
         .update(await files.get(src))
