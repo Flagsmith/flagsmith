@@ -368,6 +368,8 @@ $side-width: 800px;
     .modal-content {
       border-radius: 0;
       min-height: 100vh;
+      // Fits the visible screen when the mobile browser toolbar shows
+      min-height: 100dvh;
     }
   }
 }
