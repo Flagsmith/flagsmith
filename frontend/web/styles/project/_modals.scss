@@ -343,6 +343,11 @@ $side-width: 800px;
   }
 }
 
+// Lets a long drawer title truncate instead of pushing its buttons out
+.side-modal .modal-title {
+  min-width: 0;
+}
+
 // Feature drawer: no space above the tabs, 24px below, at every width
 .side-modal.create-feature-modal {
   .modal-body {

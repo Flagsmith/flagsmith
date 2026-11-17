@@ -85,7 +85,7 @@ const RuleConditionRow: React.FC<RuleConditionRowProps> = ({
         </Row>
       )}
       <div className='d-flex flex-row align-items-center gap-1 flex-wrap flex-sm-nowrap'>
-        <div className='d-flex flex-grow-1 flex-column flex-sm-row rule align-items-stretch align-items-sm-center justify-content-between gap-1 col-12 col-sm-8 col-md-10'>
+        <div className='d-flex flex-grow-1 flex-column flex-sm-row rule align-items-stretch align-items-sm-center justify-content-between gap-1 col-12 col-sm-8 col-md-10 mx-0'>
           <div className='col-12 col-sm-4 col-md-4'>
             <RuleConditionPropertySelect
               dataTest={`${dataTest}-property-${ruleIndex}`}
