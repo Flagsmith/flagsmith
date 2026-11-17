@@ -2,6 +2,8 @@ import { FC } from 'react'
 import { SegmentManagedBy } from 'common/types/responses'
 import Tooltip from 'components/Tooltip'
 import Icon, { IconName } from 'components/icons/Icon'
+import Chip from 'components/base/Chip'
+import { colorIconSecondary } from 'common/theme/tokens'
 
 const MANAGED_BY_LABELS: Record<SegmentManagedBy, string> = {
   '': 'Flagsmith',
@@ -28,15 +30,16 @@ const SystemSegmentOverrideLabel: FC<SystemSegmentOverrideLabelProps> = ({
   managedBy,
 }) => (
   <>
-    <Icon name={MANAGED_BY_ICONS[managedBy]} width={16} fill='#9DA4AE' />
+    <Icon
+      name={MANAGED_BY_ICONS[managedBy]}
+      width={16}
+      fill={colorIconSecondary}
+    />
     <Tooltip
       title={
-        <div
-          data-test='system-segment-override-label'
-          className='chip chip--xs ms-2'
-        >
+        <Chip size='xs' className='ms-2'>
           Managed by {MANAGED_BY_LABELS[managedBy]}
-        </div>
+        </Chip>
       }
     >
       System segment overrides can't be changed here.
