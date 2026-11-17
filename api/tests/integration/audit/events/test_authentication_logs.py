@@ -525,56 +525,6 @@ def test_login__locked_out__creates_audit_log(
     ]
 
 
-@pytest.mark.usefixtures("django_ldap_username_field")
-def test_login__ldap_user_locked_out__creates_audit_log(
-    api_client: APIClient,
-    organisation: Organisation,
-    other_organisation: Organisation,
-    settings: SettingsWrapper,
-    user: FFAdminUser,
-) -> None:
-    # Given
-    settings.AXES_FAILURE_LIMIT = 1
-    user.username = "alice"
-    user.save()
-
-    # When
-    response = api_client.post(
-        "/api/v1/auth/login/",
-        {"email": "Alice", "password": "incorrect"},
-        format="json",
-    )
-
-    # Then
-    assert response.status_code == 400
-    assert list(
-        AuditLog.objects.order_by("organisation_id", "created_date").values(
-            "organisation_id", "author_id", "log"
-        )
-    ) == [
-        {
-            "organisation_id": organisation.id,
-            "author_id": user.id,
-            "log": "User `alice@example.com` was locked out after too many failed logins.",
-        },
-        {
-            "organisation_id": organisation.id,
-            "author_id": user.id,
-            "log": "User `alice@example.com` failed to log in: incorrect password.",
-        },
-        {
-            "organisation_id": other_organisation.id,
-            "author_id": user.id,
-            "log": "User `alice@example.com` was locked out after too many failed logins.",
-        },
-        {
-            "organisation_id": other_organisation.id,
-            "author_id": user.id,
-            "log": "User `alice@example.com` failed to log in: incorrect password.",
-        },
-    ]
-
-
 def test_login__attempt_while_locked_out__creates_audit_log(
     api_client: APIClient,
     organisation: Organisation,

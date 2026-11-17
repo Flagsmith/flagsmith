@@ -283,19 +283,6 @@ def staff_user(django_user_model):  # type: ignore[no-untyped-def]
 
 
 @pytest.fixture()
-def django_ldap_username_field(
-    django_user_model: type[FFAdminUser],
-    monkeypatch: pytest.MonkeyPatch,
-    settings: SettingsWrapper,
-) -> str:
-    """Mirror `LDAP_ENABLED`, where users log in with their LDAP username."""
-    ldap_username_field = "username"
-    monkeypatch.setattr(django_user_model, "USERNAME_FIELD", ldap_username_field)
-    settings.AXES_USERNAME_FORM_FIELD = ldap_username_field
-    return ldap_username_field
-
-
-@pytest.fixture()
 def staff_client(staff_user):  # type: ignore[no-untyped-def]
     client = APIClient()
     client.force_authenticate(user=staff_user)

@@ -1,4 +1,7 @@
+import typing
+
 import pytest
+from django.contrib.auth.models import AbstractUser
 from django.test import RequestFactory
 from djoser.serializers import TokenCreateSerializer  # type: ignore[import-untyped]
 from pytest_django.fixtures import SettingsWrapper
@@ -169,6 +172,17 @@ def test_invite_link_validation__invalid_hash__raises_permission_denied(
 
     # Then
     assert exc_info.value.detail == USER_REGISTRATION_WITHOUT_INVITE_ERROR_MESSAGE
+
+
+@pytest.fixture
+def django_ldap_username_field(
+    django_user_model: type[AbstractUser],
+) -> typing.Generator[str, None, None]:
+    ldap_username_field = "username"
+    username_field = django_user_model.USERNAME_FIELD
+    django_user_model.USERNAME_FIELD = ldap_username_field
+    yield ldap_username_field
+    django_user_model.USERNAME_FIELD = username_field
 
 
 # Previously, Djoser's default `TokenCreateSerializer` only respected the
