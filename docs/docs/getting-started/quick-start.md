@@ -4,8 +4,6 @@ sidebar_label: Quick Start
 sidebar_position: 2
 ---
 
-import CodeBlock from '@theme/CodeBlock'; import { JsCdnScript } from '@site/src/components/SdkVersions.js';
-
 # Flagsmith Quick Start Guide
 
 This tutorial will guide you through the core concepts of integrating Flagsmith into your application in four simple steps:
@@ -72,7 +70,9 @@ The page looks like this:
 
 For the purposes of this quickstart tutorial, we will import the SDK inline into our web page:
 
-<CodeBlock><JsCdnScript /></CodeBlock>
+```html
+<script src="https://cdn.jsdelivr.net/npm/@flagsmith/flagsmith@12.5.0/index.js" integrity="sha384-MqtZafl7JG1sX3PWTMcsks/3Mhp9QDc8TuZRyU0/fsk6YGj542Y7Fb49eFYZ7NYT" crossorigin="anonymous"></script>
+```
 
 :::tip
 
@@ -129,13 +129,14 @@ the state of the flag and set the display visibility based on the result.
 
 Our entire web page now reads like this:
 
-<CodeBlock>{ `<!doctype html>
+```html
+<!doctype html>
 
 <html lang="en">
  <head>
   <meta charset="utf-8" />
   <title>Flagsmith Quickstart Guide</title>
-  `}<JsCdnScript />{`
+  <script src="https://cdn.jsdelivr.net/npm/@flagsmith/flagsmith@12.5.0/index.js" integrity="sha384-MqtZafl7JG1sX3PWTMcsks/3Mhp9QDc8TuZRyU0/fsk6YGj542Y7Fb49eFYZ7NYT" crossorigin="anonymous"></script>
   <script>
    flagsmith.init({
     environmentID: 'ZfmJTbLQZrhZVHkVhXbsNi',
@@ -154,8 +155,8 @@ Our entire web page now reads like this:
    <input type="submit" value="Flagsmith Quickstart Button!" />
   </div>
  </body>
-</html>`}
-</CodeBlock>
+</html>
+```
 
 If we go back and refresh our browser, you will see that the button has now disappeared.
 

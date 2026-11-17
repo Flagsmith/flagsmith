@@ -1,24 +1,34 @@
-import { readFile } from 'node:fs/promises';
-import { cdnUrl, fetchIntegrity, pinnedFile } from './sri.mjs';
+import { fileURLToPath } from 'node:url';
+import { algorithmOf, fetchIntegrity, findScripts, listDocs, readText } from './sri.mjs';
 
-// Fails the build if the pinned hash doesn't match what jsDelivr serves, so a stale or tampered pin can't ship.
+// Fails the build if a jsDelivr `<script>` snippet in the docs is missing an `integrity` attribute, or if its hash
+// doesn't match the file jsDelivr serves. Fix hashes with `npm run update-cdn-sri`.
 export default async function jsCdnSri() {
     return {
         name: 'js-cdn-sri',
         async loadContent() {
-            const { version, integrity } = JSON.parse(await readFile(pinnedFile, 'utf8'));
-            let served;
-            try {
-                served = await fetchIntegrity(version);
-            } catch (e) {
-                if (process.env.CI) throw e;
-                console.error(`Could not verify the pinned JS SDK SRI hash: ${e}`);
-                return;
+            const errors = [];
+            for (const file of await listDocs()) {
+                for (const { src, integrity } of findScripts(await readText(file))) {
+                    const where = `${fileURLToPath(file)}: ${src}`;
+                    if (!integrity) {
+                        errors.push(`${where} has no integrity attribute`);
+                        continue;
+                    }
+                    let served;
+                    try {
+                        served = await fetchIntegrity(src, algorithmOf(integrity));
+                    } catch (e) {
+                        if (process.env.CI) throw e;
+                        console.error(`Could not verify SRI hash for ${where}: ${e}`);
+                        continue;
+                    }
+                    if (served !== integrity) errors.push(`${where} pins ${integrity}, but jsDelivr serves ${served}`);
+                }
             }
-            if (served !== integrity) {
+            if (errors.length) {
                 throw new Error(
-                    `${cdnUrl(version)} has integrity ${served}, but ${pinnedFile.pathname} pins ${integrity}. ` +
-                        'Run `npm run update-js-cdn-sri` if this is an intentional SDK bump; otherwise investigate.',
+                    `${errors.join('\n')}\nRun \`npm run update-cdn-sri\` if this is an intentional version bump; otherwise investigate.`,
                 );
             }
         },

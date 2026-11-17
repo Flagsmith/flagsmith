@@ -1,7 +1,6 @@
 import { usePluginData } from '@docusaurus/useGlobalData';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import { maxSatisfying } from 'semver';
-import pinned from '@site/plugins/js-cdn-sri/pinned.json';
 
 const Version = ({ sdk, spec = '*', options = {} }) => {
     const {
@@ -30,8 +29,3 @@ export const RustVersion = ({ spec = '~2' }) => Version({ sdk: 'rust', spec });
 export const JsVersion = ({ spec = '^12' }) => Version({ sdk: 'js', spec });
 export const NodejsVersion = ({ spec = '^9' } = {}) => Version({ sdk: 'nodejs', spec });
 export const FlutterVersion = ({ spec = '~6' }) => Version({ sdk: 'flutter', spec });
-
-// `<script>` tag that loads the JS SDK from jsDelivr, pinned to an exact version with a Subresource Integrity hash.
-// The pin is version-controlled in plugins/js-cdn-sri/pinned.json and verified against jsDelivr at build time.
-export const JsCdnScript = () =>
-    `<script src="https://cdn.jsdelivr.net/npm/@flagsmith/flagsmith@${pinned.version}/index.js" integrity="${pinned.integrity}" crossorigin="anonymous"></script>`;

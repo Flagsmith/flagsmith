@@ -18,7 +18,7 @@
     "clean-api-docs": "docusaurus clean-api-docs",
     "gen-api-docs:version": "docusaurus gen-api-docs:version",
     "clean-api-docs:version": "docusaurus clean-api-docs:version",
-    "update-js-cdn-sri": "node plugins/js-cdn-sri/update.mjs"
+    "update-cdn-sri": "node plugins/js-cdn-sri/update.mjs"
   },
   "dependencies": {
     "@amplitude/analytics-browser": "^2.12.2",

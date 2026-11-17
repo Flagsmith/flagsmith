@@ -1,14 +1,20 @@
-// Pins <JsCdnScript /> to a JS SDK version and records its SRI hash.
-// Usage: npm run update-js-cdn-sri [-- <version>]  (defaults to the npm `latest` dist-tag)
+// Sets the `integrity` attribute of every jsDelivr `<script>` snippet in the docs to the hash of the file it loads.
+// Run after changing a snippet's version. Renovate runs it when bumping @flagsmith/flagsmith (see renovate.json).
 import { writeFile } from 'node:fs/promises';
-import { fetchIntegrity, pinnedFile } from './sri.mjs';
+import { fileURLToPath } from 'node:url';
+import { algorithmOf, fetchIntegrity, findScripts, listDocs, readText } from './sri.mjs';
 
-let version = process.argv[2];
-if (!version) {
-    const response = await fetch('https://registry.npmjs.org/@flagsmith/flagsmith/latest');
-    if (!response.ok) throw new Error(`npm registry: HTTP ${response.status}`);
-    ({ version } = await response.json());
+for (const file of await listDocs()) {
+    const text = await readText(file);
+    let updated = text;
+    for (const { tag, src, integrity } of findScripts(text)) {
+        const hash = await fetchIntegrity(src, algorithmOf(integrity));
+        if (hash === integrity) continue;
+        const fixed = integrity
+            ? tag.replace(`integrity="${integrity}"`, `integrity="${hash}"`)
+            : tag.replace(`src="${src}"`, `src="${src}" integrity="${hash}" crossorigin="anonymous"`);
+        updated = updated.replaceAll(tag, fixed);
+        console.log(`${fileURLToPath(file)}: ${src} -> ${hash}`);
+    }
+    if (updated !== text) await writeFile(file, updated);
 }
-const integrity = await fetchIntegrity(version);
-await writeFile(pinnedFile, JSON.stringify({ version, integrity }, null, 4) + '\n');
-console.log(`Pinned @flagsmith/flagsmith@${version} (${integrity})`);

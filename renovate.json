@@ -18,6 +18,18 @@
       "enabled": false
     }
   },
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "JS SDK version in docs jsDelivr <script> snippets",
+      "managerFilePatterns": ["/^docs/docs/.+\\.mdx?$/"],
+      "matchStrings": [
+        "https://cdn\\.jsdelivr\\.net/npm/(?<depName>@flagsmith/flagsmith)@(?<currentValue>\\d+\\.\\d+\\.\\d+)/"
+      ],
+      "datasourceTemplate": "npm",
+      "versioningTemplate": "npm"
+    }
+  ],
   "packageRules": [
     {
       "matchManagers": ["pep621"],
@@ -54,6 +66,20 @@
       "matchPackageNames": ["flagsmith-common", "flagsmith-private"],
       "enabled": true,
       "rangeStrategy": "bump"
+    },
+    {
+      "description": "Bump the JS SDK in docs jsDelivr snippets and recompute their SRI hashes",
+      "matchManagers": ["custom.regex"],
+      "matchPackageNames": ["@flagsmith/flagsmith"],
+      "matchFileNames": ["docs/**"],
+      "enabled": true,
+      "addLabels": ["docs", "dependencies"],
+      "semanticCommitScope": "Docs",
+      "postUpgradeTasks": {
+        "commands": ["node docs/plugins/js-cdn-sri/update.mjs"],
+        "fileFilters": ["docs/docs/**"],
+        "executionMode": "branch"
+      }
     },
     {
       "description": "Re-enable lock file maintenance for npm, which security:only-security-updates disables. Keep last with an empty scope to ensure commit scope is applied correctly.",
