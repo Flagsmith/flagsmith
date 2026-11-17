@@ -34,6 +34,7 @@ const TableGroupsFilter: FC<TableFilterType> = ({
 
   return (
     <TableFilterOptions
+      label='Groups'
       className={className}
       title={
         <Row>
