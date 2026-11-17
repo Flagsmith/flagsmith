@@ -7,6 +7,7 @@ import AccountStore from 'common/stores/account-store'
 import Project from 'common/project'
 import Icon from 'components/icons/Icon'
 import OverflowNav from 'components/navigation/OverflowNav'
+import AuditLogIcon from 'components/icons/AuditLogIcon'
 
 type OrganisationNavType = {}
 
@@ -42,6 +43,16 @@ const OrganisationNavbar: FC<OrganisationNavType> = ({}) => {
           Usage
         </NavSubLink>
       )}
+      {AccountStore.isAdmin() &&
+        Utils.getFlagsmithHasFeature('organisation_audit_log') && (
+          <NavSubLink
+            icon={<AuditLogIcon />}
+            id='organisation-audit-log-link'
+            to={`/organisation/${AccountStore.getOrganisation().id}/audit-log`}
+          >
+            Audit Log
+          </NavSubLink>
+        )}
       {AccountStore.isAdmin() &&
         Utils.getFlagsmithHasFeature('organisation_integrations') && (
           <NavSubLink

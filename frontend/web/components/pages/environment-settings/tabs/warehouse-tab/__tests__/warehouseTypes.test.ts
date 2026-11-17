@@ -6,6 +6,7 @@ import {
   getWarehouseTypeStatus,
   isFlagsmithDatabaseConnection,
   MinimumPlans,
+  shouldShowSendFirstEvent,
   WarehouseTypeOption,
   WarehouseTypeStatus,
 } from 'components/pages/environment-settings/tabs/warehouse-tab/warehouseTypes'
@@ -94,6 +95,48 @@ describe('isFlagsmithDatabaseConnection', () => {
     [{ config: {}, warehouse_type: 'flagsmith' }, false],
   ])('%j => %s', (connection, expected) => {
     expect(isFlagsmithDatabaseConnection(connection)).toBe(expected)
+  })
+})
+
+describe('shouldShowSendFirstEvent', () => {
+  const byo = { config: {}, warehouse_type: 'clickhouse' } as const
+  const flagsmithDatabase = {
+    config: { source: 'flagsmith_database' },
+    warehouse_type: 'postgres',
+  } as const
+  it.each<
+    [
+      Pick<WarehouseConnection, 'config' | 'warehouse_type'>,
+      Pick<WarehouseConnection, 'status' | 'total_events_received'>,
+      boolean,
+      boolean,
+    ]
+  >([
+    [byo, { status: 'connected', total_events_received: 0 }, true, true],
+    [byo, { status: 'connected', total_events_received: 0 }, false, false],
+    [byo, { status: 'connected', total_events_received: 3 }, true, false],
+    [
+      flagsmithDatabase,
+      { status: 'connected', total_events_received: 0 },
+      false,
+      true,
+    ],
+    [
+      { config: {}, warehouse_type: 'flagsmith' },
+      { status: 'created', total_events_received: null },
+      true,
+      true,
+    ],
+    [
+      { config: {}, warehouse_type: 'flagsmith' },
+      { status: 'pending_connection', total_events_received: null },
+      true,
+      false,
+    ],
+  ])('%j %j isSaas=%s => %s', (type, state, isSaas, expected) => {
+    expect(shouldShowSendFirstEvent({ ...type, ...state }, isSaas)).toBe(
+      expected,
+    )
   })
 })
 

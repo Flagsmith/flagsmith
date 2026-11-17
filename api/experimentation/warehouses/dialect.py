@@ -26,6 +26,10 @@ class Dialect(Protocol):
 
     def time_bucket(self, expr: str, granularity: ExposureGranularity) -> str: ...
 
+    def max_utc(self, expr: str) -> str:
+        """Typed as UTC, so the driver never decodes it in the server's timezone."""
+        ...
+
     def float_or_zero(self, expr: str) -> str: ...
 
     def sum_if(self, expr: str, cond: str) -> str:
@@ -79,6 +83,9 @@ class ClickHouseDialect:
 
     def time_bucket(self, expr: str, granularity: ExposureGranularity) -> str:
         return f"{_CLICKHOUSE_BUCKET_FUNCTIONS[granularity]}({expr}, 'UTC')"
+
+    def max_utc(self, expr: str) -> str:
+        return f"toTimeZone(max({expr}), 'UTC')"
 
     def float_or_zero(self, expr: str) -> str:
         return f"toFloat64OrZero({expr})"
@@ -137,6 +144,9 @@ class DatabricksDialect:
     def time_bucket(self, expr: str, granularity: ExposureGranularity) -> str:
         seconds = _BUCKET_SECONDS[granularity]
         return f"timestamp_seconds(floor(unix_seconds({expr}) / {seconds}) * {seconds})"
+
+    def max_utc(self, expr: str) -> str:
+        return f"max({expr})"
 
     def float_or_zero(self, expr: str) -> str:
         return f"coalesce(try_cast({expr} AS DOUBLE), 0)"
@@ -203,6 +213,9 @@ class PostgresDialect:
     def time_bucket(self, expr: str, granularity: ExposureGranularity) -> str:
         unit = _POSTGRES_BUCKET_UNITS[granularity]
         return f"date_trunc('{unit}', {expr} AT TIME ZONE 'UTC') AT TIME ZONE 'UTC'"
+
+    def max_utc(self, expr: str) -> str:
+        return f"max({expr})"
 
     def float_or_zero(self, expr: str) -> str:
         return (

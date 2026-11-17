@@ -83,4 +83,23 @@ test.describe('Invite Tests', () => {
     await expect(page.getByText('You already have an account')).toBeVisible()
     await expect(page.locator(byId('email'))).toHaveValue(E2E_USER)
   });
+
+  test('Switching from login to signup keeps credentials and shows name fields as text @oss', async ({ page }) => {
+    const { click, setText, waitForElementVisible } = createHelpers(page);
+
+    log('Open login and enter credentials')
+    await page.goto('/login')
+    await waitForElementVisible(byId('password'))
+    await setText(byId('email'), E2E_USER)
+    await setText(byId('password'), PASSWORD)
+
+    log('Switch to signup')
+    await click(byId('jsSignup'))
+    await waitForElementVisible(byId('firstName'))
+    await expect(page.locator(byId('firstName'))).toHaveAttribute('type', 'text')
+    await expect(page.locator(byId('lastName'))).toHaveAttribute('type', 'text')
+    await expect(page.locator(byId('password'))).toHaveAttribute('type', 'password')
+    await expect(page.locator(byId('email'))).toHaveValue(E2E_USER)
+    await expect(page.locator(byId('password'))).toHaveValue(PASSWORD)
+  });
 });

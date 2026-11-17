@@ -26,7 +26,7 @@ describe('getClickHouseOnboardingSql', () => {
 
     expect(sql).toContain('CREATE USER IF NOT EXISTS <USER>')
     expect(sql).toContain(
-      "IDENTIFIED WITH sha256_password BY '<CHANGE_ME_PASSWORD>';",
+      "IDENTIFIED WITH sha256_password BY '<YOUR_PASSWORD>';",
     )
     expect(sql).toContain(
       'GRANT SELECT, INSERT ON flagsmith_exp.events TO <USER>;',

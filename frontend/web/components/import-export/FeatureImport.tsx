@@ -299,22 +299,28 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
         </div>
       </div>
       <div className='my-2'>
-        <strong>Merge Strategy</strong>
-        <div className='mt-2'>
+        <strong id='import-strategy-label'>Merge Strategy</strong>
+        <div
+          role='radiogroup'
+          aria-labelledby='import-strategy-label'
+          className='d-flex flex-column gap-1 mt-2'
+        >
           <Radio
-            label={'Skip  (existing features will be ignored)'}
-            onChange={() => setStrategy('SKIP')}
+            name='import-strategy'
+            value='SKIP'
             checked={strategy === 'SKIP'}
-          />
-        </div>
-        <div>
+            onChange={setStrategy}
+          >
+            Skip (existing features will be ignored)
+          </Radio>
           <Radio
-            label={
-              'Overwrite Destructive (existing features will be overwritten).'
-            }
-            onChange={() => setStrategy('OVERWRITE_DESTRUCTIVE')}
+            name='import-strategy'
+            value='OVERWRITE_DESTRUCTIVE'
             checked={strategy === 'OVERWRITE_DESTRUCTIVE'}
-          />
+            onChange={setStrategy}
+          >
+            Overwrite Destructive (existing features will be overwritten).
+          </Radio>
         </div>
       </div>
       {strategy === 'OVERWRITE_DESTRUCTIVE' && (

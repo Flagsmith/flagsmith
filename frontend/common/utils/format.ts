@@ -51,10 +51,15 @@ const Format = {
     }
     const suffixes = ['', 'K', 'M', 'B', 'T']
     const numDigits = Math.floor(Math.log10(number)) + 1
-    const suffixIndex = Math.floor((numDigits - 1) / 3)
+    let suffixIndex = Math.floor((numDigits - 1) / 3)
 
     let shortValue: number = number / Math.pow(1000, suffixIndex)
     shortValue = +shortValue.toFixed(1)
+    // Rounding can carry into the next magnitude: 999950 > 1000K > 1M
+    if (shortValue >= 1000 && suffixIndex < suffixes.length - 1) {
+      suffixIndex++
+      shortValue = +(number / Math.pow(1000, suffixIndex)).toFixed(1)
+    }
 
     return shortValue + suffixes[suffixIndex]
   },

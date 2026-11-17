@@ -179,22 +179,23 @@ class Segment(
         cloned_segment = deepcopy(self)
         cloned_segment.pk = None
         cloned_segment.uuid = uuid.uuid4()
-        cloned_segment.version_of = None  # Unset for now
-        cloned_segment.version = 0  # Unset for now
+        if is_revision:
+            cloned_segment.version_of = self
+            cloned_segment.version = self.version
+        else:
+            cloned_segment.version_of = None  # Set to itself once created
+            cloned_segment.version = 1
         for attr_name, value in extra_attrs.items():
             setattr(cloned_segment, attr_name, value)
         cloned_segment.save()
 
-        cloned_segment.copy_rules_and_conditions_from(self)
+        if cloned_segment.version_of is None:
+            cloned_segment.version_of = cloned_segment
+            Segment.objects.filter(pk=cloned_segment.pk).update(
+                version_of=cloned_segment,
+            )
 
-        # Handle versioning
-        version_of = self if is_revision else cloned_segment
-        cloned_segment.version_of = extra_attrs.get("version_of", version_of)
-        cloned_segment.version = self.version if is_revision else 1
-        Segment.objects.filter(pk=cloned_segment.pk).update(
-            version_of=cloned_segment.version_of,
-            version=cloned_segment.version,
-        )
+        cloned_segment.copy_rules_and_conditions_from(self)
 
         # Increase self version
         if is_revision:

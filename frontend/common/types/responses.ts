@@ -20,6 +20,10 @@ export interface GitHubPagedResponse<T> extends PagedResponse<T> {
 }
 export type FlagsmithValue = string | number | boolean | null
 
+// A value shown in a diff. JSON fields, e.g. segment `rules_data`, arrive as
+// arrays or objects.
+export type DiffValue = FlagsmithValue | unknown[] | Record<string, unknown>
+
 export type EnvironmentMetrics = {
   id: number
   name: string
@@ -542,32 +546,62 @@ export type GroupPermission = Omit<UserPermission, 'user'> & {
   group: UserGroupSummary
 }
 
+// Mirrors api/audit/related_object_type.py (the enum names are stored).
+export type AuditLogRelatedObjectType =
+  | 'FEATURE'
+  | 'FEATURE_STATE'
+  | 'SEGMENT'
+  | 'ENVIRONMENT'
+  | 'CHANGE_REQUEST'
+  | 'EDGE_IDENTITY'
+  | 'IMPORT_REQUEST'
+  | 'EF_VERSION'
+  | 'FEATURE_HEALTH'
+  | 'RELEASE_PIPELINE'
+  | 'WAREHOUSE_CONNECTION'
+  | 'EXPERIMENT'
+  | 'METRIC'
+
+export type AuditLogChangeType = 'CREATE' | 'UPDATE' | 'DELETE' | 'UNKNOWN'
+
+// EnvironmentSerializerLight: everything but these, plus uuid.
+export type AuditLogEnvironment = Omit<
+  Environment,
+  'metadata' | 'show_disabled_flags' | 'description' | 'banner_colour'
+> & {
+  uuid: string
+  description: string | null
+  banner_colour: string | null
+}
+
 export type AuditLogItem = {
   id: number
   created_date: string
   log: string
-  author?: User
-  environment?: Environment
-  project: ProjectSummary
-  related_object_uuid?: number
-  related_feature_id?: number
-  related_object_type:
-    | 'FEATURE'
-    | 'FEATURE_STATE'
-    | 'ENVIRONMENT'
-    | 'CHANGE_REQUEST'
-    | 'SEGMENT'
-    | 'EF_VERSION'
-    | 'EDGE_IDENTITY'
+  // UserListSerializer's default fields.
+  author:
+    | (Pick<User, 'id' | 'email' | 'first_name' | 'last_name' | 'uuid'> & {
+        // Null for a user who has never logged in.
+        last_login: string | null
+      })
+    | null
+  organisation: { id: number; name: string } | null
+  environment: AuditLogEnvironment | null
+  // ProjectListSerializer.
+  project: ProjectSummary | null
+  related_object_id: number | null
+  related_object_uuid: string | null
+  related_object_type: AuditLogRelatedObjectType | null
   is_system_event: boolean
 }
 
 export type AuditLogDetail = AuditLogItem & {
   change_details: {
     field: string
-    old: FlagsmithValue
-    new: FlagsmithValue
+    old: DiffValue
+    new: DiffValue
   }[]
+  change_type: AuditLogChangeType
 }
 export type PaymentMethod = 'CHARGEBEE' | 'XERO' | 'AWS_MARKETPLACE'
 
@@ -1353,7 +1387,12 @@ export enum StageTriggerType {
   WAIT_FOR = 'WAIT_FOR',
 }
 
-export type StageTriggerBody = { wait_for?: string } | null
+export type StageAbortCondition = { unhealthy?: boolean }
+
+export type StageTriggerBody = {
+  wait_for?: string
+  abort_if?: StageAbortCondition
+} | null
 
 export type StageTrigger = {
   trigger_type: StageTriggerType
@@ -1530,6 +1569,7 @@ export type WarehouseConnection = {
   created_at: string
   total_events_received: number | null
   unique_events_count: number | null
+  last_event_received_at: string | null
 }
 
 export type TrustRelationshipClaimRule = {
@@ -1676,6 +1716,8 @@ export type Res = {
   users: User[]
   enableFeatureVersioning: { id: string }
   auditLogItem: AuditLogDetail
+  organisationAuditLogs: PagedResponse<AuditLogItem>
+  organisationAuditLogItem: AuditLogDetail
   featureExport: { id: string }
   featureExports: PagedResponse<FeatureExport>
   flagsmithProjectImport: { id: string }
@@ -1701,6 +1743,9 @@ export type Res = {
   projectChangeRequests: PagedResponse<ChangeRequestSummary>
   projectChangeRequest: ProjectChangeRequest
   actionChangeRequest: {}
+  changeRequest: ChangeRequest
+  // null when the environment has no state for the feature
+  environmentFeatureState: FeatureState | null
   identityTrait: { id: string }
   identityTraits: IdentityTrait[]
   conversionEvents: PagedResponse<ConversionEvent>

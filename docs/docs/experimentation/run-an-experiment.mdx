@@ -142,8 +142,8 @@ Enable events when you create the client, with the environment key you already u
 client-side key and server-side keys.
 
 When self-hosting, also point the SDK at your Flagsmith API and your event ingestion service, as in the commented lines
-below. Otherwise the SDK sends events to Flagsmith Cloud. To deploy the event ingestion service, see
-[Experimentation in the Helm chart](/deployment-self-hosting/hosting-guides/kubernetes-openshift#experimentation).
+below. Otherwise the SDK sends events to Flagsmith Cloud. If you use the Flagsmith database, set the events URL to your
+Flagsmith API URL ending in `/api/` instead. See [Self-Hosting and Open Source](/experimentation/self-hosting).
 
 The SDKs buffer events and send them in batches, by default every 10 seconds. Send what is left before your application
 exits, as shown in each tab.
@@ -599,6 +599,8 @@ The SDKs skip events silently rather than throw. If the **Exposures** panel stay
 - The identity is inside the experiment's rollout. Identities outside it are not enrolled and record no exposure.
 - Buffered events were sent before your application exited. See [Initialise](#initialise).
 - Event names match your metrics exactly, including case.
+- Event timestamps are within the accepted window. Events older than 10 days or more than 24 hours in the future are
+  rejected, and a batch over 2 MiB is rejected whole.
 
 To see why an event was skipped, turn on your SDK's debug logging.
 

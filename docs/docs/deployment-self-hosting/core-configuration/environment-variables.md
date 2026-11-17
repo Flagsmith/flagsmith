@@ -13,6 +13,8 @@ relevant section below for more details.
 ## API Environment Variables
 
 - `DJANGO_ALLOWED_HOSTS`: Comma-separated list of domains that can access the API. Alternatively `*` to allow any.
+- `SSRF_ALLOWED_HOSTS`: Comma-separated list of trusted hosts that webhook and integration URLs can target, even if they
+  resolve to a private network address, e.g. `.internal.example.com`.
 - `DATABASE_URL`: The URL of your PostgreSQL database. Both `postgres://` and `postgresql://` schemas are supported.
 - `DJANGO_DB_CONN_MAX_AGE`: Lifetime of a database connection, in seconds. Defaults to `60`. Set to `-1` to close the
   connection at the end of each request (Django's default behaviour). See
@@ -48,8 +50,8 @@ relevant section below for more details.
 - `INFLUXDB_TOKEN`: If you want to send API events to InfluxDB, specify this write token.
 - `INFLUXDB_URL`: The URL for your InfluxDB database.
 - `INFLUXDB_ORG`: The organisation string for your InfluxDB API call.
-- `EXPERIMENTATION_ENABLED`: Set to `true` once the experimentation infra is deployed. Experiments and warehouse
-  connections stay unavailable until it is. Defaults to `false`.
+- `EXPERIMENTATION_ENABLED`: Set to `true` to turn on experiments and warehouse connections. Defaults to `false`. See
+  [Self-Hosting and Open Source](/experimentation/self-hosting).
 - `WAREHOUSE_CREDENTIALS_SECRET`: Secret used to encrypt warehouse connection credentials. Warehouse delivery must use
   the same value. Changing it makes saved credentials unreadable.
 - `GA_TABLE_ID`: GA table ID (view) to query when looking for organisation usage.

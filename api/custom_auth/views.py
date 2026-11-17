@@ -17,7 +17,7 @@ from rest_framework.response import Response
 from rest_framework.status import HTTP_204_NO_CONTENT
 from rest_framework.throttling import ScopedRateThrottle
 
-from custom_auth.jwt_cookie.services import authorise_response
+from custom_auth.jwt_cookie.services import authorise_response, blacklist_user_tokens
 from custom_auth.mfa.backends.application import CustomApplicationBackend
 from custom_auth.mfa.trench.command.authenticate_second_factor import (
     authenticate_second_step_command,
@@ -31,6 +31,7 @@ from custom_auth.mfa.trench.responses import ErrorResponse
 from custom_auth.mfa.trench.serializers import CodeLoginSerializer
 from custom_auth.mfa.trench.utils import user_token_generator
 from custom_auth.serializers import CustomUserDelete
+from custom_auth.signals import user_login_password_verified, user_password_changed
 from integrations.lead_tracking.hubspot.client import HubspotClient
 from integrations.lead_tracking.hubspot.services import (
     register_hubspot_tracker_and_track_user,
@@ -61,6 +62,9 @@ class CustomAuthTokenLoginOrRequestMFACode(TokenCreateView):  # type: ignore[mis
             conf = settings.TRENCH_AUTH["MFA_METHODS"]["app"]  # type: ignore[index]
             mfa_handler = CustomApplicationBackend(mfa_method=mfa_method, config=conf)
             mfa_handler.dispatch_message()  # type: ignore[no-untyped-call]
+            user_login_password_verified.send(
+                sender=user.__class__, user=user, is_2fa_required=True
+            )
             return Response(
                 data={
                     "ephemeral_token": user_token_generator.make_token(user),
@@ -68,6 +72,9 @@ class CustomAuthTokenLoginOrRequestMFACode(TokenCreateView):  # type: ignore[mis
                 }
             )
         except MFAMethodDoesNotExistError:
+            user_login_password_verified.send(
+                sender=user.__class__, user=user, is_2fa_required=False
+            )
             if settings.COOKIE_AUTH_ENABLED:
                 return authorise_response(user, Response(status=HTTP_204_NO_CONTENT))
             return self._action(serializer)  # type: ignore[no-any-return]
@@ -222,7 +229,18 @@ class FFAdminUserViewSet(UserViewSet):  # type: ignore[misc]
         return Response({"token": token, "email": user.email})
 
     @action(["post"], detail=False)
+    def set_password(self, request: Request, *args: Any, **kwargs: Any) -> Response:
+        """Update the user password"""
+        user = request.user
+        assert isinstance(user, FFAdminUser)
+        response: Response = super().set_password(request, *args, **kwargs)
+        blacklist_user_tokens(user)
+        user_password_changed.send(sender=user.__class__, request=request, user=user)
+        return response
+
+    @action(["post"], detail=False)
     def reset_password(self, request: Request, *args: Any, **kwargs: Any) -> Response:
+        """Request a password reset email"""
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.get_user()
@@ -231,3 +249,17 @@ class FFAdminUserViewSet(UserViewSet):  # type: ignore[misc]
             UserPasswordResetRequest.objects.create(user=user)
 
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(["post"], detail=False)
+    def reset_password_confirm(
+        self, request: Request, *args: Any, **kwargs: Any
+    ) -> Response:
+        """Update the user password from a password reset URL"""
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.user
+        response: Response = super().reset_password_confirm(request, *args, **kwargs)
+        Token.objects.filter(user=user).delete()
+        blacklist_user_tokens(user)
+        user_password_changed.send(sender=user.__class__, request=request, user=user)
+        return response

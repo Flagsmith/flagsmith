@@ -46,11 +46,15 @@ jobs:
                   f.write(f"value={json.dumps(value)}\n")
 
       - name: Run Renovate
-        uses: renovatebot/github-action@3064367f740a1a91cca218698a63902689cce200
+        uses: renovatebot/github-action@266fef21329c44765ad42f9dea1f01f5d2d91084 # v46.3.13
         env:
           RENOVATE_TOKEN: ${{ steps.app-token.outputs.token }}
           RENOVATE_FORCE: ${{ steps.force.outputs.value }}
           RENOVATE_REPOSITORIES: ${{ github.repository }}
           RENOVATE_GIT_AUTHOR: ${{ vars.RENOVATE_GIT_AUTHOR }}
+          # Recomputes SRI hashes in docs jsDelivr snippets after Renovate bumps their version (see renovate.json).
+          # TODO: drop once Renovate's html manager supports jsDelivr and updates SRI hashes itself:
+          # https://github.com/renovatebot/renovate/pull/45015, https://github.com/renovatebot/renovate/issues/26937
+          RENOVATE_ALLOWED_COMMANDS: '["^node docs/plugins/js-cdn-sri/update\\.mjs$"]'
           RENOVATE_HOST_RULES: >-
             [{"matchHost":"flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com","username":"aws","password":"${{ steps.codeartifact.outputs.token }}"}]

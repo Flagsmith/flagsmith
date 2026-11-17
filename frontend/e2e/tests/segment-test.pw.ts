@@ -1,5 +1,5 @@
 import { test, expect } from '../test-setup';
-import { byId, log, createHelpers, visualSnapshot, getFlagsmith } from '../helpers';
+import { byId, log, createHelpers, visualSnapshot, getFlagsmith, isSaas } from '../helpers';
 import { E2E_USER, PASSWORD, E2E_TEST_IDENTITY, E2E_SEGMENT_PROJECT_1, E2E_SEGMENT_PROJECT_2, E2E_SEGMENT_PROJECT_3 } from '../config'
 
 const REMOTE_CONFIG_FEATURE = 'remote_config'
@@ -474,4 +474,50 @@ test('Segment test 4 - Create ANY rule type segment and verify match changes whe
   await gotoTraits(E2E_TEST_IDENTITY)
   await deleteTrait('age_any')
   await deleteTrait('team')
+})
+
+test('Segment test 5 - Audit log shows segment rule changes @enterprise', async ({ page }) => {
+  test.skip(
+    await isSaas(),
+    'The E2E organisation has no audit log visibility on SaaS until the seeded subscription is deployed',
+  )
+  const {
+    click,
+    createSegment,
+    deleteSegment,
+    gotoProject,
+    gotoSegments,
+    login,
+    navigateToSegment,
+    setSegmentRule,
+    waitForElementVisible,
+    waitForToast,
+  } = createHelpers(page)
+  const segmentName = 'audit_log_segment'
+
+  log('Login')
+  await login(E2E_USER, PASSWORD)
+  await gotoProject(E2E_SEGMENT_PROJECT_3)
+  await waitForElementVisible(byId('features-page'))
+
+  log('Create and update segment')
+  await gotoSegments()
+  await createSegment(segmentName, [{ name: 'age', operator: 'EQUAL', value: 18 }])
+  await navigateToSegment(segmentName)
+  await setSegmentRule(0, 0, 'age', 'EQUAL', 19)
+  await click(byId('update-segment'))
+  await waitForToast()
+
+  log('Check audit log shows the segment rule change')
+  await click(byId('audit-log-link'))
+  await click(`text="Segment updated: ${segmentName}"`)
+  const rulesDataDiff = page
+    .locator('.list-item', { hasText: 'Rules data' })
+    .getByRole('group', { name: 'Value diff' })
+  await expect(rulesDataDiff).toContainText('19')
+  await expect(rulesDataDiff).not.toContainText('[object Object]')
+
+  log('Clean up segment')
+  await gotoSegments()
+  await deleteSegment(segmentName)
 })

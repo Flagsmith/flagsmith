@@ -1,0 +1,12 @@
+.audit-log-list {
+  border: 1px solid var(--color-border-default);
+
+  &__day {
+    border-bottom: 1px solid var(--color-border-default);
+  }
+
+  // A divider between skeleton rows, not above the first one.
+  &__skeleton:not(:first-child) {
+    border-top: 1px solid var(--color-border-default);
+  }
+}

@@ -285,6 +285,7 @@ const config: Config = {
 
     plugins: [
         './plugins/flagsmith-versions',
+        './plugins/js-cdn-sri',
         // Lets pages import a file's contents as text, e.g. `import sql from '../file.sql?raw'`.
         () => ({
             name: 'raw-source',

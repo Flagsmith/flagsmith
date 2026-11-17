@@ -17,10 +17,8 @@ from django_lifecycle import (  # type: ignore[import-untyped]
 
 from api_keys.models import MasterAPIKey
 from audit.related_object_type import RelatedObjectType
+from organisations.models import Organisation
 from projects.models import Project
-
-if typing.TYPE_CHECKING:
-    from organisations.models import Organisation
 
 RELATED_OBJECT_TYPES = ((tag.name, tag.value) for tag in RelatedObjectType)
 
@@ -28,6 +26,14 @@ RELATED_OBJECT_TYPES = ((tag.name, tag.value) for tag in RelatedObjectType)
 class AuditLog(LifecycleModel):  # type: ignore[misc]
     created_date = models.DateTimeField("DateCreated")  # type: ignore[var-annotated]
 
+    organisation = models.ForeignKey[Organisation | None, Organisation | None](
+        Organisation,
+        related_name="audit_logs",
+        null=True,
+        on_delete=models.DO_NOTHING,
+        db_constraint=False,  # Logs survive on deletion
+        db_index=False,  # Indexed in `Meta.indexes`
+    )
     project = models.ForeignKey(  # type: ignore[var-annotated]
         Project, related_name="audit_logs", null=True, on_delete=models.DO_NOTHING
     )
@@ -73,6 +79,7 @@ class AuditLog(LifecycleModel):  # type: ignore[misc]
         verbose_name_plural = "Audit Logs"
         ordering = ("-created_date",)
         indexes = [
+            models.Index(fields=["organisation"], name="audit_organisation_idx"),
             models.Index(
                 fields=["project", "-created_date"],
                 name="audit_project_created_idx",
@@ -82,21 +89,6 @@ class AuditLog(LifecycleModel):  # type: ignore[misc]
                 name="audit_log_upper_trgm_idx",
             ),
         ]
-
-    @property
-    def organisation(self) -> "Organisation | None":
-        # TODO properly implement organisation relation
-        # maybe the relation list should not be _that_ exhaustive...
-        for relation in (
-            "project",
-            "environment",
-            "author",
-            "master_api_key",
-            "history_record",
-        ):
-            if hasattr(related_instance := getattr(self, relation), "organisation"):
-                return related_instance.organisation  # type: ignore[no-any-return]
-        return None
 
     @property
     def environment_document_updated(self) -> bool:

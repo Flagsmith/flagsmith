@@ -6,7 +6,6 @@ from django.urls import reverse
 from django.utils import timezone
 from freezegun import freeze_time
 from pytest_django.fixtures import SettingsWrapper
-from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -14,19 +13,7 @@ from audit.models import AuditLog
 from core.signals import create_audit_log_from_historical_record
 from features.models import FeatureState
 from features.workflows.core.models import ChangeRequest
-from organisations.subscriptions.metadata import BaseSubscriptionMetadata
 from users.models import FFAdminUser
-
-
-@pytest.fixture(autouse=True)
-def _subscription_metadata(mocker: MockerFixture) -> None:
-    metadata = BaseSubscriptionMetadata(
-        audit_log_visibility_days=None,
-    )
-    mocker.patch(
-        "organisations.models.Subscription.get_subscription_metadata",
-        return_value=metadata,
-    )
 
 
 def test_list_audit_logs__with_project_filter__makes_expected_queries(  # type: ignore[no-untyped-def]

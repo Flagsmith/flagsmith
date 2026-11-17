@@ -17,7 +17,7 @@ dependencies = [
     "backoff>=2.2.1,<2.3.0",
     "appdirs>=1.4.4,<1.5.0",
     "django-cors-headers>=3.5.0,<3.6.0",
-    "djangorestframework>=3.17.2,<3.18.0",
+    "djangorestframework>=3.18.2,<3.19.0",
     "gunicorn>=23.0.0,<23.1.0",
     "requests>=2.33.0,<2.34.0",
     "six>=1.16.0,<1.17.0",
@@ -75,20 +75,20 @@ dependencies = [
     "hubspot-api-client>=12.0.0,<13.0.0",
     "djangorestframework-dataclasses>=1.3.1,<2.0.0",
     "pyotp>=2.9.0,<3.0.0",
-    "flagsmith-common[common-core,flagsmith-schemas,task-processor]>=3.16.0,<4",
+    "flagsmith-common[common-core,flagsmith-schemas,task-processor]>=3.16.1,<4",
     "django-stubs>=5.1.3,<6.0.0",
     "tzdata>=2024.1,<2025.0.0",
     "djangorestframework-simplejwt>=5.5.1,<6.0.0",
     "structlog>=24.4.0,<25.0.0",
     "prometheus-client>=0.21.1,<0.22.0",
     "django-cockroachdb>=4.2,<4.3.0",
-    "django-oauth-toolkit>=3.0.1,<4.0.0",
+    "django-oauth-toolkit>=3.4.0,<4.0.0",
     "jsonpath-rfc9535>=0.2.0,<0.3.0",
 ]
 
 [project.optional-dependencies]
 private = [
-    "flagsmith-private>=0.14.2,<1",
+    "flagsmith-private>=0.15.1,<1",
 ]
 dev = [
     "django-test-migrations>=1.2.0,<2.0.0",
@@ -102,7 +102,7 @@ dev = [
     # setuptools only exists because pytest-freezegun fails without it
     "setuptools",
     "pytest-xdist>=3.6.1,<3.7.0",
-    "pylint>=2.16.2,<2.17.0",
+    "pylint>=4.0.9,<4.1.0",
     "pep8>=1.7.1,<1.8.0",
     "autopep8>=2.0.1,<2.1.0",
     "pytest>=9.0.3,<9.1.0",
@@ -156,7 +156,7 @@ explicit = true
 flagsmith-private = { index = "flagsmith-pypi-production" }
 
 [tool.uv]
-required-version = ">=0.11.18"  # Ensure this matches the version in .pre-commit-config.yaml
+required-version = ">=0.13.7"  # Ensure this matches the version in .pre-commit-config.yaml
 exclude-newer = "1 week"
 exclude-newer-package = { flagsmith-private = false, flagsmith-common = false, flagsmith = false, flagsmith-flag-engine = false, flagsmith-sql-flag-engine = false, openfeature-provider-flagsmith = false }
 
@@ -189,12 +189,17 @@ docstring-code-line-length = "dynamic"
 
 [tool.ruff.lint]
 # Establish parity with flake8 + isort
-select = ["C901", "E4", "E7", "E9", "F", "I", "W"]
+select = ["C901", "E4", "E7", "E9", "F", "I", "TID251", "W"]
 ignore = []
+
+[tool.ruff.lint.flake8-tidy-imports.banned-api]
+"drf_writable_nested.WritableNestedModelSerializer".msg = "Use util.drf_writable_nested.serializers.WritableNestedModelSerializer, which scopes nested ids to the parent."
+"drf_writable_nested.serializers.WritableNestedModelSerializer".msg = "Use util.drf_writable_nested.serializers.WritableNestedModelSerializer, which scopes nested ids to the parent."
 
 [tool.ruff.lint.per-file-ignores]
 # Need the * prefix to work with pre-commit which runs from the root of the repo
 "*app/settings/local.py" = ["F403", "F405"]
+"*util/drf_writable_nested/serializers.py" = ["TID251"]
 "*app/settings/production.py" = ["F403", "F405"]
 "*app/settings/saas.py" = ["F403", "F405"]
 
@@ -236,7 +241,7 @@ strict = true
 show_absolute_path = true
 
 [[tool.mypy.overrides]]
-module = ["admin_sso.models"]
+module = ["admin_sso.default_settings", "admin_sso.models"]
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]

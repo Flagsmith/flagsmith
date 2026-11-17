@@ -2,6 +2,7 @@ import React from 'react'
 import type { Meta, StoryObj } from 'storybook'
 
 import Chip from 'components/base/Chip'
+import { TAG_COLOURS } from 'common/theme/tagColours'
 
 const meta: Meta<typeof Chip> = {
   args: { children: 'Production' },
@@ -56,6 +57,18 @@ export const Group: Story = {
       <Chip>Development</Chip>
       <Chip variant='accent'>Staging</Chip>
       <Chip onRemove={() => undefined}>Production</Chip>
+    </div>
+  ),
+}
+
+export const Tinted: Story = {
+  render: () => (
+    <div className='d-flex flex-wrap gap-2'>
+      {TAG_COLOURS.map((colour) => (
+        <Chip key={colour} variant='tinted' colour={colour}>
+          {colour}
+        </Chip>
+      ))}
     </div>
   ),
 }

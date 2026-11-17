@@ -1,10 +1,11 @@
 import React, { FC } from 'react'
+import moment from 'moment'
 import Icon from 'components/icons/Icon'
 import Skeleton from 'components/Skeleton'
 
 type WarehouseStatsProps = {
   errored: boolean
-  lastEventReceived: string
+  lastEventReceivedAt: string | null
   totalEventsReceived: number | null
   uniqueEventsCount: number | null
   loading?: boolean
@@ -25,7 +26,7 @@ const StatValue: FC<{ value: number | null; loading?: boolean }> = ({
 
 const WarehouseStats: FC<WarehouseStatsProps> = ({
   errored,
-  lastEventReceived,
+  lastEventReceivedAt,
   loading,
   totalEventsReceived,
   uniqueEventsCount,
@@ -39,9 +40,15 @@ const WarehouseStats: FC<WarehouseStatsProps> = ({
         </span>
       </div>
     )}
-    <div className='d-flex flex-row gap-2'>
+    <div className='d-flex flex-row align-items-center gap-2'>
       <span className='text-muted'>Last event received:</span>
-      <span className='font-weight-medium'>{lastEventReceived}</span>
+      {loading && !lastEventReceivedAt ? (
+        <Skeleton variant='text' width={56} height={14} />
+      ) : (
+        <span className='font-weight-medium'>
+          {lastEventReceivedAt ? moment(lastEventReceivedAt).fromNow() : '-'}
+        </span>
+      )}
     </div>
     <div className='d-flex flex-row align-items-center gap-2'>
       <span className='text-muted'>Total events received:</span>

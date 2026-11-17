@@ -394,7 +394,8 @@ The task processor itself is documented [here](/deployment-self-hosting/scaling-
 ### Experimentation
 
 The chart can run [experimentation](/experimentation). You bring your own Kafka and data warehouse, and each
-environment's events are delivered to the warehouse connected to it. The chart then:
+environment's events are delivered to the warehouse connected to it. To evaluate experimentation without deploying
+this, see [Self-Hosting and Open Source](/experimentation/self-hosting). The chart then:
 
 - Runs the event ingestion service, which receives SDK events and writes them to a Kafka topic.
 - Runs warehouse delivery, which reads that topic and inserts each environment's events into its warehouse.

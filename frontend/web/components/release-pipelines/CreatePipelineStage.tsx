@@ -9,6 +9,7 @@ import {
   StageTriggerType,
 } from 'common/types/responses'
 import Button from 'components/base/forms/Button'
+import Checkbox from 'components/base/forms/Checkbox'
 import Icon from 'components/icons/Icon'
 import { NEW_PIPELINE_STAGE_ACTION, TRIGGER_OPTIONS } from './constants'
 import { PipelineStageRequest, StageActionRequest } from 'common/types/requests'
@@ -219,17 +220,37 @@ const CreatePipelineStage = ({
         />
       </FormGroup>
       {selectedTrigger?.value === StageTriggerType.WAIT_FOR && (
-        <FormGroup className='pl-4 d-flex align-items-center'>
-          <TimeIntervalInput
-            interval={existingWaitForTime?.trigger_body?.wait_for}
-            onIntervalChange={(interval) => {
-              handleOnChange('trigger', {
-                trigger_body: { wait_for: interval },
-                trigger_type: StageTriggerType.WAIT_FOR,
-              })
-            }}
-          />
-        </FormGroup>
+        <>
+          <FormGroup className='pl-4 d-flex align-items-center'>
+            <TimeIntervalInput
+              interval={existingWaitForTime?.trigger_body?.wait_for}
+              onIntervalChange={(interval) => {
+                handleOnChange('trigger', {
+                  trigger_body: {
+                    ...stageData.trigger.trigger_body,
+                    wait_for: interval,
+                  },
+                  trigger_type: StageTriggerType.WAIT_FOR,
+                })
+              }}
+            />
+          </FormGroup>
+          <FormGroup className='pl-4'>
+            <Checkbox
+              label='Abort if unhealthy in this environment'
+              checked={!!stageData.trigger.trigger_body?.abort_if?.unhealthy}
+              onChange={(unhealthy) => {
+                handleOnChange('trigger', {
+                  trigger_body: {
+                    ...stageData.trigger.trigger_body,
+                    abort_if: { unhealthy },
+                  },
+                  trigger_type: StageTriggerType.WAIT_FOR,
+                })
+              }}
+            />
+          </FormGroup>
+        </>
       )}
       <PipelineStageActions
         actions={stageData.actions}

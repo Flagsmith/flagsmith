@@ -1036,3 +1036,20 @@ def test_get_me__various_last_login_values__updates_last_login_correctly(
     staff_user.refresh_from_db()
 
     assert staff_user.last_login == expected_last_login
+
+
+@pytest.mark.django_db
+def test_admin_init__no_users__creates_superuser(
+    api_client: APIClient,
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    settings.ADMIN_EMAIL = "admin@example.com"
+
+    # When
+    response = api_client.get("/api/v1/users/init/")
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.json()["adminUserCreated"] is True
+    assert FFAdminUser.objects.get(email="admin@example.com").is_superuser

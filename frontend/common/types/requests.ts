@@ -39,6 +39,8 @@ import {
 } from './responses'
 import { UtmsType } from './utms'
 
+export type ChangeRequestAction = 'approve' | 'commit'
+
 export type UpdateProjectBody = {
   name: string
   hide_disabled_flags?: boolean
@@ -256,6 +258,11 @@ export type Req = {
     project: number
     environments?: number
   }>
+  getOrganisationAuditLogs: PagedRequest<{
+    organisationId: number
+    search?: string
+  }>
+  getOrganisationAuditLogItem: { organisationId: number; id: number }
   getOrganisations: {}
   getOrganisation: { id: number }
   updateOrganisation: { id: number; body: UpdateOrganisationBody }
@@ -700,7 +707,18 @@ export type Req = {
     live_from_after?: string
     committed?: boolean
   }>
+  getScheduledChangeRequests: PagedRequest<{
+    environmentId: string
+  }>
   updateChangeRequest: ChangeRequest
+  getChangeRequest: { id: string }
+  getEnvironmentFeatureState: { environmentId: string; feature: number }
+  actionChangeRequest: { id: string; actionType: ChangeRequestAction }
+  updateChangeRequestAssignees: {
+    id: string
+    approvals: ChangeRequest['approvals']
+    group_assignments: ChangeRequest['group_assignments']
+  }
   getGroupSummaries: {
     orgId: number
   }

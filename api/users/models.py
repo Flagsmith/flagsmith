@@ -104,9 +104,13 @@ class UserManager(BaseUserManager):  # type: ignore[type-arg]
 
         return self._create_user(email, password, **extra_fields)  # type: ignore[no-untyped-call]
 
-    def get_by_natural_key(self, email):  # type: ignore[no-untyped-def]
-        # Used to allow case insensitive login
-        return self.get(email__iexact=email)
+    def get_by_natural_key(self, username: str | None) -> "FFAdminUser":
+        """Get a user by the identifier they log in with, ignoring case."""
+        if username is None:
+            raise self.model.DoesNotExist  # pragma: no cover
+        username_lookup = f"{self.model.USERNAME_FIELD}__iexact"
+        user: FFAdminUser = self.get(**{username_lookup: username})
+        return user
 
     def make_random_password(
         self,

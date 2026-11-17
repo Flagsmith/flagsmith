@@ -2,7 +2,7 @@ import React from 'react'
 import data from 'common/data/base/_data'
 import ErrorMessage from './ErrorMessage'
 import ConfigProvider from 'common/providers/ConfigProvider'
-import Icon from './icons/Icon'
+import Checkbox from './base/forms/Checkbox'
 import ModalHR from './modals/ModalHR'
 
 const SamlForm = class extends React.Component {
@@ -58,24 +58,17 @@ const SamlForm = class extends React.Component {
           )}
 
           <Row className='mt-4'>
-            <input
-              onChange={() => {
-                const remember = !this.state.remember
+            <Checkbox
+              id='organisation'
+              label='Remember this SAML organisation'
+              checked={this.state.remember}
+              onChange={(remember) => {
                 if (!remember) {
                   API.setCookie('saml', null)
                 }
                 this.setState({ remember })
               }}
-              id='organisation'
-              type='checkbox'
-              checked={this.state.remember}
             />
-            <label className='mb-0' htmlFor='organisation'>
-              <span className='checkbox mr-2'>
-                {this.state.remember && <Icon name='checkmark-square' />}
-              </span>
-              Remember this SAML organisation
-            </label>
           </Row>
         </div>
         <ModalHR />

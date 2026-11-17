@@ -291,6 +291,23 @@ textarea {
 input[type='checkbox'] {
   display: none;
 
+  // Hidden visually but kept focusable, so keyboards and screen readers reach it
+  &.checkbox-input {
+    display: block;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: 0;
+    opacity: 0;
+    pointer-events: none;
+
+    // The focus styles below drop the ring once checked, so keyboard focus gets its own
+    &:focus-visible + label .checkbox {
+      outline: 2px solid var(--color-border-action);
+      outline-offset: 2px;
+    }
+  }
+
   & + label {
     font-size: $font-sm;
     font-weight: normal;

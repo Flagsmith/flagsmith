@@ -42,7 +42,7 @@ from users.serializers import (
     UserPermissionGroupSummarySerializer,
 )
 from users.services import (
-    create_initial_superuser,
+    create_superuser,
     should_skip_create_initial_superuser,
 )
 
@@ -83,7 +83,7 @@ class AdminInitView(View):
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        response = create_initial_superuser()
+        response = create_superuser()
         return JsonResponse(
             {
                 "adminUserCreated": True,
