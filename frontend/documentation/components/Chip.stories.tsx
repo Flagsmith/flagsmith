@@ -29,6 +29,10 @@ export const Accent: Story = {
   args: { children: '"hello"', variant: 'accent' },
 }
 
+export const Success: Story = {
+  args: { children: 'View feature', variant: 'success' },
+}
+
 export const Warning: Story = {
   args: { children: '1/2', variant: 'warning' },
 }
@@ -60,6 +64,7 @@ export const Group: Story = {
     <div className='d-flex flex-wrap gap-2'>
       <Chip>Development</Chip>
       <Chip variant='accent'>Staging</Chip>
+      <Chip variant='success'>Live</Chip>
       <Chip variant='warning'>Paused</Chip>
       <Chip onRemove={() => undefined}>Production</Chip>
     </div>
