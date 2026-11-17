@@ -15,7 +15,8 @@ export const docsDir = new URL('../../docs/', import.meta.url);
 //
 // Inside a marked block the tag must have exactly this form: an exact version and file path, so the file can't change
 // under the hash (https://www.jsdelivr.com/using-sri-with-dynamic-files), then `integrity` and `crossorigin`.
-const markedBlock = /\{\/\* renovate: datasource=npm depName=(\S+) \*\/\}\n\s*```[^\n]*\n([\s\S]*?)\n```/g;
+const markedBlock = /\{\/\* renovate: datasource=npm depName=(\S+) \*\/\}\r?\n\s*```[^\n]*\n([\s\S]*?)\r?\n```/g;
+const marker = /\{\/\*\s*renovate:/gi;
 const escape = (s) => s.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&');
 const snippetTag = (depName) =>
     new RegExp(
@@ -23,27 +24,32 @@ const snippetTag = (depName) =>
             ` integrity="((?:sha256|sha384|sha512)-[A-Za-z0-9+/=]+)" crossorigin="anonymous"></script>`,
         'g',
     );
-const jsDelivr = /cdn\.jsdelivr\.net/g;
+// Case-insensitive, like browsers treat hostnames, so no casing of the URL escapes the check.
+const jsDelivr = /cdn\.jsdelivr\.net/gi;
 export const snippetFormat =
-    'jsDelivr snippets must sit in a code block directly below `{/* renovate: datasource=npm depName=<package> */}` ' +
-    'and use `<script src="https://cdn.jsdelivr.net/npm/<package>@<x.y.z>/<file>" integrity="..." crossorigin="anonymous"></script>`';
+    'each jsDelivr snippet must sit alone in a code block directly below ' +
+    '`{/* renovate: datasource=npm depName=<package> */}`, and use `<script src="https://cdn.jsdelivr.net/npm/<package>@<x.y.z>/<file>" integrity="..." crossorigin="anonymous"></script>`';
 
 export const listDocs = async () =>
     (await readdir(docsDir, { recursive: true }))
         .filter((file) => /\.mdx?$/.test(file))
         .map((file) => new URL(file, docsDir));
 
-// Finds the marked jsDelivr snippets in a file. `unmarked` counts jsDelivr URLs that aren't in one, which the build
-// rejects so no snippet escapes the check.
+// Finds the marked jsDelivr snippets in a file. `valid` is false if any jsDelivr URL isn't in a marked snippet, or any
+// marker isn't directly above a code block with exactly one snippet, so the build can reject it.
 export const findSnippets = (text) => {
     const snippets = [];
+    let valid = true;
+    let blocks = 0;
     for (const [, depName, block] of text.matchAll(markedBlock)) {
-        for (const [tag, src, integrity] of block.matchAll(snippetTag(depName))) {
-            snippets.push({ tag, src, integrity });
-        }
+        blocks += 1;
+        const found = [...block.matchAll(snippetTag(depName))];
+        if (found.length !== 1) valid = false;
+        for (const [tag, src, integrity] of found) snippets.push({ tag, src, integrity });
     }
-    const unmarked = (text.match(jsDelivr)?.length ?? 0) - snippets.length;
-    return { snippets, unmarked };
+    if ((text.match(marker)?.length ?? 0) !== blocks) valid = false;
+    if ((text.match(jsDelivr)?.length ?? 0) !== snippets.length) valid = false;
+    return { snippets, valid };
 };
 
 export const algorithmOf = (integrity) => integrity.split('-')[0];

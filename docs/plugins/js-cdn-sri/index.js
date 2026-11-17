@@ -11,8 +11,8 @@ export default async function jsCdnSri() {
             let fixable = false;
             for (const file of await listDocs()) {
                 const path = fileURLToPath(file);
-                const { snippets, unmarked } = findSnippets(await readText(file));
-                if (unmarked > 0) errors.push(`${path}: ${snippetFormat}`);
+                const { snippets, valid } = findSnippets(await readText(file));
+                if (!valid) errors.push(`${path}: ${snippetFormat}`);
                 for (const { src, integrity } of snippets) {
                     let served;
                     try {
