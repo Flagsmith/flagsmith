@@ -1,13 +1,14 @@
-import React, { FC, ReactNode, useEffect, useRef, useState } from 'react'
-import InlineModal from 'components/InlineModal'
+import React, { FC, ReactNode, useRef } from 'react'
 import { IonIcon } from '@ionic/react'
 import { ellipsisHorizontal } from 'ionicons/icons'
-import Button from 'components/base/forms/Button'
+import IconButton from 'components/base/IconButton'
+import DropdownMenu from 'components/base/DropdownMenu'
 import classNames from 'classnames'
-import { useHistory } from 'react-router-dom'
 import { useOverflowVisibleCount } from 'common/hooks/useOverflowVisibleCount'
 
 type OverflowNavProps = {
+  // Names the overflow button; each nav on a page needs its own
+  label: string
   children: ReactNode
   containerClassName?: string
   className?: string
@@ -23,6 +24,7 @@ const OverflowNav: FC<OverflowNavProps> = ({
   force,
   gap = 2,
   icon = ellipsisHorizontal,
+  label,
 }) => {
   const items = React.Children.toArray(
     (_children as React.ReactElement)?.props?.children || _children,
@@ -30,8 +32,6 @@ const OverflowNav: FC<OverflowNavProps> = ({
 
   const outerContainerRef = useRef<HTMLDivElement>(null)
   const itemsContainerRef = useRef<HTMLDivElement>(null)
-  const [open, setOpen] = useState(false)
-  const history = useHistory()
   const { isMeasuring, visibleCount } = useOverflowVisibleCount({
     extraWidth: buttonWidth + 20,
     force,
@@ -40,13 +40,6 @@ const OverflowNav: FC<OverflowNavProps> = ({
     itemsContainerRef,
     outerContainerRef,
   })
-
-  useEffect(() => {
-    const unlisten = history.listen(() => {
-      setOpen(false)
-    })
-    return () => unlisten()
-  }, [history])
 
   const visible = items.slice(0, visibleCount)
   const overflow = items.slice(visibleCount)
@@ -84,31 +77,23 @@ const OverflowNav: FC<OverflowNavProps> = ({
       </div>
 
       {overflow.length > 0 && !isMeasuring && (
-        <div className='ms-2 nav-item dropdown position-relative flex-shrink-0'>
-          <Button
-            style={{ height: buttonWidth, width: buttonWidth }}
-            onClick={() => setOpen(!open)}
-            theme='secondary'
-            data-test='overflow-nav-button'
-            className='d-flex align-items-center justify-content-center m-0 p-0'
-          >
-            <IonIcon className='fs-small' icon={icon} />
-          </Button>
-          <InlineModal
-            relativeToParent
-            hideClose
-            isOpen={open}
-            containerClassName='p-0'
-            className='inline-modal-right'
-            onClose={() => setOpen(false)}
-          >
-            <div className='d-flex flex-column no-wrap'>
-              {overflow.map((child, idx) => (
-                <React.Fragment key={idx}>{child}</React.Fragment>
-              ))}
-            </div>
-          </InlineModal>
-        </div>
+        <DropdownMenu
+          aria-label={label}
+          trigger={
+            <IconButton
+              className='ms-2 flex-shrink-0'
+              variant='secondary'
+              size='small'
+              aria-label={label}
+            >
+              <IonIcon className='fs-small' icon={icon} />
+            </IconButton>
+          }
+        >
+          {overflow.map((child, idx) => (
+            <React.Fragment key={idx}>{child}</React.Fragment>
+          ))}
+        </DropdownMenu>
       )}
     </div>
   )

@@ -14,6 +14,7 @@ type OrganisationNavType = {}
 const OrganisationNavbar: FC<OrganisationNavType> = ({}) => {
   return (
     <OverflowNav
+      label='More organisation pages'
       gap={3}
       key={AccountStore.getOrganisation()?.id}
       containerClassName='px-2 pb-1 pb-md-0 pb-mb-0 bg-faint'

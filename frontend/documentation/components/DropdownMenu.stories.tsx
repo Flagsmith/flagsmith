@@ -1,45 +1,100 @@
-import React from 'react'
+import React, { useState } from 'react'
 import type { Meta, StoryObj } from 'storybook'
 import { screen, userEvent, within } from 'storybook/test'
 
-import DropdownMenu from 'components/base/DropdownMenu'
+import DropdownMenu, { DropdownMenuItem } from 'components/base/DropdownMenu'
+import IconButton from 'components/base/IconButton'
+import Button from 'components/base/forms/Button'
+import Icon from 'components/icons/Icon'
 
-const meta: Meta = {
+const meta: Meta<typeof DropdownMenu> = {
+  component: DropdownMenu,
   parameters: {
-    docs: { story: { height: '260px' } },
+    docs: { story: { height: '320px' } },
     layout: 'centered',
   },
   title: 'Components/Data Display/DropdownMenu',
 }
 export default meta
 
-type Story = StoryObj
+type Story = StoryObj<typeof DropdownMenu>
 
-const DEMO_ITEMS = [
-  { label: 'Edit', onClick: () => {} },
-  { label: 'Duplicate', onClick: () => {} },
-  { label: 'Archive', onClick: () => {} },
-  { label: 'Delete', onClick: () => {} },
-]
+const noop = () => undefined
 
-export const Default: Story = {
-  render: () => <DropdownMenu items={DEMO_ITEMS} />,
+const ActionsMenu = () => (
+  <DropdownMenu
+    aria-label='Feature actions'
+    trigger={
+      <IconButton variant='ghost' size='small' aria-label='Feature actions'>
+        <Icon name='more-vertical' width={18} />
+      </IconButton>
+    }
+  >
+    <DropdownMenuItem icon='copy' onSelect={noop}>
+      Copy feature name
+    </DropdownMenuItem>
+    <DropdownMenuItem icon='list' onSelect={noop}>
+      Show audit logs
+    </DropdownMenuItem>
+    <DropdownMenuItem icon='clock' disabled onSelect={noop}>
+      Show history
+    </DropdownMenuItem>
+    <DropdownMenuItem icon='trash-2' destructive onSelect={noop}>
+      Remove feature
+    </DropdownMenuItem>
+  </DropdownMenu>
+)
+
+const SECTIONS = ['Value', 'Segment overrides', 'History', 'Settings']
+
+const SectionsMenu = () => {
+  const [current, setCurrent] = useState(2)
+  return (
+    <DropdownMenu
+      aria-label='Sections'
+      trigger={<Button theme='secondary'>{SECTIONS[current]}</Button>}
+    >
+      {SECTIONS.map((section, i) => (
+        <DropdownMenuItem
+          key={section}
+          current={current === i}
+          onSelect={() => setCurrent(i)}
+        >
+          {section}
+        </DropdownMenuItem>
+      ))}
+    </DropdownMenu>
+  )
 }
 
-export const Open: Story = {
+const openMenu = async (canvasElement: HTMLElement, name: string) => {
+  const canvas = within(canvasElement)
+  await userEvent.click(canvas.getByRole('button', { name }))
+  await screen.findByRole('dialog')
+}
+
+export const Actions: Story = {
+  parameters: { chromatic: { delay: 300 } },
+  play: ({ canvasElement }: { canvasElement: HTMLElement }) =>
+    openMenu(canvasElement, 'Feature actions'),
+  render: () => <ActionsMenu />,
+}
+
+export const CurrentItem: Story = {
+  parameters: { chromatic: { delay: 300 } },
+  play: ({ canvasElement }: { canvasElement: HTMLElement }) =>
+    openMenu(canvasElement, 'History'),
+  render: () => <SectionsMenu />,
+}
+
+// On phones the menu opens as a bottom sheet
+export const MobileSheet: Story = {
+  globals: { viewport: { isRotated: false, value: 'mobile1' } },
   parameters: {
-    chromatic: { delay: 300 },
-    docs: {
-      description: {
-        story:
-          'Menu in its open state. Storybook clicks the trigger in `play`; the menu portals into `document.body`, so it is queried via `screen` rather than the local canvas.',
-      },
-    },
+    chromatic: { delay: 300, viewports: [375] },
+    docs: { story: { height: '420px', inline: false } },
   },
-  play: async ({ canvasElement }: { canvasElement: HTMLElement }) => {
-    const canvas = within(canvasElement)
-    await userEvent.click(canvas.getByRole('button'))
-    await screen.findByText('Edit')
-  },
-  render: () => <DropdownMenu items={DEMO_ITEMS} />,
+  play: ({ canvasElement }: { canvasElement: HTMLElement }) =>
+    openMenu(canvasElement, 'Feature actions'),
+  render: () => <ActionsMenu />,
 }

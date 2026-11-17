@@ -2,14 +2,26 @@ import { useDeleteReleasePipelineMutation } from 'common/services/useReleasePipe
 import { PagedResponse, ReleasePipeline } from 'common/types/responses'
 import { useHistory } from 'react-router-dom'
 import Button from 'components/base/forms/Button'
-import Icon, { IconName } from 'components/icons/Icon'
-import DropdownMenu from 'components/base/DropdownMenu'
+import Icon from 'components/icons/Icon'
+import DropdownMenu, { DropdownMenuItem } from 'components/base/DropdownMenu'
+import IconButton from 'components/base/IconButton'
+import Tooltip from 'components/Tooltip'
 import PanelSearch from 'components/PanelSearch'
 import Tag from 'components/tags/Tag'
-import { useEffect } from 'react'
+import { ReactNode, useEffect } from 'react'
 import ChangeReleasePipelineStatusModal from './ChangeReleasePipelineStatusModal'
 import CloneReleasePipelineModal from './CloneReleasePipelineModal'
 import DeleteReleasePipelineModal from './DeleteReleasePipelineModal'
+
+// Disabled actions say why on hover
+const withReason = (item: ReactNode, reason?: string) =>
+  reason ? (
+    <Tooltip title={item} place='right'>
+      {reason}
+    </Tooltip>
+  ) : (
+    item
+  )
 
 const NoReleasePipelines = ({ projectId }: { projectId: number }) => {
   const history = useHistory()
@@ -182,52 +194,69 @@ const ReleasePipelinesList = ({
                 <div>Features</div>
               </div>
               <DropdownMenu
-                items={[
-                  {
-                    disabled: isPublished,
-                    icon: 'edit' as IconName,
-                    label: 'Edit',
-                    onClick: () => {
+                aria-label={`Actions for ${name}`}
+                trigger={
+                  <IconButton
+                    variant='ghost'
+                    size='small'
+                    aria-label={`Actions for ${name}`}
+                  >
+                    <Icon name='more-vertical' width={18} />
+                  </IconButton>
+                }
+              >
+                {withReason(
+                  <DropdownMenuItem
+                    icon='edit'
+                    disabled={isPublished}
+                    onSelect={() =>
                       history.push(
                         `/project/${projectId}/release-pipelines/${id}/edit`,
                       )
-                    },
-                    tooltip: getTooltip('edit'),
-                  },
-                  {
-                    disabled: isPublished && !canUnpublish,
-                    icon: isPublished
-                      ? 'minus-circle'
-                      : ('checkmark-circle' as IconName),
-                    label: isPublished ? 'Unpublish' : 'Publish',
-                    onClick: () =>
+                    }
+                  >
+                    Edit
+                  </DropdownMenuItem>,
+                  getTooltip('edit'),
+                )}
+                {withReason(
+                  <DropdownMenuItem
+                    icon={isPublished ? 'minus-circle' : 'checkmark-circle'}
+                    disabled={isPublished && !canUnpublish}
+                    onSelect={() =>
                       openChangeReleasePipelineStatusModal(
                         projectId,
                         id,
                         isPublished,
-                      ),
-                    tooltip:
-                      isPublished && !canUnpublish
-                        ? 'Cannot unpublish a release pipeline with in-flight features'
-                        : undefined,
-                  },
-                  {
-                    icon: 'copy' as IconName,
-                    label: 'Clone',
-                    onClick: () =>
-                      openModal2(
-                        'Clone Release Pipeline',
-                        <CloneReleasePipelineModal
-                          pipelineId={id}
-                          projectId={projectId}
-                        />,
-                      ),
-                  },
-                  {
-                    disabled: !canDelete,
-                    icon: 'trash-2',
-                    label: 'Remove',
-                    onClick: () => {
+                      )
+                    }
+                  >
+                    {isPublished ? 'Unpublish' : 'Publish'}
+                  </DropdownMenuItem>,
+                  isPublished && !canUnpublish
+                    ? 'Cannot unpublish a release pipeline with in-flight features'
+                    : undefined,
+                )}
+                <DropdownMenuItem
+                  icon='copy'
+                  onSelect={() =>
+                    openModal2(
+                      'Clone Release Pipeline',
+                      <CloneReleasePipelineModal
+                        pipelineId={id}
+                        projectId={projectId}
+                      />,
+                    )
+                  }
+                >
+                  Clone
+                </DropdownMenuItem>
+                {withReason(
+                  <DropdownMenuItem
+                    icon='trash-2'
+                    destructive
+                    disabled={!canDelete}
+                    onSelect={() =>
                       openModal2(
                         'Remove Release Pipeline',
                         <DeleteReleasePipelineModal
@@ -235,13 +264,15 @@ const ReleasePipelinesList = ({
                           projectId={projectId}
                         />,
                       )
-                    },
-                    tooltip: canDelete
-                      ? undefined
-                      : 'Cannot remove a release pipeline with in-flight features',
-                  },
-                ]}
-              />
+                    }
+                  >
+                    Remove
+                  </DropdownMenuItem>,
+                  canDelete
+                    ? undefined
+                    : 'Cannot remove a release pipeline with in-flight features',
+                )}
+              </DropdownMenu>
             </Row>
           </Row>
         )

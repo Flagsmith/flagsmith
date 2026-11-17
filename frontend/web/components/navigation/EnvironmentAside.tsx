@@ -242,6 +242,7 @@ const EnvironmentAside: FC<HomeAsideType> = ({ environmentId, projectId }) => {
                           {E2E && createEnvironmentButton}
                         </div>
                         <OverflowNav
+                          label='More environment pages'
                           icon={menu}
                           force
                           containerClassName='d-block d-md-none'
