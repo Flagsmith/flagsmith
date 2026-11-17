@@ -89,7 +89,10 @@ const SegmentOverridesTab: FC<SegmentOverridesTabProps> = ({
 
   const changeSegment = (items: SegmentOverrideValue[]) => {
     items.forEach((item) => {
-      item.enabled = enabledSegment
+      // System segment overrides are managed by what owns them.
+      if (!item.is_system_segment) {
+        item.enabled = enabledSegment
+      }
     })
     updateSegments(items)
     setEnabledSegment(!enabledSegment)
