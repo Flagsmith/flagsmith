@@ -16,6 +16,7 @@ from audit.signals import (
     send_feature_flag_went_live_signal,
     trigger_feature_state_change_webhooks,
 )
+from audit.signals.authentication import create_user_logged_out_audit_logs
 from environments.models import Environment
 from features.models import Feature, FeatureState
 from features.versioning.models import EnvironmentFeatureVersion
@@ -575,6 +576,16 @@ def test_send_feature_flag_went_live_signal__scheduled_feature_state__skips_sign
 
     # Then
     mock_signal_send.assert_not_called()
+
+
+def test_create_user_logged_out_audit_logs__anonymous_user__creates_no_audit_log(
+    organisation: Organisation,
+) -> None:
+    # Given / When
+    create_user_logged_out_audit_logs(sender=FFAdminUser, user=None)
+
+    # Then
+    assert not AuditLog.objects.exists()
 
 
 def test_send_feature_flag_went_live_signal__non_feature_state_instance__skips_signal(

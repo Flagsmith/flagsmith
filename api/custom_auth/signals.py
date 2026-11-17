@@ -2,7 +2,7 @@ import json
 from typing import Any
 
 from django.conf import settings
-from django.dispatch import receiver
+from django.dispatch import Signal, receiver
 from djoser.signals import user_activated  # type: ignore[import-untyped]
 from openfeature.evaluation_context import EvaluationContext
 
@@ -11,6 +11,15 @@ from integrations.lead_tracking.hubspot.tasks import (
     create_hubspot_contact_for_user,
 )
 from users.models import FFAdminUser
+
+user_password_changed = Signal()
+user_login_password_verified = Signal()
+user_login_password_rejected = Signal()
+user_login_2fa_code_verified = Signal()
+user_login_2fa_code_rejected = Signal()
+user_login_sso_completed = Signal()
+user_2fa_enabled = Signal()
+user_2fa_disabled = Signal()
 
 
 @receiver(user_activated)

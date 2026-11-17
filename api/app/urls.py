@@ -11,6 +11,7 @@ from oauth2_provider import views as oauth2_views
 from oauth2_metadata.views import (
     DynamicClientRegistrationView,
     OAuthAuthorizeView,
+    OAuthRevokeTokenView,
     authorization_server_metadata,
 )
 from users.views import password_reset_redirect
@@ -76,7 +77,7 @@ if not settings.TASK_PROCESSOR_MODE:
                         path("token/", oauth2_views.TokenView.as_view(), name="token"),
                         path(
                             "revoke_token/",
-                            oauth2_views.RevokeTokenView.as_view(),
+                            OAuthRevokeTokenView.as_view(),
                             name="revoke-token",
                         ),
                         path(
