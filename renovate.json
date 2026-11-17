@@ -21,7 +21,7 @@
   "customManagers": [
     {
       "customType": "regex",
-      "description": "JS SDK version in docs jsDelivr <script> snippets",
+      "description": "JS SDK version in docs jsDelivr <script> snippets. TODO: once Renovate's html manager supports jsDelivr (https://github.com/renovatebot/renovate/pull/45015, https://github.com/renovatebot/renovate/issues/26937), switch to it and drop this custom manager.",
       "managerFilePatterns": ["/^docs/docs/.+\\.mdx?$/"],
       "matchStrings": [
         "https://cdn\\.jsdelivr\\.net/npm/(?<depName>@flagsmith/flagsmith)@(?<currentValue>\\d+\\.\\d+\\.\\d+)/"
@@ -68,7 +68,7 @@
       "rangeStrategy": "bump"
     },
     {
-      "description": "Bump the JS SDK in docs jsDelivr snippets and recompute their SRI hashes",
+      "description": "Bump the JS SDK in docs jsDelivr snippets and recompute their SRI hashes. TODO: once Renovate's html manager supports jsDelivr (https://github.com/renovatebot/renovate/pull/45015, https://github.com/renovatebot/renovate/issues/26937), switch to it and drop this post-upgrade task (and RENOVATE_ALLOWED_COMMANDS in .github/workflows/renovate.yml).",
       "matchManagers": ["custom.regex"],
       "matchPackageNames": ["@flagsmith/flagsmith"],
       "matchFileNames": ["docs/**"],
