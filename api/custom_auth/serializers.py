@@ -43,7 +43,7 @@ class CustomTokenCreateSerializer(TokenCreateSerializer):  # type: ignore[misc]
             return super().validate(attrs)  # type: ignore[no-any-return]
         except ValidationError as error:
             if not (username := attrs.get(djoser_settings.LOGIN_FIELD)):
-                raise
+                raise  # pragma: no cover
             try:
                 user = FFAdminUser.objects.get_by_natural_key(username)
             except FFAdminUser.DoesNotExist:
