@@ -1,7 +1,7 @@
 import { usePluginData } from '@docusaurus/useGlobalData';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import { maxSatisfying } from 'semver';
-import { JS_SPEC } from './sdkVersionSpecs.js';
+import pinned from '@site/plugins/js-cdn-sri/pinned.json';
 
 const Version = ({ sdk, spec = '*', options = {} }) => {
     const {
@@ -27,23 +27,11 @@ export const SwiftPMVersion = ({ spec = '~3' }) => Version({ sdk: 'swiftpm', spe
 export const DotnetVersion = ({ spec = '~8' }) => Version({ sdk: 'dotnet', spec });
 export const ElixirVersion = ({ spec = '~2' }) => Version({ sdk: 'elixir', spec });
 export const RustVersion = ({ spec = '~2' }) => Version({ sdk: 'rust', spec });
-export const JsVersion = ({ spec = JS_SPEC }) => Version({ sdk: 'js', spec });
+export const JsVersion = ({ spec = '^12' }) => Version({ sdk: 'js', spec });
 export const NodejsVersion = ({ spec = '^9' } = {}) => Version({ sdk: 'nodejs', spec });
 export const FlutterVersion = ({ spec = '~6' }) => Version({ sdk: 'flutter', spec });
 
 // `<script>` tag that loads the JS SDK from jsDelivr, pinned to an exact version with a Subresource Integrity hash.
-export const JsCdnScript = () => {
-    const {
-        siteConfig: {
-            customFields: { CI },
-        },
-    } = useDocusaurusContext();
-    const script = usePluginData('flagsmith-versions').jsCdnScript;
-    if (!script) {
-        const message = 'no jsDelivr script found for the JS SDK';
-        if (CI) throw new Error(message);
-        console.error(message);
-        return '<script src="https://cdn.jsdelivr.net/npm/@flagsmith/flagsmith@x.y.z/index.js"></script>';
-    }
-    return `<script src="${script.src}" integrity="${script.integrity}" crossorigin="anonymous"></script>`;
-};
+// The pin is version-controlled in plugins/js-cdn-sri/pinned.json and verified against jsDelivr at build time.
+export const JsCdnScript = () =>
+    `<script src="https://cdn.jsdelivr.net/npm/@flagsmith/flagsmith@${pinned.version}/index.js" integrity="${pinned.integrity}" crossorigin="anonymous"></script>`;
