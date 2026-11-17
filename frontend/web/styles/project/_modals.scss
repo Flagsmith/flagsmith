@@ -348,7 +348,6 @@ $side-width: 800px;
   min-width: 0;
 }
 
-// Feature drawer: no space above the tabs, 24px below, at every width
 .side-modal.create-feature-modal {
   .modal-body {
     padding-top: 0;
@@ -359,8 +358,7 @@ $side-width: 800px;
 }
 
 @include media-breakpoint-down(md) {
-  // Only drawers fill the screen, growing with their content (min-height);
-  // dialogs stay cards sized to their content
+  // Drawers fill the screen; dialogs stay cards
   .side-modal .modal-dialog {
     margin: 0;
     // Bootstrap caps .modal-dialog width from 544px; drawers stay full width
