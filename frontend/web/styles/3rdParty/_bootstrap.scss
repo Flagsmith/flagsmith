@@ -48,12 +48,26 @@ $_color-util: map-merge(
 );
 $utilities: map-merge($utilities, ("color": $_color-util));
 
-// Border colour: token border utilities take over. Values are identical to
-// Bootstrap's, so a no-op; it just moves ownership to the token layer.
+// Border colour: Bootstrap generates `.border-*` with the token colours, after
+// `.border`, so `border border-warning` draws the warning colour.
 $_border-util: map-get($utilities, "border-color");
 $_border-util: map-merge(
   $_border-util,
-  (values: map-remove(map-get($_border-util, "values"), "danger", "info", "success", "warning"))
+  (
+    values: map-merge(
+      map-get($_border-util, "values"),
+      (
+        "action": var(--color-border-action),
+        "danger": var(--color-border-danger),
+        "default": var(--color-border-default),
+        "disabled": var(--color-border-disabled),
+        "info": var(--color-border-info),
+        "strong": var(--color-border-strong),
+        "success": var(--color-border-success),
+        "warning": var(--color-border-warning),
+      )
+    ),
+  )
 );
 $utilities: map-merge($utilities, ("border-color": $_border-util));
 
@@ -104,8 +118,8 @@ $utilities: map-merge($utilities, ("shadow": $_shadow-util));
   padding: 0;
 }
 
-// Bootstrap's `.border*` utilities paint `--bs-border-color` with `!important`,
-// so `.border-default` can never win. Point the Bootstrap variable at the token.
-:root {
+// The colour of a plain `.border`. On body, not :root, so the token resolves
+// under .dark too.
+body {
   --bs-border-color: var(--color-border-default);
 }
