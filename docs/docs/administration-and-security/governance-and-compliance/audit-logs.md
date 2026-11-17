@@ -118,7 +118,11 @@ These events are recorded in every organisation the user belongs to.
 - User entered their password, pending 2FA
 - User logged in with 2FA
 - User failed to log in due to an incorrect password or 2FA code
+- User was locked out after too many failed login attempts
+- User attempted to log in while locked out
 - User logged in with SSO
 - User logged out
+- User logged in to an OAuth application
+- User logged out of an OAuth application
 - User changed their password
 - User enabled or disabled 2FA
