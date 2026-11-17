@@ -1,3 +1,7 @@
+import { createHash } from 'node:crypto';
+import { maxSatisfying } from 'semver';
+import { JS_SPEC } from '../../src/components/sdkVersionSpecs.js';
+
 const fetchJSON = async (url, options) => {
     const response = await fetch(url, options);
     if (!response.ok) throw new Error(await response.text());
@@ -83,6 +87,19 @@ const fetchFlutterVersions = async () => {
     return data.versions.map((v) => v.version);
 };
 
+// Subresource Integrity hash for the JS SDK bundle served by jsDelivr, so the docs can publish
+// `<script integrity=...>` snippets that browsers refuse to run if the file is ever tampered with.
+const fetchJsCdnScript = async (versions) => {
+    const version = maxSatisfying(versions, JS_SPEC);
+    if (!version) throw new Error(`no @flagsmith/flagsmith version matches ${JS_SPEC}`);
+    const src = `https://cdn.jsdelivr.net/npm/@flagsmith/flagsmith@${version}/index.js`;
+    const response = await fetch(src);
+    if (!response.ok) throw new Error(await response.text());
+    const body = Buffer.from(await response.arrayBuffer());
+    const integrity = `sha384-${createHash('sha384').update(body).digest('base64')}`;
+    return { src, integrity };
+};
+
 export default async function fetchFlagsmithVersions(context, options) {
     return {
         name: 'flagsmith-versions',
@@ -101,8 +118,10 @@ export default async function fetchFlagsmithVersions(context, options) {
                     fetchFlutterVersions(),
                 ].map(fallback([])),
             );
+            const jsCdnScript = await fallback(null)(fetchJsCdnScript(js));
             return {
                 js,
+                jsCdnScript,
                 nodejs,
                 java,
                 android,

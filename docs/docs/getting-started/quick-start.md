@@ -4,7 +4,7 @@ sidebar_label: Quick Start
 sidebar_position: 2
 ---
 
-import CodeBlock from '@theme/CodeBlock'; import { JsVersion } from '@site/src/components/SdkVersions.js';
+import CodeBlock from '@theme/CodeBlock'; import { JsCdnScript } from '@site/src/components/SdkVersions.js';
 
 # Flagsmith Quick Start Guide
 
@@ -72,7 +72,18 @@ The page looks like this:
 
 For the purposes of this quickstart tutorial, we will import the SDK inline into our web page:
 
-<CodeBlock>{ `<script src="https://cdn.jsdelivr.net/npm/@flagsmith/flagsmith@`}<JsVersion />{`/index.js"></script>` } </CodeBlock>
+<CodeBlock><JsCdnScript /></CodeBlock>
+
+:::tip
+
+Always load the SDK from a CDN with an exact version and the `integrity` and `crossorigin` attributes shown above. The
+`integrity` attribute is a
+[Subresource Integrity](https://developer.mozilla.org/en-US/docs/Web/Security/Subresource_Integrity) hash: the browser
+refuses to run the script if the file it downloads doesn't match it, so a compromised CDN or package can't inject code
+into your site. Avoid version ranges such as `@flagsmith/flagsmith@12` or `@latest`, which can't be pinned to a hash. If
+you install the SDK from npm and bundle it instead, your lockfile does the same job.
+
+:::
 
 ## 3. Connect to the Flagsmith API
 
@@ -127,7 +138,7 @@ Our entire web page now reads like this:
  <head>
   <meta charset="utf-8" />
   <title>Flagsmith Quickstart Guide</title>
-  <script src="https://cdn.jsdelivr.net/npm/@flagsmith/flagsmith@`}<JsVersion />{`/index.js"></script>
+  `}<JsCdnScript />{`
   <script>
    flagsmith.init({
     environmentID: 'ZfmJTbLQZrhZVHkVhXbsNi',
