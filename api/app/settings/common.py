@@ -75,6 +75,8 @@ USE_X_FORWARDED_HOST = env.bool("USE_X_FORWARDED_HOST", default=False)
 
 CSRF_TRUSTED_ORIGINS: list[str] = env.list("DJANGO_CSRF_TRUSTED_ORIGINS", default=[])
 
+SSRF_ALLOWED_HOSTS: list[str] = env.list("SSRF_ALLOWED_HOSTS", default=[])
+
 INTERNAL_IPS = ["127.0.0.1"]
 
 # Application definition

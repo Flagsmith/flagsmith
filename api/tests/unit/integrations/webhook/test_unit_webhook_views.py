@@ -1,8 +1,11 @@
 import json
 
 from django.urls import reverse
+from pytest_django.fixtures import SettingsWrapper
 from rest_framework import status
+from rest_framework.test import APIClient
 
+from environments.models import Environment
 from integrations.webhook.models import WebhookConfiguration
 
 valid_webhook_url = "http://my.webhook.com/webhooks"
@@ -138,3 +141,28 @@ def test_create_webhook_config__private_ip_url__returns_400(  # type: ignore[no-
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert not WebhookConfiguration.objects.filter(environment=environment).exists()
+
+
+def test_create_webhook_config__private_ip_in_ssrf_allowed_hosts__returns_201(
+    admin_client: APIClient,
+    environment: Environment,
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    settings.SSRF_ALLOWED_HOSTS = ["127.0.0.1"]
+    url = reverse(
+        "api-v1:environments:integrations-webhook-list",
+        args=[environment.api_key],
+    )
+    data = {"url": "http://127.0.0.1/webhooks", "secret": "random_secret"}
+
+    # When
+    response = admin_client.post(
+        url,
+        data=json.dumps(data),
+        content_type="application/json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert WebhookConfiguration.objects.filter(environment=environment).exists()
