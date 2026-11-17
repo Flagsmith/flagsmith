@@ -436,7 +436,7 @@ def test_update_feature__live_experiment__unchanged_keyed_options_preserved(
         {
             "type": option.type,
             "string_value": option.string_value,
-            "default_percentage_allocation": option.default_percentage_allocation,
+            "default_percentage_allocation": 0,
         }
         for option in multivariate_feature.multivariate_options.all()
     ]
