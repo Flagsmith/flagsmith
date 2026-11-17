@@ -16,7 +16,6 @@
   display: grid;
   justify-content: center;
   row-gap: 12px;
-  // Phones: two per row
   grid-template-columns: repeat(2, 1fr);
 
   // Wider screens: every metric on one row
