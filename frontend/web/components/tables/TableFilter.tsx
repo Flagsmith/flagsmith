@@ -12,7 +12,6 @@ type TableFilterType = {
   hideTitle?: boolean
   dropdownTitle?: ReactNode | string
   className?: string
-  size?: 'sm' | 'lg'
   children: ReactNode | ((close: () => void) => ReactNode)
   'data-test'?: string
 }
@@ -24,14 +23,13 @@ const TableFilter: FC<TableFilterType> = ({
   dropdownTitle,
   hideTitle,
   label,
-  size = 'sm',
   title,
 }) => (
   <Popover
     aria-label={label ?? (typeof title === 'string' ? title : 'Filter')}
     placement='bottom-end'
     // Width for the anchored panel; the phone sheet is full width
-    className={`inline-modal--${size}`}
+    className='inline-modal--sm'
     renderTrigger={(props) => (
       <BareButton
         {...props}
