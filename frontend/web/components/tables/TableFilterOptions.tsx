@@ -10,7 +10,6 @@ type TableFilterOptionsType = {
   label?: string
   dropdownTitle?: ReactNode | string
   className?: string
-  size?: 'sm' | 'lg'
   isLoading?: boolean
   options: { label: string; value: string | number; subtitle?: string }[]
   onChange: (value: string | string[]) => void | Promise<void>
@@ -27,7 +26,6 @@ const TableFilterOptions: FC<TableFilterOptionsType> = ({
   onChange,
   options,
   showSearch,
-  size = 'sm',
   title,
   value,
 }) => {
@@ -48,7 +46,6 @@ const TableFilterOptions: FC<TableFilterOptionsType> = ({
         title={title}
         label={label}
         hideTitle
-        size={size}
         className={classNames('user-select-none', className)}
       >
         {(close) => (

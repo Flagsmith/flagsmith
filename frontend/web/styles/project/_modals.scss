@@ -185,16 +185,6 @@ $side-width: 800px;
   &.table-filter {
     top:12px;
   }
-  &--lg {
-    width: 355px;
-    .inline-modal__title {
-      padding: 8px 12px;
-      * {
-        font-size: $font-sm !important;
-        line-height: $line-height-sm !important;
-      }
-    }
-  }
   &--sm {
     min-width: 200px;
     max-width: 355px;
