@@ -59,7 +59,6 @@ export const Open: Story = {
 export const MobileSheet: Story = {
   globals: { viewport: { isRotated: false, value: 'mobile1' } },
   parameters: {
-    chromatic: { delay: 300, viewports: [375] },
     docs: { story: { height: '420px', inline: false } },
   },
   play: async ({ canvasElement }: { canvasElement: HTMLElement }) => {
