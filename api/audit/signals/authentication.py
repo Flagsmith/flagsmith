@@ -97,7 +97,9 @@ def create_user_locked_out_audit_logs(
     username: str,
     **kwargs: Any,
 ) -> None:
-    if not (user := FFAdminUser.objects.filter(email__iexact=username).first()):
+    try:
+        user = FFAdminUser.objects.get_by_natural_key(username)
+    except FFAdminUser.DoesNotExist:
         return
     message = (
         USER_LOGIN_WHILE_LOCKED_OUT_MESSAGE

@@ -41,12 +41,13 @@ class CustomTokenCreateSerializer(TokenCreateSerializer):  # type: ignore[misc]
         Overrides djoser so that activation state can't be probed without a valid password."""
         try:
             return super().validate(attrs)  # type: ignore[no-any-return]
-        except ValidationError:
-            if not (email := attrs.get(djoser_settings.LOGIN_FIELD)):
+        except ValidationError as error:
+            if not (username := attrs.get(djoser_settings.LOGIN_FIELD)):
                 raise
-            user = FFAdminUser.objects.filter(email__iexact=email).first()
-            if not user:
-                raise
+            try:
+                user = FFAdminUser.objects.get_by_natural_key(username)
+            except FFAdminUser.DoesNotExist:
+                raise error from None
             if not (password := attrs.get("password")) or not user.check_password(
                 password
             ):
