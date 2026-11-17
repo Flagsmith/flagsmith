@@ -27,6 +27,7 @@ const TableOwnerFilter: FC<TableFilterType> = ({
 
   return (
     <TableFilterOptions
+      label='Users'
       size='lg'
       className={className}
       isLoading={isLoading}
