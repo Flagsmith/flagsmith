@@ -345,13 +345,13 @@ class CreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
         instance: Feature,
     ) -> bool:
         # The frontend resubmits the whole feature, so only a real change to
-        # writable option fields counts. Compare on content, not ids.
+        # variation value/type counts. `default_percentage_allocation` only
+        # seeds new options or environments and does not affect live variants.
         fields = (
             "type",
             "integer_value",
             "string_value",
             "boolean_value",
-            "default_percentage_allocation",
         )
         current = NestedMultivariateFeatureOptionSerializer(
             instance.multivariate_options.all(), many=True
