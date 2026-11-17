@@ -49,7 +49,6 @@ const Popover: FC<PopoverProps> = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false)
   const close = () => setIsOpen(false)
-  // Phones get a bottom sheet instead of an anchored panel
   const asSheet = useBreakpoint('isPhone')
 
   const { context, floatingStyles, refs } = useFloating({
