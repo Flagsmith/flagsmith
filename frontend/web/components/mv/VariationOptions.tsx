@@ -88,13 +88,11 @@ export const VariationOptions: FC<VariationOptionsProps> = ({
               Currently served
             </span>
           </div>
-          <div className='border rounded p-3'>
-            <ValueEditor
-              label={divergedOverride.key}
-              disabled
-              value={Utils.getTypedValue(divergedOverride.servedValue)}
-            />
-          </div>
+          <ValueEditor
+            label={divergedOverride.key}
+            readOnly
+            value={Utils.getTypedValue(divergedOverride.servedValue)}
+          />
         </div>
       )}
       {select && !!unmatchedOverride && (

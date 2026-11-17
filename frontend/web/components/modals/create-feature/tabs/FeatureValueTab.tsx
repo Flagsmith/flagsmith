@@ -8,6 +8,7 @@ import { AddVariationButton } from 'components/mv/AddVariationButton'
 import ErrorMessage from 'components/ErrorMessage'
 import InfoMessage from 'components/InfoMessage'
 import WarningMessage from 'components/WarningMessage'
+import Banner from 'components/base/Banner'
 import Tooltip from 'components/Tooltip'
 import Icon from 'components/icons/Icon'
 import Switch from 'components/Switch'
@@ -471,9 +472,9 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
               <WarningMessage warningMessage="This identity override contains a value that is not one of this flag's variations. We recommend changing it." />
             )}
             {!!divergedVariantOverride && (
-              <WarningMessage
-                warningMessage={`This identity is served a stale copy of variation '${divergedVariantOverride.key}', taken when the override was saved. Press Update Feature to refresh it.`}
-              />
+              <Banner type='warning' className='mb-3'>
+                {`This identity is served a stale copy of variation '${divergedVariantOverride.key}', taken when the override was saved. Press Update Feature to refresh it.`}
+              </Banner>
             )}
             <VariationOptions
               canCreateFeature={false}
