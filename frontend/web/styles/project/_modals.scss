@@ -358,6 +358,8 @@ $side-width: 800px;
   // dialogs stay cards sized to their content
   .side-modal .modal-dialog {
     margin: 0;
+    // Bootstrap caps .modal-dialog width from 544px; drawers stay full width
+    max-width: none;
     .modal-content {
       border-radius: 0;
       min-height: 100vh;
