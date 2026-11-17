@@ -1,5 +1,43 @@
 # Changelog
 
+## [2.292.0](https://github.com/Flagsmith/flagsmith/compare/v2.291.0...v2.292.0) (2026-11-17)
+
+
+### Features
+
+* Add SSRF allowlist ([#8993](https://github.com/Flagsmith/flagsmith/issues/8993)) ([47c774b](https://github.com/Flagsmith/flagsmith/commit/47c774ba543c992e584b4cd4897345d1982829ba))
+* **AuditLog:** Add the organisation audit log page ([#8940](https://github.com/Flagsmith/flagsmith/issues/8940)) ([339f8b0](https://github.com/Flagsmith/flagsmith/commit/339f8b0f5cdb0fd9cf9924d74fd8a1a4140fb8d9))
+* **Environments:** Standardise environment Chip across the UI ([#8971](https://github.com/Flagsmith/flagsmith/issues/8971)) ([eeb1fb7](https://github.com/Flagsmith/flagsmith/commit/eeb1fb70010268e86eb018c20fb3f497576a3c5b))
+* **Popover:** Rebuild the base Popover on Floating UI ([#8969](https://github.com/Flagsmith/flagsmith/issues/8969)) ([67e727a](https://github.com/Flagsmith/flagsmith/commit/67e727a9bac335d9c691ed274471a7fb870fab04))
+* **Radio:** Rebuild Radio around a native input ([#8970](https://github.com/Flagsmith/flagsmith/issues/8970)) ([59ef92a](https://github.com/Flagsmith/flagsmith/commit/59ef92a8e4d35fff9951423cf648472ec02a6ff4))
+
+
+### Bug Fixes
+
+* added condition to render edit identity alias button ([#8967](https://github.com/Flagsmith/flagsmith/issues/8967)) ([c57f84b](https://github.com/Flagsmith/flagsmith/commit/c57f84b16eecf155dd9e3e8cce04fa5d70028235))
+* **Change requests:** Fix flaky E2E tests and a stale deleted feature ([#8951](https://github.com/Flagsmith/flagsmith/issues/8951)) ([450eb5d](https://github.com/Flagsmith/flagsmith/commit/450eb5d9622c02b3c26ddad6bf13fb965a92b9df))
+* **Environments:** Use every palette colour and drop tests that guard nothing ([#8975](https://github.com/Flagsmith/flagsmith/issues/8975)) ([b6d94bb](https://github.com/Flagsmith/flagsmith/commit/b6d94bb046fe0be51e15df70d1722cfd8cfb773f))
+* **Flag Dependency:** Serve dependency overrides' value from the environment default ([#8793](https://github.com/Flagsmith/flagsmith/issues/8793)) ([7751408](https://github.com/Flagsmith/flagsmith/commit/77514087018b370eed92d164dbc76883f6ad695b))
+* Scope nested writes to the object being saved ([#8986](https://github.com/Flagsmith/flagsmith/issues/8986)) ([7208bde](https://github.com/Flagsmith/flagsmith/commit/7208bdeac2f45c4d8e51fb9deec409decb0ff1a0))
+* **Usage:** API call counts just under a magnitude display as 1000K ([#8804](https://github.com/Flagsmith/flagsmith/issues/8804)) ([18638a8](https://github.com/Flagsmith/flagsmith/commit/18638a85822f935d041db75ed8bb3b74379bbe44))
+* **usage:** Stop usage tasks dying on a single organisation ([#8753](https://github.com/Flagsmith/flagsmith/issues/8753)) ([a9b66f5](https://github.com/Flagsmith/flagsmith/commit/a9b66f51ba74a2e084a80f44febbac23e2ec87ef))
+
+
+### Dependency Updates
+
+* **api:** update dependency flagsmith-private to &gt;=0.15.1,&lt;1 ([#8988](https://github.com/Flagsmith/flagsmith/issues/8988)) ([da995e7](https://github.com/Flagsmith/flagsmith/commit/da995e7bb59b94abc0b2074d4c3b7a1d2029b728))
+* **mcp:** update dependency dnspython to v2.9.2 [security] ([#8963](https://github.com/Flagsmith/flagsmith/issues/8963)) ([05b073c](https://github.com/Flagsmith/flagsmith/commit/05b073cbbf29fb3ea8c3a1bbba8e3a61f69168e5))
+
+
+### Docs
+
+* pin jsDelivr SDK snippet with Subresource Integrity ([#8990](https://github.com/Flagsmith/flagsmith/issues/8990)) ([4a45da1](https://github.com/Flagsmith/flagsmith/commit/4a45da1d04367b9e424c6a3b0fb0d5ffc9bfea74))
+
+
+### Refactoring
+
+* **Change requests:** Replace the Flux change request store with RTK Query ([#8923](https://github.com/Flagsmith/flagsmith/issues/8923)) ([00b7931](https://github.com/Flagsmith/flagsmith/commit/00b7931de44805df55347a088073bbe215da271f))
+
 ## [2.291.0](https://github.com/Flagsmith/flagsmith/compare/v2.290.0...v2.291.0) (2026-11-13)
 
 
