@@ -235,7 +235,7 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
       : []
 
     openModal(
-      <Row className='align-items-center'>
+      <Row noWrap className='align-items-center'>
         {!!cameFrom && (
           <IconButton
             size='medium'
@@ -247,8 +247,12 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
             <Icon name='arrow-left' width={20} />
           </IconButton>
         )}
-        <span>
-          {permission ? 'Edit Feature' : 'Feature'}: {projectFlag.name}
+        <span className='text-truncate'>
+          {/* Phones show just the name so the copy button stays beside it */}
+          <span className='d-none d-md-inline'>
+            {permission ? 'Edit Feature' : 'Feature'}:{' '}
+          </span>
+          {projectFlag.name}
         </span>
         <IconButton
           variant='ghost'
@@ -257,12 +261,12 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
           onClick={() => {
             Utils.copyToClipboard(projectFlag.name)
           }}
-          className='ms-2'
+          className='ms-2 flex-shrink-0'
         >
           <Icon width={16} name='copy' />
         </IconButton>
         {ownerChips.length > 0 && (
-          <div className='d-flex align-items-center gap-1 ms-3'>
+          <div className='d-none d-md-flex align-items-center gap-1 ms-3'>
             <Icon name='people' width={16} fill='#9DA4AE' />
             {ownerChips.slice(0, 3).map((chip) => (
               <span key={chip.id} className='chip chip--xs'>

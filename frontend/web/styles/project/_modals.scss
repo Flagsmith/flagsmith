@@ -345,11 +345,24 @@ $side-width: 800px;
 }
 
 @include media-breakpoint-down(md) {
-  .modal-dialog {
+  // Only drawers fill the screen; dialogs stay cards sized to their content
+  .side-modal .modal-dialog {
     margin:0;
     .modal-content {
       border-radius:0;
-      height: 100vh;
+      // min-height, not height: taller content must grow the panel, or it
+      // renders past its background on top of the page
+      min-height: 100vh;
+    }
+  }
+
+  // Same spacing as the desktop side modal: none above the tabs, some below
+  .side-modal.create-feature-modal {
+    .modal-body {
+      padding-top: 0;
+    }
+    .tabs .tab-item:not(.p-0) {
+      padding-top: 24px;
     }
   }
 }
