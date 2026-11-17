@@ -15,7 +15,9 @@ export const docsDir = new URL('../../docs/', import.meta.url);
 //
 // Inside a marked block the tag must have exactly this form: an exact version and file path, so the file can't change
 // under the hash (https://www.jsdelivr.com/using-sri-with-dynamic-files), then `integrity` and `crossorigin`.
-const markedBlock = /\{\/\* renovate: datasource=npm depName=(\S+) \*\/\}\r?\n\s*```[^\n]*\n([\s\S]*?)\r?\n```/g;
+// The block must open with exactly three backticks, and ends at the first line that could close it (a fence indented by up
+// to three spaces, per CommonMark).
+const markedBlock = /\{\/\* renovate: datasource=npm depName=(\S+) \*\/\}\r?\n\s*```[^`\n]*\n([\s\S]*?)\r?\n {0,3}```/g;
 const marker = /\{\/\*\s*renovate:/gi;
 const escape = (s) => s.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&');
 const snippetTag = (depName) =>
