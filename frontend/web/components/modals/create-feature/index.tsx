@@ -480,6 +480,20 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
   const hideIdentityOverridesTab = Utils.getShouldHideIdentityOverridesTab()
   const isDependenciesTabEnabled = !existingChangeRequest
 
+  // Shows the Dependencies tab, as `Tabs` does when it's clicked.
+  const showDependencies =
+    isDependenciesTabEnabled && props.history
+      ? () => {
+          const searchParams = new URLSearchParams(window.location.search)
+          searchParams.set('tab', 'dependencies')
+          props.history?.replace({
+            pathname: window.location.pathname,
+            search: searchParams.toString(),
+          })
+          setTabKey((k) => k + 1)
+        }
+      : undefined
+
   let regexValid = true
   try {
     if (!isEdit && projectFlag.name && regex) {
@@ -873,6 +887,7 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                           noPermissions={!!noPermissions}
                           disableCreate={disableCreate}
                           highlightSegmentId={highlightSegmentId}
+                          onViewDependencies={showDependencies}
                         />
                       </TabItem>
                     )}
