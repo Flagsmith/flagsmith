@@ -35,6 +35,8 @@ export interface ValueEditorProps {
   // A string, not FlagsmithValue: deciding that "123" is a number is the
   // caller's job (Utils.getTypedValue, Utils.valueToFeatureState).
   onChange?: (value: string) => void
+  // Not editable, but shown at full strength, unlike `disabled`.
+  readOnly?: boolean
   value?: FlagsmithValue
 }
 
@@ -47,6 +49,7 @@ const ValueEditor: FC<ValueEditorProps> = ({
   language: languageProp,
   onBlur,
   onChange,
+  readOnly,
   value,
 }) => {
   const [picked, setPicked] = useState<ValueEditorLanguage>()
@@ -75,7 +78,8 @@ const ValueEditor: FC<ValueEditorProps> = ({
 
   // A caller that pins the format has nothing to switch, so the row goes, and
   // copy goes with it as it always has.
-  const showControls = !disabled && !languageProp
+  const locked = disabled || readOnly
+  const showControls = !locked && !languageProp
 
   // Only rendered alongside the format row, so a pinned caller does not need a
   // DOMParser run on every keystroke.
@@ -117,10 +121,10 @@ const ValueEditor: FC<ValueEditorProps> = ({
 
         <Highlight
           aria-labelledby={label ? labelId : undefined}
-          aria-readonly={disabled || undefined}
-          disabled={disabled}
-          onChange={disabled ? null : onChange}
-          onBlur={disabled ? null : onBlur}
+          aria-readonly={locked || undefined}
+          disabled={locked}
+          onChange={locked ? null : onChange}
+          onBlur={locked ? null : onBlur}
           role='textbox'
           className={language}
         >
