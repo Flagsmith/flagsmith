@@ -6,7 +6,7 @@ import { toHexColour } from 'common/utils/hexColour'
 import './Chip.scss'
 
 export type ChipSize = 'default' | 'sm' | 'xs'
-export type ChipVariant = 'neutral' | 'accent' | 'tinted'
+export type ChipVariant = 'neutral' | 'accent' | 'warning' | 'tinted'
 type TokenVariant = Exclude<ChipVariant, 'tinted'>
 
 // 'tinted' takes a 6-digit hex colour; the token variants take none.
@@ -37,6 +37,7 @@ export type ChipProps = ChipVariantProps & {
 const VARIANT_UTILITIES: Record<TokenVariant, string> = {
   accent: 'bg-surface-action-subtle text-action',
   neutral: 'bg-surface-subtle text-default',
+  warning: 'bg-surface-warning text-warning',
 }
 
 // Token-based chip primitive. Uses `ds-chip` rather than the legacy `.chip`
@@ -79,8 +80,9 @@ const Chip = ({
           'ds-chip--accent': !tint && tokenVariant === 'accent',
           'ds-chip--clickable': interactive,
           'ds-chip--tinted': !!tint,
-          [`ds-chip--${size}`]: size !== 'default',
           'ds-chip--truncate': truncate,
+          [`ds-chip--${size}`]: size !== 'default',
+          'ds-chip--warning': !tint && tokenVariant === 'warning',
         },
         className,
       )}
