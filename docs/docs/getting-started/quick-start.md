@@ -76,12 +76,9 @@ For the purposes of this quickstart tutorial, we will import the SDK inline into
 
 :::tip
 
-Always load the SDK from a CDN with an exact version and the `integrity` and `crossorigin` attributes shown above. The
-`integrity` attribute is a
-[Subresource Integrity](https://developer.mozilla.org/en-US/docs/Web/Security/Subresource_Integrity) hash: the browser
-refuses to run the script if the file it downloads doesn't match it, so a compromised CDN or package can't inject code
-into your site. Avoid version ranges such as `@flagsmith/flagsmith@12` or `@latest`, which can't be pinned to a hash. If
-you install the SDK from npm and bundle it instead, your lockfile does the same job.
+Keep the exact version and
+[`integrity`](https://developer.mozilla.org/en-US/docs/Web/Security/Subresource_Integrity) attribute when loading the
+SDK from a CDN.
 
 :::
 
