@@ -16,8 +16,8 @@ const systemOverride = (name: string, priority: number): Override => ({
   priority,
 })
 
-const summarise = (overrides: Override[]) =>
-  overrides.map(({ name, priority }) => [name, priority])
+const summarise = (overrides: Override[] | undefined) =>
+  overrides?.map(({ name, priority }) => [name, priority])
 
 describe('canMoveSegmentOverride', () => {
   const overrides = [
@@ -36,6 +36,16 @@ describe('canMoveSegmentOverride', () => {
   it('refuses moving system segment overrides', () => {
     expect(canMoveSegmentOverride(overrides, 0, 1)).toBe(false)
     expect(canMoveSegmentOverride(overrides, 3, 2)).toBe(false)
+  })
+
+  it("refuses moves that would take a system segment override's priority", () => {
+    expect(
+      canMoveSegmentOverride(
+        [override('a', 0), override('b', 0), systemOverride('dependency', 1)],
+        1,
+        0,
+      ),
+    ).toBe(false)
   })
 
   it('refuses moving overrides past system segment overrides', () => {
@@ -82,7 +92,7 @@ describe('moveSegmentOverride', () => {
     ])
   })
 
-  it('renumbers overrides when their priorities leave no room', () => {
+  it("refuses moves that would take a system segment override's priority", () => {
     // Given
     const overrides = [
       override('a', 0),
@@ -94,11 +104,7 @@ describe('moveSegmentOverride', () => {
     const moved = moveSegmentOverride(overrides, 1, 0)
 
     // Then
-    expect(summarise(moved)).toEqual([
-      ['b', 0],
-      ['a', 1],
-      ['dependency', 2],
-    ])
+    expect(moved).toBeUndefined()
   })
 })
 

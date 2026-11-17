@@ -746,9 +746,10 @@ class TheComponent extends Component {
     if (!canMoveSegmentOverride(this.props.value, oldIndex, newIndex)) {
       return
     }
-    this.props.onChange(
-      moveSegmentOverride(this.props.value, oldIndex, newIndex),
-    )
+    const moved = moveSegmentOverride(this.props.value, oldIndex, newIndex)
+    if (moved) {
+      this.props.onChange(moved)
+    }
   }
 
   render() {

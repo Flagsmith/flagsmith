@@ -362,7 +362,11 @@ const controller = {
               },
               id: segmentOverride.data.feature_segment.id,
               multivariate_options: segmentOverrides[i].multivariate_options,
-              priority: segmentOverride.data.feature_segment.priority,
+              // Where the override was moved to, rather than where it was
+              // created, so the priorities saved next keep it there.
+              priority:
+                segmentOverrides[i].priority ??
+                segmentOverride.data.feature_segment.priority,
               segment: segmentOverride.data.feature_segment.segment,
               segment_name: v.segment_name,
               uuid: segmentOverride.data.feature_segment.uuid,

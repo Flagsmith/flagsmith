@@ -36,6 +36,17 @@ const SystemSegmentOverrideLink: FC<SystemSegmentOverrideLinkProps> = ({
       </Button>
     )
   }
+  if (managedBy === 'release_pipeline') {
+    return (
+      <Button
+        theme='secondary'
+        size='small'
+        href={`/project/${projectId}/release-pipelines`}
+      >
+        View pipelines
+      </Button>
+    )
+  }
   return null
 }
 

@@ -9,6 +9,35 @@ export type PrioritisedSegmentOverride = {
   priority: number
 }
 
+// Moves a segment override, keeping the priority of each position, so that
+// system segment overrides keep theirs. Priorities shared or out of order, as
+// data written before priorities were kept unique may have, are moved apart.
+// Undefined where that would take a system segment override's priority.
+export const moveSegmentOverride = <T extends PrioritisedSegmentOverride>(
+  overrides: T[],
+  oldIndex: number,
+  newIndex: number,
+): T[] | undefined => {
+  const priorities = overrides.map((override) => override.priority)
+  const result: T[] = []
+  let previous = -1
+  for (const [index, override] of arrayMove(
+    overrides,
+    oldIndex,
+    newIndex,
+  ).entries()) {
+    const priority = override.is_system_segment
+      ? override.priority
+      : Math.max(previous + 1, priorities[index])
+    if (priority <= previous) {
+      return undefined
+    }
+    result.push({ ...override, priority })
+    previous = priority
+  }
+  return result
+}
+
 export const canMoveSegmentOverride = (
   overrides: PrioritisedSegmentOverride[],
   oldIndex: number,
@@ -19,38 +48,12 @@ export const canMoveSegmentOverride = (
   }
   const [start, end] =
     oldIndex < newIndex ? [oldIndex + 1, newIndex] : [newIndex, oldIndex - 1]
-  return overrides
-    .slice(start, end + 1)
-    .every((override) => !override.is_system_segment)
-}
-
-const renumber = <T extends PrioritisedSegmentOverride>(overrides: T[]): T[] =>
-  overrides.map((override, priority) => ({ ...override, priority }))
-
-// Moves a segment override, keeping the priority of each position, so that
-// system segment overrides keep theirs. Priorities shared or out of order,
-// as data written before priorities were kept unique may have, are
-// renumbered from the overrides' positions.
-export const moveSegmentOverride = <T extends PrioritisedSegmentOverride>(
-  overrides: T[],
-  oldIndex: number,
-  newIndex: number,
-): T[] => {
-  const priorities = overrides.map((override) => override.priority)
-  const moved = arrayMove(overrides, oldIndex, newIndex)
-  const result: T[] = []
-  let previous = -1
-  for (const [index, override] of moved.entries()) {
-    const priority = override.is_system_segment
-      ? override.priority
-      : Math.max(previous + 1, priorities[index])
-    if (priority <= previous) {
-      return renumber(moved)
-    }
-    result.push({ ...override, priority })
-    previous = priority
-  }
-  return result
+  return (
+    overrides
+      .slice(start, end + 1)
+      .every((override) => !override.is_system_segment) &&
+    !!moveSegmentOverride(overrides, oldIndex, newIndex)
+  )
 }
 
 export const getNextSegmentOverridePriority = (
