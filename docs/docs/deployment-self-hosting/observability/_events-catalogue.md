@@ -737,7 +737,7 @@ Attributes:
 ### `oauth2_metadata.registration.rejected`
 
 Logged at `error` from:
- - `api/oauth2_metadata/views.py:174`
+ - `api/oauth2_metadata/views.py:175`
 
 Attributes:
  - `client.name`

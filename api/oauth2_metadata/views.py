@@ -3,6 +3,7 @@ from typing import Any
 from urllib.parse import urlencode, urlparse, urlunparse
 
 import structlog
+from django.db.models import Q
 from django.http import HttpRequest, HttpResponse, JsonResponse, QueryDict
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET
@@ -240,10 +241,14 @@ class OAuthRevokeTokenView(RevokeTokenView):  # type: ignore[misc]
 
     def _get_session_refresh_token(self, request: HttpRequest) -> RefreshToken | None:
         """Identify the session to end, as revocation requests carry no user."""
-        token: str = request.POST.get("token", "")
+        token = request.POST.get("token")
+        if not token:
+            return None  # pragma: no cover
+        token_checksum = hashlib.sha256(token.encode("utf-8")).hexdigest()
         refresh_token: RefreshToken | None = (
             RefreshToken.objects.filter(
-                token_checksum=hashlib.sha256(token.encode("utf-8")).hexdigest(),
+                Q(token_checksum=token_checksum)
+                | Q(access_token__token_checksum=token_checksum),
                 revoked__isnull=True,
             )
             .select_related("user", "application")

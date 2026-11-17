@@ -676,12 +676,21 @@ def test_oauth_login__authorised__creates_audit_log(
     ]
 
 
+@pytest.mark.parametrize(
+    "token, token_type_hint",
+    [
+        ("access-token", "access_token"),
+        ("refresh-token", "refresh_token"),
+    ],
+)
 def test_oauth_logout__token_revoked__creates_audit_log(
     api_client: APIClient,
     oauth_application: Application,
     organisation: Organisation,
     other_organisation: Organisation,
     user: FFAdminUser,
+    token: str,
+    token_type_hint: str,
 ) -> None:
     # Given
     RefreshToken.objects.create(
@@ -700,8 +709,8 @@ def test_oauth_logout__token_revoked__creates_audit_log(
     response = api_client.post(
         "/o/revoke_token/",
         {
-            "token": "refresh-token",
-            "token_type_hint": "refresh_token",
+            "token": token,
+            "token_type_hint": token_type_hint,
             "client_id": oauth_application.client_id,
         },
     )
