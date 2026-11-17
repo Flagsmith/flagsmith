@@ -49,7 +49,11 @@ The dump is written inside the PostgreSQL pod first, so check there is enough fr
 ```bash
 kubectl -n flagsmith exec flagsmith-dev-postgresql-0 -- df -h /tmp
 ```
-This checks the space for the dump file. The scratch restore below also creates a full second copy of the database on the volume where PostgreSQL stores its data, so check that volume has more free space than the database uses. If it does not, skip the scratch restore or run it on a separate PostgreSQL server. This was not tested.
+
+This checks the space for the dump file. The scratch restore below also creates a full second copy of the database on
+the volume where PostgreSQL stores its data, so check that volume has more free space than the database uses. If it does
+not, run the scratch restore on a separate PostgreSQL server with enough free space. Do not skip the verification,
+because the rollback steps need a verified backup. This was not tested.
 
 Create the backup:
 
@@ -82,7 +86,8 @@ kubectl -n flagsmith exec flagsmith-dev-postgresql-0 -- sh -c \
   'PGPASSWORD=$POSTGRES_PASSWORD psql -U postgres -d $POSTGRES_DB -c \\dt | grep -c table'
 ```
 
-Then remove the scratch database. Run this command only if `createdb` succeeded. If `createdb` failed, the database already existed, so do not drop it.
+Then remove the scratch database. Run this command only if `createdb` succeeded. If `createdb` failed, the database
+already existed, so do not drop it.
 
 ```bash
 kubectl -n flagsmith exec flagsmith-dev-postgresql-0 -- sh -c \
@@ -177,8 +182,10 @@ Treat a rollback as a restore. These steps worked in the test:
    helm rollback flagsmith <revision> -n flagsmith --wait --timeout 20m
    ```
 
-2. Stop the API, so nothing is connected to the database, and wait until no `flagsmith-api` pod is listed: 
-   Stop everything that connects to the database, and wait until none of those pods is listed. In the default install only the API connects. If you enabled the task processor, note its replica count, then scale it to 0 as well, and wait for any migration Job to finish. These setups were not tested.
+2. Stop the API, so nothing is connected to the database, and wait until no `flagsmith-api` pod is listed: Stop
+   everything that connects to the database, and wait until none of those pods is listed. In the default install only
+   the API connects. If you enabled the task processor, note its replica count, then scale it to 0 as well, and wait for
+   any migration Job to finish. These setups were not tested.
 
    ```bash
    kubectl -n flagsmith scale deployment flagsmith-api --replicas=0
@@ -222,9 +229,10 @@ Treat a rollback as a restore. These steps worked in the test:
    kubectl -n flagsmith scale deployment flagsmith-api --replicas=<replica-count>
    kubectl -n flagsmith rollout status deployment flagsmith-api
    ```
-If you stopped the task processor, scale it back to the replica count you noted, so background tasks run again. This was not tested.
-Recreate the database rather than restoring over the existing one. Tables created by the newer version would otherwise
-be left behind, and a later upgrade could fail when it tries to create them again.
+
+   If you stopped the task processor, scale it back to the replica count you noted, so background tasks run again. This
+   was not tested. Recreate the database rather than restoring over the existing one. Tables created by the newer
+   version would otherwise be left behind, and a later upgrade could fail when it tries to create them again.
 
 :::warning
 
