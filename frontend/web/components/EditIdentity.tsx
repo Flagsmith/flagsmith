@@ -60,33 +60,33 @@ const EditIdentity: FC<EditIdentityType> = ({ data, environmentId }) => {
     setAlias(newValue.replace(/\n/g, ' ').trim())
   }
 
+  if (!canEditAlias) {
+    return (
+      <span className={classNames('fw-normal', { 'text-muted': !alias })}>
+        {alias || 'None'}
+      </span>
+    )
+  }
+
   return (
     <>
-      {canEditAlias ? (
-        <>
-          <GhostInput
-            ref={aliasRef}
-            value={alias}
-            onChange={handleInput}
-            onBlur={handleBlur}
-            onKeyDown={handleKeyDown}
-            placeholder='None'
-          />
-          <Button
-            disabled={!data}
-            theme='text'
-            className='text-action'
-            onClick={handleFocus}
-          >
-            Edit
-            <Icon name='edit' width={16} />
-          </Button>
-        </>
-      ) : (
-        <span className={classNames('fw-normal', { 'text-muted': !alias })}>
-          {alias || 'None'}
-        </span>
-      )}
+      <GhostInput
+        ref={aliasRef}
+        value={alias}
+        onChange={handleInput}
+        onBlur={handleBlur}
+        onKeyDown={handleKeyDown}
+        placeholder='None'
+      />
+      <Button
+        disabled={!data}
+        theme='text'
+        className='text-action'
+        onClick={handleFocus}
+      >
+        Edit
+        <Icon name='edit' width={16} />
+      </Button>
       <ErrorMessage error={error} />
     </>
   )
