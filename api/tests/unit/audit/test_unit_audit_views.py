@@ -14,6 +14,8 @@ from rest_framework.test import APIClient
 from audit.constants import ENVIRONMENT_FEATURE_VERSION_PUBLISHED_MESSAGE
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
+from edge_api.identities.tasks import generate_audit_log_records
+from edge_api.identities.types import FeatureStateChangeDetails
 from environments.models import Environment
 from features.models import Feature
 from features.versioning.models import EnvironmentFeatureVersion
@@ -323,3 +325,92 @@ def test_list_audit_log_for_organisation__multiple_projects__fetches_migration_s
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert len(dynamodb_calls) == 2
+
+
+@pytest.mark.parametrize(
+    ("changes", "expected_change_type", "expected_change_details"),
+    [
+        (
+            {
+                "change_type": "+",
+                "new": {
+                    "enabled": True,
+                    "feature_state_value": "new-val",
+                    "featurestate_uuid": "726c833a-5c9b-4c2c-954c-ddc46dd50bbb",
+                    "feature": {"id": 1, "name": "test_feature", "type": "STANDARD"},
+                },
+            },
+            "CREATE",
+            [
+                {"field": "enabled", "old": None, "new": True},
+                {"field": "feature_state_value", "old": None, "new": "new-val"},
+            ],
+        ),
+        (
+            {
+                "change_type": "~",
+                "old": {
+                    "enabled": False,
+                    "feature_state_value": False,
+                    "featurestate_uuid": "0729f130-8caa-4106-aa5c-95a6d15e820f",
+                    "feature": {"id": 1, "name": "test_feature", "type": "STANDARD"},
+                },
+                "new": {
+                    "enabled": True,
+                    "feature_state_value": 0,
+                    "featurestate_uuid": "0729f130-8caa-4106-aa5c-95a6d15e820f",
+                    "feature": {"id": 1, "name": "test_feature", "type": "STANDARD"},
+                },
+            },
+            "UPDATE",
+            [
+                {"field": "enabled", "old": False, "new": True},
+                {"field": "feature_state_value", "old": False, "new": 0},
+            ],
+        ),
+        (
+            {
+                "change_type": "-",
+                "old": {
+                    "enabled": True,
+                    "feature_state_value": "deleted-val",
+                    "featurestate_uuid": "80f6dbdd-97c0-47de-9333-cd1e1c100713",
+                    "feature": {"id": 1, "name": "test_feature", "type": "STANDARD"},
+                },
+            },
+            "DELETE",
+            [
+                {"field": "enabled", "old": True, "new": None},
+                {"field": "feature_state_value", "old": "deleted-val", "new": None},
+            ],
+        ),
+    ],
+)
+def test_retrieve_audit_log__edge_identity_override_changed__returns_change_type_and_details(
+    admin_client: APIClient,
+    environment: Environment,
+    admin_user: FFAdminUser,
+    changes: FeatureStateChangeDetails,
+    expected_change_type: str,
+    expected_change_details: list[dict[str, typing.Any]],
+) -> None:
+    # Given
+    generate_audit_log_records(
+        environment_api_key=environment.api_key,
+        identifier="identifier",
+        identity_uuid="a35a02f2-fefd-4932-8f5c-e84a0bf542c7",
+        user_id=admin_user.id,
+        changes={"feature_overrides": {"test_feature": changes}},
+    )
+    audit_log = AuditLog.objects.get(
+        related_object_type=RelatedObjectType.EDGE_IDENTITY.name
+    )
+    url = reverse("api-v1:audit-detail", args=[audit_log.id])
+
+    # When
+    response = admin_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["change_type"] == expected_change_type
+    assert response.json()["change_details"] == expected_change_details
