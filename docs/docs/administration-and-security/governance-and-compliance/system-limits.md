@@ -26,7 +26,11 @@ In order to ensure consistent performance, Flagsmith has the following limitatio
 
 ### SaaS
 
-Please contact us if you want to override the current system limits.
+Please contact us if you need higher limits for a project. We can change:
+
+- Features per project
+- Segments per project
+- Segment overrides per environment
 
 ### Self Hosted
 
