@@ -170,7 +170,7 @@ class DatabricksDialect:
 
 DATABRICKS_DIALECT = DatabricksDialect()
 
-_POSTGRES_NUMERIC_PATTERN = (
+_NUMERIC_PATTERN = (
     "^[-+]?([0-9]{1,30}([.][0-9]{0,30})?|[.][0-9]{1,30})([eE][-+]?[0-9]{1,2})?$"
 )
 
@@ -219,7 +219,7 @@ class PostgresDialect:
 
     def float_or_zero(self, expr: str) -> str:
         return (
-            f"CASE WHEN {expr} ~ '{_POSTGRES_NUMERIC_PATTERN}' "
+            f"CASE WHEN {expr} ~ '{_NUMERIC_PATTERN}' "
             f"THEN ({expr})::double precision ELSE 0 END"
         )
 
@@ -241,3 +241,76 @@ class PostgresDialect:
 
 
 POSTGRES_DIALECT = PostgresDialect()
+
+_SNOWFLAKE_BUCKET_UNITS: dict[ExposureGranularity, str] = {
+    "hour": "hour",
+    "day": "day",
+}
+
+
+class SnowflakeDialect:
+    """Timestamp columns must be TIMESTAMP_NTZ holding UTC. ``float_or_zero``
+    casts the same values as ``PostgresDialect``."""
+
+    events_table_name = "events"
+
+    def param(self, name: str) -> str:
+        return f"%({name})s"
+
+    def in_list(self, expr: str, name: str, size: int) -> str:
+        markers = ", ".join(self.param(f"{name}_{i}") for i in range(size))
+        return f"{expr} IN ({markers})"
+
+    def list_params(self, name: str, values: Sequence[str]) -> dict[str, object]:
+        return {f"{name}_{i}": value for i, value in enumerate(values)}
+
+    def count_all(self) -> str:
+        return "count(*)"
+
+    def count_if(self, cond: str) -> str:
+        return f"coalesce(count_if({cond}), 0)"
+
+    def count_distinct(self, expr: str) -> str:
+        return f"count(DISTINCT {expr})"
+
+    def any_value(self, expr: str) -> str:
+        return f"any_value({expr})"
+
+    def time_bucket(self, expr: str, granularity: ExposureGranularity) -> str:
+        return f"date_trunc('{_SNOWFLAKE_BUCKET_UNITS[granularity]}', {expr})"
+
+    def max_utc(self, expr: str) -> str:
+        return f"max({expr})"
+
+    def float_or_zero(self, expr: str) -> str:
+        return (
+            f"iff(regexp_like({expr}, '{_NUMERIC_PATTERN}'), try_to_double({expr}), 0)"
+        )
+
+    def sum_if(self, expr: str, cond: str) -> str:
+        return f"coalesce(sum(iff({cond}, {expr}, NULL)), 0)"
+
+    def avg_if(self, expr: str, cond: str) -> str:
+        return f"coalesce(avg(iff({cond}, {expr}, NULL)), 0)"
+
+    def min_if(self, expr: str, cond: str) -> str:
+        return f"min(iff({cond}, {expr}, NULL))"
+
+    def bool_to_number(self, expr: str) -> str:
+        return f"iff({expr}, 1, 0)"
+
+    def zip_unnest(self, arrays: Mapping[str, Sequence[str]]) -> str:
+        # VALUES rejects outer columns and FLATTEN yields VARIANT, hence decode().
+        size = len(next(iter(arrays.values())))
+        columns = ", ".join(
+            f"decode(position, {', '.join(f'{i}, {value}' for i, value in enumerate(values))}) AS {alias}"
+            for alias, values in arrays.items()
+        )
+        positions = ", ".join(f"({i})" for i in range(size))
+        return (
+            f"CROSS JOIN LATERAL (SELECT {columns} "
+            f"FROM VALUES {positions} AS positions(position)) AS zipped"
+        )
+
+
+SNOWFLAKE_DIALECT = SnowflakeDialect()
