@@ -25,8 +25,11 @@ export const useFeatureStates = ({
     isLoading: isLoadingEnvironments,
   } = useProjectEnvironments(projectId)
   const numericEnvId = getEnvironmentIdFromKey(environmentId)
+  const shouldSkip = skip || !numericEnvId
+  // currentData, not data, which keeps another environment's list while this
+  // one's loads.
   const {
-    data,
+    currentData,
     isError: isFeatureListError,
     isLoading: isLoadingFeatureList,
   } = useGetFeatureListQuery(
@@ -37,10 +40,10 @@ export const useFeatureStates = ({
       page_size: 999,
       projectId,
     },
-    { skip: skip || !numericEnvId },
+    { skip: shouldSkip },
   )
 
-  const features = data?.results ?? NO_FEATURES
+  const features = currentData?.results ?? NO_FEATURES
   return {
     features,
     isEnabled: (featureId: number) =>
@@ -52,6 +55,9 @@ export const useFeatureStates = ({
       // The lookup finished without finding the environment, so the feature
       // list will never run and nothing is coming.
       (!isLoadingEnvironments && !numericEnvId),
-    isLoading: isLoadingEnvironments || isLoadingFeatureList,
+    isLoading:
+      isLoadingEnvironments ||
+      isLoadingFeatureList ||
+      (!shouldSkip && !currentData && !isFeatureListError),
   }
 }

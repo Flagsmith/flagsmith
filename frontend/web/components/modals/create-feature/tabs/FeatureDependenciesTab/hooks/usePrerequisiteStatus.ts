@@ -26,8 +26,10 @@ export const usePrerequisiteStatus = ({
   projectId,
   skip,
 }: UsePrerequisiteStatusArgs): PrerequisiteRow[] | undefined => {
+  // currentData, not data, which keeps another flag's or environment's
+  // dependencies while these load.
   const {
-    data: dependencies,
+    currentData: dependencies,
     isError,
     isLoading,
   } = useGetFeatureDependenciesQuery({ environmentId, featureId }, { skip })
