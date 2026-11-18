@@ -2,6 +2,10 @@ import type { APIRequestContext } from '@playwright/test'
 import { expect } from '@playwright/test'
 import { E2E_USER, PASSWORD } from '../config'
 import Project from '../../common/project'
+import type {
+  Environment,
+  Project as ProjectResponse,
+} from '../../common/types/responses'
 
 type ApiList<T> = T[] | { results: T[] }
 
@@ -41,7 +45,7 @@ export const createProjectThroughApi = async (
     headers: { ...headers, 'X-E2E-Test-Auth-Token': e2eToken.trim() },
   })
   expect(projectRes.ok()).toBeTruthy()
-  const project = (await projectRes.json()) as { id: number; name: string }
+  const project: ProjectResponse = await projectRes.json()
 
   return { api, headers, project }
 }
@@ -52,11 +56,11 @@ export const createEnvironmentThroughApi = async (
   api: string,
   name: string,
   projectId: number,
-) => {
+): Promise<Environment> => {
   const res = await request.post(`${api}environments/`, {
     data: { name, project: projectId },
     headers,
   })
   expect(res.ok()).toBeTruthy()
-  return (await res.json()) as { id: number; api_key: string; name: string }
+  return res.json()
 }
