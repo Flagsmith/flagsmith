@@ -253,7 +253,12 @@ export type Segment = {
   managed_by?: SegmentManagedBy
 }
 // What creates and edits the segment, empty where users do.
-export type SegmentManagedBy = '' | 'cohort' | 'dependency' | 'experiment'
+export type SegmentManagedBy =
+  | ''
+  | 'cohort'
+  | 'dependency'
+  | 'experiment'
+  | 'release_pipeline'
 export type ProjectChangeRequest = Omit<
   ChangeRequest,
   | 'environment_feature_versions'
@@ -937,6 +942,19 @@ export type IdentityOverride = FeatureState & {
   identity: { id: string; identifier: string }
   segment?: null
   overridden_by?: string | null
+}
+
+export type FeatureSegment = {
+  id: number
+  uuid: string
+  segment: number
+  priority: number
+  environment: number
+  segment_name: string
+  is_feature_specific: boolean
+  // System segments and their overrides are managed by what owns them.
+  is_system_segment: boolean
+  segment_managed_by: SegmentManagedBy
 }
 
 export type FeatureState = {

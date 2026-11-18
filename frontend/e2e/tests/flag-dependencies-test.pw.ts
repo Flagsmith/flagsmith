@@ -92,6 +92,22 @@ test.describe('Flag Dependencies', () => {
     await expect(metCount).toHaveText('1/1')
     await visualSnapshot(page, 'dependencies-satisfied', testInfo)
 
+    log('The dependency manages its segment override')
+    await page.getByRole('button', { name: 'Segment Overrides' }).click()
+    await expect(
+      page.locator(byId('system-segment-override-label')),
+    ).toHaveText('Managed by a flag dependency')
+    await expect(page.locator(byId('segment-override-scope-0'))).toContainText(
+      'Applies to the whole environment',
+    )
+    await expect(page.locator(byId('segment-override-toggle-0'))).toBeDisabled()
+    await visualSnapshot(page, 'dependencies-segment-override', testInfo)
+    await page
+      .getByRole('button', { exact: true, name: 'View dependencies' })
+      .click()
+    await expect(page).toHaveURL(/tab=dependencies/)
+    await expect(row).toBeVisible()
+
     log('The prerequisite names its dependent and cannot take one of its own')
     await closeModal()
     await waitForModalToClose()

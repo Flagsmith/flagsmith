@@ -64,7 +64,7 @@ const convertSegmentOverrideToFeatureState = (
     feature: override.feature,
     feature_segment: {
       id: override.id,
-      priority: i,
+      priority: override.priority ?? i,
       segment: override.segment,
       uuid: override.uuid,
     },
@@ -362,7 +362,11 @@ const controller = {
               },
               id: segmentOverride.data.feature_segment.id,
               multivariate_options: segmentOverrides[i].multivariate_options,
-              priority: segmentOverride.data.feature_segment.priority,
+              // Where the override was moved to, rather than where it was
+              // created, so the priorities saved next keep it there.
+              priority:
+                segmentOverrides[i].priority ??
+                segmentOverride.data.feature_segment.priority,
               segment: segmentOverride.data.feature_segment.segment,
               segment_name: v.segment_name,
               uuid: segmentOverride.data.feature_segment.uuid,
@@ -444,14 +448,15 @@ const controller = {
                     getStore(),
                     segmentOverrides.map((override, index) => ({
                       id: override.id,
-                      priority: index,
+                      priority: override.priority ?? index,
                     })),
                   )
                 : Promise.resolve([])
               ).then(() =>
                 Promise.all(
                   segmentOverrides.map((override) =>
-                    !override.created
+                    // System segment overrides can't be changed directly.
+                    !override.created && !override.is_system_segment
                       ? data.put(
                           `${Project.api}features/featurestates/${override.feature_segment_value.id}/`,
                           {

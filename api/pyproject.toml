@@ -82,7 +82,7 @@ dependencies = [
     "structlog>=24.4.0,<25.0.0",
     "prometheus-client>=0.21.1,<0.22.0",
     "django-cockroachdb>=4.2,<4.3.0",
-    "django-oauth-toolkit>=3.0.1,<4.0.0",
+    "django-oauth-toolkit>=3.4.0,<4.0.0",
     "jsonpath-rfc9535>=0.2.0,<0.3.0",
 ]
 
