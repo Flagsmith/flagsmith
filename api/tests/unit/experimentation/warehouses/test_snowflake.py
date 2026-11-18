@@ -30,7 +30,7 @@ from experimentation.warehouses.snowflake import (
 
 HOST = "https://acme-org-prod.snowflakecomputing.com"
 STATEMENTS_URL = f"{HOST}/api/v2/statements"
-POLL_URL = f"{STATEMENTS_URL}/01-handle"
+STATEMENT_HANDLE_URL = f"{STATEMENTS_URL}/01-handle"
 
 WINDOW_START = datetime(2026, 1, 1, tzinfo=timezone.utc)
 WINDOW_END = datetime(2026, 1, 8, tzinfo=timezone.utc)
@@ -524,7 +524,7 @@ def test_run__still_running__polls_until_done(
     # Given
     statements = requests_mock.post(STATEMENTS_URL, status_code=202, json=_running())
     poll = requests_mock.get(
-        POLL_URL,
+        STATEMENT_HANDLE_URL,
         [
             {"status_code": 202, "json": _running()},
             {"json": _succeeded([("N", "fixed", 0)], [["42"]])},
@@ -564,8 +564,8 @@ def test_run__deadline_reached__cancels_and_raises_timeout(
 ) -> None:
     # Given
     requests_mock.post(STATEMENTS_URL, status_code=202, json=_running())
-    poll = requests_mock.get(POLL_URL, status_code=202, json=_running())
-    cancel = requests_mock.post(f"{POLL_URL}/cancel", **cancel_response)
+    poll = requests_mock.get(STATEMENT_HANDLE_URL, status_code=202, json=_running())
+    cancel = requests_mock.post(f"{STATEMENT_HANDLE_URL}/cancel", **cancel_response)
 
     # When
     with pytest.raises(SnowflakeTimeout):
@@ -594,8 +594,8 @@ def test_run__poll_fails__retries_then_raises_timeout(
 ) -> None:
     # Given
     requests_mock.post(STATEMENTS_URL, status_code=202, json=_running())
-    poll = requests_mock.get(POLL_URL, exc=poll_error)
-    cancel = requests_mock.post(f"{POLL_URL}/cancel", json={})
+    poll = requests_mock.get(STATEMENT_HANDLE_URL, exc=poll_error)
+    cancel = requests_mock.post(f"{STATEMENT_HANDLE_URL}/cancel", json={})
 
     # When
     with pytest.raises(SnowflakeTimeout):
