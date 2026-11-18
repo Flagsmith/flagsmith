@@ -115,6 +115,11 @@ _BUCKET_SECONDS: dict[ExposureGranularity, int] = {
     "day": 86400,
 }
 
+_BUCKET_UNITS: dict[ExposureGranularity, str] = {
+    "hour": "hour",
+    "day": "day",
+}
+
 
 class DatabricksDialect:
     events_table_name = "events"
@@ -174,11 +179,6 @@ _NUMERIC_PATTERN = (
     "^[-+]?([0-9]{1,30}([.][0-9]{0,30})?|[.][0-9]{1,30})([eE][-+]?[0-9]{1,2})?$"
 )
 
-_POSTGRES_BUCKET_UNITS: dict[ExposureGranularity, str] = {
-    "hour": "hour",
-    "day": "day",
-}
-
 
 class PostgresDialect:
     """Timestamp columns must be TIMESTAMPTZ. ``float_or_zero`` casts up to 30
@@ -211,7 +211,7 @@ class PostgresDialect:
         return f"min({expr})"
 
     def time_bucket(self, expr: str, granularity: ExposureGranularity) -> str:
-        unit = _POSTGRES_BUCKET_UNITS[granularity]
+        unit = _BUCKET_UNITS[granularity]
         return f"date_trunc('{unit}', {expr} AT TIME ZONE 'UTC') AT TIME ZONE 'UTC'"
 
     def max_utc(self, expr: str) -> str:
@@ -242,11 +242,6 @@ class PostgresDialect:
 
 POSTGRES_DIALECT = PostgresDialect()
 
-_SNOWFLAKE_BUCKET_UNITS: dict[ExposureGranularity, str] = {
-    "hour": "hour",
-    "day": "day",
-}
-
 
 class SnowflakeDialect:
     """Timestamp columns must be TIMESTAMP_NTZ holding UTC. ``float_or_zero``
@@ -268,7 +263,7 @@ class SnowflakeDialect:
         return "count(*)"
 
     def count_if(self, cond: str) -> str:
-        return f"coalesce(count_if({cond}), 0)"
+        return f"count_if({cond})"
 
     def count_distinct(self, expr: str) -> str:
         return f"count(DISTINCT {expr})"
@@ -277,7 +272,7 @@ class SnowflakeDialect:
         return f"any_value({expr})"
 
     def time_bucket(self, expr: str, granularity: ExposureGranularity) -> str:
-        return f"date_trunc('{_SNOWFLAKE_BUCKET_UNITS[granularity]}', {expr})"
+        return f"date_trunc('{_BUCKET_UNITS[granularity]}', {expr})"
 
     def max_utc(self, expr: str) -> str:
         return f"max({expr})"
