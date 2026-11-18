@@ -95,7 +95,7 @@ grep -i "error\|failed" 0-trace.network  # Check for network errors
 ### Common Fix Patterns
 
 - **Wrong selector** → Update to match actual DOM from error-context.md
-- **Missing `data-test` attribute** → Add it to the component
+- **No good locator** → Give the element a role or accessible name (e.g. `aria-label`) and use `getByRole`/`getByText`; add `data-test` only as a last resort
 - **Element hidden** → Filter for visible elements or wait for visibility
 - **Missing wait** → Add appropriate `waitFor*` calls
 - **Race condition** → Add network waits, increase timeouts, or use more specific waits
@@ -122,7 +122,7 @@ Tests that fail initially but pass on retry are FLAKY and MUST be investigated, 
 ## Important Rules
 
 - **DO** modify test files to fix timing issues, missing waits, or broken selectors
-- **DO** add `data-test` attributes to components if they're missing
+- **DO** prefer `getByRole`, `getByLabel` and `getByText`; add `data-test` only when an element has no role or accessible name to match (the lint warns on new ones)
 - **DON'T** modify test assertions or business logic unless the test is clearly wrong
 - If the failure is in application code (not test code), report it as a bug but don't try to fix it
 - Always explain what fixes you're attempting and why
