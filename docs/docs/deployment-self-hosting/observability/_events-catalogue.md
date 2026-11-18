@@ -148,6 +148,20 @@ Attributes:
  - `seats.previous`
  - `subscription.id`
 
+### `cli.request.made`
+
+Logged at `info` from:
+ - `api/telemetry/middleware.py:72`
+ - `api/telemetry/middleware.py:74`
+
+Attributes:
+ - `amplitude.user_id`
+ - `cli.arch`
+ - `cli.os`
+ - `cli.version`
+ - `organisation.id`
+ - `status`
+
 ### `code_references.cleanup_issues.created`
 
 Logged at `info` from:
@@ -728,11 +742,12 @@ Attributes:
 ### `mcp.tool.called`
 
 Logged at `info` from:
- - `api/telemetry/middleware.py:38`
- - `api/telemetry/middleware.py:40`
+ - `api/telemetry/middleware.py:48`
+ - `api/telemetry/middleware.py:50`
 
 Attributes:
  - `organisation.id`
+ - `status`
 
 ### `oauth2_metadata.registration.rejected`
 

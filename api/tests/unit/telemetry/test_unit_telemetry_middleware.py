@@ -6,14 +6,14 @@ from rest_framework.test import APIClient
 
 from environments.models import Environment
 from organisations.models import Organisation, OrganisationRole
-from telemetry.middleware import CLIUsageLoggerMiddleware
+from telemetry.middleware import ClientUsageLoggerMiddleware
 from users.models import FFAdminUser
 
 CLI_USER_AGENT = "flagsmith-cli/2.0.0 (darwin/arm64)"
 
 
 @pytest.mark.usefixtures("organisation")
-def test_mcp_usage_logger_middleware__no_mcp_baggage__logs_nothing(
+def test_client_usage_logger_middleware__no_mcp_baggage__logs_nothing(
     staff_client: APIClient,
     log: StructuredLogCapture,
 ) -> None:
@@ -26,7 +26,7 @@ def test_mcp_usage_logger_middleware__no_mcp_baggage__logs_nothing(
 
 
 @pytest.mark.usefixtures("mcp_baggage", "recording_span", "organisation")
-def test_mcp_usage_logger_middleware__organisation_id_span_attribute__logs_span_organisation_id(
+def test_client_usage_logger_middleware__mcp_organisation_id_span_attribute__logs_span_organisation_id(
     staff_client: APIClient,
     staff_user: FFAdminUser,
     log: StructuredLogCapture,
@@ -53,7 +53,7 @@ def test_mcp_usage_logger_middleware__organisation_id_span_attribute__logs_span_
 
 
 @pytest.mark.usefixtures("mcp_baggage")
-def test_mcp_usage_logger_middleware__user_with_single_organisation__logs_user_organisation_id(
+def test_client_usage_logger_middleware__mcp_user_with_single_organisation__logs_user_organisation_id(
     staff_client: APIClient,
     organisation: Organisation,
     log: StructuredLogCapture,
@@ -74,7 +74,7 @@ def test_mcp_usage_logger_middleware__user_with_single_organisation__logs_user_o
 
 
 @pytest.mark.usefixtures("mcp_baggage")
-def test_mcp_usage_logger_middleware__user_without_organisations__logs_warning(
+def test_client_usage_logger_middleware__mcp_user_without_organisations__logs_warning(
     staff_client: APIClient,
     staff_user: FFAdminUser,
     log: StructuredLogCapture,
@@ -98,7 +98,7 @@ def test_mcp_usage_logger_middleware__user_without_organisations__logs_warning(
 
 
 @pytest.mark.usefixtures("mcp_baggage", "organisation")
-def test_mcp_usage_logger_middleware__user_with_multiple_organisations__logs_warning(
+def test_client_usage_logger_middleware__mcp_user_with_multiple_organisations__logs_warning(
     staff_client: APIClient,
     staff_user: FFAdminUser,
     log: StructuredLogCapture,
@@ -123,7 +123,7 @@ def test_mcp_usage_logger_middleware__user_with_multiple_organisations__logs_war
 
 
 @pytest.mark.usefixtures("mcp_baggage")
-def test_mcp_usage_logger_middleware__unauthenticated_request__logs_nothing(
+def test_client_usage_logger_middleware__mcp_unauthenticated_request__logs_nothing(
     api_client: APIClient,
     log: StructuredLogCapture,
 ) -> None:
@@ -136,7 +136,7 @@ def test_mcp_usage_logger_middleware__unauthenticated_request__logs_nothing(
 
 
 @pytest.mark.usefixtures("mcp_baggage")
-def test_mcp_usage_logger_middleware__error_response__logs_error_status(
+def test_client_usage_logger_middleware__mcp_error_response__logs_error_status(
     staff_client: APIClient,
     organisation: Organisation,
     log: StructuredLogCapture,
@@ -157,7 +157,7 @@ def test_mcp_usage_logger_middleware__error_response__logs_error_status(
 
 
 @pytest.mark.usefixtures("mcp_baggage")
-def test_mcp_usage_logger_middleware__sdk_request__logs_nothing(
+def test_client_usage_logger_middleware__mcp_sdk_request__logs_nothing(
     api_client: APIClient,
     environment: Environment,
     log: StructuredLogCapture,
@@ -174,7 +174,7 @@ def test_mcp_usage_logger_middleware__sdk_request__logs_nothing(
 
 
 @pytest.mark.usefixtures("organisation")
-def test_cli_usage_logger_middleware__no_cli_user_agent__logs_nothing(
+def test_client_usage_logger_middleware__no_cli_user_agent__logs_nothing(
     staff_client: APIClient,
     log: StructuredLogCapture,
 ) -> None:
@@ -201,7 +201,7 @@ def test_cli_usage_logger_middleware__no_cli_user_agent__logs_nothing(
     ],
 )
 @pytest.mark.usefixtures("organisation")
-def test_cli_usage_logger_middleware__user_agent_not_matching_cli_pattern__logs_nothing(
+def test_client_usage_logger_middleware__user_agent_not_matching_cli_pattern__logs_nothing(
     staff_client: APIClient,
     log: StructuredLogCapture,
     user_agent: str,
@@ -215,7 +215,7 @@ def test_cli_usage_logger_middleware__user_agent_not_matching_cli_pattern__logs_
 
 
 @pytest.mark.usefixtures("recording_span", "organisation")
-def test_cli_usage_logger_middleware__organisation_id_span_attribute__logs_span_organisation_id(
+def test_client_usage_logger_middleware__cli_organisation_id_span_attribute__logs_span_organisation_id(
     staff_client: APIClient,
     staff_user: FFAdminUser,
     log: StructuredLogCapture,
@@ -235,7 +235,7 @@ def test_cli_usage_logger_middleware__organisation_id_span_attribute__logs_span_
     assert log.events == [
         {
             "level": "info",
-            "event": "cli.request.made",
+            "event": "request.made",
             "cli__version": "2.0.0",
             "cli__os": "darwin",
             "cli__arch": "arm64",
@@ -246,7 +246,7 @@ def test_cli_usage_logger_middleware__organisation_id_span_attribute__logs_span_
     ]
 
 
-def test_cli_usage_logger_middleware__user_with_single_organisation__logs_user_organisation_id(
+def test_client_usage_logger_middleware__cli_user_with_single_organisation__logs_user_organisation_id(
     staff_client: APIClient,
     staff_user: FFAdminUser,
     organisation: Organisation,
@@ -260,7 +260,7 @@ def test_cli_usage_logger_middleware__user_with_single_organisation__logs_user_o
     assert log.events == [
         {
             "level": "info",
-            "event": "cli.request.made",
+            "event": "request.made",
             "cli__version": "2.0.0",
             "cli__os": "darwin",
             "cli__arch": "arm64",
@@ -271,7 +271,7 @@ def test_cli_usage_logger_middleware__user_with_single_organisation__logs_user_o
     ]
 
 
-def test_cli_usage_logger_middleware__user_without_organisations__logs_warning(
+def test_client_usage_logger_middleware__cli_user_without_organisations__logs_warning(
     staff_client: APIClient,
     staff_user: FFAdminUser,
     log: StructuredLogCapture,
@@ -287,7 +287,7 @@ def test_cli_usage_logger_middleware__user_without_organisations__logs_warning(
     assert log.events == [
         {
             "level": "warning",
-            "event": "cli.request.made",
+            "event": "request.made",
             "cli__version": "2.0.0",
             "cli__os": "darwin",
             "cli__arch": "arm64",
@@ -299,7 +299,7 @@ def test_cli_usage_logger_middleware__user_without_organisations__logs_warning(
 
 
 @pytest.mark.usefixtures("organisation")
-def test_cli_usage_logger_middleware__user_with_multiple_organisations__logs_warning(
+def test_client_usage_logger_middleware__cli_user_with_multiple_organisations__logs_warning(
     staff_client: APIClient,
     staff_user: FFAdminUser,
     log: StructuredLogCapture,
@@ -316,7 +316,7 @@ def test_cli_usage_logger_middleware__user_with_multiple_organisations__logs_war
     assert log.events == [
         {
             "level": "warning",
-            "event": "cli.request.made",
+            "event": "request.made",
             "cli__version": "2.0.0",
             "cli__os": "darwin",
             "cli__arch": "arm64",
@@ -327,7 +327,7 @@ def test_cli_usage_logger_middleware__user_with_multiple_organisations__logs_war
     ]
 
 
-def test_cli_usage_logger_middleware__master_api_key__logs_key_organisation_id(
+def test_client_usage_logger_middleware__cli_master_api_key__logs_key_organisation_id(
     admin_master_api_key_client: APIClient,
     organisation: Organisation,
     log: StructuredLogCapture,
@@ -343,7 +343,7 @@ def test_cli_usage_logger_middleware__master_api_key__logs_key_organisation_id(
     assert log.events == [
         {
             "level": "info",
-            "event": "cli.request.made",
+            "event": "request.made",
             "cli__version": "2.0.0",
             "cli__os": "darwin",
             "cli__arch": "arm64",
@@ -353,7 +353,7 @@ def test_cli_usage_logger_middleware__master_api_key__logs_key_organisation_id(
     ]
 
 
-def test_cli_usage_logger_middleware__unauthenticated_request__logs_nothing(
+def test_client_usage_logger_middleware__cli_unauthenticated_request__logs_nothing(
     api_client: APIClient,
     log: StructuredLogCapture,
 ) -> None:
@@ -365,7 +365,7 @@ def test_cli_usage_logger_middleware__unauthenticated_request__logs_nothing(
     assert log.events == []
 
 
-def test_cli_usage_logger_middleware__error_response__logs_error_status(
+def test_client_usage_logger_middleware__cli_error_response__logs_error_status(
     staff_client: APIClient,
     staff_user: FFAdminUser,
     organisation: Organisation,
@@ -382,7 +382,7 @@ def test_cli_usage_logger_middleware__error_response__logs_error_status(
     assert log.events == [
         {
             "level": "info",
-            "event": "cli.request.made",
+            "event": "request.made",
             "cli__version": "2.0.0",
             "cli__os": "darwin",
             "cli__arch": "arm64",
@@ -393,7 +393,7 @@ def test_cli_usage_logger_middleware__error_response__logs_error_status(
     ]
 
 
-def test_cli_usage_logger_middleware__server_error_response__logs_error_status(
+def test_client_usage_logger_middleware__cli_server_error_response__logs_error_status(
     rf: RequestFactory,
     staff_user: FFAdminUser,
     organisation: Organisation,
@@ -402,7 +402,7 @@ def test_cli_usage_logger_middleware__server_error_response__logs_error_status(
     # Given
     request = rf.get("/api/v1/projects/", HTTP_USER_AGENT=CLI_USER_AGENT)
     request.user = staff_user
-    middleware = CLIUsageLoggerMiddleware(lambda request: HttpResponse(status=500))
+    middleware = ClientUsageLoggerMiddleware(lambda request: HttpResponse(status=500))
 
     # When
     response = middleware(request)
@@ -412,7 +412,7 @@ def test_cli_usage_logger_middleware__server_error_response__logs_error_status(
     assert log.events == [
         {
             "level": "info",
-            "event": "cli.request.made",
+            "event": "request.made",
             "cli__version": "2.0.0",
             "cli__os": "darwin",
             "cli__arch": "arm64",
@@ -423,7 +423,7 @@ def test_cli_usage_logger_middleware__server_error_response__logs_error_status(
     ]
 
 
-def test_cli_usage_logger_middleware__sdk_request__logs_nothing(
+def test_client_usage_logger_middleware__cli_sdk_request__logs_nothing(
     api_client: APIClient,
     environment: Environment,
     log: StructuredLogCapture,
@@ -448,7 +448,7 @@ def test_cli_usage_logger_middleware__sdk_request__logs_nothing(
         ("flagsmith-cli/99.0.0 (freebsd/riscv64)", "99.0.0", "freebsd", "riscv64"),
     ],
 )
-def test_cli_usage_logger_middleware__cli_user_agent__passes_version_through_unchanged(
+def test_client_usage_logger_middleware__cli_user_agent__passes_version_through_unchanged(
     staff_client: APIClient,
     staff_user: FFAdminUser,
     organisation: Organisation,
@@ -466,7 +466,7 @@ def test_cli_usage_logger_middleware__cli_user_agent__passes_version_through_unc
     assert log.events == [
         {
             "level": "info",
-            "event": "cli.request.made",
+            "event": "request.made",
             "cli__version": expected_version,
             "cli__os": expected_os,
             "cli__arch": expected_arch,
