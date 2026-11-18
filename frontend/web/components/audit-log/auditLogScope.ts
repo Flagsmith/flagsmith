@@ -6,12 +6,13 @@ export const isOrganisationEvent = (item: {
   environment: Named
 }): boolean => !item.project && !item.environment
 
+// Environment colours only hold within a project, so the row shows it as text.
 export const getAuditLogScopeLabel = (item: {
   project: Named
   environment: Named
-}): string | null => {
+}): { name: string; environment?: string } | null => {
   const { environment, project } = item
-  if (isOrganisationEvent(item)) return 'Organisation'
-  if (!project) return environment?.name ?? null
-  return environment ? `${project.name} · ${environment.name}` : project.name
+  if (isOrganisationEvent(item)) return { name: 'Organisation' }
+  if (!project) return environment ? { name: environment.name } : null
+  return { environment: environment?.name, name: project.name }
 }
