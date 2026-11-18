@@ -38,7 +38,6 @@ const EmptyState: FC<EmptyStateProps> = ({
     description ?? (onRetry ? 'Try again in a few moments.' : undefined)
   return (
     <div
-      // A failed load is announced as soon as it lands
       role={isError ? 'alert' : undefined}
       className={`empty-state ${className || ''}`}
     >

@@ -11,7 +11,6 @@ import {
   PASSWORD,
 } from '../config'
 
-// Both dialogs list a project's environments once one is picked
 const MEMBER_ACTIONS = ['Manage user', 'Inspect permissions']
 
 test.describe('User permissions dialogs', () => {

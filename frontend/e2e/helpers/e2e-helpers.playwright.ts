@@ -186,8 +186,7 @@ export class E2EHelpers {
     const projectLink = this.page.locator('a').filter({ has: this.page.locator(`text="${projectName}"`) }).first();
     await projectLink.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
     await projectLink.click();
-    // The card links to /project/:id, which redirects to the features page
-    // or to create environment, so wait for the redirect to land
+    // Cards go to /project/:id, which redirects to an environment page
     await this.page.waitForURL(/\/project\/\d+\/environment\//, { timeout: LONG_TIMEOUT });
     await this.waitForPageFullyLoaded();
   }
