@@ -492,6 +492,16 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
   const isVersionedChangeRequest = existingChangeRequest && isVersioned
   const hideIdentityOverridesTab = Utils.getShouldHideIdentityOverridesTab()
   const isDependenciesTabEnabled = !existingChangeRequest
+  const onTabChange = () => {
+    setTabKey((k) => k + 1)
+    // A save error belongs to the tab it occurred on — the
+    // other tabs cannot render its shape meaningfully.
+    if (FeatureListStore.error) {
+      FeatureListStore.error = null
+      FeatureListStore.trigger('change')
+    }
+  }
+
   // Shows the Dependencies tab, as `Tabs` does when it's clicked.
   const showDependencies =
     isDependenciesTabEnabled && props.history
@@ -502,7 +512,7 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
             pathname: window.location.pathname,
             search: searchParams.toString(),
           })
-          setTabKey((k) => k + 1)
+          onTabChange()
         }
       : undefined
 
@@ -824,15 +834,7 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                 <Tabs
                   urlParam='tab'
                   history={props.history}
-                  onChange={() => {
-                    setTabKey((k) => k + 1)
-                    // A save error belongs to the tab it occurred on — the
-                    // other tabs cannot render its shape meaningfully.
-                    if (FeatureListStore.error) {
-                      FeatureListStore.error = null
-                      FeatureListStore.trigger('change')
-                    }
-                  }}
+                  onChange={onTabChange}
                   overflowX
                 >
                   <TabItem
