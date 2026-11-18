@@ -27,7 +27,7 @@ Create a new E2E test following the existing patterns in the codebase.
 
 4. **Scan application code:**
    - Find components being tested in `frontend/web/components/` or `frontend/common/`
-   - Add `data-test` attributes if missing
+   - Make sure elements have a role or accessible name to locate them by; add `data-test` only as a last resort
 
 5. **Create the test file:**
    - Follow naming convention: `*-test.pw.ts` or `*-tests.pw.ts`
@@ -41,11 +41,11 @@ Create a new E2E test following the existing patterns in the codebase.
 
 7. **Report what was created:**
    - Test file path
-   - Any `data-test` attributes added
+   - Any accessible names or `data-test` attributes added
    - Test stability results
 
 ## Important Notes
 
-- Always use `data-test` attributes for selectors
+- Prefer `getByRole`, `getByLabel` and `getByText`; keep `data-test` as a fallback
 - Use existing helper functions instead of raw Playwright APIs
 - Tests should be independent and not rely on execution order
