@@ -66,14 +66,19 @@ test.describe('Flag Dependencies', () => {
     log('The prerequisite is off, so the flag is held off')
     await expect(row.getByRole('img', { name: 'Off' })).toBeVisible()
     await expect(row.getByText('No', { exact: true })).toBeVisible()
-    await expect(page.getByText(/Serving off in/)).toBeVisible()
+    // The Value tab's banner stays in the page behind the open tab, and the
+    // role skips hidden elements, so this only matches the open tab's.
+    const servingOff = page
+      .getByRole('status')
+      .filter({ hasText: /Serving off in/ })
+    await expect(servingOff).toBeVisible()
     await visualSnapshot(page, 'dependencies-blocked', testInfo)
 
     log('The tab counts the prerequisites met, and the Value tab says why')
     const metCount = page.locator(byId('dependencies-met-count'))
     await expect(metCount).toHaveText('0/1')
     await page.getByRole('button', { exact: true, name: 'Value' }).click()
-    await expect(page.getByText(/Serving off in/)).toBeVisible()
+    await expect(servingOff).toBeVisible()
     await visualSnapshot(page, 'dependencies-blocked-value', testInfo)
     await page
       .getByRole('button', { exact: true, name: 'View dependencies' })
@@ -88,7 +93,7 @@ test.describe('Flag Dependencies', () => {
     await openDependencies(DEPENDENT)
     await expect(row.getByRole('img', { name: 'On' })).toBeVisible()
     await expect(row.getByText('Yes', { exact: true })).toBeVisible()
-    await expect(page.getByText(/Serving off in/)).toBeHidden()
+    await expect(servingOff).toBeHidden()
     await expect(metCount).toHaveText('1/1')
     await visualSnapshot(page, 'dependencies-satisfied', testInfo)
 
