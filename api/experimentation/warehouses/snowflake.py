@@ -94,7 +94,7 @@ def _to_binding(name: str, value: object) -> dict[str, str]:
     raise TypeError(f"Unsupported parameter type for {name}: {type(value).__name__}")
 
 
-def _to_positional_bindings(
+def _rewrite_to_positional_bindings(
     statement: str, params: Mapping[str, object]
 ) -> tuple[str, dict[str, dict[str, str]]]:
     bindings: dict[str, dict[str, str]] = {}
@@ -107,7 +107,7 @@ def _to_positional_bindings(
     return _PLACEHOLDER.sub(bind, statement), bindings
 
 
-def _parse_timestamp(value: str) -> datetime:
+def _parse_epoch_seconds(value: str) -> datetime:
     return _EPOCH + timedelta(microseconds=int(Decimal(value) * 1_000_000))
 
 
@@ -115,12 +115,12 @@ _CONVERTERS: dict[str, Callable[[str], object]] = {
     "real": float,
     "text": str,
     "boolean": lambda value: value == "true",
-    "timestamp_ntz": _parse_timestamp,
-    "timestamp_ltz": _parse_timestamp,
+    "timestamp_ntz": _parse_epoch_seconds,
+    "timestamp_ltz": _parse_epoch_seconds,
 }
 
 
-def _converter(column: dict[str, Any]) -> Callable[[str], object]:
+def _column_converter(column: dict[str, Any]) -> Callable[[str], object]:
     if column["type"] == "fixed":
         return int if column["scale"] == 0 else float
     return _CONVERTERS[column["type"]]
@@ -131,7 +131,7 @@ def _convert_rows(payload: dict[str, Any]) -> QueryResult:
     if len(metadata.get("partitionInfo") or []) > 1:
         raise SnowflakeRequestError(None, "MULTI_PARTITION_RESULT")
     columns = metadata["rowType"]
-    converters = [_converter(column) for column in columns]
+    converters = [_column_converter(column) for column in columns]
     rows = [
         [
             None if value is None else convert(value)
@@ -215,17 +215,21 @@ class _Session:
         return response
 
     def run(self, statement: str, params: Mapping[str, object]) -> QueryResult:
-        positional_statement, bindings = _to_positional_bindings(statement, params)
-        timeout = max(math.ceil(self._remaining()), MIN_STATEMENT_TIMEOUT_SECONDS)
+        positional_statement, bindings = _rewrite_to_positional_bindings(
+            statement, params
+        )
+        statement_timeout_seconds = max(
+            math.ceil(self._remaining()), MIN_STATEMENT_TIMEOUT_SECONDS
+        )
         try:
             response = self._request(
                 "POST",
                 "/api/v2/statements",
-                read_timeout=timeout + CONNECT_TIMEOUT_SECONDS,
+                read_timeout=statement_timeout_seconds + CONNECT_TIMEOUT_SECONDS,
                 params={"requestId": str(uuid.uuid4())},
                 json={
                     "statement": positional_statement,
-                    "timeout": timeout,
+                    "timeout": statement_timeout_seconds,
                     "database": self._config["database"],
                     "schema": self._config["schema"],
                     "warehouse": self._config["warehouse"],
