@@ -1,5 +1,5 @@
 import { FC } from 'react'
-import cn from 'classnames'
+import Chip from 'components/base/Chip'
 import { PrerequisiteRow, countMet } from './prerequisiteState'
 
 type DependenciesTabLabelProps = {
@@ -19,14 +19,11 @@ const DependenciesTabLabel: FC<DependenciesTabLabelProps> = ({
         <span
           data-test='dependencies-met-count'
           aria-label={`${met} of ${total} prerequisites met`}
-          className={cn(
-            'ms-2 px-2 border rounded-sm fs-small lh-sm',
-            met < total
-              ? 'bg-surface-warning text-warning border-warning'
-              : 'bg-surface-muted text-secondary border-default',
-          )}
+          className='ms-2'
         >
-          {met}/{total}
+          <Chip size='xs' variant={met < total ? 'warning' : 'neutral'}>
+            {met}/{total}
+          </Chip>
         </span>
       )}
     </>
