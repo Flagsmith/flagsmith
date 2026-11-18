@@ -286,6 +286,24 @@ def test_run__budget__bounds_statement_timeout(
     assert connect_and_read_timeouts == (5, expected_timeout + 5)
 
 
+def test_run__budget_spent__raises_timeout_without_submitting(
+    snowflake_connection: WarehouseConnection,
+    requests_mock: RequestsMockerFixture,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    # Given
+    statements = requests_mock.post(STATEMENTS_URL, json=_succeeded())
+
+    # When / Then
+    with pytest.raises(SnowflakeTimeout):
+        with snowflake.snowflake_session(
+            snowflake_connection, budget_seconds=5
+        ) as session:
+            freezer.tick(5)
+            session.run("SELECT 1", {})
+    assert statements.call_count == 0
+
+
 def test_run__params__rewrites_placeholders_to_positional_bindings(
     snowflake_connection: WarehouseConnection,
     requests_mock: RequestsMockerFixture,
@@ -407,6 +425,7 @@ def test_run__unsupported_param__raises(
         ),
         ({"status_code": 429, "text": "Too Many Requests"}, 429, None, None),
         ({"status_code": 503, "text": "Service Unavailable"}, 503, None, None),
+        ({"status_code": 503, "text": "[]"}, 503, None, None),
     ],
     ids=[
         "role-not-granted",
@@ -415,6 +434,7 @@ def test_run__unsupported_param__raises(
         "statement-failed",
         "rate-limited",
         "server-error",
+        "non-object-body",
     ],
 )
 def test_run__rejected__raises_request_error_with_codes(
@@ -547,15 +567,49 @@ def test_run__still_running__polls_until_done(
     assert sleep.call_count == 2
 
 
+def test_run__statement_fails_while_polling__raises_request_error_with_codes(
+    snowflake_connection: WarehouseConnection,
+    requests_mock: RequestsMockerFixture,
+) -> None:
+    # Given
+    requests_mock.post(STATEMENTS_URL, status_code=202, json=_running())
+    requests_mock.get(
+        STATEMENT_HANDLE_URL,
+        status_code=422,
+        json={"code": "100038", "sqlState": "22018", "statementHandle": "01-handle"},
+    )
+
+    # When
+    with pytest.raises(SnowflakeRequestError) as exc_info:
+        with snowflake.snowflake_session(
+            snowflake_connection, budget_seconds=5
+        ) as session:
+            session.run("SELECT 1", {})
+
+    # Then
+    assert (
+        exc_info.value.status_code,
+        exc_info.value.error_code,
+        exc_info.value.sql_state,
+    ) == (422, "100038", "22018")
+
+
 @pytest.mark.parametrize(
     "cancel_response",
     [
         {"json": {"code": "000604", "message": "SQL execution canceled"}},
         {"status_code": 422, "json": {"code": "000709"}},
         {"status_code": 503, "text": "unavailable"},
+        {"status_code": 503, "text": "null"},
         {"exc": requests.Timeout},
     ],
-    ids=["cancelled", "already-finished", "server-error", "timeout"],
+    ids=[
+        "cancelled",
+        "already-finished",
+        "server-error",
+        "server-error-null-body",
+        "timeout",
+    ],
 )
 def test_run__deadline_reached__cancels_and_raises_timeout(
     snowflake_connection: WarehouseConnection,
@@ -575,7 +629,7 @@ def test_run__deadline_reached__cancels_and_raises_timeout(
             session.run("SELECT 1", {})
 
     # Then
-    assert poll.call_count == 5
+    assert poll.call_count == 4
     assert cancel.call_count == 1
     assert cancel.request_history[-1].headers[
         "X-Snowflake-Authorization-Token-Type"
@@ -583,18 +637,22 @@ def test_run__deadline_reached__cancels_and_raises_timeout(
 
 
 @pytest.mark.parametrize(
-    "poll_error",
-    [requests.ReadTimeout, requests.ConnectionError],
-    ids=["held-open", "connection-dropped"],
+    "poll_response",
+    [
+        {"exc": requests.ReadTimeout},
+        {"exc": requests.ConnectionError},
+        {"status_code": 429, "json": _running()},
+    ],
+    ids=["held-open", "connection-dropped", "rate-limited"],
 )
-def test_run__poll_fails__retries_then_raises_timeout(
+def test_run__poll_unanswered_or_rate_limited__keeps_polling_then_raises_timeout(
     snowflake_connection: WarehouseConnection,
     requests_mock: RequestsMockerFixture,
-    poll_error: type[Exception],
+    poll_response: dict[str, Any],
 ) -> None:
     # Given
     requests_mock.post(STATEMENTS_URL, status_code=202, json=_running())
-    poll = requests_mock.get(STATEMENT_HANDLE_URL, exc=poll_error)
+    poll = requests_mock.get(STATEMENT_HANDLE_URL, **poll_response)
     cancel = requests_mock.post(f"{STATEMENT_HANDLE_URL}/cancel", json={})
 
     # When
@@ -605,7 +663,7 @@ def test_run__poll_fails__retries_then_raises_timeout(
             session.run("SELECT 1", {})
 
     # Then
-    assert poll.call_count == 5
+    assert poll.call_count == 4
     assert cancel.call_count == 1
 
 

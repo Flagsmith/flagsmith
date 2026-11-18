@@ -209,17 +209,50 @@ class _Session:
                 error = response.json()
             except ValueError:
                 error = {}
+            if not isinstance(error, Mapping):
+                error = {}
             raise SnowflakeRequestError(
                 response.status_code, error.get("code"), error.get("sqlState")
             )
+        return response
+
+    def _poll_until_finished(self, response: requests.Response) -> requests.Response:
+        statement_handle = response.json()["statementHandle"]
+        while response.status_code == 202:
+            if self._remaining() <= 0:
+                with suppress(requests.RequestException, SnowflakeRequestError):
+                    self._request(
+                        "POST",
+                        f"/api/v2/statements/{statement_handle}/cancel",
+                        read_timeout=CONNECT_TIMEOUT_SECONDS,
+                    )
+                raise SnowflakeTimeout()
+            time.sleep(POLL_INTERVAL_SECONDS)
+            if self._remaining() <= 0:
+                continue
+            try:
+                response = self._request(
+                    "GET",
+                    f"/api/v2/statements/{statement_handle}",
+                    read_timeout=max(self._remaining(), 1),
+                )
+            except (requests.Timeout, requests.ConnectionError):
+                continue
+            except SnowflakeRequestError as exc:
+                if exc.status_code == 429:
+                    continue
+                raise
         return response
 
     def run(self, statement: str, params: Mapping[str, object]) -> QueryResult:
         positional_statement, bindings = _rewrite_to_positional_bindings(
             statement, params
         )
+        remaining_seconds = self._remaining()
+        if remaining_seconds <= 0:
+            raise SnowflakeTimeout()
         statement_timeout_seconds = max(
-            math.ceil(self._remaining()), MIN_STATEMENT_TIMEOUT_SECONDS
+            math.ceil(remaining_seconds), MIN_STATEMENT_TIMEOUT_SECONDS
         )
         try:
             response = self._request(
@@ -238,25 +271,7 @@ class _Session:
                     "parameters": {"timezone": "UTC"},
                 },
             )
-            statement_handle = response.json()["statementHandle"]
-            while response.status_code == 202:
-                if self._remaining() <= 0:
-                    with suppress(requests.RequestException, SnowflakeRequestError):
-                        self._request(
-                            "POST",
-                            f"/api/v2/statements/{statement_handle}/cancel",
-                            read_timeout=CONNECT_TIMEOUT_SECONDS,
-                        )
-                    raise SnowflakeTimeout()
-                time.sleep(POLL_INTERVAL_SECONDS)
-                try:
-                    response = self._request(
-                        "GET",
-                        f"/api/v2/statements/{statement_handle}",
-                        read_timeout=max(self._remaining(), 1),
-                    )
-                except (requests.Timeout, requests.ConnectionError):
-                    continue
+            response = self._poll_until_finished(response)
         except SnowflakeRequestError as exc:
             if exc.status_code == 401:
                 raise SnowflakeAuthError() from exc
