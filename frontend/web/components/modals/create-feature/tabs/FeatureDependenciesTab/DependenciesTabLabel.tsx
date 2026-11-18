@@ -17,8 +17,9 @@ const DependenciesTabLabel: FC<DependenciesTabLabelProps> = ({
       Dependencies
       {!!total && (
         <>
-          {/* Read out in full instead, as part of the tab's name. */}
-          <span aria-hidden className='ms-2'>
+          {/* Read out in full instead, as part of the tab's name. The body's
+          line height stops the chip taking the tab's, which is its height. */}
+          <span aria-hidden className='ms-2 lh-base'>
             <Chip size='xs' variant={met < total ? 'warning' : 'neutral'}>
               {met}/{total}
             </Chip>
