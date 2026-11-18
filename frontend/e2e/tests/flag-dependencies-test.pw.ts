@@ -81,9 +81,7 @@ test.describe('Flag Dependencies', () => {
 
     log('The dependency manages its segment override')
     await page.getByRole('button', { name: 'Segment Overrides' }).click()
-    await expect(
-      page.locator(byId('system-segment-override-label')),
-    ).toHaveText('Managed by a flag dependency')
+    await expect(page.getByText('Managed by a flag dependency')).toBeVisible()
     await expect(page.locator(byId('segment-override-scope-0'))).toContainText(
       'Applies to the whole environment',
     )
