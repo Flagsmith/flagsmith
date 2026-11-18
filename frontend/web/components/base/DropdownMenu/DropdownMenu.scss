@@ -1,6 +1,7 @@
 .ds-dropdown-menu {
   display: flex;
   flex-direction: column;
+  gap: 2px;
   padding: 4px;
   min-width: 200px;
 
@@ -19,8 +20,15 @@
     white-space: nowrap;
   }
 
-  // Links bring their own hover and active styles
-  &__item:hover {
+  // Links bring their own hover and active styles. Touch screens keep :hover
+  // after a tap, so only devices that can hover get it; keyboard gets focus.
+  @media (hover: hover) {
+    &__item:hover {
+      background: var(--color-surface-hover);
+    }
+  }
+
+  &__item:focus-visible {
     background: var(--color-surface-hover);
   }
 
@@ -64,7 +72,8 @@
         color: var(--color-icon-disabled);
       }
 
-      &:hover {
+      &:hover,
+      &:focus-visible {
         background: none;
       }
     }
