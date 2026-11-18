@@ -18,12 +18,36 @@ const colourLiterals = [
   },
 ]
 
+// Legacy classes that have a DS component. Keep this list short: add a class
+// only once its replacement exists, remove it once the last use migrates.
+const legacyClasses = [
+  { re: '(^|\\s)chip(--|\\s|$)', use: 'Chip' },
+  { re: '(^|\\s)alert(\\s|$)', use: 'Banner' },
+].flatMap(({ re, use }) => {
+  const message = `Use the DS ${use} instead of the legacy class.`
+  return [
+    {
+      message,
+      selector: `JSXAttribute[name.name='className'] > Literal[value=/${re}/]`,
+    },
+    {
+      message,
+      selector: `JSXAttribute[name.name='className'] TemplateElement[value.raw=/${re}/]`,
+    },
+    {
+      message,
+      selector: `CallExpression[callee.name=/^(cn|classNames|cx)$/] Literal[value=/${re}/]`,
+    },
+  ]
+})
+
 // A style object that only sets CSS custom properties is allowed.
 const styleMessage =
   'Use a SCSS class with tokens. For a runtime value, set a CSS custom property.'
 // `as const` only narrows, so it stays allowed.
 const assertionMessage = 'Type the value instead of asserting its type.'
 const otherPatterns = [
+  ...legacyClasses,
   {
     message: assertionMessage,
     selector: "TSAsExpression:not([typeAnnotation.typeName.name='const'])",
@@ -232,6 +256,17 @@ module.exports = {
       {
         message: fetchMessage,
         name: 'fetch',
+      },
+    ],
+    'no-restricted-imports': [
+      'warn',
+      {
+        patterns: [
+          {
+            group: ['**/ErrorMessage', '**/InfoMessage', '**/WarningMessage'],
+            message: 'Use the DS Banner (components/base/Banner) instead.',
+          },
+        ],
       },
     ],
     'no-restricted-syntax': ['warn', ...colourLiterals, ...otherPatterns],
