@@ -266,6 +266,10 @@ module.exports = {
             group: ['**/ErrorMessage', '**/InfoMessage', '**/WarningMessage'],
             message: 'Use the DS Banner (components/base/Banner) instead.',
           },
+          {
+            group: ['@ionic/react', 'ionicons', 'ionicons/*'],
+            message: 'Use components/icons/Icon, our own SVG icons.',
+          },
         ],
       },
     ],
