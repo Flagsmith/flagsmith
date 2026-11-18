@@ -145,7 +145,7 @@ CONVERSIONS_DAY_SQL = CONVERSIONS_HOUR_SQL.replace(
 
 
 @pytest.mark.parametrize(
-    "build, expected_sql",
+    "build_sql, expected_sql",
     [
         (partial(event_names_query, SNOWFLAKE_DIALECT), EVENT_NAMES_SQL),
         (partial(event_stats_query, SNOWFLAKE_DIALECT), EVENT_STATS_SQL),
@@ -188,12 +188,12 @@ CONVERSIONS_DAY_SQL = CONVERSIONS_HOUR_SQL.replace(
         "conversions-day",
     ],
 )
-def test_snowflake_dialect__query__builds_expected_sql(
-    build: Callable[[], str | None],
+def test_query_builder__snowflake_dialect__returns_expected_sql(
+    build_sql: Callable[[], str | None],
     expected_sql: str,
 ) -> None:
     # Given / When
-    sql = build()
+    sql = build_sql()
 
     # Then
     assert sql == expected_sql
