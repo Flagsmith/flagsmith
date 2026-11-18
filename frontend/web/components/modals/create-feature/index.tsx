@@ -46,7 +46,10 @@ import SegmentOverridesTab, {
   SegmentOverrideValue,
 } from './tabs/SegmentOverridesTab'
 import UsageTab from './tabs/UsageTab'
-import FeatureDependenciesTab from './tabs/FeatureDependenciesTab'
+import FeatureDependenciesTab, {
+  DependenciesTabLabel,
+  usePrerequisiteStatus,
+} from './tabs/FeatureDependenciesTab'
 import { useStagedPrerequisites } from './tabs/FeatureDependenciesTab/hooks/useStagedPrerequisites'
 import FeatureLimitAlert from './components/FeatureLimitAlert'
 import FeatureUpdateSummary from './components/FeatureUpdateSummary'
@@ -461,6 +464,16 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
     setSkipSaveProjectFeature(!createFeaturePermission)
   }, [createFeaturePermission])
 
+  // Shown on the Value tab and the Dependencies tab's label, as
+  // prerequisites that are off serve the flag off. Dependencies don't apply
+  // to identity overrides, nor show for change requests.
+  const prerequisites = usePrerequisiteStatus({
+    environmentId,
+    featureId: projectFlag.id,
+    projectId,
+    skip: !isEdit || !!identity || !!existingChangeRequest,
+  })
+
   if (!environment || !project) {
     return (
       <div className='text-center'>
@@ -479,6 +492,15 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
   const isVersionedChangeRequest = existingChangeRequest && isVersioned
   const hideIdentityOverridesTab = Utils.getShouldHideIdentityOverridesTab()
   const isDependenciesTabEnabled = !existingChangeRequest
+  const onTabChange = () => {
+    setTabKey((k) => k + 1)
+    // A save error belongs to the tab it occurred on — the
+    // other tabs cannot render its shape meaningfully.
+    if (FeatureListStore.error) {
+      FeatureListStore.error = null
+      FeatureListStore.trigger('change')
+    }
+  }
 
   // Shows the Dependencies tab, as `Tabs` does when it's clicked.
   const showDependencies =
@@ -490,7 +512,7 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
             pathname: window.location.pathname,
             search: searchParams.toString(),
           })
-          setTabKey((k) => k + 1)
+          onTabChange()
         }
       : undefined
 
@@ -812,15 +834,7 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                 <Tabs
                   urlParam='tab'
                   history={props.history}
-                  onChange={() => {
-                    setTabKey((k) => k + 1)
-                    // A save error belongs to the tab it occurred on — the
-                    // other tabs cannot render its shape meaningfully.
-                    if (FeatureListStore.error) {
-                      FeatureListStore.error = null
-                      FeatureListStore.trigger('change')
-                    }
-                  }}
+                  onChange={onTabChange}
                   overflowX
                 >
                   <TabItem
@@ -830,6 +844,8 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                   >
                     <FeatureValueTab
                       error={error}
+                      prerequisites={prerequisites}
+                      onViewDependencies={showDependencies}
                       projectId={projectId}
                       noPermissions={!!noPermissions}
                       freeze={freeze}
@@ -894,7 +910,10 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                   {isDependenciesTabEnabled && (
                     <TabItem
                       data-test='feature_dependencies'
-                      tabLabel='Dependencies'
+                      tabLabelString='Dependencies'
+                      tabLabel={
+                        <DependenciesTabLabel prerequisites={prerequisites} />
+                      }
                       isDirty={dependenciesChanged}
                     >
                       <FeatureDependenciesTab

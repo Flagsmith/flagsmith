@@ -1,4 +1,4 @@
-import { useGetFeatureListQuery } from 'common/services/useProjectFlag'
+import { useGetProjectFlagsQuery } from 'common/services/useProjectFlag'
 import { useProjectEnvironments } from './useProjectEnvironments'
 import { ProjectFlag } from 'common/types/responses'
 
@@ -12,8 +12,9 @@ type UseFeatureStatesArgs = {
   skip?: boolean
 }
 
-// Whether each of a project's features is on in one environment, from the
-// feature list. getFeatureList takes the numeric environment id, not the key.
+// Whether each of a project's features is on in one environment, from every
+// page of the feature list, as a feature missing from it reads as off.
+// getProjectFlags takes the numeric environment id, not the key.
 export const useFeatureStates = ({
   environmentId,
   projectId,
@@ -25,22 +26,19 @@ export const useFeatureStates = ({
     isLoading: isLoadingEnvironments,
   } = useProjectEnvironments(projectId)
   const numericEnvId = getEnvironmentIdFromKey(environmentId)
+  const shouldSkip = skip || !numericEnvId
+  // currentData, not data, which keeps another environment's list while this
+  // one's loads.
   const {
-    data,
+    currentData,
     isError: isFeatureListError,
     isLoading: isLoadingFeatureList,
-  } = useGetFeatureListQuery(
-    {
-      environmentId: String(numericEnvId ?? ''),
-      page: 1,
-      // One page has to cover every feature, or one outside it reads as off.
-      page_size: 999,
-      projectId,
-    },
-    { skip: skip || !numericEnvId },
+  } = useGetProjectFlagsQuery(
+    { environment: numericEnvId, project: String(projectId) },
+    { skip: shouldSkip },
   )
 
-  const features = data?.results ?? NO_FEATURES
+  const features = currentData?.results ?? NO_FEATURES
   return {
     features,
     isEnabled: (featureId: number) =>
@@ -52,6 +50,9 @@ export const useFeatureStates = ({
       // The lookup finished without finding the environment, so the feature
       // list will never run and nothing is coming.
       (!isLoadingEnvironments && !numericEnvId),
-    isLoading: isLoadingEnvironments || isLoadingFeatureList,
+    isLoading:
+      isLoadingEnvironments ||
+      isLoadingFeatureList ||
+      (!shouldSkip && !currentData && !isFeatureListError),
   }
 }

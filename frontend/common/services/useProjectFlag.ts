@@ -149,6 +149,12 @@ export const projectFlagService = service
               .join('-'),
             type: 'ProjectFlag',
           },
+          // Refreshed with the feature list, as it carries the same states.
+          {
+            id: `${req?.project}-${req?.environment}`,
+            type: 'FeatureList',
+          },
+          { id: 'LIST', type: 'FeatureList' },
         ],
         queryFn: async (args, _, _2, baseQuery) => {
           return await recursivePageGet<ProjectFlag>(
