@@ -295,8 +295,7 @@ class SnowflakeDialect:
         return f"iff({expr}, 1, 0)"
 
     def zip_unnest(self, arrays: Mapping[str, Sequence[str]]) -> str:
-        # VALUES rejects outer columns and FLATTEN yields VARIANT, hence decode().
-        size = len(next(iter(arrays.values())))
+        size = max(len(values) for values in arrays.values())
         columns = ", ".join(
             f"decode(position, {', '.join(f'{i}, {value}' for i, value in enumerate(values))}) AS {alias}"
             for alias, values in arrays.items()
