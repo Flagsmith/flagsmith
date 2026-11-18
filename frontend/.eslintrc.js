@@ -21,7 +21,17 @@ const colourLiterals = [
 // A style object that only sets CSS custom properties is allowed.
 const styleMessage =
   'Use a SCSS class with tokens. For a runtime value, set a CSS custom property.'
+// `as const` only narrows, so it stays allowed.
+const assertionMessage = 'Type the value instead of asserting its type.'
 const otherPatterns = [
+  {
+    message: assertionMessage,
+    selector: "TSAsExpression:not([typeAnnotation.typeName.name='const'])",
+  },
+  {
+    message: assertionMessage,
+    selector: 'TSTypeAssertion',
+  },
   {
     message: styleMessage,
     selector:
@@ -200,10 +210,6 @@ module.exports = {
     ],
     '@typescript-eslint/ban-ts-comment': 'off',
     '@typescript-eslint/ban-types': 'off',
-    '@typescript-eslint/consistent-type-assertions': [
-      'warn',
-      { 'assertionStyle': 'never' },
-    ],
     '@typescript-eslint/no-empty-function': 'off',
     '@typescript-eslint/no-explicit-any': 'off',
     '@typescript-eslint/no-namespace': 'off',
