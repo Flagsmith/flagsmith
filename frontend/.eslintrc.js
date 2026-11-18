@@ -28,7 +28,7 @@ const legacyClasses = [
   return [
     {
       message,
-      selector: `JSXAttribute[name.name='className'] > Literal[value=/${re}/]`,
+      selector: `JSXAttribute[name.name='className'] Literal[value=/${re}/]:not(CallExpression Literal)`,
     },
     {
       message,
