@@ -165,6 +165,7 @@ module.exports = {
         '.storybook/**',
         'common/constants.ts',
         'common/theme/**',
+        'common/utils/paletteColour.ts',
         'documentation/**',
         'web/components/icons/**',
       ],
