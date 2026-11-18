@@ -121,6 +121,7 @@ const IdentitiesPage: FC<{ props: any }> = (props) => {
     )
   }
 
+  // Throwaway (#8819): the data-test lines below predate this PR, so no warnings
   return (
     <div className='app-container container'>
       <PageTitle
