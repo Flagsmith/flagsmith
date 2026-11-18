@@ -47,7 +47,7 @@ describe('useFeatureStates', () => {
     expect(states.features).toEqual([])
   })
 
-  it('reads every page of the feature list for the environment', () => {
+  it('requests project flags for the resolved environment', () => {
     // Given
     mockUseGetProjectFlagsQuery.mockReturnValue({
       currentData: { results: [] },
