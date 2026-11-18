@@ -42,6 +42,6 @@ describe('recursivePageGet', () => {
     const res = await recursivePageGet<number>('items/?page=1', null, baseQuery)
 
     // Then
-    expect(res.error).toBe(error)
+    expect(res).toEqual({ error })
   })
 })
