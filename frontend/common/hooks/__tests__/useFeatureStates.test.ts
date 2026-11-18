@@ -1,5 +1,5 @@
 jest.mock('common/services/useProjectFlag', () => ({
-  useGetFeatureListQuery: jest.fn(),
+  useGetProjectFlagsQuery: jest.fn(),
 }))
 
 jest.mock('common/hooks/useProjectEnvironments', () => ({
@@ -7,12 +7,12 @@ jest.mock('common/hooks/useProjectEnvironments', () => ({
 }))
 
 import { useFeatureStates } from 'common/hooks/useFeatureStates'
-import { useGetFeatureListQuery } from 'common/services/useProjectFlag'
+import { useGetProjectFlagsQuery } from 'common/services/useProjectFlag'
 import { useProjectEnvironments } from 'common/hooks/useProjectEnvironments'
 import { ProjectFlag } from 'common/types/responses'
 
-const mockUseGetFeatureListQuery =
-  useGetFeatureListQuery as jest.MockedFunction<typeof useGetFeatureListQuery>
+const mockUseGetProjectFlagsQuery =
+  useGetProjectFlagsQuery as jest.MockedFunction<typeof useGetProjectFlagsQuery>
 const mockUseProjectEnvironments =
   useProjectEnvironments as jest.MockedFunction<typeof useProjectEnvironments>
 
@@ -32,7 +32,7 @@ describe('useFeatureStates', () => {
 
   it("ignores another environment's list while this one's loads", () => {
     // Given
-    mockUseGetFeatureListQuery.mockReturnValue({
+    mockUseGetProjectFlagsQuery.mockReturnValue({
       currentData: undefined,
       data: { results: [enabledFeature] },
       isError: false,
@@ -47,9 +47,27 @@ describe('useFeatureStates', () => {
     expect(states.features).toEqual([])
   })
 
+  it('reads every page of the feature list for the environment', () => {
+    // Given
+    mockUseGetProjectFlagsQuery.mockReturnValue({
+      currentData: { results: [] },
+      isError: false,
+      isLoading: false,
+    } as any)
+
+    // When
+    useFeatureStates({ environmentId: 'key', projectId: 1 })
+
+    // Then
+    expect(mockUseGetProjectFlagsQuery).toHaveBeenCalledWith(
+      { environment: 2, project: '1' },
+      { skip: false },
+    )
+  })
+
   it("reads this environment's list once loaded", () => {
     // Given
-    mockUseGetFeatureListQuery.mockReturnValue({
+    mockUseGetProjectFlagsQuery.mockReturnValue({
       currentData: { results: [enabledFeature] },
       isError: false,
       isLoading: false,

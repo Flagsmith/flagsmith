@@ -1,4 +1,4 @@
-import { useGetFeatureListQuery } from 'common/services/useProjectFlag'
+import { useGetProjectFlagsQuery } from 'common/services/useProjectFlag'
 import { useProjectEnvironments } from './useProjectEnvironments'
 import { ProjectFlag } from 'common/types/responses'
 
@@ -12,8 +12,9 @@ type UseFeatureStatesArgs = {
   skip?: boolean
 }
 
-// Whether each of a project's features is on in one environment, from the
-// feature list. getFeatureList takes the numeric environment id, not the key.
+// Whether each of a project's features is on in one environment, from every
+// page of the feature list, as a feature missing from it reads as off.
+// getProjectFlags takes the numeric environment id, not the key.
 export const useFeatureStates = ({
   environmentId,
   projectId,
@@ -32,14 +33,8 @@ export const useFeatureStates = ({
     currentData,
     isError: isFeatureListError,
     isLoading: isLoadingFeatureList,
-  } = useGetFeatureListQuery(
-    {
-      environmentId: String(numericEnvId ?? ''),
-      page: 1,
-      // One page has to cover every feature, or one outside it reads as off.
-      page_size: 999,
-      projectId,
-    },
+  } = useGetProjectFlagsQuery(
+    { environment: numericEnvId, project: String(projectId) },
     { skip: shouldSkip },
   )
 
