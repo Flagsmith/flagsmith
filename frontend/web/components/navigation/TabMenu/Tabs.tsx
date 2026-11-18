@@ -18,10 +18,10 @@ import TabLabel from './TabLabel'
 import classNames from 'classnames'
 import DropdownMenu, { DropdownMenuItem } from 'components/base/DropdownMenu'
 import IconButton from 'components/base/IconButton'
-import BareButton from 'components/base/forms/BareButton'
 import Icon from 'components/icons/Icon'
 import { useOverflowVisibleCount } from 'common/hooks/useOverflowVisibleCount'
 import { useBreakpoint } from 'common/hooks/useBreakpoint'
+import { useTabScroller } from './useTabScroller'
 
 interface TabsProps {
   children: ReactNode | ReactNode[]
@@ -104,18 +104,31 @@ const Tabs: React.FC<TabsProps> = ({
     outerContainerRef,
   })
 
+  // Phones scroll the tabs sideways instead of hiding some behind a menu
+  const scrollTabs = isPhone && !disableOverflow
+  const { canScrollEnd, canScrollStart } = useTabScroller(
+    itemsContainerRef,
+    scrollTabs,
+    value,
+  )
+
   const visible = useMemo(
     // Disable overflow for pill tabs
-    () => (disableOverflow ? tabChildren : tabChildren.slice(0, visibleCount)),
-    [tabChildren, visibleCount, disableOverflow],
+    () =>
+      disableOverflow || scrollTabs
+        ? tabChildren
+        : tabChildren.slice(0, visibleCount),
+    [tabChildren, visibleCount, disableOverflow, scrollTabs],
   )
   const overflow = useMemo(
-    () => (disableOverflow ? [] : tabChildren.slice(visibleCount)),
-    [tabChildren, visibleCount, disableOverflow],
+    () =>
+      disableOverflow || scrollTabs ? [] : tabChildren.slice(visibleCount),
+    [tabChildren, visibleCount, disableOverflow, scrollTabs],
   )
-  const canGrow = !isMeasuring && visibleCount === tabChildren.length
+  const measuring = isMeasuring && !scrollTabs
+  const canGrow =
+    !scrollTabs && !isMeasuring && visibleCount === tabChildren.length
   const hasOverflow = overflow.length > 0 && !isMeasuring
-  const activeTab = tabChildren[value]
   const tabLabelOf = (child: ReactElement<TabItemProps>) =>
     String(child.props.tabLabelString || child.props.tabLabel)
 
@@ -151,14 +164,15 @@ const Tabs: React.FC<TabsProps> = ({
       >
         <div
           ref={itemsContainerRef}
-          className={classNames(
-            'align-items-center flex-1 gap-2',
-            hasOverflow ? 'd-none d-md-flex' : 'd-flex',
-            { 'opacity-0': isMeasuring },
-          )}
+          className={classNames('d-flex align-items-center flex-1 gap-2', {
+            'opacity-0': measuring,
+            'tabs-nav__scroller': scrollTabs,
+            'tabs-nav__scroller--fade-end': scrollTabs && canScrollEnd,
+            'tabs-nav__scroller--fade-start': scrollTabs && canScrollStart,
+          })}
         >
-          {(isMeasuring ? tabChildren : visible).map((child, i) => {
-            const isSelected = !isMeasuring && value === i
+          {(measuring ? tabChildren : visible).map((child, i) => {
+            const isSelected = !measuring && value === i
             return (
               <TabButton
                 key={`button-${i}`}
@@ -180,31 +194,21 @@ const Tabs: React.FC<TabsProps> = ({
             )
           })}
         </div>
-        {hasOverflow && activeTab && (
+        {hasOverflow && (
           <DropdownMenu
-            aria-label='Sections'
+            aria-label='More tabs'
             trigger={
-              isPhone ? (
-                // Tabs don't fit on phones, so the trigger shows the current section
-                <BareButton className='d-flex align-items-center justify-content-between gap-2 w-100 px-0 py-2 text-start'>
-                  <span className='h5 mb-0 text-truncate'>
-                    {activeTab.props.tabLabel}
-                  </span>
-                  <Icon name='chevron-down' width={18} />
-                </BareButton>
-              ) : (
-                <IconButton
-                  className='ms-2 flex-shrink-0'
-                  variant='secondary'
-                  size='small'
-                  aria-label='More tabs'
-                >
-                  <Icon name='more-vertical' width={18} />
-                </IconButton>
-              )
+              <IconButton
+                className='ms-2 flex-shrink-0'
+                variant='secondary'
+                size='small'
+                aria-label='More tabs'
+              >
+                <Icon name='more-vertical' width={18} />
+              </IconButton>
             }
           >
-            {(isPhone ? tabChildren : overflow).map((child) => {
+            {overflow.map((child) => {
               const i = tabChildren.indexOf(child)
               return (
                 <DropdownMenuItem
