@@ -38,7 +38,8 @@ test.describe('Flag Dependencies', () => {
 
     const openDependencies = async (feature: string) => {
       await gotoFeature(feature)
-      await page.getByRole('button', { name: 'Dependencies' }).click()
+      // The tab's name goes on to count the prerequisites met.
+      await page.getByRole('button', { name: /^Dependencies/ }).click()
     }
 
     log('The dependent has no prerequisites yet')
@@ -75,8 +76,9 @@ test.describe('Flag Dependencies', () => {
     await visualSnapshot(page, 'dependencies-blocked', testInfo)
 
     log('The tab counts the prerequisites met, and the Value tab says why')
-    const metCount = page.locator(byId('dependencies-met-count'))
-    await expect(metCount).toHaveText('0/1')
+    await expect(
+      page.getByRole('button', { name: /0 of 1 prerequisites met/ }),
+    ).toBeVisible()
     await page.getByRole('button', { exact: true, name: 'Value' }).click()
     await expect(servingOff).toBeVisible()
     await visualSnapshot(page, 'dependencies-blocked-value', testInfo)
@@ -94,7 +96,9 @@ test.describe('Flag Dependencies', () => {
     await expect(row.getByRole('img', { name: 'On' })).toBeVisible()
     await expect(row.getByText('Yes', { exact: true })).toBeVisible()
     await expect(servingOff).toBeHidden()
-    await expect(metCount).toHaveText('1/1')
+    await expect(
+      page.getByRole('button', { name: /1 of 1 prerequisites met/ }),
+    ).toBeVisible()
     await visualSnapshot(page, 'dependencies-satisfied', testInfo)
 
     log('The dependency manages its segment override')

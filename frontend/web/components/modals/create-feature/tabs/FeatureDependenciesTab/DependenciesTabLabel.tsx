@@ -16,15 +16,17 @@ const DependenciesTabLabel: FC<DependenciesTabLabelProps> = ({
     <>
       Dependencies
       {!!total && (
-        <span
-          data-test='dependencies-met-count'
-          aria-label={`${met} of ${total} prerequisites met`}
-          className='ms-2'
-        >
-          <Chip size='xs' variant={met < total ? 'warning' : 'neutral'}>
-            {met}/{total}
-          </Chip>
-        </span>
+        <>
+          {/* Read out in full instead, as part of the tab's name. */}
+          <span aria-hidden className='ms-2'>
+            <Chip size='xs' variant={met < total ? 'warning' : 'neutral'}>
+              {met}/{total}
+            </Chip>
+          </span>
+          <span className='visually-hidden'>
+            {met} of {total} prerequisites met
+          </span>
+        </>
       )}
     </>
   )
