@@ -79,7 +79,7 @@ export class E2EHelpers {
       await element.waitFor({ state: 'visible', timeout: SHORT_TIMEOUT });
       return;
     } catch {
-      const overflowButton = this.page.locator(byId('overflow-nav-button')).first();
+      const overflowButton = this.page.getByRole('button', { name: /^More (project|organisation|environment) pages$/ }).filter({ visible: true }).first();
       if (await overflowButton.isVisible()) {
         await overflowButton.click();
       }
@@ -812,12 +812,14 @@ export class E2EHelpers {
   // Go to feature versions
   async goToFeatureVersions(featureName: string) {
     await this.gotoFeature(featureName);
-    if (await this.isElementExists('change-history')) {
-      await this.click(byId('change-history'));
-    } else {
-      await this.click(byId('tabs-overflow-button'));
-      await this.click(byId('change-history'));
+    // History is a tab, or an item in the "More tabs" menu when the tabs overflow
+    const history = this.page
+      .getByRole('button', { exact: true, name: 'History' })
+      .filter({ visible: true });
+    if (!(await history.count())) {
+      await this.page.getByRole('button', { exact: true, name: 'More tabs' }).click();
     }
+    await history.first().click();
   }
 
   // Compare version

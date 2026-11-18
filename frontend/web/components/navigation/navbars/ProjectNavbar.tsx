@@ -27,6 +27,7 @@ const ProjectNavbar: FC<ProjectNavType> = ({ environmentId, projectId }) => {
   )
   return (
     <OverflowNav
+      label='More project pages'
       gap={3}
       key='project'
       containerClassName='px-2 pb-1 pb-md-0 pb-mb-0 bg-faint'

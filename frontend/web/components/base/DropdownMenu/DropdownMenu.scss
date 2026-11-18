@@ -1,0 +1,81 @@
+.ds-dropdown-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 4px;
+  min-width: 200px;
+
+  // Plain links (e.g. nav overflow) get the same row treatment as items
+  > a,
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    min-height: 44px;
+    padding: 10px 12px;
+    border-radius: var(--radius-md);
+    color: var(--color-text-default);
+    text-align: left;
+    white-space: nowrap;
+  }
+
+  // Links bring their own hover and active styles. Touch screens keep :hover
+  // after a tap, so only devices that can hover get it; keyboard gets focus.
+  @media (hover: hover) {
+    &__item:hover {
+      background: var(--color-surface-hover);
+    }
+  }
+
+  &__item:focus-visible {
+    background: var(--color-surface-hover);
+  }
+
+  &__label {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    gap: 8px;
+  }
+
+  // Icons draw with currentColor
+  &__icon {
+    display: flex;
+    color: var(--color-icon-secondary);
+  }
+
+  &__item {
+    &[aria-current='true'] {
+      font-weight: 600;
+      color: var(--color-text-action);
+      background: var(--color-surface-action-subtle);
+    }
+
+    &--destructive {
+      color: var(--color-text-danger);
+
+      .ds-dropdown-menu__icon {
+        color: var(--color-icon-danger);
+      }
+    }
+
+    &[aria-current='true'] .ds-dropdown-menu__icon {
+      color: var(--color-icon-action);
+    }
+
+    &:disabled {
+      color: var(--color-text-disabled);
+      cursor: not-allowed;
+
+      .ds-dropdown-menu__icon {
+        color: var(--color-icon-disabled);
+      }
+
+      &:hover,
+      &:focus-visible {
+        background: none;
+      }
+    }
+  }
+}

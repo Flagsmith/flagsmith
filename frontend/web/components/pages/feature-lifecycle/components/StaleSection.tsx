@@ -1,5 +1,7 @@
 import React, { FC, useCallback } from 'react'
-import DropdownMenu from 'components/base/DropdownMenu'
+import DropdownMenu, { DropdownMenuItem } from 'components/base/DropdownMenu'
+import IconButton from 'components/base/IconButton'
+import Icon from 'components/icons/Icon'
 import SectionShell from './SectionShell'
 import { useClientPagination } from 'components/pages/feature-lifecycle/hooks/useClientPagination'
 import { useCreateCleanupIssueMutation } from 'common/services/useGithubIntegration'
@@ -133,19 +135,30 @@ const StaleSection: FC<StaleSectionProps> = ({
       goToPage={goToPage}
       renderActions={(flag) => (
         <DropdownMenu
-          items={[
-            {
-              icon: 'github',
-              label: 'Create Cleanup Issue',
-              onClick: () => handleCreateCleanupIssue(flag),
-            },
-            {
-              icon: 'copy',
-              label: 'Copy Cleanup AI Prompt',
-              onClick: () => handleCopyCleanupPrompt(flag),
-            },
-          ]}
-        />
+          aria-label={`Actions for ${flag.name}`}
+          trigger={
+            <IconButton
+              variant='ghost'
+              size='small'
+              aria-label={`Actions for ${flag.name}`}
+            >
+              <Icon name='more-vertical' width={18} />
+            </IconButton>
+          }
+        >
+          <DropdownMenuItem
+            icon='github'
+            onSelect={() => handleCreateCleanupIssue(flag)}
+          >
+            Create Cleanup Issue
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            icon='copy'
+            onSelect={() => handleCopyCleanupPrompt(flag)}
+          >
+            Copy Cleanup AI Prompt
+          </DropdownMenuItem>
+        </DropdownMenu>
       )}
     />
   )

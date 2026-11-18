@@ -55,6 +55,39 @@
     flex: 1 !important;
   }
 
+  // Phones: tabs scroll sideways, and the edge with more tabs behind it fades
+  .tabs-nav__scroller {
+    position: relative;
+    overflow-x: auto;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+
+    > * {
+      flex-shrink: 0;
+    }
+
+    &--fade-end {
+      mask-image: linear-gradient(to right, black calc(100% - 40px), transparent);
+    }
+
+    &--fade-start {
+      mask-image: linear-gradient(to left, black calc(100% - 40px), transparent);
+    }
+
+    &--fade-start.tabs-nav__scroller--fade-end {
+      mask-image: linear-gradient(
+        to right,
+        transparent,
+        black 40px,
+        black calc(100% - 40px),
+        transparent
+      );
+    }
+  }
+
   position: relative;
   display: flex;
   flex-direction: row;

@@ -14,8 +14,10 @@ import {
 } from 'common/types/responses'
 import map from 'lodash/map'
 import Button from './base/forms/Button'
-import DropdownMenu from './base/DropdownMenu'
+import DropdownMenu, { DropdownMenuItem } from './base/DropdownMenu'
+import IconButton from './base/IconButton'
 import Icon from './icons/Icon'
+import Tooltip from './Tooltip'
 import { IonIcon } from '@ionic/react'
 import { close as closeIcon } from 'ionicons/icons'
 import Utils from 'common/utils/utils'
@@ -270,7 +272,39 @@ const Integration: FC<IntegrationProps> = (props) => {
       }
       return button
     }
-    return <DropdownMenu items={actions} />
+    return (
+      <DropdownMenu
+        aria-label={`${props.integration.title ?? 'Integration'} actions`}
+        trigger={
+          <IconButton
+            variant='ghost'
+            size='small'
+            aria-label={`${props.integration.title ?? 'Integration'} actions`}
+          >
+            <Icon name='more-vertical' width={18} />
+          </IconButton>
+        }
+      >
+        {actions.map((action) => {
+          const item = (
+            <DropdownMenuItem
+              key={action.label}
+              disabled={action.disabled}
+              onSelect={action.onClick}
+            >
+              {action.label}
+            </DropdownMenuItem>
+          )
+          return action.tooltip ? (
+            <Tooltip key={action.label} title={item} place='right'>
+              {action.tooltip}
+            </Tooltip>
+          ) : (
+            item
+          )
+        })}
+      </DropdownMenu>
+    )
   }
 
   return (
@@ -343,19 +377,27 @@ const Integration: FC<IntegrationProps> = (props) => {
               </Flex>
               <div onClick={(e) => e.stopPropagation()}>
                 <DropdownMenu
-                  items={[
-                    {
-                      dataTest: 'edit-integration',
-                      label: 'Edit',
-                      onClick: () => edit(integration),
-                    },
-                    {
-                      dataTest: 'delete-integration',
-                      label: 'Delete',
-                      onClick: () => remove(integration),
-                    },
-                  ]}
-                />
+                  aria-label='Integration actions'
+                  trigger={
+                    <IconButton
+                      variant='ghost'
+                      size='small'
+                      aria-label='Integration actions'
+                    >
+                      <Icon name='more-vertical' width={18} />
+                    </IconButton>
+                  }
+                >
+                  <DropdownMenuItem onSelect={() => edit(integration)}>
+                    Edit
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    destructive
+                    onSelect={() => remove(integration)}
+                  >
+                    Delete
+                  </DropdownMenuItem>
+                </DropdownMenu>
               </div>
             </Row>
           </div>
