@@ -9,6 +9,8 @@ from typing import Protocol
 import openfeature.api as openfeature_api
 import psycopg2
 import pytest
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
 from django.db import connection as django_connection
 from django.urls import reverse
 from django.utils import timezone
@@ -178,6 +180,38 @@ def databricks_connection(
             "schema": "flagsmith_exp",
         },
         credentials={"client_id": "sp-id", "client_secret": "sp-secret"},
+    )
+    return connection
+
+
+@pytest.fixture(scope="session")
+def snowflake_private_key() -> rsa.RSAPrivateKey:
+    return rsa.generate_private_key(public_exponent=65537, key_size=2048)
+
+
+@pytest.fixture()
+def snowflake_connection(
+    environment: Environment,
+    snowflake_private_key: rsa.RSAPrivateKey,
+) -> WarehouseConnection:
+    private_key = snowflake_private_key.private_bytes(
+        serialization.Encoding.PEM,
+        serialization.PrivateFormat.PKCS8,
+        serialization.NoEncryption(),
+    ).decode()
+    connection: WarehouseConnection = WarehouseConnection.objects.create(
+        environment=environment,
+        warehouse_type=WarehouseType.SNOWFLAKE,
+        name="Production Snowflake",
+        config={
+            "account_identifier": "acme_org-prod",
+            "warehouse": "FLAGSMITH_WH",
+            "database": "FLAGSMITH",
+            "schema": "FLAGSMITH_EXP",
+            "role": "FLAGSMITH_ROLE",
+            "user": "flagsmith_service",
+        },
+        credentials={"private_key": private_key},
     )
     return connection
 

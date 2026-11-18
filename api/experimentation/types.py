@@ -48,6 +48,10 @@ SNOWFLAKE_DEFAULTS: SnowflakeConfig = {
 }
 
 
+class SnowflakeCredentials(TypedDict):
+    private_key: str
+
+
 class ClickHouseConfig(TypedDict):
     host: str
     # The HTTP(S) interface port, used for verification and delivery alike.
