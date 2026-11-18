@@ -8,7 +8,6 @@ import Dispatcher from 'common/dispatcher/dispatcher'
 import BaseStore from './base/_store'
 import data from 'common/data/base/_data'
 import filter from 'lodash/filter'
-import find from 'lodash/find'
 import findIndex from 'lodash/findIndex'
 import keyBy from 'lodash/keyBy'
 
@@ -75,10 +74,7 @@ const controller = {
     const idInt = parseInt(id)
     store.saving()
     if (store.model) {
-      store.model.projects = filter(
-        store.model.projects,
-        (p) => p.id !== idInt,
-      )
+      store.model.projects = filter(store.model.projects, (p) => p.id !== idInt)
       store.model.keyedProjects = keyBy(store.model.projects, 'id')
     }
     API.trackEvent(Constants.events.REMOVE_PROJECT)
@@ -140,7 +136,9 @@ const controller = {
         if (`${id}` === `${store.id}`) {
           // eslint-disable-next-line prefer-const
           let [_projects, users, invites, subscriptionMeta] = res
-          let projects = sortBy(_projects, 'name')
+          let projects = sortBy(_projects, (project) =>
+            project.name.toLowerCase(),
+          )
 
           store.model = {
             ...store.model,
@@ -196,27 +194,9 @@ const controller = {
               })
           }
 
-          return Promise.all(
-            projects.map((project, i) =>
-              data
-                .get(`${Project.api}environments/?project=${project.id}`)
-                .then((res) => {
-                  projects[i].environments = sortBy(res.results, 'name')
-                })
-                .catch(() => {
-                  projects[i].environments = []
-                }),
-            ),
-          ).then(() => {
-            projects.sort((a, b) => {
-              const textA = a.name.toLowerCase()
-              const textB = b.name.toLowerCase()
-              return textA < textB ? -1 : textA > textB ? 1 : 0
-            })
-            store.model.projects = projects
-            store.model.keyedProjects = keyBy(store.model.projects, 'id')
-            store.loaded()
-          })
+          store.model.projects = projects
+          store.model.keyedProjects = keyBy(store.model.projects, 'id')
+          store.loaded()
         }
       })
     }

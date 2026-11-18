@@ -293,8 +293,13 @@ const App = class extends Component {
       return <Maintenance />
     }
     const activeProject = OrganisationStore.getProject(projectId)
+    // Pages still read the project from ProjectStore (e.g. Edge identities),
+    // so wait for it as well as the organisation's project list
     const projectNotLoaded =
-      !activeProject && document.location.href.includes('project/')
+      document.location.href.includes('project/') &&
+      (!activeProject ||
+        !ProjectStore.model ||
+        `${ProjectStore.id}` !== `${projectId}`)
 
     if (this.props.isLoading) {
       return (
