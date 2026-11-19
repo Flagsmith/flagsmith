@@ -1495,7 +1495,7 @@ requires-dist = [
     { name = "drf-writable-nested", specifier = ">=0.6.2,<0.7.0" },
     { name = "environs", specifier = ">=14.1.1,<15.0.0" },
     { name = "flagsmith", specifier = ">=6.2.0,<7.0.0" },
-    { name = "flagsmith-common", extras = ["common-core", "flagsmith-schemas", "task-processor"], specifier = ">=3.16.1,<4" },
+    { name = "flagsmith-common", extras = ["common-core", "flagsmith-schemas", "task-processor"], specifier = ">=3.16.2,<4" },
     { name = "flagsmith-common", extras = ["test-tools"], marker = "extra == 'dev'" },
     { name = "flagsmith-flag-engine", specifier = ">=11.1.0,<12.0.0" },
     { name = "flagsmith-private", marker = "extra == 'private'", specifier = ">=0.15.1,<1", index = "https://flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-production/simple/" },
@@ -1568,11 +1568,11 @@ provides-extras = ["private", "dev"]
 
 [[package]]
 name = "flagsmith-common"
-version = "3.16.1"
+version = "3.16.2"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/f5/5c/434fa2ab9cc8707c865a1b17dbe90387d4b08df4fe15b114ce907253d884/flagsmith_common-3.16.1.tar.gz", hash = "sha256:7404133b3342b206c87b49a6d03b758bf8e7ce323a749d3fc40a2e2c093fdc80", size = 68648, upload-time = "2026-11-05T17:38:35.886Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/f5/bf/d49da35fc3f1e38061db035ec34e43030e280f2f3660806615358d38356e/flagsmith_common-3.16.2.tar.gz", hash = "sha256:7af9e22d51371ef465f932bd446a2097f9a7fb722a01dfa31bc277a2a95d9ed9", size = 68718, upload-time = "2026-11-19T15:56:59.969Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/db/5a/a203df00c5b1cf5fcd6df5857113cf81dcf42b6c6d0887508b86ca808161/flagsmith_common-3.16.1-py3-none-any.whl", hash = "sha256:d1a64ff5bbeaf66e9b651a5341999be09016e74a9cacf8c3958b89f8ef45b8ca", size = 100878, upload-time = "2026-11-05T17:38:34.213Z" },
+    { url = "https://files.pythonhosted.org/packages/c6/7c/20a16b39d27f63291695b4bef9f1e3c26eccdf16aec4f55df0de6d276219/flagsmith_common-3.16.2-py3-none-any.whl", hash = "sha256:0d69bcfca75d920f74ed9a89f7e21c5bf49f9b6c3b5045ff02f8b99607f3f506", size = 100807, upload-time = "2026-11-19T15:56:58.651Z" },
 ]
 
 [package.optional-dependencies]
@@ -1582,7 +1582,6 @@ common-core = [
     { name = "djangorestframework" },
     { name = "djangorestframework-recursive" },
     { name = "drf-spectacular" },
-    { name = "drf-writable-nested" },
     { name = "environs" },
     { name = "gunicorn" },
     { name = "inflection" },
