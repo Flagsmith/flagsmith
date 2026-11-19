@@ -16,7 +16,8 @@ import {
   joinSegmentNames,
 } from 'components/experiments/rollout'
 import isValidPercentage from 'common/utils/isValidPercentage'
-import { getVariantIdentities } from './derive'
+import { getCompletedRollout, getVariantIdentities } from './derive'
+import VariantName from './VariantName'
 
 type ExperimentRolloutCardProps = {
   experiment: Experiment
@@ -121,16 +122,32 @@ const ExperimentRolloutCard: FC<ExperimentRolloutCardProps> = ({
       !isValidPercentage(draftRollout) ||
       draftSplit.some((s) => !isValidPercentage(s.percentage_allocation)))
 
-  if (experiment.status === 'completed' && !rollout) {
+  const completedRollout = getCompletedRollout(experiment)
+
+  if (experiment.status === 'completed' && (completedRollout || !rollout)) {
     return (
       <ContentCard
         compact
         className='experiment-config-rollout'
         title='Rollout configuration'
       >
-        <span className='text-muted'>
-          This rollout was replaced by a newer experiment on this feature.
-        </span>
+        {completedRollout ? (
+          <span>
+            {completedRollout.variant && (
+              <>
+                <VariantName
+                  colour={completedRollout.variant.colour}
+                  name={completedRollout.variant.name}
+                />{' '}
+              </>
+            )}
+            {completedRollout.message}
+          </span>
+        ) : (
+          <span className='text-muted'>
+            This rollout was replaced by a newer experiment on this feature.
+          </span>
+        )}
       </ContentCard>
     )
   }

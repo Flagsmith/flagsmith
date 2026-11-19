@@ -1,13 +1,13 @@
 import { FC, useCallback, useMemo } from 'react'
 import { ExperimentStatus } from 'common/types/responses'
 import {
-  useCompleteExperimentMutation,
   useDeleteExperimentMutation,
   usePauseExperimentMutation,
   useStartExperimentMutation,
 } from 'common/services/useExperiment'
 import { ENABLE_EXPERIMENT_LIFECYCLE } from 'components/experiments/constants'
 import DropdownMenu from 'components/base/DropdownMenu'
+import CompleteExperimentModal from 'components/experiments/CompleteExperimentModal'
 
 type ExperimentActionDropdownProps = {
   experimentId: number
@@ -24,7 +24,6 @@ const ExperimentActionDropdown: FC<ExperimentActionDropdownProps> = ({
 }) => {
   const [startExperiment] = useStartExperimentMutation()
   const [pauseExperiment] = usePauseExperimentMutation()
-  const [completeExperiment] = useCompleteExperimentMutation()
   const [deleteExperiment] = useDeleteExperimentMutation()
 
   const params = useMemo(
@@ -51,26 +50,15 @@ const ExperimentActionDropdown: FC<ExperimentActionDropdownProps> = ({
   }, [pauseExperiment, params])
 
   const handleComplete = useCallback(() => {
-    openConfirm({
-      body: (
-        <span>
-          Are you sure you want to mark <strong>{experimentName}</strong> as
-          completed? This action cannot be undone.
-        </span>
-      ),
-      noText: 'Cancel',
-      onYes: async () => {
-        try {
-          await completeExperiment(params).unwrap()
-          toast('Experiment completed')
-        } catch {
-          toast('Failed to complete experiment', 'danger')
-        }
-      },
-      title: 'Complete experiment?',
-      yesText: 'Complete',
-    })
-  }, [completeExperiment, experimentName, params])
+    openModal(
+      'Complete experiment',
+      <CompleteExperimentModal
+        environmentId={environmentId}
+        experimentId={experimentId}
+      />,
+      'p-0',
+    )
+  }, [environmentId, experimentId])
 
   const handleDelete = useCallback(() => {
     openConfirm({

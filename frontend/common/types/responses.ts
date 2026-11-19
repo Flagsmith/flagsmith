@@ -695,6 +695,8 @@ export type FeatureType = 'STANDARD' | 'MULTIVARIATE'
 
 export type ExperimentStatus = 'created' | 'running' | 'paused' | 'completed'
 
+export type ExperimentRolloutDecision = 'control' | 'variant' | 'disable'
+
 export type ExperimentStatusCounts = Record<ExperimentStatus, number>
 
 export type MetricAggregation = 'count' | 'sum' | 'mean' | 'occurrence'
@@ -744,6 +746,8 @@ export type Experiment = {
   started_at: string | null
   ended_at: string | null
   experiment_rollout?: ExperimentRollout
+  rollout_decision: ExperimentRolloutDecision | null
+  rollout_variant: number | null
 }
 
 export type ExperimentAudienceMatch = 'any' | 'all'
