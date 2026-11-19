@@ -188,25 +188,15 @@ def get_usage_data_from_local_db_for_window(
     date_start: datetime,
     date_stop: datetime,
     project_id: int | None = None,
-    group_by: UsageGroupByType | None = None,
 ) -> list[UsageData]:
-    project_ids_by_environment_id = _get_project_ids_by_environment_id_for_org(
-        organisation
-    )
     qs = _get_api_usage_bucket_qs(
-        project_ids_by_environment_id,
+        _get_project_ids_by_environment_id_for_org(organisation),
         project_id=project_id,
     ).filter(
         created_at__gte=date_start,
         created_at__lt=date_stop,
     )
-    if not group_by:
-        return _aggregate_buckets(qs)
-
-    return map_annotated_api_usage_buckets_to_usage_data(
-        _group_bucket(row, project_ids_by_environment_id, group_by)
-        for row in _annotate_buckets(qs, "environment_id")
-    )
+    return _aggregate_buckets(qs)
 
 
 def get_usage_data_for_window(
