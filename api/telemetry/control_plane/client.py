@@ -5,6 +5,8 @@ import json
 import requests
 import structlog
 from django.core.serializers.json import DjangoJSONEncoder
+from requests.adapters import HTTPAdapter
+from urllib3 import Retry
 
 from telemetry.dataclasses import UsageSnapshot
 
@@ -12,6 +14,13 @@ logger = structlog.get_logger(__name__)
 
 USAGE_ENDPOINT_PATH = "/v1/public/usage"
 REQUEST_TIMEOUT_SECONDS = 30
+RETRY_POLICY = Retry(
+    total=3,
+    backoff_factor=1,
+    status_forcelist=(429, 500, 502, 503, 504),
+    allowed_methods={"POST"},
+    raise_on_status=False,
+)
 
 
 def post_usage_snapshot(
@@ -27,17 +36,17 @@ def post_usage_snapshot(
     }
     body = json.dumps(dataclasses.asdict(snapshot), cls=DjangoJSONEncoder)
 
-    response = requests.post(
-        url,
-        data=body,
-        headers=headers,
-        timeout=REQUEST_TIMEOUT_SECONDS,
-    )
+    with requests.Session() as session:
+        session.mount("https://", HTTPAdapter(max_retries=RETRY_POLICY))
+        response = session.post(
+            url,
+            data=body,
+            headers=headers,
+            timeout=REQUEST_TIMEOUT_SECONDS,
+        )
 
-    if response.ok:
+        response.raise_for_status()
         logger.info("snapshot.pushed", status_code=response.status_code)
-    else:
-        logger.warning("snapshot.push_failed", status_code=response.status_code)
 
 
 def _map_signature_to_bearer_token(signature_b64: str) -> str:
