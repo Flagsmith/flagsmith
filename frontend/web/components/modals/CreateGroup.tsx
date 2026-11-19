@@ -14,12 +14,12 @@ import Icon from 'components/icons/Icon'
 import Tooltip from 'components/Tooltip'
 import { IonIcon } from '@ionic/react'
 import { informationCircle } from 'ionicons/icons'
-import { GroupUser, Role, User, UserGroupSummary } from 'common/types/responses'
+import { GroupUser, Role, UserGroupSummary } from 'common/types/responses'
 import { differenceBy, find, intersectionBy, sortBy } from 'lodash'
 import filter from 'lodash/filter'
 import Utils from 'common/utils/utils'
 import InputGroup from 'components/base/forms/InputGroup'
-import AccountStore from 'common/stores/account-store'
+import { useCurrentUser } from 'common/hooks/useCurrentUser'
 import {
   useCurrentOrganisation,
   useIsOrganisationAdmin,
@@ -41,6 +41,7 @@ type CreateGroupType = {
 }
 
 const CreateGroup: FC<CreateGroupType> = ({ group, orgId, roles }) => {
+  const user = useCurrentUser()
   const organisation = useCurrentOrganisation()
   const isAdmin = useIsOrganisationAdmin()
   const [edited, setEdited] = useState(false)
@@ -199,7 +200,7 @@ const CreateGroup: FC<CreateGroupType> = ({ group, orgId, roles }) => {
       {({ users: organisationUsers }) => {
         const activeUsers = intersectionBy(organisationUsers, users, 'id')
         const inactiveUsers = differenceBy(organisationUsers, users, 'id')
-        const yourEmail = (AccountStore as { model?: User }).model?.email
+        const yourEmail = user?.email
 
         return isLoading ? (
           <div className='text-center'>
@@ -292,7 +293,7 @@ const CreateGroup: FC<CreateGroupType> = ({ group, orgId, roles }) => {
                               <div className='d-flex align-items-center gap-2'>
                                 <span>
                                   {`${first_name} ${last_name}`}{' '}
-                                  {id === AccountStore.getUserId() && '(You)'}
+                                  {id === user?.id && '(You)'}
                                 </span>
                                 <InactiveMembershipChip
                                   user={props.data.user}
@@ -387,7 +388,7 @@ const CreateGroup: FC<CreateGroupType> = ({ group, orgId, roles }) => {
                             <div className='font-weight-medium d-flex align-items-center gap-2'>
                               <span>
                                 {`${first_name} ${last_name}`}{' '}
-                                {id === AccountStore.getUserId() && '(You)'}
+                                {id === user?.id && '(You)'}
                               </span>
                               <InactiveMembershipChip user={organisationUser} />
                               {isEdit && userEdited && (

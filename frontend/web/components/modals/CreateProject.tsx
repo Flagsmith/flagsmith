@@ -23,7 +23,7 @@ import { useGetUsersQuery } from 'common/services/useUser'
 import { useGetRolesQuery } from 'common/services/useRole'
 import { useCreateProjectUserPermissionMutation } from 'common/services/useUserPermissions'
 import { useCreateProjectRolePermissionMutation } from 'common/services/useRolePermission'
-import AccountStore from 'common/stores/account-store'
+import { useCurrentUser } from 'common/hooks/useCurrentUser'
 import { useCurrentOrganisation } from 'common/hooks/useCurrentOrganisation'
 import getUserDisplayName from 'common/utils/getUserDisplayName'
 import { Role, User } from 'common/types/responses'
@@ -57,7 +57,7 @@ const CreateProject: FC<CreateProjectProps> = ({ history, onSave }) => {
   onSaveRef.current = onSave
 
   const organisationId = useCurrentOrganisation()?.id
-  const currentUserId = AccountStore.getUser()?.id as number | undefined
+  const currentUserId = useCurrentUser()?.id
   const hasRbac = Utils.getPlansPermission('RBAC')
   const { data: users } = useGetUsersQuery(
     { organisationId: organisationId! },

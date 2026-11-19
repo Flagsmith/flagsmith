@@ -17,11 +17,11 @@ declare global {
   }
 }
 
-import AccountStore from './stores/account-store'
+import { getCurrentUser } from './hooks/useCurrentUser'
 import { getStore } from './store'
 import { getHubspotChatToken } from './services/useHubspotChatToken'
 import Utils from './utils/utils'
-import { AccountModel, HubspotChatToken } from './types/responses'
+import { HubspotChatToken } from './types/responses'
 
 const SUPPORT_EMAIL_URL = 'mailto:support@flagsmith.com'
 
@@ -79,7 +79,7 @@ function setHubSpotIdentity(identity?: HubspotChatToken) {
 // Without a token the widget still loads, just anonymously. A 404 means the
 // API has no HubSpot token configured (e.g. self-hosted), so it isn't logged.
 async function fetchHubSpotIdentity(): Promise<HubspotChatToken | undefined> {
-  const user = AccountStore.getUser() as AccountModel | undefined
+  const user = getCurrentUser()
   if (!user?.id) return
   try {
     const { data, error } = await getHubspotChatToken(

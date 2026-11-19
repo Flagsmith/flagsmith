@@ -24,6 +24,7 @@ import Constants from 'common/constants'
 import AccountStore from 'common/stores/account-store'
 import { getCurrentOrganisation } from 'common/hooks/useCurrentOrganisation'
 import withCurrentOrganisation from 'common/hooks/withCurrentOrganisation'
+import { getCurrentUser } from 'common/hooks/useCurrentUser'
 import OrganisationLimit from './OrganisationLimit'
 import OrganisationStore from 'common/stores/organisation-store'
 import ScrollToTop from './ScrollToTop'
@@ -168,13 +169,11 @@ const App = class extends Component {
       // instead of blocking the redirect.
       const storedVariant = getStoredOnboardingVariant()
       const deciding =
-        !storedVariant && !!AccountStore.getUser()?.isGettingStarted
+        !storedVariant && !!getCurrentUser()?.isGettingStarted
       let timedOut = false
       Promise.race([
         deciding
-          ? decideOnboardingEntry(AccountStore.getUser()?.email).catch(
-              () => null,
-            )
+          ? decideOnboardingEntry(getCurrentUser()?.email).catch(() => null)
           : Promise.resolve(null),
         new Promise((resolve) =>
           setTimeout(() => {
@@ -230,7 +229,7 @@ const App = class extends Component {
           }
           if (res) {
             const lastEnv = JSON.parse(res)
-            const lastOrg = find(AccountStore.getUser().organisations, {
+            const lastOrg = find(getCurrentUser().organisations, {
               id: lastEnv.orgId,
             })
             if (!lastOrg) {
@@ -253,7 +252,7 @@ const App = class extends Component {
             return
           }
 
-          if (AccountStore.getUser()?.isGettingStarted) {
+          if (getCurrentUser()?.isGettingStarted) {
             this.props.history.replace('/getting-started')
           } else {
             this.props.history.replace(Utils.getOrganisationHomePage())
