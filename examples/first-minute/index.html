@@ -11,7 +11,7 @@
         <header>
             <div class="shell brandbar">
                 <a class="brand" href="./"><span class="mark" aria-hidden="true">∿</span> First Minute</a
-                ><button class="link" id="method">Experiment notes</button>
+                ><button class="link" id="method" aria-haspopup="dialog">Experiment replay</button>
             </div>
         </header>
         <main class="shell">
@@ -105,6 +105,7 @@
                 <p id="outcome"></p>
                 <button class="primary" id="replay">Practise again →</button>
                 <button class="link" id="switch-layout">Try the other desk</button>
+                <button class="link" id="show-experiment" aria-haspopup="dialog">View experiment results</button>
             </section>
             <section class="briefing" id="preflight">
                 <div class="kicker">DRILL BRIEFING</div>
@@ -127,37 +128,64 @@
                 </div>
             </section>
         </main>
-        <dialog id="notes">
-            <form method="dialog"><button class="close" aria-label="Close">×</button></form>
-            <div class="kicker">EXPERIMENT NOTES</div>
-            <h2>Does a runbook help?</h2>
-            <p>
-                Participants see the same incident, timer and evidence. Flagsmith assigns half to the evidence desk
-                alone and half to the desk with a three-step runbook.
-            </p>
-            <h3>What counts as success</h3>
-            <p>
-                A correct diagnosis on the first attempt within 60 seconds records <code>drill_resolved</code>. Starting
-                an enrolled drill records an exposure. Practice attempts are excluded.
-            </p>
-            <p>
-                Compare conversion rates and win probability in Flagsmith before deciding whether to roll out the guide.
-            </p>
-            <section class="proof">
-                <h3>SDK verification</h3>
-                <p id="proof-description"></p>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Desk</th>
-                            <th>Exposures</th>
-                            <th>Conversions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="proof-counts"></tbody>
-                </table>
-                <small>Automated test traffic · separate demo environment</small>
+        <dialog id="notes" aria-labelledby="replay-title">
+            <form method="dialog"><button class="close" aria-label="Close experiment replay">×</button></form>
+            <div class="kicker">FLAGSMITH EXPERIMENT REPLAY</div>
+            <h2 id="replay-title">Does a runbook help?</h2>
+            <p id="replay-source"></p>
+            <div class="replay-stages" role="group" aria-label="Rehearsal stages">
+                <button aria-controls="assignment" aria-pressed="false">Assignment</button>
+                <button aria-controls="measurement" aria-pressed="true">Results</button>
+                <button aria-controls="rollout" aria-pressed="false">Rollout</button>
+            </div>
+            <section id="assignment" class="replay-stage" hidden>
+                <h3>Who saw each desk?</h3>
+                <p id="allocation-description"></p>
+                <div class="split" aria-hidden="true"><span id="split-standard"></span></div>
+                <div class="split-labels"><span id="assigned-control"></span><span id="assigned-guided"></span></div>
+                <p>
+                    The SDK records an exposure when an enrolled participant opens the incident desk. Both groups see
+                    the same release, metrics, traces and timer.
+                </p>
             </section>
+            <section id="measurement" class="replay-stage">
+                <h3>First-attempt resolution</h3>
+                <p>A conversion records one correct diagnosis within 60 seconds. Practice replays are excluded.</p>
+                <div id="result-bars"></div>
+                <div class="inference">
+                    <div><strong id="difference"></strong><span>Difference in success rate</span></div>
+                    <div><strong id="win-chance"></strong><span>Chance guided beats standard</span></div>
+                </div>
+                <details class="statistics">
+                    <summary>Statistical details</summary>
+                    <p id="stat-detail"></p>
+                </details>
+            </section>
+            <section id="rollout" class="replay-stage" hidden>
+                <h3>What did the flag serve next?</h3>
+                <div class="rollout-check">
+                    <div><strong id="rollout-checks"></strong><span>SDK checks passed after rollout</span></div>
+                </div>
+                <p id="rollout-description"></p>
+                <p>
+                    The participant experiment runs separately. Its rollout decision depends on results from people who
+                    play the drill.
+                </p>
+            </section>
+            <details class="dashboard-capture">
+                <summary>View original Flagsmith dashboard capture</summary>
+                <img
+                    id="dashboard-capture"
+                    alt="Completed Flagsmith rehearsal showing the hypothesis, enrollment, results and credible interval."
+                />
+            </details>
+            <a id="participant-dashboard" hidden target="_blank" rel="noopener"
+                >Open participant experiment in Flagsmith ↗</a
+            >
+            <div class="replay-foot">
+                <time id="replay-date"></time
+                ><a id="download-results" download="first-minute-rehearsal.json">Download result JSON</a>
+            </div>
         </dialog>
         <footer class="shell">First Minute <span>Built with Flagsmith Experimentation</span></footer>
         <script type="module" src="./main.js"></script>

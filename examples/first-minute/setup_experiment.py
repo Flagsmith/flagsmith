@@ -9,14 +9,14 @@ from urllib.request import Request, urlopen
 BASE = "http://127.0.0.1:8000/api/v1/"
 
 
-def request(path, data=None):
+def request(path, data=None, *, method=None):
     url = urljoin(BASE, path)
     if urlsplit(url).netloc != urlsplit(BASE).netloc:
         raise ValueError("Unexpected pagination host")
     req = Request(url, headers={
         "Authorization": "Token " + os.environ["FLAGSMITH_MANAGEMENT_TOKEN"],
         "Content-Type": "application/json",
-    }, data=None if data is None else json.dumps(data).encode())
+    }, data=None if data is None else json.dumps(data).encode(), method=method)
     try:
         with urlopen(req, timeout=20) as response:
             return json.loads(response.read() or b"null")
@@ -41,13 +41,13 @@ def ensure(path, body, match):
     return found[0] if found else request(path, body)
 
 
-def setup(org_id):
+def prepare_experiment(org_id, environment_name):
     project_name = "First Minute"
     project = ensure("projects/", {"name": project_name, "organisation": org_id},
                      lambda p: p["name"] == project_name and p["organisation"] == org_id)
     pid = project["id"]
-    env = ensure(f"environments/?project={pid}", {"name": "Participant drill", "project": pid},
-                 lambda e: e["name"] == "Participant drill" and e["project"] == pid)
+    env = ensure(f"environments/?project={pid}", {"name": environment_name, "project": pid},
+                 lambda e: e["name"] == environment_name and e["project"] == pid)
     root = f'environments/{env["api_key"]}/'
     warehouse_path = root + "warehouse-connections/"
     warehouse = next(iter(records(warehouse_path)), None)
@@ -80,11 +80,20 @@ def setup(org_id):
     detail = path + str(experiment["id"]) + "/"
     if experiment["status"] == "created":
         request(detail + "start/", {})
-    if request(detail)["status"] != "running":
+    return env, metric, variant, detail
+
+
+def setup(org_id):
+    env, _, _, detail = prepare_experiment(org_id, "Participant drill")
+    experiment = request(detail)
+    if experiment["status"] != "running":
         raise SystemExit("The experiment is not running. Check its status in the dashboard.")
     print("Participant experiment is running.", file=sys.stderr)
     # Only the client-side environment key belongs in a browser configuration.
     print("VITE_FLAGSMITH_ENVIRONMENT_ID=" + env["api_key"])
+    print("VITE_FLAGSMITH_DASHBOARD_URL=http://localhost:8000/project/{}/environment/{}/experiments/{}".format(
+        env["project"], env["api_key"], experiment["id"]
+    ))
 
 
 if __name__ == "__main__":

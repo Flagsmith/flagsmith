@@ -7,12 +7,14 @@
         "dev": "vite",
         "build": "vite build",
         "preview": "vite preview",
-        "build:practice": "node build-practice.js"
+        "build:practice": "node build-practice.js",
+        "test": "playwright test"
     },
     "dependencies": {
         "@flagsmith/flagsmith": "^12.4.0"
     },
     "devDependencies": {
+        "@playwright/test": "1.64.1",
         "vite": "^7.2.0"
     }
 }

@@ -2,9 +2,9 @@
 
 Play the on-call engineer for 60 seconds. Inspect a checkout outage, submit a diagnosis, then adjust the connection pool to see how it affects the queue. This hackathon entry uses Flagsmith to test whether a three-step runbook improves first-attempt diagnoses.
 
-[Download the offline drill](https://raw.githubusercontent.com/arpitkjaiswal/flagsmith1/main/examples/first-minute/media/first-minute.zip) · [Watch the walkthrough](examples/first-minute/media/walkthrough.mp4) · [Run the live experiment](examples/first-minute/README.md)
+[Download the offline drill](https://raw.githubusercontent.com/arpitkjaiswal/flagsmith1/main/examples/first-minute/media/first-minute.zip) · [Watch the walkthrough](examples/first-minute/media/walkthrough.mp4) · [See the Flagsmith results](examples/first-minute/media/flagsmith-results.png) · [Run the live experiment](examples/first-minute/README.md)
 
-Unzip the download and open `first-minute.html` in a browser. Practice rounds run entirely on your device.
+Unzip the download and open `first-minute.html` in a browser. Practice rounds run entirely on your device. Select **Experiment replay** to inspect the synthetic results and the verified flag rollout.
 
 [![Feature Flag, Remote Config and A/B Testing platform, Flagsmith](static-files/flagsmith-cover.png)](https://www.flagsmith.com/)
 
