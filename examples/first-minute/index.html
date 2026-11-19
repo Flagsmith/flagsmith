@@ -69,6 +69,10 @@
                             </fieldset>
                             <button class="primary" id="submit">Submit diagnosis <b>→</b></button>
                         </form>
+                        <div id="save-error" hidden>
+                            <p role="status">Your answer is waiting to be saved. The timer has stopped.</p>
+                            <button class="primary" id="retry-answer">Retry saving answer</button>
+                        </div>
                     </section>
                 </div>
             </section>
@@ -103,6 +107,7 @@
                     </div>
                 </section>
                 <p id="outcome"></p>
+                <p id="delivery-status" role="status" hidden></p>
                 <button class="primary" id="replay">Practise again →</button>
                 <button class="link" id="switch-layout">Try the other desk</button>
                 <button class="link" id="show-experiment" aria-haspopup="dialog">View experiment results</button>

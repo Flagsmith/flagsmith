@@ -79,7 +79,7 @@ def local_organisation(description):
         email = input().strip()
         password = getpass.getpass("Local Flagsmith password: ")
         response = request("auth/login/", {"email": email, "password": password})
-        if not response.get("key"):
+        if not isinstance(response, dict) or not response.get("key"):
             parser.error(
                 "Sign in to local Flagsmith and supply your user token in FLAGSMITH_MANAGEMENT_TOKEN."
             )
@@ -104,7 +104,23 @@ def ensure(path, body, match):
     return found[0] if found else request(path, body)
 
 
-def prepare_experiment(org_id, environment_name):
+def check_rollout(experiment, guided_id):
+    rollout = experiment.get("experiment_rollout") or {}
+    weights = {
+        item["multivariate_feature_option"]: item["percentage_allocation"]
+        for item in rollout.get("multivariate_feature_state_values", [])
+        if item["percentage_allocation"]
+    }
+    if weights != {guided_id: 50} or rollout.get("feature_state_value") != {
+        "type": "string",
+        "value": "control",
+    }:
+        raise SystemExit(
+            "The existing experiment must allocate 50% to guided and 50% to control. Check its rollout before continuing."
+        )
+
+
+def prepare_experiment(org_id, environment_name, *, resume_paused=False):
     project_name = "First Minute"
     project = ensure(
         "projects/",
@@ -212,13 +228,18 @@ def prepare_experiment(org_id, environment_name):
         raise SystemExit(
             "The existing experiment uses a different flag or metric. Check the experiment in Flagsmith."
         )
-    if experiment["status"] == "created":
+    check_rollout(experiment, variant["id"])
+    if experiment["status"] == "created" or (
+        resume_paused and experiment["status"] == "paused"
+    ):
         request(detail + "start/", {})
     return env, metric, variant, detail
 
 
 def setup(org_id):
-    env, _, _, detail = prepare_experiment(org_id, "Participant drill")
+    env, _, _, detail = prepare_experiment(
+        org_id, "Participant drill", resume_paused=True
+    )
     experiment = request(detail)
     if experiment["status"] != "running":
         raise SystemExit(

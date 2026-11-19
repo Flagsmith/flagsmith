@@ -1590,6 +1590,35 @@ def test_expected_variant_shares__keyed_options__control_takes_remainder(
 
 
 @pytest.mark.django_db
+def test_expected_variant_shares__experiment_rollout__uses_enrolled_split(
+    environment: Environment, admin_user: FFAdminUser
+) -> None:
+    # Given an environment serving control and an experiment enrolling 20% of visitors
+    feature = _multivariate_feature(environment, {"guided": 0})
+    experiment = Experiment.objects.create(
+        environment=environment, feature=feature, name="exp", hypothesis="h"
+    )
+    guided = feature.multivariate_options.get(key="guided")
+    services.apply_experiment_rollout(
+        experiment,
+        RolloutSpec(
+            enabled=True,
+            rollout_percentage=20,
+            feature_state_value="control",
+            value_type="string",
+            variants=[{"id": guided.id, "weight": 50}],
+            author=AuthorData(user=admin_user),
+        ),
+    )
+
+    # When
+    shares = services._expected_variant_shares(experiment)
+
+    # Then SRM compares enrolled participants against the experiment's equal split
+    assert shares == {"guided": 0.5, "control": 0.5}
+
+
+@pytest.mark.django_db
 def test_expected_variant_shares__null_option_keys__returns_empty(
     experiment: Experiment,
 ) -> None:

@@ -8,7 +8,7 @@ A 60-second incident drill that tests whether a short runbook helps people diagn
 
 ## Play
 
-For a no-install practice round, [download the drill](https://raw.githubusercontent.com/arpitkjaiswal/flagsmith1/main/examples/first-minute/media/first-minute.zip), unzip it and open `first-minute.html`. The debrief includes a capacity model where you can adjust the pool size and see the resulting queue growth.
+For a no-install practice round, [download the drill](media/first-minute.zip?raw=true), unzip it and open `first-minute.html`. The archive comes from the repository revision you are viewing. The debrief includes a capacity model where you can adjust the pool size and see the resulting queue growth.
 
 To run from source, run `npm ci` and `npm run dev` with Node 24. Open the address Vite prints. Without a client-side environment key, the drill runs in practice mode. To make a portable, offline copy, run `npm run build:practice` and open `dist/first-minute.html`. Finish a round and choose **Try the other desk** to compare the layouts.
 
@@ -27,9 +27,11 @@ If the self-hosted dashboard shows **Maintenance** because its bootstrap request
 
 **Hypothesis.** A three-step runbook increases the fraction of first-time participants who correctly diagnose connection-pool exhaustion within 60 seconds. Both variants use identical evidence, answer choices, time limit and feedback.
 
-**Measurement.** The browser stores an anonymous identity, the assigned desk and the first attempt's deadline. Opening the desk records an SDK exposure. Only a correct first answer before expiry records the `drill_resolved` occurrence event. A returning player resumes the same desk and deadline directly from the browser. Tabs sharing the same browser identity share one first answer. New players can practise if Flagsmith takes more than four seconds to assign a desk. Practice and replays are excluded from the experiment. A new browser profile is a new identity.
+**Measurement.** Opening the first desk fixes eligibility for this browser. If a player starts in offline practice, later rounds on the same site stay in practice. Reading the briefing keeps the player eligible. An enrolled player gets 60 seconds from the moment the browser claims the desk. Reloading or opening another tab preserves the original assignment and deadline. A new browser profile or a separately downloaded file has its own storage.
 
-**Evidence.** The [browser smoke-test snapshot](verification.json) recorded three exposures and two conversions. The in-app **Experiment replay** follows a larger synthetic run through assignment, measurement and rollout. Both runs used the real Flagsmith SDK and a local Flagsmith instance.
+The browser saves the first answer before showing the solution. It retains the exposure and any correct first-answer event until Flagsmith acknowledges delivery. After an interruption, it retries with the original identity, variation and interaction timestamps. The warehouse counts exposed identities and whether each one resolved the drill. Replaying the same event after a lost acknowledgement preserves those counts.
+
+**Evidence.** A separate automated run against local Flagsmith recorded three exposures and two conversions in the QA environment. The checked-in Playwright suite intercepts SDK requests to test browser behaviour. The in-app **Experiment replay** uses warehouse results from 240 synthetic identities that the rehearsal script sent through the SDK to local Flagsmith. [QA snapshot](verification.json) · [Rehearsal results](rehearsal.json)
 
 **Rollout.** Collect independent participant attempts and inspect sample-ratio warnings. Flagsmith shows “Collecting data” below its inference thresholds. Once sufficient evidence supports a decision, end the participant experiment and use the same flag to roll out the selected desk. If the evidence stays inconclusive, continue collecting data.
 

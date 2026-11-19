@@ -417,15 +417,17 @@ def _experiment_metric_specs(experiment: "Experiment") -> list[MetricSpec]:
 
 
 def _expected_variant_shares(experiment: "Experiment") -> dict[str, float]:
-    """The traffic split SRM tests against: each multivariate option's
-    environment allocation, with ``control`` taking the unallocated remainder.
-    Empty when the feature has no usable allocations, skipping the SRM check."""
-    # TODO: read the split from the percentage-split segment override feature
-    # state once that's implemented, rather than the environment default.
+    """Return the split served to enrolled identities. Older experiments without
+    a managed rollout use the environment default. Control takes the remainder."""
+    allocation_scope = (
+        Q(feature_segment__segment_id=experiment.rollout_segment_id)
+        if experiment.rollout_segment_id is not None
+        else Q(feature_segment__isnull=True)
+    )
     feature_state = (
         FeatureState.objects.get_live_feature_states(
             environment=experiment.environment,
-            additional_filters=Q(feature_segment__isnull=True, identity__isnull=True),
+            additional_filters=allocation_scope & Q(identity__isnull=True),
             feature_id=experiment.feature_id,
         )
         .prefetch_related(

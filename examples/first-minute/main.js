@@ -1,5 +1,6 @@
 import './experiment-replay.js';
-import { updateRecord } from './attempt-store.js';
+import { clearPendingAnswer, pendingAnswer, updateRecord } from './attempt-store.js';
+import { createEventDelivery } from './event-delivery.js';
 import flagsmith from '@flagsmith/flagsmith';
 
 const $ = (id) => document.getElementById(id);
@@ -29,12 +30,18 @@ const flagName = 'triage_guide';
 const identityKey = 'first-minute.participant.v1';
 const experimentKey = import.meta.env.MODE === 'practice' ? '' : import.meta.env.VITE_FLAGSMITH_ENVIRONMENT_ID;
 const attemptKey = 'first-minute.first-attempt.v1.' + (experimentKey || 'practice');
+const unconfiguredPractice = 'first-minute.unconfigured-practice.v1';
+const root = (import.meta.env.VITE_FLAGSMITH_ORIGIN || location.origin).replace(/\/+$/, '');
 const flagLookupTimeoutMs = 4000;
 let connected = false;
 let active;
 let interval;
 let lastLayout = 'control';
 let saved = null;
+let participant;
+let journalKey;
+let syncEvents;
+let displayed;
 
 let starting = false;
 const updates = experimentKey && typeof BroadcastChannel === 'function' ? new BroadcastChannel(attemptKey) : null;
@@ -124,6 +131,9 @@ function openDesk() {
     $('preflight').hidden = true;
     $('desk').hidden = false;
     $('result').hidden = true;
+    displayed = null;
+    $('save-error').hidden = true;
+    $('form').hidden = false;
     $('guide').hidden = active.layout !== 'guided';
     $('form').reset();
     selectTab('Release log');
@@ -132,36 +142,66 @@ function openDesk() {
     $('mode').textContent = active.measured ? 'Experiment · first attempt' : 'Practice · excluded from experiment';
     $('desk').focus({ preventScroll: true });
     $('desk').scrollIntoView({ block: 'start' });
+    const held = active === saved && pendingAnswer(journalKey, active.deadline);
+    if (held) {
+        active = null;
+        void saveAnswer(held);
+        return;
+    }
     refreshClock();
     if (active) interval = setInterval(refreshClock, 200);
+}
+
+async function claimFirstAttempt() {
+    const flag = connected ? flagsmith.getAllFlags()[flagName] : null;
+    const layout = flag?.enabled && flag.value === 'guided' ? 'guided' : 'control';
+    try {
+        saved = await updateRecord(attemptKey, (previous) => {
+            if (previous) return previous;
+            let practised = false;
+            try {
+                practised = localStorage.getItem(unconfiguredPractice) === '1';
+            } catch {
+                /* IndexedDB is still available. */
+            }
+            const measured = !practised && Boolean(flag?.enabled && flag.experiment?.inExperiment);
+            return {
+                layout,
+                measured,
+                deadline: Date.now() + 60000,
+                ...(measured && { identifier: participant, variant: flag.variant, experimentId: flag.experiment.id }),
+            };
+        });
+    } catch {
+        return { layout, measured: false, deadline: Date.now() + 60000 };
+    }
+    // The earliest release stored completion without a verdict.
+    if (saved.done && !saved.finishedAt) return { layout: saved.layout, measured: false, deadline: Date.now() + 60000 };
+    return saved;
 }
 
 async function begin(forcePractice = false) {
     if (active || starting) return;
     starting = true;
     try {
-        const candidate = { layout: lastLayout, measured: false, deadline: Date.now() + 60000 };
-        if (connected && !forcePractice) {
-            const flag = flagsmith.getAllFlags()[flagName];
-            candidate.layout = flag?.enabled && flag.value === 'guided' ? 'guided' : 'control';
-            candidate.measured = Boolean(flag?.enabled && flag.experiment?.inExperiment);
-            if (candidate.measured) {
-                try {
-                    saved = await updateRecord(attemptKey, (previous) => previous ?? candidate);
-                } catch {
-                    active = { ...candidate, measured: false };
-                    openDesk();
-                    return;
-                }
-                if (saved === candidate) {
-                    flagsmith.getExperimentFlag(flagName);
-                    void flagsmith.flushEvents();
-                }
-                if (saved.done) candidate.measured = false;
+        if (!experimentKey) {
+            try {
+                localStorage.setItem(unconfiguredPractice, '1');
+            } catch {
+                /* Downloaded files can disable storage. */
             }
         }
-        active = candidate.measured ? saved : candidate;
+        const round =
+            participant && !forcePractice
+                ? await claimFirstAttempt()
+                : { layout: lastLayout, measured: false, deadline: Date.now() + 60000 };
+        if (round.done) {
+            displayResult(round);
+            return;
+        }
+        active = round;
         openDesk();
+        if (round.measured) syncEvents();
     } finally {
         starting = false;
     }
@@ -182,9 +222,21 @@ function updateCapacity() {
 }
 $('connections').oninput = updateCapacity;
 
+function showDelivery(record) {
+    if (!displayed?.measured || displayed.deadline !== record.deadline) return;
+    const failed = Boolean(record.delivery?.failed);
+    $('delivery-status').textContent = failed
+        ? 'Event delivery unconfirmed. Your result is saved and will be retried.'
+        : '';
+    $('delivery-status').hidden = !failed;
+}
+
 function displayResult(attempt) {
     clearInterval(interval);
     active = null;
+    displayed = attempt;
+    $('delivery-status').hidden = true;
+    showDelivery(attempt);
     lastLayout = attempt.layout;
     const timedOut = attempt.answer === 'expired';
     const correct = attempt.answer === 'pool';
@@ -210,43 +262,41 @@ function displayResult(attempt) {
     $('result').focus();
 }
 
-async function finish(answer) {
+async function saveAnswer(submission) {
+    $('retry-answer').disabled = true;
+    try {
+        saved = await updateRecord(attemptKey, (current) =>
+            current?.done ? current : { ...(current ?? { ...saved, measured: false }), ...submission, done: true },
+        );
+    } catch {
+        $('form').hidden = true;
+        $('save-error').hidden = false;
+        $('retry-answer').disabled = false;
+        $('retry-answer').onclick = () => saveAnswer(submission);
+        $('retry-answer').focus();
+        return;
+    }
+    clearPendingAnswer(journalKey);
+    updates?.postMessage(saved);
+    displayResult(saved);
+    if (saved.measured) syncEvents();
+}
+
+function finish(answer) {
     if (!active) return;
     const finishedAt = Date.now();
+    const isFirstAttempt = active === saved;
     const outcome = { ...active, done: true, finishedAt, answer: finishedAt >= active.deadline ? 'expired' : answer };
     clearInterval(interval);
     active = null;
-    let first = outcome;
-    if (outcome.measured) {
-        try {
-            first = await updateRecord(attemptKey, (previous) => (previous?.done ? previous : outcome));
-        } catch {
-            displayResult(outcome);
-            $('outcome').append(' · First attempt could not be saved');
-            return;
-        }
-        if (first === outcome) updates?.postMessage(outcome);
-        saved = first;
-    }
-    displayResult(first.finishedAt ? first : outcome);
-    if (first === outcome && outcome.measured && outcome.answer === 'pool') {
-        const deliveryNote = document.createTextNode('');
-        $('outcome').append(deliveryNote);
-        if (!connected) {
-            deliveryNote.textContent = ' · Event delivery unconfirmed';
-            return;
-        }
-        flagsmith.trackEvent('drill_resolved');
-        try {
-            await flagsmith.flushEvents();
-        } catch {
-            deliveryNote.textContent = ' · Event delivery unconfirmed';
-        }
-    }
+    if (isFirstAttempt) {
+        const submission = { deadline: outcome.deadline, finishedAt, answer: outcome.answer };
+        void saveAnswer(pendingAnswer(journalKey, outcome.deadline, submission));
+    } else displayResult(outcome);
 }
 if (updates)
     updates.onmessage = ({ data }) => {
-        if (active?.measured && data.done && data.finishedAt && data.deadline === active.deadline) {
+        if (active && active === saved && data.done && data.finishedAt && data.deadline === active.deadline) {
             saved = data;
             displayResult(data);
         }
@@ -256,18 +306,13 @@ $('form').onsubmit = (event) => {
     void finish(new FormData(event.currentTarget).get('cause'));
 };
 
-async function connectFlagsmith(participant, attempt) {
-    const root = (import.meta.env.VITE_FLAGSMITH_ORIGIN || location.origin).replace(/\/+$/, '');
+async function connectFlagsmith(participant) {
     await flagsmith.init({
         environmentID: experimentKey,
         identity: participant,
-        enableEvents: true,
         api: root + '/api/v1/',
-        eventProcessorConfig: { eventsApiUrl: root + '/api/' },
         fetch: (url, options) =>
             fetch(url, { ...options, signal: options?.signal ?? AbortSignal.timeout(flagLookupTimeoutMs) }),
-        // An exposed player already has an assignment. Restore it while enabling the SDK to send their answer.
-        ...(attempt && { preventFetch: true, defaultFlags: { [flagName]: { enabled: true, value: attempt.layout } } }),
     });
     return Boolean(flagsmith.getAllFlags()[flagName]);
 }
@@ -276,20 +321,30 @@ async function initialise() {
     $('start').disabled = true;
     if (experimentKey) {
         try {
-            const participant = await updateRecord(
+            participant = await updateRecord(
                 identityKey,
                 (previous) => previous || crypto.randomUUID(),
                 (value) => value,
             );
+            journalKey = attemptKey + '.answer.' + participant;
+            syncEvents = createEventDelivery({
+                key: attemptKey,
+                environmentID: experimentKey,
+                root,
+                feature: flagName,
+                identifier: participant,
+                onChange: showDelivery,
+            });
             saved = await updateRecord(attemptKey, (previous) => previous);
-            if (!saved?.done) connected = await connectFlagsmith(participant, saved);
+            if (!saved) connected = await connectFlagsmith(participant);
         } catch (error) {
             console.warn('Experiment unavailable.', error);
         }
     }
     $('start').onclick = () => begin(Boolean(saved));
     $('start').disabled = false;
-    if (saved && !saved.done) {
+    if (saved?.measured) syncEvents();
+    if (saved && !saved.done && (saved.measured || pendingAnswer(journalKey, saved.deadline))) {
         active = saved;
         lastLayout = saved.layout;
         openDesk();
@@ -304,7 +359,7 @@ async function initialise() {
         $('start').textContent = 'Enter practice →';
     }
     $('mode').textContent = saved
-        ? 'First attempt complete · practice available'
+        ? 'Previous attempt · practice available'
         : connected
         ? 'Connected to Flagsmith'
         : 'Practice mode · experiment offline';

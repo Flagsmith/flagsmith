@@ -8,7 +8,7 @@
         "build": "vite build",
         "preview": "vite preview",
         "build:practice": "node build-practice.js",
-        "package:practice": "npm run build:practice && python3 -m zipfile -c media/first-minute.zip dist/first-minute.html",
+        "package:practice": "npm run build:practice && python3 package_practice.py",
         "test": "playwright test"
     },
     "dependencies": {

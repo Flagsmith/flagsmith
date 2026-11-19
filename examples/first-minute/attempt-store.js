@@ -22,6 +22,27 @@ function readLegacy(key, parse) {
     }
 }
 
+export function pendingAnswer(key, deadline, submission) {
+    const existing = readLegacy(key, JSON.parse);
+    if (existing?.deadline === deadline) return existing;
+    if (submission) {
+        try {
+            localStorage.setItem(key, JSON.stringify(submission));
+        } catch {
+            // The UI holds the original answer until IndexedDB confirms completion.
+        }
+    }
+    return submission;
+}
+
+export function clearPendingAnswer(key) {
+    try {
+        localStorage.removeItem(key);
+    } catch {
+        // A completed IndexedDB record takes precedence over a stale journal entry.
+    }
+}
+
 export async function updateRecord(key, change, parseLegacy = JSON.parse) {
     const database = await openDatabase();
     return new Promise((resolve, reject) => {
