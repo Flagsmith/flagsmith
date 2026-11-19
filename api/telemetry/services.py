@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 import structlog
 from common.core.utils import get_version
@@ -10,6 +10,7 @@ from app_analytics.dataclasses import UsageData
 from organisations.models import Organisation
 from telemetry.control_plane.client import post_usage_snapshot
 from telemetry.dataclasses import ApiCallBreakdown, ProjectUsage, UsageSnapshot
+from telemetry.models import UsageReportingState
 
 logger = structlog.get_logger("usage_reporting")
 
@@ -27,22 +28,38 @@ def push_usage_snapshots() -> None:
         logger.debug("run.skipped", reason="no_licensed_organisations")
         return
 
+    window_end = timezone.now().replace(minute=0, second=0, microsecond=0)
+
     for organisation in organisations:
         with structlog.contextvars.bound_contextvars(organisation__id=organisation.id):
             try:
+                window_start = get_window_start(organisation, window_end)
+                if window_start >= window_end:
+                    logger.debug("snapshot.skipped", reason="empty_window")
+                    continue
+
                 post_usage_snapshot(
                     base_url=base_url,
-                    snapshot=_get_usage_snapshot(organisation),
+                    snapshot=_get_usage_snapshot(
+                        organisation, window_start, window_end
+                    ),
                     signature_b64=organisation.licence.signature,
                 )
-            except Exception:
-                logger.exception("snapshot.errored")
+
+                UsageReportingState.objects.filter(
+                    organisation=organisation, reported_until__lt=window_end
+                ).update(reported_until=window_end)
+
+            except Exception as e:
+                logger.exception("snapshot.errored", reason=e)
 
 
 def _get_licensed_organisations() -> list[Organisation]:
     if settings.LICENSING_INSTALLED:  # pragma: no cover
         return list(
-            Organisation.objects.filter(licence__isnull=False).select_related("licence")
+            Organisation.objects.filter(licence__isnull=False).select_related(
+                "licence", "usage_reporting_state"
+            )
         )
     return []
 
@@ -80,15 +97,25 @@ def _map_to_api_call_breakdown(
     )
 
 
-def _get_usage_snapshot(organisation: Organisation) -> UsageSnapshot:
-    hour_end = timezone.now().replace(minute=0, second=0, microsecond=0)
-    hour_start = hour_end - timedelta(hours=24)
+def get_window_start(organisation: Organisation, window_end: datetime) -> datetime:
+    try:
+        reported_until: datetime = organisation.usage_reporting_state.reported_until
+        return reported_until
+    except UsageReportingState.DoesNotExist:
+        return UsageReportingState.objects.create(
+            organisation=organisation, reported_until=window_end - timedelta(hours=24)
+        ).reported_until
+
+
+def _get_usage_snapshot(
+    organisation: Organisation, window_start: datetime, window_end: datetime
+) -> UsageSnapshot:
     seat_count = organisation.num_seats
     instance_version = get_version()
-    usage_data = get_usage_data_for_window(organisation, hour_start, hour_end)
+    usage_data = get_usage_data_for_window(organisation, window_start, window_end)
     usage_data_by_project_id = {
         project.id: get_usage_data_for_window(
-            organisation, hour_start, hour_end, project_id=project.id
+            organisation, window_start, window_end, project_id=project.id
         )
         for project in organisation.projects.all()
     }
@@ -96,7 +123,7 @@ def _get_usage_snapshot(organisation: Organisation) -> UsageSnapshot:
     # No data access past this point!
 
     return UsageSnapshot(
-        timestamp=hour_start,
+        timestamp=window_start,
         seat_count=seat_count,
         api_call_total=_sum_api_calls(usage_data),
         api_call_breakdown=_map_to_api_call_breakdown(usage_data),
