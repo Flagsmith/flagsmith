@@ -1,6 +1,10 @@
 import { test, expect } from '../test-setup';
 import { byId, createHelpers, getFlagsmith, log, visualSnapshot } from '../helpers';
-import { E2E_SIGN_UP_USER, PASSWORD } from '../config';
+import {
+  E2E_ONBOARDING_RELOAD_USER,
+  E2E_SIGN_UP_USER,
+  PASSWORD,
+} from '../config';
 
 // The single-page onboarding flow (onboarding_quickstart_flow), at
 // /getting-started. Runs only when the flag is on (the legacy signup test runs
@@ -181,5 +185,64 @@ test.describe('Onboarding', () => {
     await waitConnected();
     await page.getByRole('button', { name: /Experiment/ }).click();
     await expect(page).toHaveURL(/\/experiments$/);
+  });
+
+  // Pins the variant instead of reading the real flag, so this runs whatever
+  // the experiment is set to. A reload before the organisation exists used to
+  // send the user to /create, and onboarding then made a second organisation.
+  test('A reload before the organisation exists keeps a new user on the onboarding flow @oss', async ({
+    page,
+  }) => {
+    const { addErrorLogging, click, setText, waitForElementVisible } =
+      createHelpers(page);
+    await addErrorLogging();
+
+    // Flagsmith-on-Flagsmith requests carry the environment key header; the
+    // app's own API calls don't.
+    await page.route('**/identities/', async (route) => {
+      if (!route.request().headers()['x-environment-key']) {
+        return route.fallback();
+      }
+      const response = await route.fetch();
+      const json = await response.json();
+      json.flags = (json.flags ?? []).map((flag) =>
+        flag.feature?.name === 'onboarding_quickstart_flow'
+          ? { ...flag, enabled: true, variant: 'single_page' }
+          : flag,
+      );
+      await route.fulfill({ json, response });
+    });
+
+    // Fail the first organisation create, so the reload below happens while
+    // the user still has no organisation.
+    const createOrganisation = '**/api/v1/organisations/';
+    await page.route(createOrganisation, (route) =>
+      route.request().method() === 'POST' ? route.abort() : route.fallback(),
+    );
+
+    log('Sign up');
+    await page.goto('/');
+    await click(byId('jsSignup'));
+    await waitForElementVisible(byId('firstName'));
+    await setText(byId('firstName'), 'Bullet');
+    await setText(byId('lastName'), 'Train');
+    await setText(byId('email'), E2E_ONBOARDING_RELOAD_USER);
+    await setText(byId('password'), PASSWORD);
+    await click(byId('signup-btn'));
+    await page.waitForURL((url) => url.pathname === '/getting-started', {
+      timeout: 30000,
+    });
+
+    log('Reload before the organisation exists');
+    await page.unroute(createOrganisation);
+    await page.reload();
+
+    await expect(
+      page.getByRole('heading', { name: /Welcome/ }),
+    ).toBeVisible({ timeout: 30000 });
+    expect(new URL(page.url()).pathname).toBe('/getting-started');
+    await expect(
+      page.getByRole('heading', { name: 'Create your organisation' }),
+    ).not.toBeVisible();
   });
 });

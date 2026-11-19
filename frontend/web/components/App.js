@@ -15,7 +15,7 @@ import ProjectStore from 'common/stores/project-store'
 import {
   decideOnboardingEntry,
   getStoredOnboardingVariant,
-  persistOnboardingEntry,
+  resolveOnboardingVariant,
 } from 'common/utils/onboardingEntry'
 import { AUTHORISE_PATH } from 'common/utils/pendingAuthorisation'
 import { Provider } from 'react-redux'
@@ -163,8 +163,9 @@ const App = class extends Component {
       // targeting key, so bucketing never diverges from this decision.
       // Capped at 2s: a degraded flags API falls back to the legacy page
       // instead of blocking the redirect.
+      const storedVariant = getStoredOnboardingVariant()
       Promise.race([
-        AccountStore.getUser()?.isGettingStarted
+        !storedVariant && AccountStore.getUser()?.isGettingStarted
           ? decideOnboardingEntry(AccountStore.getUser()?.email).catch(
               () => null,
             )
@@ -173,7 +174,7 @@ const App = class extends Component {
       ]).then((decision) => {
         // Only an accepted decision is persisted: a decision losing the
         // race must not store its assignment after routing has happened.
-        const variant = decision ? persistOnboardingEntry(decision) : 'control'
+        const variant = resolveOnboardingVariant(storedVariant, decision)
         // Restore the logged-in identity for the rest of the app.
         Promise.resolve(API.flagsmithIdentify()).catch(() => {})
         if (variant === 'single_page') {

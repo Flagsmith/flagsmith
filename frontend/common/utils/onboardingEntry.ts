@@ -55,6 +55,15 @@ export function persistOnboardingEntry(
   return variant
 }
 
+// A variant stored earlier in the session wins over a new decision. A reload
+// during onboarding logs in again without isGettingStarted, and must not send
+// a single_page user to /create.
+export const resolveOnboardingVariant = (
+  stored: OnboardingVariant | null,
+  decision: OnboardingEntryDecision | null,
+): OnboardingVariant =>
+  stored ?? (decision ? persistOnboardingEntry(decision) : 'control')
+
 export const getStoredOnboardingVariant = (): OnboardingVariant | null => {
   const variant = storageGet(VARIANT_STORAGE_KEY)
   return variant === 'single_page' || variant === 'control' ? variant : null

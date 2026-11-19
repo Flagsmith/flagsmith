@@ -30,7 +30,9 @@ export type OnboardingResources = {
  */
 export const useEnsureOnboardingResources = (): OnboardingResources => {
   const { data: profile } = useGetProfileQuery({})
-  const { data: organisations, isLoading: orgsLoading } =
+  // isFetching, not isLoading: after /create invalidates the list, the cached
+  // one is stale and would read as "no organisation".
+  const { data: organisations, isFetching: orgsFetching } =
     useGetOrganisationsQuery({})
   const defaults = useSmartDefaults(
     profile?.email ?? '',
@@ -55,7 +57,7 @@ export const useEnsureOnboardingResources = (): OnboardingResources => {
   useEffect(() => {
     // Run once, and only after the profile + organisations have loaded so the
     // reuse-vs-create decision is made against real data.
-    if (ranRef.current || !profile || orgsLoading) {
+    if (ranRef.current || !profile || orgsFetching) {
       return
     }
     ranRef.current = true
@@ -83,7 +85,7 @@ export const useEnsureOnboardingResources = (): OnboardingResources => {
         setError(e)
         setStatus('error')
       })
-  }, [profile, orgsLoading, organisations, selectedOrganisation, defaults])
+  }, [profile, orgsFetching, organisations, selectedOrganisation, defaults])
 
   return {
     caseSensitive,

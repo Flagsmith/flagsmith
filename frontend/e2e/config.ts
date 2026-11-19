@@ -1,5 +1,6 @@
 const E2E_EMAIL_DOMAIN = 'flagsmithe2etestdomain.io'
 export const E2E_SIGN_UP_USER = `e2e_signup_user@${E2E_EMAIL_DOMAIN}`
+export const E2E_ONBOARDING_RELOAD_USER = `e2e_onboarding_reload_user@${E2E_EMAIL_DOMAIN}`
 export const E2E_USER = `e2e_user@${E2E_EMAIL_DOMAIN}`
 export const E2E_NON_ADMIN_USER = `e2e_user@${E2E_EMAIL_DOMAIN}`
 //e2e_non_admin_user_with_project_permissions@flagsmithe2etestdomain.io

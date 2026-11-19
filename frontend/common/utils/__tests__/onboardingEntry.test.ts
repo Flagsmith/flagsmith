@@ -4,6 +4,7 @@ import {
   getStoredOnboardingTargetingKey,
   getStoredOnboardingVariant,
   persistOnboardingEntry,
+  resolveOnboardingVariant,
 } from 'common/utils/onboardingEntry'
 
 jest.mock('@flagsmith/flagsmith', () => ({
@@ -94,5 +95,52 @@ describe('persistOnboardingEntry', () => {
     expect(variant).toBe('control')
     expect(getStoredOnboardingVariant()).toBe('control')
     expect(getStoredOnboardingTargetingKey()).toBeNull()
+  })
+})
+
+describe('resolveOnboardingVariant', () => {
+  beforeEach(() => {
+    storage.clear()
+  })
+
+  it.each`
+    stored           | decision                                              | expected
+    ${'single_page'} | ${null}                                               | ${'single_page'}
+    ${'single_page'} | ${{ targetingKey: 'anon-1', variant: 'control' }}     | ${'single_page'}
+    ${'control'}     | ${{ targetingKey: 'anon-1', variant: 'single_page' }} | ${'control'}
+    ${null}          | ${{ targetingKey: 'anon-1', variant: 'single_page' }} | ${'single_page'}
+    ${null}          | ${null}                                               | ${'control'}
+  `(
+    'stored $stored with decision $decision routes as $expected',
+    ({ decision, expected, stored }) => {
+      expect(resolveOnboardingVariant(stored, decision)).toBe(expected)
+    },
+  )
+
+  it('keeps the stored variant instead of persisting a new decision', () => {
+    // Given
+    storage.set('onboarding_variant', 'single_page')
+
+    // When
+    resolveOnboardingVariant('single_page', {
+      targetingKey: 'anon-2',
+      variant: 'control',
+    })
+
+    // Then
+    expect(getStoredOnboardingVariant()).toBe('single_page')
+    expect(getStoredOnboardingTargetingKey()).toBeNull()
+  })
+
+  it('persists a new decision when nothing is stored', () => {
+    // When
+    resolveOnboardingVariant(null, {
+      targetingKey: 'anon-3',
+      variant: 'single_page',
+    })
+
+    // Then
+    expect(getStoredOnboardingVariant()).toBe('single_page')
+    expect(getStoredOnboardingTargetingKey()).toBe('anon-3')
   })
 })
