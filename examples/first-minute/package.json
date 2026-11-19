@@ -1,0 +1,18 @@
+{
+    "name": "first-minute",
+    "private": true,
+    "version": "1.0.0",
+    "type": "module",
+    "scripts": {
+        "dev": "vite",
+        "build": "vite build",
+        "preview": "vite preview",
+        "build:practice": "node build-practice.js"
+    },
+    "dependencies": {
+        "@flagsmith/flagsmith": "^12.4.0"
+    },
+    "devDependencies": {
+        "vite": "^7.2.0"
+    }
+}

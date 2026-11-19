@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="theme-color" content="#102a28" />
+        <title>First Minute · Incident drill</title>
+        <link rel="stylesheet" href="./style.css" />
+    </head>
+    <body>
+        <header>
+            <div class="shell brandbar">
+                <a class="brand" href="./"><span class="mark" aria-hidden="true">∿</span> First Minute</a
+                ><button class="link" id="method">Experiment notes</button>
+            </div>
+        </header>
+        <main class="shell">
+            <section class="brief">
+                <div>
+                    <div class="kicker"><i></i> ON-CALL SIMULATOR</div>
+                    <h1>Checkout is<br /><em>timing out.</em></h1>
+                    <p>A release just landed. Payment requests are piling up. You have one minute to find the cause.</p>
+                    <button class="primary" id="start">Start drill <b>→</b></button
+                    ><small id="mode" role="status">Loading drill…</small>
+                </div>
+                <div class="monitor">
+                    <div class="monitorhead">
+                        <span><i></i> INCIDENT TELEMETRY</span><span>SIMULATION</span>
+                    </div>
+                    <div class="stat">
+                        <strong>2.84<span>s</span></strong
+                        ><span>p95 checkout latency<br /><b>↑ 1,191% from baseline</b></span>
+                    </div>
+                    <canvas
+                        id="chart"
+                        role="img"
+                        aria-label="Latency stays near 220 milliseconds until release 8.4 at 14:04, then spikes to 2.84 seconds."
+                    ></canvas>
+                    <div class="axis"><span>14:00</span><span>14:04 · RELEASE</span><span>14:08 UTC</span></div>
+                </div>
+            </section>
+            <section class="board" id="desk" hidden>
+                <div class="sectionhead">
+                    <div>
+                        <div class="kicker">INCIDENT DESK</div>
+                        <h2>Trace the failure</h2>
+                    </div>
+                    <strong id="clock" aria-label="Seconds remaining"></strong>
+                </div>
+                <div class="work">
+                    <section class="evidence">
+                        <h3>Evidence</h3>
+                        <div class="tabs" id="tabs" aria-label="Evidence sources"></div>
+                        <div id="signals"></div>
+                    </section>
+                    <section class="decision">
+                        <aside id="guide" hidden>
+                            <h3>Responder runbook</h3>
+                            <ol>
+                                <li>Locate the first change on the timeline.</li>
+                                <li>Compare demand with time spent waiting.</li>
+                                <li>Find the release setting that explains both.</li>
+                            </ol>
+                        </aside>
+                        <form id="form">
+                            <fieldset>
+                                <legend>What caused the slowdown?</legend>
+                                <div id="choices"></div>
+                            </fieldset>
+                            <button class="primary" id="submit">Submit diagnosis <b>→</b></button>
+                        </form>
+                    </section>
+                </div>
+            </section>
+            <section id="result" hidden tabindex="-1">
+                <div class="kicker">INCIDENT DEBRIEF</div>
+                <h2 id="verdict"></h2>
+                <p>
+                    Release 8.4 cut the connection pool from 40 to 4. Requests waited 2.65 seconds for a connection
+                    while queries and payment authorisations stayed fast.
+                </p>
+                <div class="trace">
+                    <div class="kicker">SLOW REQUEST · 2,866 MS</div>
+                    <div
+                        class="tracebar"
+                        role="img"
+                        aria-label="92 percent of request time spent waiting for a database connection"
+                    ></div>
+                    <p>2,650 ms waiting for a connection · 216 ms other work</p>
+                </div>
+                <section class="capacity" aria-labelledby="capacity-title">
+                    <div>
+                        <h3 id="capacity-title">Could a larger pool keep up?</h3>
+                        <p>
+                            Model one worker receiving 100 requests per second. Each request holds a connection for 50
+                            ms. Move the pool limit to see when the queue grows.
+                        </p>
+                    </div>
+                    <div>
+                        <label for="connections">Pool limit <output id="pool-value" for="connections">4</output></label>
+                        <input id="connections" type="range" min="1" max="40" value="4" />
+                        <p id="capacity-outcome" aria-live="polite"></p>
+                    </div>
+                </section>
+                <p id="outcome"></p>
+                <button class="primary" id="replay">Practise again →</button>
+                <button class="link" id="switch-layout">Try the other desk</button>
+            </section>
+            <section class="briefing" id="preflight">
+                <div class="kicker">DRILL BRIEFING</div>
+                <div class="three">
+                    <article>
+                        <span>Duration</span>
+                        <h3>60 seconds</h3>
+                        <p>The clock begins when you enter the incident desk.</p>
+                    </article>
+                    <article>
+                        <span>Evidence</span>
+                        <h3>Three sources</h3>
+                        <p>Read the release log, service metrics and request traces.</p>
+                    </article>
+                    <article>
+                        <span>Objective</span>
+                        <h3>One diagnosis</h3>
+                        <p>Choose the change that explains the symptoms.</p>
+                    </article>
+                </div>
+            </section>
+        </main>
+        <dialog id="notes">
+            <form method="dialog"><button class="close" aria-label="Close">×</button></form>
+            <div class="kicker">EXPERIMENT NOTES</div>
+            <h2>Does a runbook help?</h2>
+            <p>
+                Participants see the same incident, timer and evidence. Flagsmith assigns half to the evidence desk
+                alone and half to the desk with a three-step runbook.
+            </p>
+            <h3>What counts as success</h3>
+            <p>
+                A correct diagnosis on the first attempt within 60 seconds records <code>drill_resolved</code>. Starting
+                an enrolled drill records an exposure. Practice attempts are excluded.
+            </p>
+            <p>
+                Compare conversion rates and win probability in Flagsmith before deciding whether to roll out the guide.
+            </p>
+            <section class="proof">
+                <h3>SDK verification</h3>
+                <p id="proof-description"></p>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Desk</th>
+                            <th>Exposures</th>
+                            <th>Conversions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="proof-counts"></tbody>
+                </table>
+                <small>Automated test traffic · separate demo environment</small>
+            </section>
+        </dialog>
+        <footer class="shell">First Minute <span>Built with Flagsmith Experimentation</span></footer>
+        <script type="module" src="./main.js"></script>
+    </body>
+</html>

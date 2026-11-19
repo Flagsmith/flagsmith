@@ -1,0 +1,16 @@
+{
+  "as_of": "2026-11-19T09:12:06.378674Z",
+  "traffic": "automated browser checks",
+  "variants": {
+    "guided": {
+      "n": 2,
+      "sum": 2.0,
+      "sum_squares": 2.0
+    },
+    "control": {
+      "n": 1,
+      "sum": 0.0,
+      "sum_squares": 0.0
+    }
+  }
+}
