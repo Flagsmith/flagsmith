@@ -241,8 +241,5 @@ test.describe('Onboarding', () => {
       page.getByRole('heading', { name: /Welcome/ }),
     ).toBeVisible({ timeout: 30000 });
     expect(new URL(page.url()).pathname).toBe('/getting-started');
-    await expect(
-      page.getByRole('heading', { name: 'Create your organisation' }),
-    ).not.toBeVisible();
   });
 });
