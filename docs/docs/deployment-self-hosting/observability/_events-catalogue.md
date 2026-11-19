@@ -130,8 +130,8 @@ Attributes:
 
 Logged at `warning` from:
  - `api/app_analytics/analytics_db_service.py:83`
- - `api/app_analytics/analytics_db_service.py:240`
- - `api/app_analytics/analytics_db_service.py:331`
+ - `api/app_analytics/analytics_db_service.py:230`
+ - `api/app_analytics/analytics_db_service.py:321`
 
 Attributes:
  - `details`
@@ -1024,9 +1024,9 @@ Attributes:
 ### `usage_reporting.run.skipped`
 
 Logged at `debug` from:
- - `api/telemetry/services.py:21`
- - `api/telemetry/services.py:24`
- - `api/telemetry/services.py:27`
+ - `api/telemetry/services.py:22`
+ - `api/telemetry/services.py:25`
+ - `api/telemetry/services.py:28`
 
 Attributes:
  - `reason`
@@ -1034,25 +1034,26 @@ Attributes:
 ### `usage_reporting.snapshot.errored`
 
 Logged at `exception` from:
- - `api/telemetry/services.py:39`
+ - `api/telemetry/services.py:54`
 
 Attributes:
-
-### `usage_reporting.snapshot.push_failed`
-
-Logged at `warning` from:
- - `api/telemetry/control_plane/client.py:40`
-
-Attributes:
- - `status_code`
+ - `reason`
 
 ### `usage_reporting.snapshot.pushed`
 
 Logged at `info` from:
- - `api/telemetry/control_plane/client.py:38`
+ - `api/telemetry/control_plane/client.py:49`
 
 Attributes:
  - `status_code`
+
+### `usage_reporting.snapshot.skipped`
+
+Logged at `debug` from:
+ - `api/telemetry/services.py:38`
+
+Attributes:
+ - `reason`
 
 ### `warehouse.connection.connected`
 
