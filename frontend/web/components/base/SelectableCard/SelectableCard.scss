@@ -41,7 +41,7 @@
     padding: 16px;
     text-align: left;
 
-    &:focus-visible {
+    .selectable-card &:focus-visible {
       outline: none;
     }
   }

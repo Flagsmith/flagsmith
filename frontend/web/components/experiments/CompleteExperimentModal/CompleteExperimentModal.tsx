@@ -7,6 +7,7 @@ import {
 import { useGetEnvironmentQuery } from 'common/services/useEnvironment'
 import Banner from 'components/base/Banner'
 import Button from 'components/base/forms/Button'
+import ErrorMessage from 'components/ErrorMessage'
 import ModalHR from 'components/modals/ModalHR'
 import { getVariantIdentities } from 'components/experiments/results/derive'
 import RolloutDecisionPicker from './RolloutDecisionPicker'
@@ -42,23 +43,19 @@ const CompleteExperimentModal: FC<CompleteExperimentModalProps> = ({
     () => (experiment ? getVariantChoices(experiment, results) : []),
     [experiment, results],
   )
-  const defaultSelection = useMemo(
-    () =>
-      experiment ? getDefaultSelection(experiment, choices, results) : null,
-    [experiment, choices, results],
-  )
 
   if (isError) {
     return (
       <div className='modal-body'>
-        <div className='alert alert-danger mb-0'>
-          We couldn't load this experiment.
-        </div>
+        <ErrorMessage
+          errorMessageClass='mb-0'
+          error="We couldn't load this experiment."
+        />
       </div>
     )
   }
 
-  if (!experiment || !environment || !defaultSelection || isLoadingResults) {
+  if (!experiment || !environment || isLoadingResults) {
     return (
       <div className='modal-body text-center'>
         <Loader />
@@ -66,6 +63,7 @@ const CompleteExperimentModal: FC<CompleteExperimentModalProps> = ({
     )
   }
 
+  const defaultSelection = getDefaultSelection(experiment, choices, results)
   const activeSelection = selection ?? defaultSelection
   const control = getVariantIdentities(experiment.feature)[0]
   const servedVariant = getServedVariant(activeSelection, control, choices)
