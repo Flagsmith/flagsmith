@@ -24,11 +24,9 @@ and an orange colour.
 
 ![The Stale tag displayed against a feature in the Features list](/img/managing-flags/stale-flags/flag-list-stale.png)
 
-Updating a feature does not remove the `Stale` tag on its own — once a feature has been flagged, you (or your
-automation) decide what to do with it: clean it up, keep it, or exclude it from future detection. You can remove the tag
-manually, but if the feature still meets the staleness criteria, Flagsmith will re-apply it on the next detection run.
-To permanently opt a feature out, apply a permanent tag instead — see
-[Excluding flags from stale detection](#excluding-flags-from-stale-detection) below.
+Changing a stale feature in any environment removes the `Stale` tag. You can also remove the tag yourself, but it will
+come back for as long as the feature stays unchanged. To keep a feature from ever being marked as stale, give it a
+permanent tag — see [Excluding flags from stale detection](#excluding-flags-from-stale-detection) below.
 
 ---
 
