@@ -10,63 +10,74 @@ import requests
 # RFC 6598 carrier-grade NAT; not caught by ipaddress.is_private.
 _SHARED_ADDRESS_SPACE = ipaddress.ip_network("100.64.0.0/10")
 
-# OpenSSL X509_V_ERR_* verification results, named as Node.js reports them.
-_CERT_VERIFY_ERROR_CODES = {
-    2: "UNABLE_TO_GET_ISSUER_CERT",
-    3: "UNABLE_TO_GET_CRL",
-    4: "UNABLE_TO_DECRYPT_CERT_SIGNATURE",
-    5: "UNABLE_TO_DECRYPT_CRL_SIGNATURE",
-    6: "UNABLE_TO_DECODE_ISSUER_PUBLIC_KEY",
-    7: "CERT_SIGNATURE_FAILURE",
-    8: "CRL_SIGNATURE_FAILURE",
-    9: "CERT_NOT_YET_VALID",
-    10: "CERT_HAS_EXPIRED",
-    11: "CRL_NOT_YET_VALID",
-    12: "CRL_HAS_EXPIRED",
-    13: "ERROR_IN_CERT_NOT_BEFORE_FIELD",
-    14: "ERROR_IN_CERT_NOT_AFTER_FIELD",
-    15: "ERROR_IN_CRL_LAST_UPDATE_FIELD",
-    16: "ERROR_IN_CRL_NEXT_UPDATE_FIELD",
-    18: "DEPTH_ZERO_SELF_SIGNED_CERT",
-    19: "SELF_SIGNED_CERT_IN_CHAIN",
-    20: "UNABLE_TO_GET_ISSUER_CERT_LOCALLY",
-    21: "UNABLE_TO_VERIFY_LEAF_SIGNATURE",
-    22: "CERT_CHAIN_TOO_LONG",
-    23: "CERT_REVOKED",
-    24: "INVALID_CA",
-    25: "PATH_LENGTH_EXCEEDED",
-    26: "INVALID_PURPOSE",
-    27: "CERT_UNTRUSTED",
-    28: "CERT_REJECTED",
-    62: "ERR_TLS_CERT_ALTNAME_INVALID",  # X509_V_ERR_HOSTNAME_MISMATCH
+# OpenSSL 3+ certificate verification results, from `include/openssl/x509_vfy.h`.
+# Python exposes the numeric `verify_code`, but not the constant names.
+_CERT_VERIFY_ERROR_NAMES = {
+    2: "X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT",
+    3: "X509_V_ERR_UNABLE_TO_GET_CRL",
+    4: "X509_V_ERR_UNABLE_TO_DECRYPT_CERT_SIGNATURE",
+    5: "X509_V_ERR_UNABLE_TO_DECRYPT_CRL_SIGNATURE",
+    6: "X509_V_ERR_UNABLE_TO_DECODE_ISSUER_PUBLIC_KEY",
+    7: "X509_V_ERR_CERT_SIGNATURE_FAILURE",
+    8: "X509_V_ERR_CRL_SIGNATURE_FAILURE",
+    9: "X509_V_ERR_CERT_NOT_YET_VALID",
+    10: "X509_V_ERR_CERT_HAS_EXPIRED",
+    11: "X509_V_ERR_CRL_NOT_YET_VALID",
+    12: "X509_V_ERR_CRL_HAS_EXPIRED",
+    13: "X509_V_ERR_ERROR_IN_CERT_NOT_BEFORE_FIELD",
+    14: "X509_V_ERR_ERROR_IN_CERT_NOT_AFTER_FIELD",
+    15: "X509_V_ERR_ERROR_IN_CRL_LAST_UPDATE_FIELD",
+    16: "X509_V_ERR_ERROR_IN_CRL_NEXT_UPDATE_FIELD",
+    18: "X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT",
+    19: "X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN",
+    20: "X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY",
+    21: "X509_V_ERR_UNABLE_TO_VERIFY_LEAF_SIGNATURE",
+    22: "X509_V_ERR_CERT_CHAIN_TOO_LONG",
+    23: "X509_V_ERR_CERT_REVOKED",
+    24: "X509_V_ERR_NO_ISSUER_PUBLIC_KEY",
+    25: "X509_V_ERR_PATH_LENGTH_EXCEEDED",
+    26: "X509_V_ERR_INVALID_PURPOSE",
+    27: "X509_V_ERR_CERT_UNTRUSTED",
+    28: "X509_V_ERR_CERT_REJECTED",
+    62: "X509_V_ERR_HOSTNAME_MISMATCH",
+    64: "X509_V_ERR_IP_ADDRESS_MISMATCH",
+    66: "X509_V_ERR_EE_KEY_TOO_SMALL",
+    67: "X509_V_ERR_CA_KEY_TOO_SMALL",
+    68: "X509_V_ERR_CA_MD_TOO_WEAK",
+    79: "X509_V_ERR_INVALID_CA",
+}
+
+# getaddrinfo() returns EAI_* codes, which don't overlap with errno.
+_GETADDRINFO_ERROR_NAMES = {
+    getattr(socket, name): name for name in dir(socket) if name.startswith("EAI_")
 }
 
 
-def get_request_error_code(error: requests.RequestException) -> str:
-    """Return a POSIX error name, or a Node.js-style TLS error code,
-    for a request that failed without an HTTP response."""
-    if isinstance(error, requests.exceptions.ConnectTimeout):
+def get_request_error_code(error: requests.RequestException) -> str | None:
+    """Return the POSIX error name, or the OpenSSL certificate verification
+    error name, for a request that failed without an HTTP response."""
+    if isinstance(error, requests.exceptions.Timeout):
         return "ETIMEDOUT"
-    if isinstance(error, requests.exceptions.ReadTimeout):
-        return "ESOCKETTIMEDOUT"
     for exc in _iter_exception_chain(error):
         if code := _get_exception_error_code(exc):
             return code
-    return "UNKNOWN"
+    return None
 
 
 def _get_exception_error_code(exc: BaseException) -> str | None:
     # SSL errors subclass OSError, with an OpenSSL-specific errno.
     if isinstance(exc, ssl.SSLCertVerificationError):
-        return _CERT_VERIFY_ERROR_CODES.get(exc.verify_code, "EPROTO")
+        return _CERT_VERIFY_ERROR_NAMES.get(exc.verify_code, "EPROTO")
     if isinstance(exc, ssl.SSLError):
         return "EPROTO"
-    # gaierror carries an EAI_* errno, not a POSIX one.
-    if isinstance(exc, socket.gaierror):
-        return "EAI_AGAIN" if exc.errno == socket.EAI_AGAIN else "ENOTFOUND"
+    if isinstance(exc, socket.gaierror) and exc.errno is not None:
+        return _GETADDRINFO_ERROR_NAMES.get(exc.errno)
     if isinstance(exc, OSError) and exc.errno is not None:
         if name := errno.errorcode.get(exc.errno):
             return name
+    # A socket timeout, e.g. connecting to a proxy, without an errno.
+    if isinstance(exc, TimeoutError):
+        return "ETIMEDOUT"
     # e.g. `RemoteDisconnected`: the peer closed without responding.
     if isinstance(exc, ConnectionResetError):
         return "ECONNRESET"

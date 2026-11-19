@@ -606,7 +606,6 @@ def test_send_test_webhook__request_exception__returns_error_response(
     assert response.json() == {
         "detail": "Could not connect to webhook URL",
         "body": "Please check the URL, and ensure it is valid and accessible from the server.",
-        "code": "UNKNOWN",
     }
 
 

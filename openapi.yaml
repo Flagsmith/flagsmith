@@ -29072,7 +29072,7 @@ components:
             - string
             - 'null'
         code:
-          description: 'A POSIX error name, or a TLS error code, when the webhook could not be reached.'
+          description: 'Why the webhook could not be reached, if known: a POSIX error name, or an OpenSSL certificate verification error name.'
           type: string
       required:
         - detail

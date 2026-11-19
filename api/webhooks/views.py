@@ -65,11 +65,10 @@ class WebhookViewSet(viewsets.ViewSet):
                 status=status.HTTP_200_OK,
             )
         except requests.exceptions.RequestException as error:
-            return Response(
-                {
-                    "detail": "Could not connect to webhook URL",
-                    "body": "Please check the URL, and ensure it is valid and accessible from the server.",
-                    "code": get_request_error_code(error),
-                },
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            error_data = {
+                "detail": "Could not connect to webhook URL",
+                "body": "Please check the URL, and ensure it is valid and accessible from the server.",
+            }
+            if code := get_request_error_code(error):
+                error_data["code"] = code
+            return Response(error_data, status=status.HTTP_400_BAD_REQUEST)

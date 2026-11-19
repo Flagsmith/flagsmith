@@ -37,7 +37,7 @@ class TestWebhookErrorResponseSerializer(serializers.Serializer[None]):
     code = serializers.CharField(
         required=False,
         help_text=(
-            "A POSIX error name, or a TLS error code, when "
-            "the webhook could not be reached."
+            "Why the webhook could not be reached, if known: a POSIX error "
+            "name, or an OpenSSL certificate verification error name."
         ),
     )
