@@ -1,5 +1,5 @@
 import React from 'react'
-import AccountStore from 'common/stores/account-store'
+import { useIsOrganisationAdmin } from 'common/hooks/useCurrentOrganisation'
 
 interface EmptyFeatureHealthProvidersProps {
   projectId: number
@@ -8,7 +8,7 @@ interface EmptyFeatureHealthProvidersProps {
 const EmptyFeatureHealthProviders: React.FC<
   EmptyFeatureHealthProvidersProps
 > = ({ projectId }) => {
-  const isAdmin = AccountStore.isAdmin()
+  const isAdmin = useIsOrganisationAdmin()
 
   return (
     <>
