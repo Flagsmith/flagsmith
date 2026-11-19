@@ -1000,7 +1000,7 @@ def test_sdk_identities_get__hide_sensitive_data_with_feature__returns_nulled_fi
         "initial_value",
         "default_enabled",
     ]
-    fs_sensitive_fields = ["id", "environment", "identity", "feature_segment"]
+    fs_sensitive_fields = ["id", "environment", "identity", "feature_segment", "reason"]
 
     # When
     response = api_client.get(url)
@@ -1032,7 +1032,7 @@ def test_sdk_identities_get__hide_sensitive_data__returns_nulled_fields(  # type
         "initial_value",
         "default_enabled",
     ]
-    fs_sensitive_fields = ["id", "environment", "identity", "feature_segment"]
+    fs_sensitive_fields = ["id", "environment", "identity", "feature_segment", "reason"]
 
     # When
     response = api_client.get(url)
@@ -1086,7 +1086,7 @@ def test_sdk_identities_post__hide_sensitive_data__returns_nulled_fields(  # typ
         "initial_value",
         "default_enabled",
     ]
-    fs_sensitive_fields = ["id", "environment", "identity", "feature_segment"]
+    fs_sensitive_fields = ["id", "environment", "identity", "feature_segment", "reason"]
 
     # When
     response = api_client.post(
