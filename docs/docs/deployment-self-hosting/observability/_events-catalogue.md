@@ -42,7 +42,7 @@ Attributes:
 ### `api_usage.overage.charge_failed`
 
 Logged at `exception` from:
- - `api/organisations/tasks.py:331`
+ - `api/organisations/tasks.py:325`
 
 Attributes:
  - `api_overage`
@@ -51,7 +51,7 @@ Attributes:
 ### `api_usage.overage.charged`
 
 Logged at `info` from:
- - `api/organisations/tasks.py:338`
+ - `api/organisations/tasks.py:332`
 
 Attributes:
  - `api_overage`
@@ -61,7 +61,7 @@ Attributes:
 ### `api_usage.overage.missing_allowance`
 
 Logged at `error` from:
- - `api/organisations/tasks.py:229`
+ - `api/organisations/tasks.py:223`
 
 Attributes:
  - `organisation.id`
@@ -69,7 +69,7 @@ Attributes:
 ### `api_usage.overage.missing_subscription_id`
 
 Logged at `error` from:
- - `api/organisations/tasks.py:310`
+ - `api/organisations/tasks.py:304`
 
 Attributes:
  - `organisation.id`
@@ -77,8 +77,8 @@ Attributes:
 ### `api_usage.overage.skipped`
 
 Logged at `info` from:
- - `api/organisations/tasks.py:256`
- - `api/organisations/tasks.py:280`
+ - `api/organisations/tasks.py:250`
+ - `api/organisations/tasks.py:274`
 
 Attributes:
  - `allowed_30d_api_calls`
@@ -90,7 +90,7 @@ Attributes:
 ### `api_usage.overage.unknown_plan`
 
 Logged at `error` from:
- - `api/organisations/tasks.py:324`
+ - `api/organisations/tasks.py:318`
 
 Attributes:
  - `organisation.id`
@@ -99,7 +99,7 @@ Attributes:
 ### `api_usage.restriction.applied`
 
 Logged at `info` from:
- - `api/organisations/tasks.py:466`
+ - `api/organisations/tasks.py:460`
 
 Attributes:
  - `allowed_30d_api_calls`
@@ -111,7 +111,7 @@ Attributes:
 ### `api_usage.restriction.failed`
 
 Logged at `exception` from:
- - `api/organisations/tasks.py:400`
+ - `api/organisations/tasks.py:394`
 
 Attributes:
  - `organisation.id`
@@ -119,7 +119,7 @@ Attributes:
 ### `api_usage.restriction.skipped`
 
 Logged at `info` from:
- - `api/organisations/tasks.py:447`
+ - `api/organisations/tasks.py:441`
 
 Attributes:
  - `allowed_30d_api_calls`
@@ -940,6 +940,39 @@ Attributes:
  - `feature_name`
  - `sentry_action`
 
+### `telemetry.control_plane.client.snapshot.push_failed`
+
+Logged at `warning` from:
+ - `api/telemetry/control_plane/client.py:40`
+
+Attributes:
+ - `status_code`
+
+### `telemetry.control_plane.client.snapshot.pushed`
+
+Logged at `info` from:
+ - `api/telemetry/control_plane/client.py:38`
+
+Attributes:
+ - `status_code`
+
+### `telemetry.services.run.skipped`
+
+Logged at `debug` from:
+ - `api/telemetry/services.py:21`
+ - `api/telemetry/services.py:24`
+ - `api/telemetry/services.py:27`
+
+Attributes:
+ - `reason`
+
+### `telemetry.services.snapshot.errored`
+
+Logged at `exception` from:
+ - `api/telemetry/services.py:39`
+
+Attributes:
+
 ### `trust_relationships.created`
 
 Logged at `info` from:
@@ -993,38 +1026,6 @@ Attributes:
  - `organisation.id`
  - `trust_relationship.id`
  - `trust_relationship.issuer`
-
-### `usage_reporting.run.skipped`
-
-Logged at `debug` from:
- - `api/organisations/usage_reporting/services.py:60`
- - `api/organisations/usage_reporting/services.py:63`
-
-Attributes:
- - `reason`
-
-### `usage_reporting.snapshot.errored`
-
-Logged at `exception` from:
- - `api/organisations/usage_reporting/services.py:75`
-
-Attributes:
-
-### `usage_reporting.snapshot.push_failed`
-
-Logged at `warning` from:
- - `api/organisations/usage_reporting/services.py:55`
-
-Attributes:
- - `status_code`
-
-### `usage_reporting.snapshot.pushed`
-
-Logged at `info` from:
- - `api/organisations/usage_reporting/services.py:53`
-
-Attributes:
- - `status_code`
 
 ### `warehouse.connection.connected`
 
