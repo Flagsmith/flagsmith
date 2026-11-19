@@ -1,4 +1,4 @@
-import React, { FC, useEffect, useState } from 'react'
+import React, { FC, useEffect, useMemo, useRef, useState } from 'react'
 import { useHistory } from 'react-router-dom'
 import Button from 'components/base/forms/Button'
 import Icon from 'components/icons/Icon'
@@ -166,11 +166,16 @@ const OnboardingFlow: FC = () => {
     history.push(`${base}/features?feature=${flagId}&tab=${tab}`)
   }
 
-  const diagnosticIds = {
-    environment_id: environment?.id,
-    organisation_id: organisationId,
-    project_id: projectId,
-  }
+  const environmentId = environment?.id
+  // Memoised so the connection effect below doesn't re-run every render.
+  const diagnosticIds = useMemo(
+    () => ({
+      environment_id: environmentId,
+      organisation_id: organisationId,
+      project_id: projectId,
+    }),
+    [environmentId, organisationId, projectId],
+  )
 
   // Off, rollout deep-links to the overrides tab like every other next step.
   // Read on click rather than on render: hasFeature counts an evaluation, and
@@ -203,6 +208,20 @@ const OnboardingFlow: FC = () => {
       ...Constants.events.ONBOARDING_AI_CONNECT,
       extra: diagnosticIds,
     })
+  const trackedConnection = useRef(false)
+  useEffect(() => {
+    if (connection.status !== 'connected' || trackedConnection.current) return
+    trackedConnection.current = true
+    API.trackEvent({
+      ...Constants.events.ONBOARDING_SDK_CONNECTED,
+      extra: {
+        ...diagnosticIds,
+        connected_on_page: connection.connectedOnPage,
+        sdk: connection.sdkLabel,
+      },
+    })
+  }, [connection, diagnosticIds])
+
   const handleToggleFlag = async (enabled: boolean) => {
     if (await toggleFlag(enabled)) {
       API.trackEvent({
