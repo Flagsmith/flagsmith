@@ -37,8 +37,7 @@ class TestWebhookErrorResponseSerializer(serializers.Serializer[None]):
     code = serializers.CharField(
         required=False,
         help_text=(
-            "Set when the webhook could not be reached: a POSIX error name"
-            " (e.g. `ECONNREFUSED`, `ETIMEDOUT`) or a Node.js-style TLS"
-            " error code (e.g. `CERT_HAS_EXPIRED`)."
+            "A POSIX error name, or a TLS error code, when "
+            "the webhook could not be reached."
         ),
     )

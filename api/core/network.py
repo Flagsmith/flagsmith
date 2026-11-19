@@ -43,12 +43,8 @@ _CERT_VERIFY_ERROR_CODES = {
 
 
 def get_request_error_code(error: requests.RequestException) -> str:
-    """Return a POSIX error name (e.g. `ECONNREFUSED`), or a Node.js-style
-    TLS error code (e.g. `CERT_HAS_EXPIRED`), for a request that failed
-    without an HTTP response.
-
-    Unlike the exception text, the code carries no hostnames, addresses or
-    ports, so it is safe to show to the user who made the request."""
+    """Return a POSIX error name, or a Node.js-style TLS error code,
+    for a request that failed without an HTTP response."""
     if isinstance(error, requests.exceptions.ConnectTimeout):
         return "ETIMEDOUT"
     if isinstance(error, requests.exceptions.ReadTimeout):
