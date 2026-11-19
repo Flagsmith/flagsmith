@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useGetEnvironmentOnboardingStatusQuery } from 'common/services/useEnvironmentOnboardingStatus'
+import { readOnboardingStatus } from './readOnboardingStatus'
 
 export type OnboardingConnectionStatus = 'listening' | 'connected'
 
@@ -25,8 +26,9 @@ export const useOnboardingConnection = (
     connectedOnPage: boolean
   } | null>(null)
   const [sawListening, setSawListening] = useState(false)
+  const [mountedAt] = useState(Date.now)
 
-  const { data } = useGetEnvironmentOnboardingStatusQuery(
+  const { data, fulfilledTimeStamp } = useGetEnvironmentOnboardingStatusQuery(
     { environmentKey },
     {
       pollingInterval: POLL_INTERVAL_MS,
@@ -36,17 +38,17 @@ export const useOnboardingConnection = (
   )
 
   useEffect(() => {
-    if (!data) return
-    if (!data.first_evaluated_at) {
+    const reading = readOnboardingStatus(data, fulfilledTimeStamp, mountedAt)
+    if (reading === 'listening') {
       setSawListening(true)
-      return
     }
-    const label = data.first_evaluated_sdk_label
+    if (reading !== 'connected') return
+    const label = data?.first_evaluated_sdk_label
     setFirstEvaluation({
       connectedOnPage: sawListening,
       sdkLabel: label && label !== UNIDENTIFIED_SDK ? label : null,
     })
-  }, [data, sawListening])
+  }, [data, fulfilledTimeStamp, mountedAt, sawListening])
 
   return {
     connectedOnPage: firstEvaluation?.connectedOnPage ?? false,

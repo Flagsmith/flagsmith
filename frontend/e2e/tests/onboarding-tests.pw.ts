@@ -228,10 +228,18 @@ test.describe('Onboarding', () => {
     await setText(byId('lastName'), 'Train');
     await setText(byId('email'), E2E_ONBOARDING_RELOAD_USER);
     await setText(byId('password'), PASSWORD);
+    const createAborted = page.waitForEvent(
+      'requestfailed',
+      (request) =>
+        request.method() === 'POST' &&
+        new URL(request.url()).pathname.endsWith('/organisations/'),
+      { timeout: 30000 },
+    );
     await click(byId('signup-btn'));
     await page.waitForURL((url) => url.pathname === '/getting-started', {
       timeout: 30000,
     });
+    await createAborted;
 
     log('Reload before the organisation exists');
     await page.unroute(createOrganisation);

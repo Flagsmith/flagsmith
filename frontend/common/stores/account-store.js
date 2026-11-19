@@ -442,10 +442,11 @@ const controller = {
       if (darkMode) {
         storageSet('dark_mode', darkMode)
       }
+      // Before the token check: a 401 clears the token, then lands here.
+      clearOnboardingEntry()
       if (!data.token) {
         return
       }
-      clearOnboardingEntry()
       ;(Project.cookieAuthEnabled && !E2E
         ? data.post(`${Project.api}auth/logout/`, {})
         : Promise.resolve()
