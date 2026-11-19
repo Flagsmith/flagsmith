@@ -1,1 +1,0 @@
-export { VariationKeyLabel } from './VariationKeyLabel'

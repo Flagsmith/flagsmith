@@ -1,1 +1,0 @@
-JWT_SLIDING_COOKIE_KEY = "jwt"
