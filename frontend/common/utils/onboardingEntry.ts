@@ -76,3 +76,9 @@ export const getStoredOnboardingTargetingKey = (): string | null =>
 // reuse it, or two organisations would share one experiment subject.
 export const clearOnboardingTargetingKey = (): void =>
   storageRemove(TARGETING_KEY_STORAGE_KEY)
+
+// On logout, so the next user in this browser gets their own decision.
+export const clearOnboardingEntry = (): void => {
+  storageRemove(TARGETING_KEY_STORAGE_KEY)
+  storageRemove(VARIANT_STORAGE_KEY)
+}

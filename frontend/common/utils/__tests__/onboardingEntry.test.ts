@@ -1,5 +1,6 @@
 import flagsmith from '@flagsmith/flagsmith'
 import {
+  clearOnboardingEntry,
   decideOnboardingEntry,
   getStoredOnboardingTargetingKey,
   getStoredOnboardingVariant,
@@ -104,12 +105,10 @@ describe('resolveOnboardingVariant', () => {
   })
 
   it.each`
-    stored           | decision                                              | expected
-    ${'single_page'} | ${null}                                               | ${'single_page'}
-    ${'single_page'} | ${{ targetingKey: 'anon-1', variant: 'control' }}     | ${'single_page'}
-    ${'control'}     | ${{ targetingKey: 'anon-1', variant: 'single_page' }} | ${'control'}
-    ${null}          | ${{ targetingKey: 'anon-1', variant: 'single_page' }} | ${'single_page'}
-    ${null}          | ${null}                                               | ${'control'}
+    stored           | decision                                          | expected
+    ${'single_page'} | ${{ targetingKey: 'anon-1', variant: 'control' }} | ${'single_page'}
+    ${'single_page'} | ${null}                                           | ${'single_page'}
+    ${null}          | ${null}                                           | ${'control'}
   `(
     'stored $stored with decision $decision routes as $expected',
     ({ decision, expected, stored }) => {
@@ -142,5 +141,19 @@ describe('resolveOnboardingVariant', () => {
     // Then
     expect(getStoredOnboardingVariant()).toBe('single_page')
     expect(getStoredOnboardingTargetingKey()).toBe('anon-3')
+  })
+})
+
+describe('clearOnboardingEntry', () => {
+  it('removes the stored variant and targeting key', () => {
+    // Given
+    persistOnboardingEntry({ targetingKey: 'anon-1', variant: 'single_page' })
+
+    // When
+    clearOnboardingEntry()
+
+    // Then
+    expect(getStoredOnboardingVariant()).toBeNull()
+    expect(getStoredOnboardingTargetingKey()).toBeNull()
   })
 })

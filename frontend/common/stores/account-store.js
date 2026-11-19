@@ -4,7 +4,10 @@ import find from 'lodash/find'
 import findIndex from 'lodash/findIndex'
 import get from 'lodash/get'
 import { storageGet, storageSet } from 'common/safeLocalStorage'
-import { clearOnboardingTargetingKey } from 'common/utils/onboardingEntry'
+import {
+  clearOnboardingEntry,
+  clearOnboardingTargetingKey,
+} from 'common/utils/onboardingEntry'
 import Dispatcher from 'common/dispatcher/dispatcher'
 import BaseStore from './base/_store'
 import data from 'common/data/base/_data'
@@ -442,7 +445,7 @@ const controller = {
       if (!data.token) {
         return
       }
-
+      clearOnboardingEntry()
       ;(Project.cookieAuthEnabled && !E2E
         ? data.post(`${Project.api}auth/logout/`, {})
         : Promise.resolve()
