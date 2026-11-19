@@ -317,24 +317,26 @@ class ExperimentRolloutSerializer(serializers.Serializer):  # type: ignore[type-
 
 class ExperimentRolloutDecisionSerializer(serializers.Serializer):  # type: ignore[type-arg]
     rollout_decision = serializers.ChoiceField(choices=RolloutDecision.choices)
-    variant_id = serializers.IntegerField(required=False)
+    rollout_variant = serializers.IntegerField(required=False)
 
     def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
         experiment: Experiment = self.context["experiment"]
-        variant_id: int | None = attrs.get("variant_id")
+        rollout_variant: int | None = attrs.get("rollout_variant")
         if attrs["rollout_decision"] != RolloutDecision.VARIANT:
-            if variant_id is not None:
+            if rollout_variant is not None:
                 raise serializers.ValidationError(
-                    {"variant_id": "Only allowed when rolling out a variant."}
+                    {"rollout_variant": "Only allowed when rolling out a variant."}
                 )
             return attrs
-        if variant_id is None:
+        if rollout_variant is None:
             raise serializers.ValidationError(
-                {"variant_id": "Required when rolling out a variant."}
+                {"rollout_variant": "Required when rolling out a variant."}
             )
-        if not experiment.feature.multivariate_options.filter(id=variant_id).exists():
+        if not experiment.feature.multivariate_options.filter(
+            id=rollout_variant
+        ).exists():
             raise serializers.ValidationError(
-                {"variant_id": "Variant not found for the experiment's feature."}
+                {"rollout_variant": "Variant not found for the experiment's feature."}
             )
         return attrs
 
@@ -342,7 +344,7 @@ class ExperimentRolloutDecisionSerializer(serializers.Serializer):  # type: igno
     def to_spec(data: dict[str, Any]) -> RolloutDecisionSpec:
         return RolloutDecisionSpec(
             decision=data["rollout_decision"],
-            variant_id=data.get("variant_id"),
+            rollout_variant_id=data.get("rollout_variant"),
         )
 
 

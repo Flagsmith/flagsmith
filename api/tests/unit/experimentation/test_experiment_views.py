@@ -730,7 +730,7 @@ def test_action__complete__returns_ended_at_and_rollout_decision(
     # When
     response = admin_client_new.post(
         _action_url(environment, experiment, "complete"),
-        data={"rollout_decision": "variant", "variant_id": variant_id},
+        data={"rollout_decision": "variant", "rollout_variant": variant_id},
         format="json",
     )
 
@@ -770,7 +770,7 @@ def test_action__complete_invalid_rollout_decision__returns_400(
     }
     data: dict[str, object] = {"rollout_decision": rollout_decision}
     if variant_id := variant_ids[variant_owner]:
-        data["variant_id"] = variant_id
+        data["rollout_variant"] = variant_id
 
     # When
     response = admin_client_new.post(
@@ -781,7 +781,7 @@ def test_action__complete_invalid_rollout_decision__returns_400(
 
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert list(response.json()) == ["variant_id"]
+    assert list(response.json()) == ["rollout_variant"]
 
 
 def test_exposures__computed_row__returns_row(

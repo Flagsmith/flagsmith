@@ -59,6 +59,7 @@ from experimentation.models import (
     ExperimentStatus,
     MetricAggregation,
     MetricDirection,
+    RolloutDecision,
     SDKExperimentationEvent,
     WarehouseConnection,
     WarehouseConnectionStatus,
@@ -631,7 +632,7 @@ def transition_experiment_status(
                 )
             experiment.ended_at = timezone.now()
             experiment.rollout_decision = rollout_decision.decision
-            experiment.rollout_variant_id = rollout_decision.variant_id
+            experiment.rollout_variant_id = rollout_decision.rollout_variant_id
             _apply_rollout_decision(
                 experiment, rollout_decision, AuthorData.from_user(user)
             )
@@ -642,13 +643,25 @@ def transition_experiment_status(
                     environment__id=experiment.environment_id,
                     feature__id=experiment.feature_id,
                     rollout__decision=rollout_decision.decision,
-                    variant__id=rollout_decision.variant_id,
+                    variant__id=rollout_decision.rollout_variant_id,
                 )
             )
 
         experiment.save()
         create_experiment_audit_log(experiment, user, action=target_status)
     return experiment
+
+
+def delete_experiment(experiment: Experiment, user: FFAdminUser) -> None:
+    with transaction.atomic():
+        experiment.refresh_from_db(from_queryset=Experiment.objects.select_for_update())
+        if experiment.status == ExperimentStatus.RUNNING:
+            raise ValueError(
+                "Cannot delete a running experiment. Pause or complete it first."
+            )
+        _delete_experiment_rollout_override(experiment, AuthorData.from_user(user))
+        create_experiment_audit_log(experiment, user, action="deleted")
+        experiment.delete()
 
 
 def _apply_rollout_decision(
@@ -660,13 +673,15 @@ def _apply_rollout_decision(
     rollout override. The rollout segment is kept: it records the audience."""
     environment_default: EnvironmentDefaultRequest = (
         {"enabled": False}
-        if rollout_decision.decision == "disable"
+        if rollout_decision.decision == RolloutDecision.DISABLE
         else {
             "enabled": True,
             "variants": [
                 {
                     "id": option_id,
-                    "weight": 100 if option_id == rollout_decision.variant_id else 0,
+                    "weight": (
+                        100 if option_id == rollout_decision.rollout_variant_id else 0
+                    ),
                 }
                 for option_id in experiment.feature.multivariate_options.values_list(
                     "id", flat=True
@@ -682,10 +697,10 @@ def _apply_rollout_decision(
         author=author,
         overwrite_system_segment_overrides=True,
     )
-    delete_experiment_rollout_override(experiment, author)
+    _delete_experiment_rollout_override(experiment, author)
 
 
-def delete_experiment_rollout_override(
+def _delete_experiment_rollout_override(
     experiment: Experiment, author: AuthorData
 ) -> None:
     if (

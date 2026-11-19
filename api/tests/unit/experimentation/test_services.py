@@ -62,7 +62,6 @@ from experimentation.services import (
     verify_warehouse_connection,
 )
 from experimentation.stats import VariantStats
-from experimentation.types import RolloutDecisionType
 from experimentation.warehouses import flagsmith
 from experimentation.warehouses.constants import VERIFY_TIMEOUT_SECONDS
 from experimentation.warehouses.dialect import CLICKHOUSE_DIALECT
@@ -3766,7 +3765,7 @@ def test_transition_experiment_status__first_start__removes_superseded_rollouts(
 )
 def test_transition_experiment_status__complete__serves_decision_and_removes_rollout_override(  # type: ignore[no-untyped-def]
     environment_fixture_name: str,
-    decision: RolloutDecisionType,
+    decision: RolloutDecision,
     variant_index: int | None,
     expected_enabled: bool,
     expected_weights: list[float],
@@ -3814,7 +3813,7 @@ def test_transition_experiment_status__complete__serves_decision_and_removes_rol
             ExperimentStatus.COMPLETED,
             admin_user,
             rollout_decision=RolloutDecisionSpec(
-                decision=decision, variant_id=variant_id
+                decision=decision, rollout_variant_id=variant_id
             ),
         )
 

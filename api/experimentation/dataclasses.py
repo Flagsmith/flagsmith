@@ -1,11 +1,15 @@
 from dataclasses import dataclass
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from core.dataclasses import AuthorData
 from experimentation.stats import Inference, VariantStats
-from experimentation.types import ExposureGranularity, RolloutDecisionType
+from experimentation.types import ExposureGranularity
 from features.feature_states.models import FeatureValueType
 from features.future.types import Variant
+
+if TYPE_CHECKING:
+    from experimentation.models import RolloutDecision
 
 
 @dataclass(frozen=True)
@@ -27,8 +31,8 @@ class RolloutSpec:
 
 @dataclass(frozen=True)
 class RolloutDecisionSpec:
-    decision: RolloutDecisionType
-    variant_id: int | None = None
+    decision: "RolloutDecision"
+    rollout_variant_id: int | None = None
 
 
 @dataclass(frozen=True)

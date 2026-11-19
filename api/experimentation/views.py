@@ -77,7 +77,7 @@ from experimentation.services import (
     create_experiment_audit_log,
     create_metric_audit_log,
     create_warehouse_audit_log,
-    delete_experiment_rollout_override,
+    delete_experiment,
     enable_experiment_rollout,
     get_warehouse_event_names,
     mark_warehouse_pending_connection,
@@ -475,29 +475,12 @@ class ExperimentViewSet(
         )
 
     def perform_destroy(self, instance: Experiment) -> None:
-        with transaction.atomic():
-            try:
-                instance.refresh_from_db(
-                    from_queryset=Experiment.objects.select_for_update()
-                )
-            except Experiment.DoesNotExist as exc:
-                raise NotFound from exc
-            if instance.status == ExperimentStatus.RUNNING:
-                raise serializers.ValidationError(
-                    {
-                        "detail": (
-                            "Cannot delete a running experiment. "
-                            "Pause or complete it first."
-                        )
-                    }
-                )
-            delete_experiment_rollout_override(
-                instance, AuthorData.from_request(self.request)
-            )
-            create_experiment_audit_log(
-                instance, self._get_user(self.request), action="deleted"
-            )
-            instance.delete()
+        try:
+            delete_experiment(instance, self._get_user(self.request))
+        except Experiment.DoesNotExist as exc:
+            raise NotFound from exc
+        except ValueError as exc:
+            raise serializers.ValidationError({"detail": str(exc)}) from exc
 
     @action(detail=True, methods=["post"])
     def start(self, request: Request, **kwargs: object) -> Response:
