@@ -22,11 +22,7 @@ describe('readOnboardingStatus', () => {
   `(
     'reads $expected when fetched at $fetchedAt',
     ({ data, expected, fetchedAt }) => {
-      // When
-      const reading = readOnboardingStatus(data, fetchedAt, MOUNTED_AT)
-
-      // Then
-      expect(reading).toBe(expected)
+      expect(readOnboardingStatus(data, fetchedAt, MOUNTED_AT)).toBe(expected)
     },
   )
 })

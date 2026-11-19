@@ -114,11 +114,7 @@ describe('resolveOnboardingVariant', () => {
   `(
     'stored $stored with decision $decision routes as $expected',
     ({ decision, expected, stored }) => {
-      // When
-      const variant = resolveOnboardingVariant(stored, decision)
-
-      // Then
-      expect(variant).toBe(expected)
+      expect(resolveOnboardingVariant(stored, decision)).toBe(expected)
     },
   )
 
