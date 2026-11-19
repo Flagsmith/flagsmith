@@ -8,6 +8,7 @@ import {
   deriveSummary,
   formatBucketLabel,
   formatChancePct,
+  getCompletedRollout,
   getControlChanceToWin,
   getHeadlineTotal,
   getVariantIdentities,
@@ -22,6 +23,7 @@ import {
   BayesianResultsSummary,
   Experiment,
   ExperimentFeature,
+  ExperimentRolloutDecision,
   ExposuresSummary,
   MetricDirection,
   MultivariateOption,
@@ -141,6 +143,40 @@ const summary: ExposuresSummary = {
     ],
   },
 }
+
+describe('getCompletedRollout', () => {
+  const completed = (
+    rollout_decision: ExperimentRolloutDecision | null,
+    rollout_variant: number | null = null,
+  ): Experiment =>
+    ({
+      feature: feature({
+        multivariate_options: [
+          option({ id: 10, key: 'b' }),
+          option({ id: 11, key: 'c' }),
+        ],
+      }),
+      rollout_decision,
+      rollout_variant,
+    } as Experiment)
+
+  it.each<[string, Experiment, string | null, string | null]>([
+    ['control', completed('control'), 'Control', 'rolled out to everyone.'],
+    ['variant', completed('variant', 11), 'c', 'rolled out to everyone.'],
+    ['disable', completed('disable'), null, 'Flag turned off for everyone.'],
+    [
+      'deleted variant',
+      completed('variant', 99),
+      null,
+      'A variant was rolled out to everyone.',
+    ],
+    ['no decision', completed(null), null, null],
+  ])('%s', (_, experiment, variantName, message) => {
+    const result = getCompletedRollout(experiment)
+    expect(result?.variant?.name ?? null).toBe(variantName)
+    expect(result?.message ?? null).toBe(message)
+  })
+})
 
 describe('buildExposuresChartData', () => {
   it('produces cumulative series carrying forward missing variants', () => {
@@ -337,6 +373,8 @@ describe('deriveSummary', () => {
       },
     ],
     name: 'exp',
+    rollout_decision: null,
+    rollout_variant: null,
     started_at: null,
     status: 'running',
     updated_at: '2026-06-01T00:00:00Z',

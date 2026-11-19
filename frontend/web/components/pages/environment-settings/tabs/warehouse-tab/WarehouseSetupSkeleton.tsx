@@ -15,12 +15,14 @@ const WarehouseSetupSkeleton: FC = () => (
         {Array.from({ length: TYPE_CARD_COUNT }).map((_, index) => (
           <div className='warehouse-setup__type-card' key={index}>
             <div className='selectable-card'>
-              <div className='selectable-card__content'>
-                <div className='selectable-card__icon'>
-                  <Skeleton variant='circle' width={20} height={20} />
+              <div className='selectable-card__body'>
+                <div className='selectable-card__content'>
+                  <div className='selectable-card__icon'>
+                    <Skeleton variant='circle' width={20} height={20} />
+                  </div>
+                  <Skeleton width={80} height={16} />
+                  <Skeleton width={120} height={12} />
                 </div>
-                <Skeleton width={80} height={16} />
-                <Skeleton width={120} height={12} />
               </div>
             </div>
           </div>

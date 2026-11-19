@@ -12,13 +12,14 @@ export const experimentService = service
     endpoints: (builder) => ({
       completeExperiment: builder.mutation<
         Res['experiment'],
-        Req['experimentAction']
+        Req['completeExperiment']
       >({
         invalidatesTags: (_res, _err, { experimentId }) => [
           { id: experimentId, type: 'Experiment' },
           { id: 'LIST', type: 'Experiment' },
         ],
-        query: ({ environmentId, experimentId }) => ({
+        query: ({ body, environmentId, experimentId }) => ({
+          body,
           method: 'POST',
           url: `environments/${environmentId}/experiments/${experimentId}/complete/`,
         }),
