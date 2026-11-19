@@ -1,6 +1,6 @@
 // The Python rehearsal driver provisions a dedicated local environment and passes
 // its public SDK key on stdin. All writes use the same SDK calls as the drill.
-import { createHash } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { createFlagsmithInstance } from '@flagsmith/flagsmith/isomorphic';
 
@@ -8,6 +8,7 @@ const { action, environment, experiment, total, rates, winner } = JSON.parse(rea
 const client = createFlagsmithInstance();
 const base = 'http://127.0.0.1:8000/api/';
 const counts = { control: { exposed: 0, converted: 0 }, guided: { exposed: 0, converted: 0 } };
+const identityPrefix = `first-minute-rehearsal-${experiment}-${action}${action === 'verify' ? '-' + randomUUID() : ''}`;
 
 function simulatedConversion(identifier, rate) {
     const sample =
@@ -28,7 +29,7 @@ try {
         ...(action === 'sample' && { eventProcessorConfig: { eventsApiUrl: base } }),
     });
     for (let i = 0; i < total; i++) {
-        const identity = `first-minute-rehearsal-${experiment}-${action}-${i}`;
+        const identity = `${identityPrefix}-${i}`;
         await client.identify(identity);
         if (action === 'verify') {
             const flag = client.getAllFlags().triage_guide;

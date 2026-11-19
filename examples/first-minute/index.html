@@ -10,11 +10,11 @@
     <body>
         <header>
             <div class="shell brandbar">
-                <a class="brand" href="./"><span class="mark" aria-hidden="true">∿</span> First Minute</a
+                <a class="brand" href="#briefing"><span class="mark" aria-hidden="true">∿</span> First Minute</a
                 ><button class="link" id="method" aria-haspopup="dialog">Experiment replay</button>
             </div>
         </header>
-        <main class="shell">
+        <main class="shell" id="briefing" tabindex="-1">
             <section class="brief">
                 <div>
                     <div class="kicker"><i></i> ON-CALL SIMULATOR</div>
@@ -39,18 +39,18 @@
                     <div class="axis"><span>14:00</span><span>14:04 · RELEASE</span><span>14:08 UTC</span></div>
                 </div>
             </section>
-            <section class="board" id="desk" hidden>
+            <section class="board" id="desk" tabindex="-1" aria-labelledby="desk-title" hidden>
                 <div class="sectionhead">
                     <div>
                         <div class="kicker">INCIDENT DESK</div>
-                        <h2>Trace the failure</h2>
+                        <h2 id="desk-title">Trace the failure</h2>
                     </div>
-                    <strong id="clock" aria-label="Seconds remaining"></strong>
+                    <strong id="clock" role="timer" aria-label="Time remaining"></strong>
                 </div>
                 <div class="work">
                     <section class="evidence">
                         <h3>Evidence</h3>
-                        <div class="tabs" id="tabs" aria-label="Evidence sources"></div>
+                        <div class="tabs" id="tabs" role="group" aria-label="Evidence sources"></div>
                         <div id="signals"></div>
                     </section>
                     <section class="decision">

@@ -4,11 +4,15 @@ import json
 import math
 import os
 import subprocess
-import sys
 import time
 from pathlib import Path
 
-from setup_experiment import prepare_experiment, request
+from setup_experiment import (
+    RateLimited,
+    local_organisation,
+    prepare_experiment,
+    request,
+)
 
 ENVIRONMENT = "Synthetic rollout rehearsal"
 PARTICIPANTS = 240
@@ -44,15 +48,21 @@ def counts(metric):
 
 def measured_results(detail, metric_id, expected):
     path = detail + "results/"
-    result = request(path)["results"] or {}
-    if counts(metric_result(result, metric_id)) == expected:
-        return result
-    request(path + "refresh/", {})
-    for _ in range(45):
-        time.sleep(2)
+    # Flagsmith permits one refresh every five minutes and the worker computes it asynchronously.
+    deadline = time.monotonic() + 420
+    next_refresh = 0
+    while time.monotonic() < deadline:
         result = request(path)["results"] or {}
         if counts(metric_result(result, metric_id)) == expected:
             return result
+        if time.monotonic() >= next_refresh:
+            try:
+                request(path + "refresh/", {})
+                delay = 300
+            except RateLimited as limited:
+                delay = limited.seconds
+            next_refresh = time.monotonic() + delay
+        time.sleep(3)
     raise SystemExit(
         "Warehouse counts have not caught up with the SDK. Retry after the refresh interval."
     )
@@ -175,8 +185,4 @@ def rehearse(org_id):
 
 
 if __name__ == "__main__":
-    if "FLAGSMITH_MANAGEMENT_TOKEN" not in os.environ or len(sys.argv) != 2:
-        raise SystemExit(
-            "Supply FLAGSMITH_MANAGEMENT_TOKEN and pass the local organisation ID."
-        )
-    print(json.dumps(rehearse(int(sys.argv[1])), indent=2, allow_nan=False))
+    print(json.dumps(rehearse(local_organisation(__doc__)), indent=2, allow_nan=False))

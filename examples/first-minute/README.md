@@ -12,11 +12,13 @@ For a no-install practice round, [download the drill](https://raw.githubusercont
 
 To run from source, run `npm ci` and `npm run dev` with Node 24. Open the address Vite prints. Without a client-side environment key, the drill runs in practice mode. To make a portable, offline copy, run `npm run build:practice` and open `dist/first-minute.html`. Finish a round and choose **Try the other desk** to compare the layouts.
 
+To rebuild the ZIP distributed on GitHub, run `npm run package:practice` with Node 24 and Python 3 installed.
+
 ## Run the experiment locally
 
-1. Start Flagsmith with Experimentation enabled, create an organisation, and sign in. The provided Compose setup uses PostgreSQL as the event warehouse.
-2. Supply a **local Flagsmith user authentication token** with project and environment management rights in `FLAGSMITH_MANAGEMENT_TOKEN`. Use Python 3 to run `python setup_experiment.py ORGANISATION_ID` from this directory. The script creates or reuses the First Minute project, Participant drill environment, warehouse connection, feature, metric and experiment. It starts the experiment and prints the client environment key and dashboard URL as browser configuration lines. Copy both into `.env.local`. Keep management credentials outside the checkout.
-3. Start or restart Vite. Its local SDK proxy forwards flags, identities and events to Flagsmith on port 8000. The briefing should say **Connected to Flagsmith**. Start the drill to enrol. For self-hosted deployments on another origin, set `VITE_FLAGSMITH_ORIGIN` to the HTTPS origin serving both the Flagsmith API and SDK events before running `npm run build`. Serve the generated `dist` directory over HTTPS.
+1. From the repository root, run `docker compose up -d`. Open `http://localhost:8000`, sign in and create an organisation if this is a fresh install. The supplied Compose file enables Experimentation and stores SDK events in PostgreSQL.
+2. From `examples/first-minute`, run `python3 setup_experiment.py` in a terminal. Sign in with your local Flagsmith email and password. If your account belongs to several organisations, the script lists their names and IDs so you can rerun it with the chosen ID. It creates or reuses the First Minute project, Participant drill environment, warehouse connection, flag, metric and experiment. Copy the two printed `VITE_` lines into `.env.local`. For unattended setup, provide your local user token in `FLAGSMITH_MANAGEMENT_TOKEN` and run `python3 setup_experiment.py ORGANISATION_ID`.
+3. Start or restart Vite. Its local SDK proxy forwards flags, identities and events to Flagsmith on port 8000. The briefing should say **Connected to Flagsmith**. Start the drill to enrol. For a shared deployment, set `VITE_FLAGSMITH_ORIGIN` to the HTTPS origin serving the Flagsmith API and SDK events. Set `VITE_FLAGSMITH_DASHBOARD_URL` to the address where your team signs in to view that experiment. Run `npm run build` and serve `dist` over HTTPS.
 4. Open **Experiments** in the Participant drill environment and refresh the results after events arrive. The guide is a keyed variation of the `triage_guide` multivariate flag. All eligible identities enter the experiment, with equal allocation between control and guided.
 
 If the self-hosted dashboard shows **Maintenance** because its bootstrap request is blocked, configure `FLAGSMITH_ON_FLAGSMITH_API_URL` and `FLAGSMITH_ON_FLAGSMITH_API_KEY` on the web service to read from a local dashboard configuration environment, then restart the service. [Self-hosting guide](../../docs/docs/deployment-self-hosting/core-configuration/running-flagsmith-on-flagsmith.md)
@@ -25,7 +27,7 @@ If the self-hosted dashboard shows **Maintenance** because its bootstrap request
 
 **Hypothesis.** A three-step runbook increases the fraction of first-time participants who correctly diagnose connection-pool exhaustion within 60 seconds. Both variants use identical evidence, answer choices, time limit and feedback.
 
-**Measurement.** The browser stores an anonymous identity and the first attempt's deadline. Opening the desk records an SDK exposure. Only a correct first answer before expiry records the `drill_resolved` occurrence event. Reloading preserves the deadline and restores a finished debrief. Tabs sharing the same browser identity share one first answer. Replays are practice. A new browser profile is a new identity.
+**Measurement.** The browser stores an anonymous identity, the assigned desk and the first attempt's deadline. Opening the desk records an SDK exposure. Only a correct first answer before expiry records the `drill_resolved` occurrence event. A returning player resumes the same desk and deadline directly from the browser. Tabs sharing the same browser identity share one first answer. New players can practise if Flagsmith takes more than four seconds to assign a desk. Practice and replays are excluded from the experiment. A new browser profile is a new identity.
 
 **Evidence.** The [browser smoke-test snapshot](verification.json) recorded three exposures and two conversions. The in-app **Experiment replay** follows a larger synthetic run through assignment, measurement and rollout. Both runs used the real Flagsmith SDK and a local Flagsmith instance.
 
@@ -39,19 +41,21 @@ Rollout shows what happened after the synthetic experiment closed. The same `tri
 
 ![Completed synthetic experiment in the native Flagsmith dashboard](media/flagsmith-results.png)
 
-To reproduce the capture, use the local Flagsmith instance and token from the setup above. From this directory, run the following with your numeric organisation ID.
+To reproduce the capture, run the following from this directory against the local Flagsmith instance. It accepts the same sign-in and optional organisation ID as the participant setup.
 
 ```sh
-python rehearse.py ORGANISATION_ID
+python3 rehearse.py
 ```
 
-This command provisions the dedicated rehearsal environment. It sends seeded traffic through the JavaScript SDK, checks the warehouse counts against the events it sent, and uses the Flagsmith results to select a desk. It pauses enrolment before closing the rehearsal and updating the environment default. A repeated run against a completed rehearsal verifies the rollout again. The JSON contains aggregate evidence only. The allocation check uses an exact two-sided binomial test against 50/50 when Flagsmith leaves its sample-ratio statistic empty.
+This command provisions the dedicated rehearsal environment. It sends seeded traffic through the JavaScript SDK, waits for the warehouse counts to match, and uses the Flagsmith results to select a desk. Results refreshes respect the server's five-minute cooldown. The script pauses enrolment before closing the rehearsal and updating the environment default. Each run against a completed rehearsal verifies the rollout with 16 fresh identities. The JSON contains aggregate evidence only. The allocation check uses an exact two-sided binomial test against 50/50 when Flagsmith leaves its sample-ratio statistic empty.
 
 The [captured JSON](rehearsal.json) drives the replay. To replace it after your own successful run, save the command output to a temporary file, then move it to `rehearsal.json`. The dashboard capture is a separate image taken from the original run shown here.
 
 ## Browser checks
 
-Run `npx playwright install chromium` once, then `npm test`. To use an existing Chromium installation, set `CHROMIUM_EXECUTABLE` to its path. These tests intercept SDK traffic locally and check simultaneous submissions, restored first attempts and practice exclusions. The rehearsal command above exercises the real API and warehouse.
+Run `npx playwright install chromium` once, then `npm test`. To use an existing Chromium installation, set `CHROMIUM_EXECUTABLE` to its path. The browser tests intercept SDK traffic locally and cover simultaneous submissions, interrupted connections, keyboard navigation, timeouts and practice exclusions. The rehearsal command above exercises the real API and warehouse.
+
+With pytest installed, run `python3 -m pytest tests/test_rehearsal.py` to check recovery when Flagsmith asks the rehearsal to wait before refreshing results.
 
 ## Submission copy
 

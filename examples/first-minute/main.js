@@ -29,6 +29,7 @@ const flagName = 'triage_guide';
 const identityKey = 'first-minute.participant.v1';
 const experimentKey = import.meta.env.MODE === 'practice' ? '' : import.meta.env.VITE_FLAGSMITH_ENVIRONMENT_ID;
 const attemptKey = 'first-minute.first-attempt.v1.' + (experimentKey || 'practice');
+const flagLookupTimeoutMs = 4000;
 let connected = false;
 let active;
 let interval;
@@ -129,6 +130,7 @@ function openDesk() {
     $('start').disabled = true;
     $('start').textContent = 'Drill in progress';
     $('mode').textContent = active.measured ? 'Experiment · first attempt' : 'Practice · excluded from experiment';
+    $('desk').focus({ preventScroll: true });
     $('desk').scrollIntoView({ block: 'start' });
     refreshClock();
     if (active) interval = setInterval(refreshClock, 200);
@@ -187,6 +189,7 @@ function displayResult(attempt) {
     const timedOut = attempt.answer === 'expired';
     const correct = attempt.answer === 'pool';
     const seconds = Math.min(60, Math.max(0, Math.ceil((attempt.finishedAt - attempt.deadline + 60000) / 1000)));
+    $('preflight').hidden = true;
     $('desk').hidden = true;
     $('result').hidden = false;
     const heading = timedOut ? 'Time expired.' : correct ? 'Root cause found.' : 'Look at the connection queue.';
@@ -227,15 +230,17 @@ async function finish(answer) {
     }
     displayResult(first.finishedAt ? first : outcome);
     if (first === outcome && outcome.measured && outcome.answer === 'pool') {
+        const deliveryNote = document.createTextNode('');
+        $('outcome').append(deliveryNote);
         if (!connected) {
-            $('outcome').append(' · Event delivery unconfirmed');
+            deliveryNote.textContent = ' · Event delivery unconfirmed';
             return;
         }
         flagsmith.trackEvent('drill_resolved');
         try {
             await flagsmith.flushEvents();
         } catch {
-            $('outcome').append(' · Event delivery unconfirmed');
+            deliveryNote.textContent = ' · Event delivery unconfirmed';
         }
     }
 }
@@ -251,6 +256,22 @@ $('form').onsubmit = (event) => {
     void finish(new FormData(event.currentTarget).get('cause'));
 };
 
+async function connectFlagsmith(participant, attempt) {
+    const root = (import.meta.env.VITE_FLAGSMITH_ORIGIN || location.origin).replace(/\/+$/, '');
+    await flagsmith.init({
+        environmentID: experimentKey,
+        identity: participant,
+        enableEvents: true,
+        api: root + '/api/v1/',
+        eventProcessorConfig: { eventsApiUrl: root + '/api/' },
+        fetch: (url, options) =>
+            fetch(url, { ...options, signal: options?.signal ?? AbortSignal.timeout(flagLookupTimeoutMs) }),
+        // An exposed player already has an assignment. Restore it while enabling the SDK to send their answer.
+        ...(attempt && { preventFetch: true, defaultFlags: { [flagName]: { enabled: true, value: attempt.layout } } }),
+    });
+    return Boolean(flagsmith.getAllFlags()[flagName]);
+}
+
 async function initialise() {
     $('start').disabled = true;
     if (experimentKey) {
@@ -261,16 +282,7 @@ async function initialise() {
                 (value) => value,
             );
             saved = await updateRecord(attemptKey, (previous) => previous);
-            const remote = import.meta.env.VITE_FLAGSMITH_ORIGIN;
-            const root = remote || location.origin;
-            await flagsmith.init({
-                environmentID: experimentKey,
-                identity: participant,
-                enableEvents: true,
-                api: root + '/api/v1/',
-                eventProcessorConfig: { eventsApiUrl: root + '/api/' },
-            });
-            connected = Boolean(flagsmith.getAllFlags()[flagName]);
+            if (!saved?.done) connected = await connectFlagsmith(participant, saved);
         } catch (error) {
             console.warn('Experiment unavailable.', error);
         }

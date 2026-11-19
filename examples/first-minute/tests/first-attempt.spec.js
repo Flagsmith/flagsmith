@@ -49,6 +49,7 @@ for (const correct of [false, true]) {
         for (const tab of tabs) await expect(tab.locator('#verdict')).toHaveText(verdict);
         await second.reload();
         await expect(second.locator('#verdict')).toHaveText(verdict);
+        await expect(second.locator('#preflight')).toBeHidden();
 
         // A replay or a late answer in the other tab must never add a conversion.
         await second.locator('#replay').click();
@@ -84,4 +85,63 @@ test('resumes a legacy first attempt under its original identity', async ({ page
         .toEqual([['drill_resolved', 'returning-learner']]);
     await page.reload();
     await expect(page.locator('#verdict')).toHaveText('Root cause found.');
+});
+
+test('a stalled Flagsmith lookup still allows an unmeasured practice round', async ({ page, context }) => {
+    const events = await interceptSdk(context);
+    await page.route('**/api/v1/identities/**', () => {});
+    await page.goto('/index.html');
+    await expect(page.locator('#mode')).toHaveText('Practice mode · experiment offline', { timeout: 8000 });
+    await page.locator('#start').focus();
+    await page.keyboard.press('Enter');
+    await expect(page.locator('#desk')).toBeFocused();
+    await page.keyboard.press('Tab');
+    await expect(page.getByRole('button', { name: 'Release log' })).toBeFocused();
+    await page.getByRole('button', { name: 'Traces' }).click();
+    await page.getByRole('link', { name: 'First Minute' }).click();
+    await expect(page).toHaveURL(/\/index\.html#briefing$/);
+    await expect(page.getByRole('button', { name: 'Traces' })).toHaveAttribute('aria-pressed', 'true');
+    await page.locator('input[value=pool]').check();
+    await page.locator('#submit').click();
+    await expect(page.locator('#verdict')).toHaveText('Root cause found.');
+    expect(events).toEqual([]);
+});
+
+test('a returning participant can answer with the flag endpoint unavailable', async ({ page, context }) => {
+    const events = await interceptSdk(context);
+    await page.goto('/');
+    await expect(page.locator('#mode')).toHaveText('Connected to Flagsmith');
+    await page.locator('#start').click();
+    await expect.poll(() => events.map((event) => event.event)).toEqual(['$flag_exposure']);
+
+    let repeatedLookups = 0;
+    await page.route('**/api/v1/identities/**', (route) => {
+        repeatedLookups++;
+        return route.abort();
+    });
+    await page.reload();
+    await expect(page.locator('#guide')).toBeVisible({ timeout: 2500 });
+    await page.locator('input[value=pool]').check();
+    await page.locator('#submit').click();
+    await expect(page.locator('#verdict')).toHaveText('Root cause found.');
+    await expect.poll(() => events.map((event) => event.event)).toEqual(['$flag_exposure', 'drill_resolved']);
+    expect(events[0].identifier).toBe(events[1].identifier);
+    expect(repeatedLookups).toBe(0);
+});
+
+test('a correct answer after the deadline stays expired across a reload', async ({ page, context }) => {
+    const events = await interceptSdk(context);
+    await page.clock.install();
+    await page.goto('/');
+    await expect(page.locator('#mode')).toHaveText('Connected to Flagsmith');
+    await page.locator('#start').click();
+    await page.locator('input[value=pool]').check();
+    await expect.poll(() => events.map((event) => event.event)).toEqual(['$flag_exposure']);
+    // Advance wall time without firing the next timer tick, as when resuming a background tab.
+    await page.clock.setSystemTime(new Date((await page.evaluate(() => Date.now())) + 61000));
+    await page.locator('#form').evaluate((form) => form.requestSubmit());
+    await expect(page.locator('#verdict')).toHaveText('Time expired.');
+    await page.reload();
+    await expect(page.locator('#verdict')).toHaveText('Time expired.');
+    expect(events.map((event) => event.event)).toEqual(['$flag_exposure']);
 });
