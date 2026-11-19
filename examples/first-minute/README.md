@@ -8,11 +8,11 @@ A 60-second incident drill that tests whether a short runbook helps people diagn
 
 ## Play
 
-For a no-install practice round, [download the drill](media/first-minute.zip?raw=true), unzip it and open `first-minute.html`. The archive comes from the repository revision you are viewing. The debrief includes a capacity model where you can adjust the pool size and see the resulting queue growth.
+For a no-install practice round, [download the drill](https://raw.githubusercontent.com/Flagsmith/flagsmith/035de2312d49460031ab93af09f91ddb7a77363e/examples/first-minute/media/first-minute.zip), unzip it and open `first-minute.html`. The debrief includes a capacity model where you can adjust the pool size and see the resulting queue growth.
 
 To run from source, run `npm ci` and `npm run dev` with Node 24. Open the address Vite prints. Without a client-side environment key, the drill runs in practice mode. To make a portable, offline copy, run `npm run build:practice` and open `dist/first-minute.html`. Finish a round and choose **Try the other desk** to compare the layouts.
 
-To rebuild the ZIP distributed on GitHub, run `npm run package:practice` with Node 24 and Python 3 installed.
+The download is pinned to the commit that packaged it. Its SHA-256 is `8b23c21fd4b40a30e4fb50b2d2b049629dbf58f2b557d7c8b8d3aeadf485a4e8`. To reproduce `media/first-minute.zip`, run `npm run package:practice` with Node 24 and Python 3 installed. When publishing a new archive, update both README links to its commit and record its checksum here.
 
 ## Run the experiment locally
 
