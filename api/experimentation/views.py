@@ -476,9 +476,12 @@ class ExperimentViewSet(
 
     def perform_destroy(self, instance: Experiment) -> None:
         with transaction.atomic():
-            instance.refresh_from_db(
-                from_queryset=Experiment.objects.select_for_update()
-            )
+            try:
+                instance.refresh_from_db(
+                    from_queryset=Experiment.objects.select_for_update()
+                )
+            except Experiment.DoesNotExist as exc:
+                raise NotFound from exc
             if instance.status == ExperimentStatus.RUNNING:
                 raise serializers.ValidationError(
                     {
@@ -662,6 +665,8 @@ class ExperimentViewSet(
                 self._get_user(self.request),
                 rollout_decision=rollout_decision,
             )
+        except Experiment.DoesNotExist as exc:
+            raise NotFound from exc
         except ValueError:
             logger.warning(
                 "Invalid experiment status transition for "

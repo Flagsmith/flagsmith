@@ -1263,6 +1263,43 @@ def test_delete__running_experiment__returns_400(
     assert Experiment.objects.filter(id=experiment.id).exists()
 
 
+@pytest.mark.parametrize(
+    "method, action, data",
+    [
+        pytest.param("delete", None, None, id="delete"),
+        pytest.param(
+            "post", "complete", {"rollout_decision": "control"}, id="complete"
+        ),
+    ],
+)
+def test_experiment__deleted_concurrently__returns_404(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment: Experiment,
+    mocker: MockerFixture,
+    method: str,
+    action: str | None,
+    data: dict[str, str] | None,
+) -> None:
+    # Given
+    experiment.status = ExperimentStatus.PAUSED
+    experiment.save()
+    mocker.patch.object(
+        Experiment, "refresh_from_db", side_effect=Experiment.DoesNotExist
+    )
+    url = (
+        _action_url(environment, experiment, action)
+        if action
+        else _detail_url(environment, experiment)
+    )
+
+    # When
+    response = getattr(admin_client_new, method)(url, data=data, format="json")
+
+    # Then
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
 def test_patch__no_change__skips_audit_log(
     admin_client_new: APIClient,
     environment: Environment,
