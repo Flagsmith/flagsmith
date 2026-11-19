@@ -1,7 +1,7 @@
 import { FC, ReactNode, useEffect, useState } from 'react'
 import OrganisationStore from 'common/stores/organisation-store'
 import { RouterChildContext, useHistory } from 'react-router'
-import AccountStore from 'common/stores/account-store'
+import { useCurrentOrganisation } from 'common/hooks/useCurrentOrganisation'
 import AppActions from 'common/dispatcher/app-actions'
 import { useGetChangeRequestsQuery } from 'common/services/useChangeRequest'
 import ProjectStore from 'common/stores/project-store'
@@ -38,7 +38,7 @@ const ChangeRequestsPage: FC<ChangeRequestsPageType> = ({ match, router }) => {
   const [page, setPage] = useState(1)
   const [pageCommitted, setPageCommitted] = useState(1)
   const history = useHistory()
-  const organisationId = AccountStore.getOrganisation()?.id
+  const organisationId = useCurrentOrganisation()?.id
   const environment = ProjectStore.getEnvironment(
     environmentId,
   ) as unknown as Environment

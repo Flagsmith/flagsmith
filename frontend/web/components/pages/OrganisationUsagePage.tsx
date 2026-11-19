@@ -9,6 +9,7 @@ import { useRouteContext } from 'components/providers/RouteContext'
 import { AggregateUsageDataItem } from 'common/types/responses'
 import Utils from 'common/utils/utils'
 import AccountStore from 'common/stores/account-store'
+import { useCurrentOrganisation } from 'common/hooks/useCurrentOrganisation'
 import { planNames } from 'common/utils/utils'
 import { Req } from 'common/types/requests'
 import { useGetOrganisationUsageQuery } from 'common/services/useOrganisationUsage'
@@ -18,6 +19,7 @@ import UsageChartTotals from 'components/organisation-settings/usage/components/
 import UsageDashboardPage from './usage'
 
 const OrganisationUsagePage: FC = () => {
+  const organisation = useCurrentOrganisation()
   const isSdkViewEnabled = Utils.getFlagsmithHasFeature('sdk_usage_charts')
   const { organisationId } = useRouteContext()
   const location = useLocation()
@@ -49,7 +51,7 @@ const OrganisationUsagePage: FC = () => {
 
   const colours = ['#0AADDF', '#27AB95', '#FF9F43', '#EF4D56']
   const currentPlan = Utils.getPlanName(AccountStore.getActiveOrgPlan())
-  const orgSubscription = AccountStore.getOrganisation()?.subscription
+  const orgSubscription = organisation?.subscription
   const isOnFreePlanPeriods =
     planNames.free === currentPlan ||
     !orgSubscription?.has_active_billing_periods

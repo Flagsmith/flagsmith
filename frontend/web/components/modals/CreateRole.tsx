@@ -37,7 +37,7 @@ import Utils from 'common/utils/utils'
 import Button from 'components/base/forms/Button'
 import SettingsButton from 'components/SettingsButton'
 import PermissionsTabs from 'components/PermissionsTabs'
-import AccountStore from 'common/stores/account-store'
+import { useCurrentOrganisation } from 'common/hooks/useCurrentOrganisation'
 import { RouteComponentProps } from 'react-router-dom'
 import getUserDisplayName from 'common/utils/getUserDisplayName'
 type TabRef = {
@@ -63,6 +63,7 @@ const CreateRole: FC<CreateRoleType> = ({
   role,
   users,
 }) => {
+  const organisation = useCurrentOrganisation()
   const buttonText = isEdit ? 'Update Role' : 'Create Role'
   const [tab, setTab] = useState<number>(0)
   const [userGroupTab, setUserGroupTab] = useState<number>(0)
@@ -524,7 +525,7 @@ const CreateRole: FC<CreateRoleType> = ({
               value={userGroupTab}
               onChange={changeSubTab}
               role={role}
-              orgId={AccountStore.getOrganisation()?.id}
+              orgId={organisation?.id}
             />
           </div>
         </TabItem>

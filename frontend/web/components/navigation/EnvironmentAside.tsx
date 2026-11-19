@@ -11,7 +11,7 @@ import ProjectProvider from 'common/providers/ProjectProvider'
 import OrganisationProvider from 'common/providers/OrganisationProvider'
 // @ts-ignore
 import { AsyncStorage } from 'polyfill-react-native'
-import AccountStore from 'common/stores/account-store'
+import { useCurrentOrganisation } from 'common/hooks/useCurrentOrganisation'
 import AppActions from 'common/dispatcher/app-actions'
 import EnvironmentSelect from 'components/EnvironmentSelect'
 import { components } from 'react-select'
@@ -101,6 +101,7 @@ const CustomSingleValue = ({ hasWarning, ...rest }: CustomSingleValueProps) => {
 }
 
 const EnvironmentAside: FC<HomeAsideType> = ({ environmentId, projectId }) => {
+  const organisation = useCurrentOrganisation()
   const history = useHistory()
   const { data: healthEvents } = useGetHealthEventsQuery(
     { projectId: projectId },
@@ -217,7 +218,7 @@ const EnvironmentAside: FC<HomeAsideType> = ({ environmentId, projectId }) => {
                                     'lastEnv',
                                     JSON.stringify({
                                       environmentId: newEnvironmentId,
-                                      orgId: AccountStore.getOrganisation().id,
+                                      orgId: organisation?.id,
                                       projectId: projectId,
                                     }),
                                   ).finally(() => {

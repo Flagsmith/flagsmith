@@ -1,6 +1,6 @@
 import { FC, useEffect, useState } from 'react'
 import { RouterChildContext } from 'react-router'
-import AccountStore from 'common/stores/account-store'
+import { useCurrentOrganisation } from 'common/hooks/useCurrentOrganisation'
 import AppActions from 'common/dispatcher/app-actions'
 import Utils from 'common/utils/utils'
 import { Link } from 'react-router-dom'
@@ -26,7 +26,7 @@ const ProjectChangeRequestsPage: FC<ProjectChangeRequestsPageType> = ({
   const { environmentId, projectId } = match.params
   const [page, setPage] = useState(1)
   const [pageCommitted, setPageCommitted] = useState(1)
-  const organisationId = AccountStore.getOrganisation()?.id
+  const organisationId = useCurrentOrganisation()?.id
   const { data: project } = useGetProjectQuery({ id: projectId })
   // @ts-ignore
 

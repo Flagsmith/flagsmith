@@ -1,21 +1,20 @@
 import { FC, useEffect } from 'react'
 import { useHistory } from 'react-router-dom'
-import AccountStore from 'common/stores/account-store'
+import { useCurrentOrganisation } from 'common/hooks/useCurrentOrganisation'
 import ConfigProvider from 'common/providers/ConfigProvider'
 
 const OrganisationSettingsRedirectPage: FC = () => {
+  const organisation = useCurrentOrganisation()
   const history = useHistory()
   useEffect(() => {
-    if (AccountStore.getOrganisation()) {
+    if (organisation) {
       history.replace(
-        `/organisation/${AccountStore.getOrganisation().id}/settings${
-          document.location.search
-        }`,
+        `/organisation/${organisation.id}/settings${document.location.search}`,
       )
     } else {
       history.replace('/organisations')
     }
-  }, [history])
+  }, [history, organisation])
   return (
     <div className='text-center'>
       <Loader />

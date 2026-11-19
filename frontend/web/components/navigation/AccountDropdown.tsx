@@ -7,9 +7,10 @@ import { createPortal } from 'react-dom'
 import { calculateListPosition } from 'common/utils/calculateListPosition'
 import { useHistory } from 'react-router-dom'
 import { getViewMode, setViewMode, ViewMode } from 'common/useViewMode'
-import AccountStore from 'common/stores/account-store'
+import { useCurrentOrganisation } from 'common/hooks/useCurrentOrganisation'
 
 const AccountDropdown: React.FC = () => {
+  const organisation = useCurrentOrganisation()
   const [isOpen, setIsOpen] = useState(false)
   const [currentViewMode, setCurrentViewMode] = useState<ViewMode>(
     getViewMode(),
@@ -35,7 +36,7 @@ const AccountDropdown: React.FC = () => {
     setCurrentViewMode(mode)
 
     // Navigate to the appropriate page based on view mode
-    const organisationId = AccountStore.getOrganisation()?.id
+    const organisationId = organisation?.id
     if (organisationId) {
       if (mode === 'release-manager') {
         history.push(`/organisation/${organisationId}/release-manager`)

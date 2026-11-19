@@ -12,6 +12,7 @@ import InviteUsersModal from 'components/modals/InviteUsers'
 import InfoMessage from 'components/InfoMessage'
 import OrganisationProvider from 'common/providers/OrganisationProvider'
 import AccountStore from 'common/stores/account-store'
+import { useCurrentOrganisation } from 'common/hooks/useCurrentOrganisation'
 import AccountProvider from 'common/providers/AccountProvider'
 import {
   Invite,
@@ -72,6 +73,7 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
   subscriptionMeta,
   users,
 }) => {
+  const currentOrganisation = useCurrentOrganisation()
   const { data: userInvitesData } = useGetUserInvitesQuery({
     organisationId: organisation.id,
   })
@@ -89,12 +91,12 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
 
   const hasEmailProvider = version?.backend?.has_email_provider ?? false
   const manageUsersPermission = useHasPermission({
-    id: AccountStore.getOrganisation()?.id,
+    id: currentOrganisation?.id,
     level: 'organisation',
     permission: OrganisationPermission.MANAGE_USERS,
   })
   const manageGroupsPermission = useHasPermission({
-    id: AccountStore.getOrganisation()?.id,
+    id: currentOrganisation?.id,
     level: 'organisation',
     permission: OrganisationPermission.MANAGE_USER_GROUPS,
   })
@@ -108,12 +110,13 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
   const { data: roles } = useGetRolesQuery({ organisation_id: organisation.id })
 
   const editGroup = (group: UserGroupSummary) => {
+    if (!currentOrganisation) return
     openModal(
       'Edit Group',
       <CreateGroup
         roles={roles}
         isEdit
-        orgId={AccountStore.getOrganisation().id}
+        orgId={`${currentOrganisation.id}`}
         group={group}
       />,
       'side-modal',
@@ -602,10 +605,11 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
 const UsersAndPermissionsPage: FC<UsersAndPermissionsPageType> = ({
   router,
 }) => {
+  const organisation = useCurrentOrganisation()
   return (
     <AccountProvider>
       {({ organisation }: { organisation: Organisation | null }) => (
-        <OrganisationProvider id={AccountStore.getOrganisation()?.id}>
+        <OrganisationProvider id={organisation?.id}>
           {({
             error,
             invalidateInviteLink,

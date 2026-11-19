@@ -3,6 +3,7 @@ import { projectService } from 'common/services/useProject'
 import { getStore } from 'common/store'
 import sortBy from 'lodash/sortBy'
 import { getSubscriptionMetadata } from 'common/services/useSubscriptionMetadata'
+import { getCurrentOrganisation } from 'common/hooks/useCurrentOrganisation'
 
 import Dispatcher from 'common/dispatcher/dispatcher'
 import BaseStore from './base/_store'
@@ -202,7 +203,7 @@ const controller = {
     }
   },
   invalidateInviteLink: (link) => {
-    const id = AccountStore.getOrganisation().id
+    const id = getCurrentOrganisation()?.id
     const role = link.role
     data
       .delete(`${Project.api}organisations/${id}/invite-links/${link.id}/`)

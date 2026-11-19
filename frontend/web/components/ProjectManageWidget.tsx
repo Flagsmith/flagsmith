@@ -4,7 +4,7 @@ import { useHistory, useLocation } from 'react-router-dom'
 
 import Utils from 'common/utils/utils'
 import Constants from 'common/constants'
-import AccountStore from 'common/stores/account-store'
+import { useIsOrganisationAdmin } from 'common/hooks/useCurrentOrganisation'
 import { useHasPermission } from 'common/providers/Permission'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import { useGetOrganisationsQuery } from 'common/services/useOrganisation'
@@ -24,7 +24,7 @@ type SegmentsPageType = {
 const ProjectManageWidget: FC<SegmentsPageType> = ({ organisationId }) => {
   const history = useHistory()
   const location = useLocation()
-  const isAdmin = AccountStore.isAdmin()
+  const isAdmin = useIsOrganisationAdmin()
   const create = Utils.fromParam()?.create
   const { data: organisations } = useGetOrganisationsQuery({})
 
@@ -124,7 +124,7 @@ const ProjectManageWidget: FC<SegmentsPageType> = ({ organisationId }) => {
                                 canCreateProject,
                                 Constants.organisationPermissions(
                                   Utils.getCreateProjectPermission(
-                                    AccountStore.getOrganisation(),
+                                    organisation,
                                   ),
                                 ),
                                 <Button
