@@ -570,6 +570,7 @@ class FeatureStateSerializerFull(serializers.Serializer):  # type: ignore[type-a
         source="feature_state.feature_segment_id", allow_null=True
     )
     enabled = serializers.BooleanField(source="evaluation_result.enabled")
+    reason = serializers.CharField(source="evaluation_result.reason")
 
     @extend_schema_field(
         {
@@ -638,6 +639,7 @@ class SDKFeatureStateSerializer(
         "environment",
         "identity",
         "feature_segment",
+        "reason",
     )
 
 
