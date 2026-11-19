@@ -29065,14 +29065,17 @@ components:
         detail:
           type: string
         status:
+          description: 'HTTP status returned by the webhook, if it responded.'
           type: integer
         body:
           type:
             - string
             - 'null'
+        code:
+          description: 'Set when the webhook could not be reached: a POSIX error name (e.g. `ECONNREFUSED`, `ETIMEDOUT`) or a Node.js-style TLS error code (e.g. `CERT_HAS_EXPIRED`).'
+          type: string
       required:
         - detail
-        - status
     TestWebhookSuccessResponse:
       type: object
       properties:

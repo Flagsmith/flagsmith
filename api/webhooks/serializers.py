@@ -29,5 +29,16 @@ class TestWebhookSuccessResponseSerializer(serializers.Serializer[None]):
 
 class TestWebhookErrorResponseSerializer(serializers.Serializer[None]):
     detail = serializers.CharField()
-    status = serializers.IntegerField()
+    status = serializers.IntegerField(
+        required=False,
+        help_text="HTTP status returned by the webhook, if it responded.",
+    )
     body = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    code = serializers.CharField(
+        required=False,
+        help_text=(
+            "Set when the webhook could not be reached: a POSIX error name"
+            " (e.g. `ECONNREFUSED`, `ETIMEDOUT`) or a Node.js-style TLS"
+            " error code (e.g. `CERT_HAS_EXPIRED`)."
+        ),
+    )

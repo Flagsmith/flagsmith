@@ -6,6 +6,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 
+from core.network import get_request_error_code
 from webhooks.webhooks import WebhookType
 
 from .permissions import TriggerSampleWebhookPermission
@@ -63,11 +64,12 @@ class WebhookViewSet(viewsets.ViewSet):
                 },
                 status=status.HTTP_200_OK,
             )
-        except requests.exceptions.RequestException:
+        except requests.exceptions.RequestException as error:
             return Response(
                 {
                     "detail": "Could not connect to webhook URL",
                     "body": "Please check the URL, and ensure it is valid and accessible from the server.",
+                    "code": get_request_error_code(error),
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
