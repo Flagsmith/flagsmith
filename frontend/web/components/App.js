@@ -175,6 +175,11 @@ const App = class extends Component {
         // Only an accepted decision is persisted: a decision losing the
         // race must not store its assignment after routing has happened.
         const variant = resolveOnboardingVariant(storedVariant, decision)
+        // Label both arms here, at the decision. On /getting-started, control
+        // was only labelled after /create, so its drop-offs were never counted.
+        if (storedVariant || decision) {
+          API.trackTraits({ onboarding_variant: variant })
+        }
         // Restore the logged-in identity for the rest of the app.
         Promise.resolve(API.flagsmithIdentify()).catch(() => {})
         if (variant === 'single_page') {
