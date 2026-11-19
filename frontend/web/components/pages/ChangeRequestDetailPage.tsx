@@ -5,6 +5,7 @@ import FeatureListStore from 'common/stores/feature-list-store'
 import { useGetMyGroupsQuery } from 'common/services/useMyGroup'
 import CreateFeatureModal from 'components/modals/create-feature'
 import AccountStore from 'common/stores/account-store'
+import { useCurrentOrganisation } from 'common/hooks/useCurrentOrganisation'
 import AppActions from 'common/dispatcher/app-actions'
 import {
   mergeChangeSets,
@@ -444,7 +445,8 @@ export const ChangeRequestPageInner: FC<ChangeRequestPageInnerType> = ({
   removeOwner,
   scheduledDate,
 }) => {
-  const organisationId = AccountStore.getOrganisation()?.id
+  const organisation = useCurrentOrganisation()
+  const organisationId = organisation?.id
   const { data: myGroups } = useGetMyGroupsQuery(
     {
       orgId: `${organisationId}`,
@@ -663,7 +665,7 @@ export const ChangeRequestPageInner: FC<ChangeRequestPageInnerType> = ({
           </Row>
           {!hasApprovals && (
             <MyGroupsSelect
-              orgId={AccountStore.getOrganisation().id}
+              orgId={organisation?.id}
               value={ownerGroups && ownerGroups.map((v) => v.id)}
               onAdd={addOwner}
               onRemove={removeOwner}

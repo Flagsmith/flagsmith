@@ -4,7 +4,7 @@ import RolesSelect, { RoleSelectType } from './RolesSelect'
 import { PermissionLevel } from 'common/types/requests'
 
 type MyRoleSelectType = Omit<RoleSelectType, 'roles'> & {
-  orgId: string | number
+  orgId: string | number | undefined
   level?: PermissionLevel
 }
 

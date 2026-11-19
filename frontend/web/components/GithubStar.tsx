@@ -1,12 +1,12 @@
 import React, { FC, useEffect, useState } from 'react'
 import Utils, { planNames } from 'common/utils/utils'
-import AccountStore from 'common/stores/account-store'
+import { useCurrentOrganisation } from 'common/hooks/useCurrentOrganisation'
 import { GithubIcon } from './icons/GithubIcon'
 
 type GithubStarType = {}
 
 const GithubStar: FC<GithubStarType> = ({}) => {
-  const organisation = AccountStore.getOrganisation()
+  const organisation = useCurrentOrganisation()
   const plan = organisation?.subscription?.plan || ''
   const planName = Utils.getPlanName(plan)
   const [stars, setStars] = useState<number | null>(null)

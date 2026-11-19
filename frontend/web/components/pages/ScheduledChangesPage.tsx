@@ -2,7 +2,7 @@ import { FC, useEffect, useState } from 'react'
 import moment from 'moment/moment'
 import { useGetScheduledChangeRequestsQuery } from 'common/services/useChangeRequest'
 import { RouterChildContext } from 'react-router'
-import AccountStore from 'common/stores/account-store'
+import { useCurrentOrganisation } from 'common/hooks/useCurrentOrganisation'
 import { ChangeRequestSummary, User } from 'common/types/responses'
 import OrganisationStore from 'common/stores/organisation-store'
 import AppActions from 'common/dispatcher/app-actions'
@@ -29,7 +29,7 @@ type ScheduledChangesPageType = {
 }
 const ScheduledChangesPage: FC<ScheduledChangesPageType> = ({ match }) => {
   const { environmentId, projectId } = match.params
-  const organisationId = AccountStore.getOrganisation()?.id
+  const organisationId = useCurrentOrganisation()?.id
   const [_, setUpdate] = useState(Date.now())
   const [page, setPage] = useState(1)
 

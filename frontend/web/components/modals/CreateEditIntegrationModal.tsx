@@ -8,7 +8,7 @@ import classNames from 'classnames'
 import { getStore } from 'common/store'
 import { getGithubRepos } from 'common/services/useGithub'
 import Project from 'common/project'
-import AccountStore from 'common/stores/account-store'
+import { useCurrentOrganisation } from 'common/hooks/useCurrentOrganisation'
 import Utils from 'common/utils/utils'
 import { ensureTrailingSlash } from 'common/utils/ensureTrailingSlash'
 import Input from 'components/base/forms/Input'
@@ -89,6 +89,7 @@ interface CreateEditIntegrationProps {
 }
 
 const CreateEditIntegration: FC<CreateEditIntegrationProps> = (props) => {
+  const organisation = useCurrentOrganisation()
   const {
     data,
     githubMeta,
@@ -347,13 +348,14 @@ const CreateEditIntegration: FC<CreateEditIntegrationProps> = (props) => {
       if (
         event.source === childWindow &&
         !event.data?.installationId &&
-        githubMeta
+        githubMeta &&
+        organisation
       ) {
         getGithubRepos(
           getStore(),
           {
             installation_id: githubMeta.installationId,
-            organisation_id: AccountStore.getOrganisation().id,
+            organisation_id: organisation.id,
           },
           { forceRefetch: true },
         ).then(() => {
@@ -485,7 +487,7 @@ const CreateEditIntegration: FC<CreateEditIntegrationProps> = (props) => {
               Flagsmith Project
             </label>
             <ProjectSelect
-              organisationId={AccountStore.getOrganisation()?.id}
+              organisationId={organisation?.id}
               readOnly={authorised}
               value={selectedProjectId}
               onChange={(v) => setSelectedProjectId(v)}
@@ -507,17 +509,20 @@ const CreateEditIntegration: FC<CreateEditIntegrationProps> = (props) => {
             />
           </div>
         )}
-        {integration.isExternalInstallation && githubMeta && projectId && (
-          <div className='mb-3'>
-            <MyGitHubRepositoriesComponent
-              githubId={githubMeta.githubId}
-              installationId={githubMeta.installationId}
-              organisationId={AccountStore.getOrganisation().id}
-              projectId={projectId}
-              openGitHubWinInstallations={openGitHubWinInstallations}
-            />
-          </div>
-        )}
+        {integration.isExternalInstallation &&
+          githubMeta &&
+          projectId &&
+          organisation && (
+            <div className='mb-3'>
+              <MyGitHubRepositoriesComponent
+                githubId={githubMeta.githubId}
+                installationId={githubMeta.installationId}
+                organisationId={`${organisation.id}`}
+                projectId={projectId}
+                openGitHubWinInstallations={openGitHubWinInstallations}
+              />
+            </div>
+          )}
         {readOnly && (
           <div className='row'>
             {integration.perEnvironment && projectId && (

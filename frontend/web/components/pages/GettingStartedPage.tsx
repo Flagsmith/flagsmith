@@ -1,3 +1,4 @@
+import { skipToken } from '@reduxjs/toolkit/query'
 import React, { FC, useEffect, useState } from 'react'
 import PageTitle from 'components/PageTitle'
 import Button from 'components/base/forms/Button'
@@ -6,7 +7,7 @@ import Utils from 'common/utils/utils'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Icon from 'components/icons/Icon'
 import { useGetProjectsQuery } from 'common/services/useProject'
-import AccountStore from 'common/stores/account-store'
+import { useCurrentOrganisation } from 'common/hooks/useCurrentOrganisation'
 import { useGetProjectFlagsQuery } from 'common/services/useProjectFlag'
 import { useGetSegmentsQuery } from 'common/services/useSegment'
 import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
@@ -32,14 +33,9 @@ const GettingStartedPage: FC = () => {
     openChat()
   }
 
-  const organisationId = AccountStore.getOrganisation()?.id
+  const organisationId = useCurrentOrganisation()?.id
   const { data: projects } = useGetProjectsQuery(
-    {
-      organisationId,
-    },
-    {
-      skip: !organisationId,
-    },
+    organisationId ? { organisationId } : skipToken,
   )
   const project = projects?.[0]?.id
   const { data: flags } = useGetProjectFlagsQuery(

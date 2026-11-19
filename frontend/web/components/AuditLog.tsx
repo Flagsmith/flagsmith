@@ -1,3 +1,4 @@
+import { skipToken } from '@reduxjs/toolkit/query'
 import React, { FC, ReactNode, useEffect, useRef, useState } from 'react'
 import Utils from 'common/utils/utils'
 import { AuditLogItem } from 'common/types/responses'
@@ -13,7 +14,7 @@ import JSONReference from './JSONReference'
 import moment from 'moment'
 import PlanBasedBanner from './PlanBasedAccess'
 import { useGetSubscriptionMetadataQuery } from 'common/services/useSubscriptionMetadata'
-import AccountStore from 'common/stores/account-store'
+import { useCurrentOrganisation } from 'common/hooks/useCurrentOrganisation'
 import { isVersionOverLimit } from 'common/services/useFeatureVersion'
 import Tooltip from './Tooltip'
 
@@ -29,13 +30,14 @@ type AuditLogType = {
 
 const widths = [210, 310, 150]
 const AuditLog: FC<AuditLogType> = (props) => {
+  const organisation = useCurrentOrganisation()
   const [page, setPage] = useState(Utils.fromParam().page ?? 1)
   const { search, searchInput, setSearchInput } = useDebouncedSearch(
     Utils.fromParam().search ?? '',
   )
-  const { data: subscriptionMeta } = useGetSubscriptionMetadataQuery({
-    id: AccountStore.getOrganisation()?.id,
-  })
+  const { data: subscriptionMeta } = useGetSubscriptionMetadataQuery(
+    organisation ? { id: organisation.id } : skipToken,
+  )
   // Same list as the environment filter, so the colours match.
   const { data: projectEnvironments } = useGetEnvironmentsQuery({
     projectId: Number(props.projectId),

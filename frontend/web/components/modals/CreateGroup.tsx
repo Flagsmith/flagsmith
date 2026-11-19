@@ -20,6 +20,10 @@ import filter from 'lodash/filter'
 import Utils from 'common/utils/utils'
 import InputGroup from 'components/base/forms/InputGroup'
 import AccountStore from 'common/stores/account-store'
+import {
+  useCurrentOrganisation,
+  useIsOrganisationAdmin,
+} from 'common/hooks/useCurrentOrganisation'
 import PanelSearch from 'components/PanelSearch'
 import Button from 'components/base/forms/Button'
 import Tabs from 'components/navigation/TabMenu/Tabs'
@@ -37,6 +41,8 @@ type CreateGroupType = {
 }
 
 const CreateGroup: FC<CreateGroupType> = ({ group, orgId, roles }) => {
+  const organisation = useCurrentOrganisation()
+  const isAdmin = useIsOrganisationAdmin()
   const [edited, setEdited] = useState(false)
   const [externalId, setExternalId] = useState('')
   const [name, setName] = useState('')
@@ -193,7 +199,6 @@ const CreateGroup: FC<CreateGroupType> = ({ group, orgId, roles }) => {
       {({ users: organisationUsers }) => {
         const activeUsers = intersectionBy(organisationUsers, users, 'id')
         const inactiveUsers = differenceBy(organisationUsers, users, 'id')
-        const isAdmin = AccountStore.isAdmin()
         const yourEmail = (AccountStore as { model?: User }).model?.email
 
         return isLoading ? (
@@ -457,11 +462,7 @@ const CreateGroup: FC<CreateGroupType> = ({ group, orgId, roles }) => {
   const editPermissionsEl = (
     <div className='mt-4'>
       {!!groupData && (
-        <PermissionsTabs
-          uncontrolled
-          orgId={AccountStore.getOrganisation()?.id}
-          group={group}
-        />
+        <PermissionsTabs uncontrolled orgId={organisation?.id} group={group} />
       )}
     </div>
   )

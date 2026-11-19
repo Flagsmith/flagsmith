@@ -22,6 +22,8 @@ import { Provider } from 'react-redux'
 import { getStore } from 'common/store'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import AccountStore from 'common/stores/account-store'
+import { getCurrentOrganisation } from 'common/hooks/useCurrentOrganisation'
+import withCurrentOrganisation from 'common/hooks/withCurrentOrganisation'
 import OrganisationLimit from './OrganisationLimit'
 import OrganisationStore from 'common/stores/organisation-store'
 import ScrollToTop from './ScrollToTop'
@@ -154,7 +156,7 @@ const App = class extends Component {
     // A signup with a consent request waiting keeps its redirect cookie
     // through the branch below: onboarding provisions the organisation the
     // client needs, then answers the request itself.
-    if (!AccountStore.getOrganisation() && !invite) {
+    if (!getCurrentOrganisation() && !invite) {
       // New users with no organisation go through the single-page onboarding
       // flow when it's enabled - it creates the organisation itself, so it
       // replaces the legacy /create page. Everyone else still gets /create.
@@ -216,7 +218,7 @@ const App = class extends Component {
               return
             }
 
-            const org = AccountStore.getOrganisation()
+            const org = getCurrentOrganisation()
             if (
               !org ||
               (org.id !== lastOrg.id && this.getEnvironmentId(this.props))
@@ -279,7 +281,7 @@ const App = class extends Component {
     const environmentId = this.getEnvironmentId(this.props)
 
     if (
-      AccountStore.getOrganisation()?.block_access_to_admin &&
+      this.props.organisation?.block_access_to_admin &&
       !isAllowedWhileBlocked(pathname)
     ) {
       return <Blocked />
@@ -365,17 +367,16 @@ const App = class extends Component {
                     <ButterBar
                       projectId={projectId}
                       billingStatus={
-                        AccountStore.getOrganisation()?.subscription
-                          .billing_status
+                        this.props.organisation?.subscription.billing_status
                       }
                     />
                     {user && (
                       <>
                         {!hasOwnQuotaBanner && (
                           <OrganisationLimit
-                            id={AccountStore.getOrganisation()?.id}
+                            id={this.props.organisation?.id}
                             organisationPlan={
-                              AccountStore.getOrganisation()?.subscription.plan
+                              this.props.organisation?.subscription.plan
                             }
                           />
                         )}
@@ -416,6 +417,7 @@ App.propTypes = {
   history: RequiredObject,
   location: RequiredObject,
   match: RequiredObject,
+  organisation: OptionalObject,
 }
 
-export default withRouter(ConfigProvider(App))
+export default withRouter(ConfigProvider(withCurrentOrganisation(App)))

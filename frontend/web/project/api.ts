@@ -10,6 +10,7 @@ import Cookies from 'js-cookie'
 import Project from 'common/project'
 import { AccountModel, User } from 'common/types/responses'
 import AccountStore from 'common/stores/account-store'
+import { getCurrentOrganisation } from 'common/hooks/useCurrentOrganisation'
 import flagsmith from '@flagsmith/flagsmith'
 import Utils from 'common/utils/utils'
 import loadChat, { identifyChatUser } from 'common/loadChat'
@@ -141,7 +142,7 @@ const API = {
     const user = AccountStore.model as unknown as AccountModel
     if (!user) return
 
-    const currentOrganisation = AccountStore.getOrganisation()
+    const currentOrganisation = getCurrentOrganisation()
 
     return flagsmith
       .identify(`${user.id}`, {
@@ -166,7 +167,7 @@ const API = {
         ),
       )
       .then(() => {
-        const organisation = AccountStore.getOrganisation()
+        const organisation = getCurrentOrganisation()
         const emailDomain = user.email.split('@')[1] || ''
         const freeDomain = isFreeEmailDomain(emailDomain)
         if (
@@ -274,7 +275,7 @@ const API = {
   postEvent(event: string, tag?: string): Promise<any> | void {
     const currentUser = AccountStore.getUser()
     if (!currentUser) return
-    const organisation = AccountStore.getOrganisation()
+    const organisation = getCurrentOrganisation()
     const name = organisation?.name ? ` - ${organisation.name}` : ''
     return data.post('/api/event', {
       event: `${event}(${currentUser.email} ${currentUser.first_name} ${currentUser.last_name})${name}`,
