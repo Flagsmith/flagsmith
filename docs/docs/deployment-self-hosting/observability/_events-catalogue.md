@@ -130,8 +130,8 @@ Attributes:
 
 Logged at `warning` from:
  - `api/app_analytics/analytics_db_service.py:83`
- - `api/app_analytics/analytics_db_service.py:230`
- - `api/app_analytics/analytics_db_service.py:321`
+ - `api/app_analytics/analytics_db_service.py:240`
+ - `api/app_analytics/analytics_db_service.py:331`
 
 Attributes:
  - `details`
