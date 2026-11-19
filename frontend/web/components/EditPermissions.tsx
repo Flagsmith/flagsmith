@@ -13,7 +13,7 @@ import {
   UserGroupSummary,
   UserPermission,
 } from 'common/types/responses'
-import AccountStore from 'common/stores/account-store'
+import { useCurrentUser } from 'common/hooks/useCurrentUser'
 import { useCurrentOrganisation } from 'common/hooks/useCurrentOrganisation'
 import Format from 'common/utils/format'
 import PanelSearch from './PanelSearch'
@@ -992,6 +992,7 @@ export const EditPermissionsModal = ConfigProvider(
 
 const rolesWidths = [250, 600, 100]
 const EditPermissions: FC<EditPermissionsType> = (props) => {
+  const user = useCurrentUser()
   const organisation = useCurrentOrganisation()
   const {
     envId,
@@ -1163,8 +1164,7 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
                                     <div className='mb-1 font-weight-medium d-flex align-items-center gap-2'>
                                       <span>
                                         {`${first_name} ${last_name}`}{' '}
-                                        {String(id) ===
-                                          String(AccountStore.getUserId()) &&
+                                        {String(id) === String(user?.id) &&
                                           '(You)'}
                                       </span>
                                       <InactiveMembershipChip user={user} />

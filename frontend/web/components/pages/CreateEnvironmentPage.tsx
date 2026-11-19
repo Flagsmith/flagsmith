@@ -12,7 +12,7 @@ import { getStore } from 'common/store'
 import ProjectProvider, {
   CreateEnvType,
 } from 'common/providers/ProjectProvider'
-import AccountStore from 'common/stores/account-store'
+import { useCurrentUser } from 'common/hooks/useCurrentUser'
 import { useCurrentOrganisation } from 'common/hooks/useCurrentOrganisation'
 import Utils from 'common/utils/utils'
 import { useHistory } from 'react-router-dom'
@@ -60,7 +60,7 @@ const CreateEnvironmentPage: React.FC = () => {
 
   const organisation = useCurrentOrganisation()
   const organisationId = organisation?.id
-  const currentUserId = AccountStore.getUser()?.id as number | undefined
+  const currentUserId = useCurrentUser()?.id
   const hasRbac = Utils.getPlansPermission('RBAC')
   const { data: users } = useGetUsersQuery(
     { organisationId: organisationId! },

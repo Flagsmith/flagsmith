@@ -24,6 +24,7 @@ import ConfigProvider from 'common/providers/ConfigProvider'
 import AccountStore from 'common/stores/account-store'
 import { getCurrentOrganisation } from 'common/hooks/useCurrentOrganisation'
 import withCurrentOrganisation from 'common/hooks/withCurrentOrganisation'
+import { getCurrentUser } from 'common/hooks/useCurrentUser'
 import OrganisationLimit from './OrganisationLimit'
 import OrganisationStore from 'common/stores/organisation-store'
 import ScrollToTop from './ScrollToTop'
@@ -166,10 +167,8 @@ const App = class extends Component {
       // Capped at 2s: a degraded flags API falls back to the legacy page
       // instead of blocking the redirect.
       Promise.race([
-        AccountStore.getUser()?.isGettingStarted
-          ? decideOnboardingEntry(AccountStore.getUser()?.email).catch(
-              () => null,
-            )
+        getCurrentUser()?.isGettingStarted
+          ? decideOnboardingEntry(getCurrentUser()?.email).catch(() => null)
           : Promise.resolve(null),
         new Promise((resolve) => setTimeout(() => resolve(null), 2000)),
       ]).then((decision) => {
@@ -210,7 +209,7 @@ const App = class extends Component {
           }
           if (res) {
             const lastEnv = JSON.parse(res)
-            const lastOrg = find(AccountStore.getUser().organisations, {
+            const lastOrg = find(getCurrentUser().organisations, {
               id: lastEnv.orgId,
             })
             if (!lastOrg) {
@@ -233,7 +232,7 @@ const App = class extends Component {
             return
           }
 
-          if (AccountStore.getUser()?.isGettingStarted) {
+          if (getCurrentUser()?.isGettingStarted) {
             this.props.history.replace('/getting-started')
           } else {
             this.props.history.replace(Utils.getOrganisationHomePage())

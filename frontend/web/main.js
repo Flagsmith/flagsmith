@@ -10,7 +10,7 @@ import ToastMessages from './project/toast'
 import routes from './routes'
 import Utils from 'common/utils/utils'
 import Project from 'common/project'
-import AccountStore from 'common/stores/account-store'
+import { getCurrentUser } from 'common/hooks/useCurrentUser'
 import data from 'common/data/base/_data'
 import { isPendingAuthorisation } from 'common/utils/pendingAuthorisation'
 import {
@@ -91,7 +91,7 @@ setTimeout(() => {
   })
 
   // redirect before login
-  if (!isPublicURL() && !AccountStore.getUser()) {
+  if (!isPublicURL() && !getCurrentUser()) {
     // A consent request already waiting outranks the page being loaded. A
     // reload part-way through onboarding - which its own Try again performs -
     // would otherwise overwrite it and leave the client waiting for ever.

@@ -1,6 +1,6 @@
 import React, { FC, ReactNode, useEffect, useState } from 'react'
 import { useHistory, useLocation } from 'react-router-dom'
-import AccountStore from 'common/stores/account-store'
+import { useCurrentUser } from 'common/hooks/useCurrentUser'
 import { useCurrentOrganisation } from 'common/hooks/useCurrentOrganisation'
 import EnvironmentAside from './EnvironmentAside'
 import { Project as ProjectType } from 'common/types/responses'
@@ -24,6 +24,7 @@ const Nav: FC<NavType> = ({
   header,
   projectId,
 }) => {
+  const user = useCurrentUser()
   const organisation = useCurrentOrganisation()
   const [lastEnvironmentId, setLastEnvironmentId] = useState()
   const [lastProjectId, setLastProjectId] = useState()
@@ -71,7 +72,7 @@ const Nav: FC<NavType> = ({
         {!isHomepage && (
           <div className='d-flex bg-faint pt-1 py-0'>
             <Flex className='flex-row px-2 '>
-              {!!AccountStore.getUser() && (
+              {!!user && (
                 <TopNavbar
                   activeProject={activeProject}
                   projectId={projectId}

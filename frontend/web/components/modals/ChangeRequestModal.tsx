@@ -9,7 +9,7 @@ import MyGroupsSelect from 'components/MyGroupsSelect'
 import { useGetMyGroupsQuery } from 'common/services/useMyGroup'
 import DateSelect, { DateSelectProps } from 'components/DateSelect'
 import InfoMessage from 'components/InfoMessage'
-import AccountStore from 'common/stores/account-store'
+import { useCurrentUser } from 'common/hooks/useCurrentUser'
 import { useCurrentOrganisation } from 'common/hooks/useCurrentOrganisation'
 import InputGroup from 'components/base/forms/InputGroup'
 import moment from 'moment'
@@ -52,6 +52,7 @@ const ChangeRequestModal: FC<ChangeRequestModalProps> = ({
   showAssignees,
   showIgnoreConflicts,
 }) => {
+  const user = useCurrentUser()
   const organisation = useCurrentOrganisation()
   const [approvals, setApprovals] = useState<Approval[]>([
     ...(changeRequest?.approvals ?? []),
@@ -280,9 +281,7 @@ const ChangeRequestModal: FC<ChangeRequestModalProps> = ({
             {!changeRequest &&
               !Utils.getFlagsmithHasFeature('disable_users_as_reviewers') && (
                 <UserSelect
-                  users={users.filter(
-                    (v) => v.id !== AccountStore.getUser().id,
-                  )}
+                  users={users.filter((v) => v.id !== user?.id)}
                   value={approvals.map((v) => v.user)}
                   onAdd={addOwner}
                   onRemove={removeOwner}

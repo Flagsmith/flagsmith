@@ -10,6 +10,7 @@ import Cookies from 'js-cookie'
 import Project from 'common/project'
 import { AccountModel, User } from 'common/types/responses'
 import AccountStore from 'common/stores/account-store'
+import { getCurrentUser } from 'common/hooks/useCurrentUser'
 import { getCurrentOrganisation } from 'common/hooks/useCurrentOrganisation'
 import flagsmith from '@flagsmith/flagsmith'
 import Utils from 'common/utils/utils'
@@ -273,7 +274,7 @@ const API = {
   },
 
   postEvent(event: string, tag?: string): Promise<any> | void {
-    const currentUser = AccountStore.getUser()
+    const currentUser = getCurrentUser()
     if (!currentUser) return
     const organisation = getCurrentOrganisation()
     const name = organisation?.name ? ` - ${organisation.name}` : ''

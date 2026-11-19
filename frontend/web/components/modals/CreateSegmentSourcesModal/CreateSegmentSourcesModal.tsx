@@ -1,7 +1,7 @@
 import React, { FC, useState } from 'react'
 import flagsmith from '@flagsmith/flagsmith'
 import classNames from 'classnames'
-import AccountStore from 'common/stores/account-store'
+import { useCurrentUser } from 'common/hooks/useCurrentUser'
 import { useCurrentOrganisation } from 'common/hooks/useCurrentOrganisation'
 import Utils from 'common/utils/utils'
 import { colorIconAction } from 'common/theme/tokens'
@@ -90,6 +90,7 @@ const CreateSegmentSourcesModal: FC<CreateSegmentSourcesModalType> = ({
   onMixpanel,
   sources,
 }) => {
+  const user = useCurrentUser()
   const organisation = useCurrentOrganisation()
   const [selected, setSelected] = useState<SelectedSegmentSource>(null)
   const [requested, setRequested] = useState<string[]>([])
@@ -103,7 +104,7 @@ const CreateSegmentSourcesModal: FC<CreateSegmentSourcesModalType> = ({
   const trackSourceEvent = (event: string, source: SegmentSource) => {
     flagsmith.trackEvent(event, {
       metadata: {
-        email: AccountStore.getUser()?.email,
+        email: user?.email,
         organisation: organisation?.name,
         source: source.key,
       },
