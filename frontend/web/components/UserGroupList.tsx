@@ -2,7 +2,7 @@ import React, { FC, ReactNode, useState } from 'react'
 import IconButton from './base/IconButton'
 import CreateGroup from './modals/CreateGroup'
 import Button from './base/forms/Button'
-import AccountStore from 'common/stores/account-store'
+import { useIsOrganisationAdmin } from 'common/hooks/useCurrentOrganisation'
 import { UserGroup, GroupPermission } from 'common/types/responses'
 import { useDeleteGroupMutation } from 'common/services/useGroup'
 import { useGetUserGroupPermissionQuery } from 'common/services/useUserGroupPermission'
@@ -46,7 +46,7 @@ const UserGroupsRow: FC<UserGroupsRowType> = ({
   showRemove,
 }) => {
   const [deleteGroup] = useDeleteGroupMutation({})
-  const isAdmin = AccountStore.isAdmin()
+  const isAdmin = useIsOrganisationAdmin()
 
   const removeGroup = (id: number, name: string) => {
     openConfirm({
