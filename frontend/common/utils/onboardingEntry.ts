@@ -18,7 +18,7 @@ export type OnboardingEntryDecision = {
  * Persists nothing: the caller races this against a timeout, and a late
  * decision must not be stored — by then the SDK identity may already be
  * the logged-in user, and the routing it should have driven has happened.
- * Call `persistOnboardingEntry` with an accepted decision.
+ * Call `resolveOnboardingVariant` with the result.
  */
 export async function decideOnboardingEntry(
   email?: string,
@@ -55,9 +55,9 @@ export function persistOnboardingEntry(
   return variant
 }
 
-// A variant stored earlier in the session wins over a new decision. A reload
-// during onboarding logs in again without isGettingStarted, and must not send
-// a single_page user to /create.
+// A stored variant wins over a new decision. A reload during onboarding logs
+// in again without isGettingStarted, and must not send a single_page user to
+// /create.
 export const resolveOnboardingVariant = (
   stored: OnboardingVariant | null,
   decision: OnboardingEntryDecision | null,
