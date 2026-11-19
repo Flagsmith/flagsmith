@@ -42,6 +42,7 @@ from experimentation.dataclasses import (
     MetricSpec,
     ResultsAggregates,
     ResultsSummary,
+    RolloutDecisionSpec,
     RolloutSpec,
     WarehouseEventNames,
     WarehouseEventStats,
@@ -58,6 +59,7 @@ from experimentation.models import (
     ExperimentStatus,
     MetricAggregation,
     MetricDirection,
+    RolloutDecision,
     SDKExperimentationEvent,
     WarehouseConnection,
     WarehouseConnectionStatus,
@@ -78,7 +80,7 @@ from experimentation.warehouses.registry import get_warehouse
 from features.feature_segments.services import get_next_segment_override_priority
 from features.feature_states.models import API_VALUE_TYPES
 from features.future.services import delete_segment_override, update_flag
-from features.future.types import SegmentOverrideRequest
+from features.future.types import EnvironmentDefaultRequest, SegmentOverrideRequest
 from features.models import FeatureState
 from features.value_types import BOOLEAN, STRING
 from features.versioning.versioning_service import get_environment_flags_list
@@ -606,6 +608,8 @@ def transition_experiment_status(
     experiment: Experiment,
     target_status: str,
     user: FFAdminUser,
+    *,
+    rollout_decision: RolloutDecisionSpec | None = None,
 ) -> Experiment:
     with transaction.atomic():
         experiment.refresh_from_db(from_queryset=Experiment.objects.select_for_update())
@@ -622,11 +626,80 @@ def transition_experiment_status(
                 experiment, AuthorData.from_user(user)
             )
         elif target_status == ExperimentStatus.COMPLETED:
+            if rollout_decision is None:
+                raise ValueError(
+                    "Cannot complete an experiment without a rollout decision."
+                )
             experiment.ended_at = timezone.now()
+            experiment.rollout_decision = rollout_decision.decision
+            experiment.rollout_variant_id = rollout_decision.variant_id
+            _apply_rollout_decision(
+                experiment, rollout_decision, AuthorData.from_user(user)
+            )
+            transaction.on_commit(
+                lambda: experimentation_logger.info(
+                    "experiment.completed",
+                    experiment__id=experiment.id,
+                    environment__id=experiment.environment_id,
+                    feature__id=experiment.feature_id,
+                    rollout__decision=rollout_decision.decision,
+                    variant__id=rollout_decision.variant_id,
+                )
+            )
 
         experiment.save()
         create_experiment_audit_log(experiment, user, action=target_status)
     return experiment
+
+
+def _apply_rollout_decision(
+    experiment: Experiment,
+    rollout_decision: RolloutDecisionSpec,
+    author: AuthorData,
+) -> None:
+    """Serve the decided outcome from the environment default and remove the
+    rollout override. The rollout segment is kept: it records the audience."""
+    environment_default: EnvironmentDefaultRequest = (
+        {"enabled": False}
+        if rollout_decision.decision == RolloutDecision.DISABLE
+        else {
+            "enabled": True,
+            "variants": [
+                {
+                    "id": option_id,
+                    "weight": 100 if option_id == rollout_decision.variant_id else 0,
+                }
+                for option_id in experiment.feature.multivariate_options.values_list(
+                    "id", flat=True
+                )
+            ],
+        }
+    )
+    update_flag(
+        environment=experiment.environment,
+        feature=experiment.feature,
+        changes={"environment_default": environment_default},
+        replace=False,
+        author=author,
+        overwrite_system_segment_overrides=True,
+    )
+    delete_experiment_rollout_override(experiment, author)
+
+
+def delete_experiment_rollout_override(
+    experiment: Experiment, author: AuthorData
+) -> None:
+    if (
+        segment_id := experiment.rollout_segment_id
+    ) is None or not _get_live_rollout_override(experiment):
+        return
+    delete_segment_override(
+        environment=experiment.environment,
+        feature=experiment.feature,
+        segment_id=segment_id,
+        author=author,
+        overwrite_system_segment_overrides=True,
+    )
 
 
 def _remove_superseded_experiment_rollouts(

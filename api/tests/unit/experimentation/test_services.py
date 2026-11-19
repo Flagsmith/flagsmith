@@ -37,6 +37,7 @@ from experimentation.dataclasses import (
     ExposuresTimeseriesPoint,
     MetricSpec,
     ResultsAggregates,
+    RolloutDecisionSpec,
     RolloutSpec,
     WarehouseEventNames,
     WarehouseEventStats,
@@ -49,6 +50,7 @@ from experimentation.models import (
     Metric,
     MetricAggregation,
     MetricDirection,
+    RolloutDecision,
     WarehouseConnection,
     WarehouseConnectionStatus,
     WarehouseDeliveryStatus,
@@ -66,7 +68,7 @@ from experimentation.warehouses.dialect import CLICKHOUSE_DIALECT
 from experimentation.warehouses.exceptions import UnsupportedWarehouseOperation
 from features.feature_segments.services import get_next_segment_override_priority
 from features.feature_types import MULTIVARIATE
-from features.future.services import update_flag
+from features.future.services import get_flag, update_flag
 from features.models import Feature, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
 from features.value_types import STRING
@@ -3747,6 +3749,123 @@ def test_transition_experiment_status__first_start__removes_superseded_rollouts(
         }
         for superseded in (completed, deleted)
     ]
+
+
+@pytest.mark.parametrize(
+    "environment_fixture_name",
+    ["environment", "environment_v2_versioning"],
+)
+@pytest.mark.parametrize(
+    "decision, variant_index, expected_enabled, expected_weights",
+    [
+        pytest.param(RolloutDecision.CONTROL, None, True, [0, 0, 0], id="control"),
+        pytest.param(RolloutDecision.VARIANT, 1, True, [0, 100, 0], id="variant"),
+        pytest.param(RolloutDecision.DISABLE, None, False, [30, 0, 0], id="disable"),
+    ],
+)
+def test_transition_experiment_status__complete__serves_decision_and_removes_rollout_override(  # type: ignore[no-untyped-def]
+    environment_fixture_name: str,
+    decision: str,
+    variant_index: int | None,
+    expected_enabled: bool,
+    expected_weights: list[float],
+    multivariate_feature: Feature,
+    multivariate_options: list[MultivariateFeatureOption],
+    admin_user: FFAdminUser,
+    rollout_spec: RolloutSpecFactory,
+    log: StructuredLogCapture,
+    request: pytest.FixtureRequest,
+    django_capture_on_commit_callbacks,
+) -> None:
+    # Given
+    environment: Environment = request.getfixturevalue(environment_fixture_name)
+    experiment = _experiment_with_rollout(
+        environment,
+        multivariate_feature,
+        rollout_spec,
+        status=ExperimentStatus.RUNNING,
+    )
+    rollout_segment_id = experiment.rollout_segment_id
+    update_flag(
+        environment=environment,
+        feature=multivariate_feature,
+        changes={
+            "environment_default": {
+                "enabled": not expected_enabled,
+                "variants": [
+                    {"id": option.id, "weight": 30 if index == 0 else 0}
+                    for index, option in enumerate(multivariate_options)
+                ],
+            }
+        },
+        replace=False,
+        author=AuthorData(user=admin_user),
+        overwrite_system_segment_overrides=False,
+    )
+    variant_id = (
+        multivariate_options[variant_index].id if variant_index is not None else None
+    )
+
+    # When
+    with django_capture_on_commit_callbacks(execute=True):
+        services.transition_experiment_status(
+            experiment,
+            ExperimentStatus.COMPLETED,
+            admin_user,
+            rollout_decision=RolloutDecisionSpec(
+                decision=decision, variant_id=variant_id
+            ),
+        )
+
+    # Then
+    environment_default = get_flag(
+        environment=environment, feature=multivariate_feature
+    )["environment_default"]
+    assert environment_default["enabled"] is expected_enabled
+    assert {
+        variant["id"]: variant["weight"] for variant in environment_default["variants"]
+    } == {
+        option.id: weight
+        for option, weight in zip(multivariate_options, expected_weights)
+    }
+    assert _live_override_segment_ids(environment, multivariate_feature) == set()
+    experiment.refresh_from_db()
+    assert experiment.rollout_decision == decision
+    assert experiment.rollout_variant_id == variant_id
+    assert experiment.rollout_segment_id == rollout_segment_id
+    assert Segment.objects.filter(id=rollout_segment_id).exists()
+    assert [
+        event for event in log.events if event["event"] == "experiment.completed"
+    ] == [
+        {
+            "level": "info",
+            "event": "experiment.completed",
+            "experiment__id": experiment.id,
+            "environment__id": environment.id,
+            "feature__id": multivariate_feature.id,
+            "rollout__decision": decision,
+            "variant__id": variant_id,
+        }
+    ]
+
+
+def test_transition_experiment_status__complete_without_rollout_decision__raises(
+    experiment: Experiment,
+    admin_user: FFAdminUser,
+) -> None:
+    # Given
+    experiment.status = ExperimentStatus.RUNNING
+    experiment.save()
+
+    # When
+    with pytest.raises(ValueError):
+        services.transition_experiment_status(
+            experiment, ExperimentStatus.COMPLETED, admin_user
+        )
+
+    # Then
+    experiment.refresh_from_db()
+    assert experiment.status == ExperimentStatus.RUNNING
 
 
 def test_get_experiment_rollout__audience__returns_segment_details(

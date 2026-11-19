@@ -26,6 +26,12 @@ class RolloutSpec:
 
 
 @dataclass(frozen=True)
+class RolloutDecisionSpec:
+    decision: str
+    variant_id: int | None = None
+
+
+@dataclass(frozen=True)
 class WarehouseEventStats:
     total_events_received: int
     unique_events_count: int

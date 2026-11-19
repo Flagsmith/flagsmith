@@ -597,7 +597,11 @@ def test_action__status_transition__returns_expected(
     experiment.save()
 
     # When
-    response = admin_client_new.post(_action_url(environment, experiment, action_name))
+    response = admin_client_new.post(
+        _action_url(environment, experiment, action_name),
+        data={"rollout_decision": "control"},
+        format="json",
+    )
 
     # Then
     assert response.status_code == expected_status_code
@@ -712,21 +716,72 @@ def test_action__start_rollout_enable_fails__rolls_back_transition(
     assert experiment.started_at is None
 
 
-def test_action__complete__sets_ended_at(
+def test_action__complete__returns_ended_at_and_rollout_decision(
     admin_client_new: APIClient,
     environment: Environment,
     experiment: Experiment,
+    multivariate_options: list[MultivariateFeatureOption],
 ) -> None:
     # Given
     experiment.status = ExperimentStatus.RUNNING
     experiment.save()
+    variant_id = multivariate_options[0].id
 
     # When
-    response = admin_client_new.post(_action_url(environment, experiment, "complete"))
+    response = admin_client_new.post(
+        _action_url(environment, experiment, "complete"),
+        data={"rollout_decision": "variant", "variant_id": variant_id},
+        format="json",
+    )
 
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["ended_at"] is not None
+    assert response.json()["rollout_decision"] == "variant"
+    assert response.json()["rollout_variant"] == variant_id
+
+
+@pytest.mark.parametrize(
+    "rollout_decision, variant_owner",
+    [
+        pytest.param("variant", None, id="variant-without-id"),
+        pytest.param("control", "own", id="control-with-variant-id"),
+        pytest.param("variant", "other", id="variant-of-other-feature"),
+    ],
+)
+def test_action__complete_invalid_rollout_decision__returns_400(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment: Experiment,
+    multivariate_options: list[MultivariateFeatureOption],
+    feature: Feature,
+    rollout_decision: str,
+    variant_owner: str | None,
+) -> None:
+    # Given
+    experiment.status = ExperimentStatus.RUNNING
+    experiment.save()
+    variant_ids = {
+        None: None,
+        "own": multivariate_options[0].id,
+        "other": MultivariateFeatureOption.objects.create(
+            feature=feature, type="unicode", string_value="other"
+        ).id,
+    }
+    data: dict[str, object] = {"rollout_decision": rollout_decision}
+    if variant_id := variant_ids[variant_owner]:
+        data["variant_id"] = variant_id
+
+    # When
+    response = admin_client_new.post(
+        _action_url(environment, experiment, "complete"),
+        data=data,
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert list(response.json()) == ["variant_id"]
 
 
 def test_exposures__computed_row__returns_row(
@@ -1025,6 +1080,29 @@ def test_delete__exists__returns_204_and_soft_deletes(
     assert response.status_code == status.HTTP_204_NO_CONTENT
     assert not Experiment.objects.filter(id=experiment.id).exists()
     assert Experiment.objects.all_with_deleted().filter(id=experiment.id).exists()
+
+
+def test_delete__live_rollout_override__removes_override_and_keeps_segment(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment_with_rollout: Experiment,
+) -> None:
+    # Given
+    rollout_segment_id = experiment_with_rollout.rollout_segment_id
+
+    # When
+    response = admin_client_new.delete(
+        _detail_url(environment, experiment_with_rollout)
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert not FeatureState.objects.get_live_feature_states(
+        environment=environment,
+        additional_filters=Q(feature_segment__segment_id=rollout_segment_id),
+        feature_id=experiment_with_rollout.feature_id,
+    ).exists()
+    assert Segment.objects.filter(id=rollout_segment_id).exists()
 
 
 def test_post__valid_create__creates_audit_log(
