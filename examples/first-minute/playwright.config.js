@@ -9,7 +9,7 @@ export default defineConfig({
         launchOptions: { executablePath: process.env.CHROMIUM_EXECUTABLE },
     },
     webServer: {
-        command: 'npm run dev -- --host 127.0.0.1 --port 4185 --strictPort',
+        command: 'npm run build:practice && npm run dev -- --host 127.0.0.1 --port 4185 --strictPort',
         url: baseURL,
         env: {
             VITE_FLAGSMITH_ENVIRONMENT_ID: 'browser-test',

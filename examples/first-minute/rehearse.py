@@ -9,6 +9,7 @@ from pathlib import Path
 
 from setup_experiment import (
     RateLimited,
+    check_enrolment,
     local_organisation,
     prepare_experiment,
     request,
@@ -110,15 +111,7 @@ def rehearse(org_id):
     connection = {"environment": env["api_key"], "experiment": experiment["id"]}
     status = experiment["status"]
     if status == "running":
-        rollout = experiment["experiment_rollout"]
-        if (
-            not rollout["enabled"]
-            or rollout["rollout_percentage"] != 100
-            or (rollout.get("audience") or {}).get("segments")
-        ):
-            raise SystemExit(
-                "The rehearsal must enrol all synthetic identities before it can send sample traffic."
-            )
+        check_enrolment(experiment)
         expected = sdk("sample", **connection, total=PARTICIPANTS, rates=RATES)
         result = measured_results(detail, metric["id"], expected)
     else:

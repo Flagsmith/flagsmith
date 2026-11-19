@@ -29,7 +29,9 @@ If the self-hosted dashboard shows **Maintenance** because its bootstrap request
 
 **Measurement.** Opening the first desk fixes eligibility for this browser. If a player starts in offline practice, later rounds on the same site stay in practice. Reading the briefing keeps the player eligible. An enrolled player gets 60 seconds from the moment the browser claims the desk. Reloading or opening another tab preserves the original assignment and deadline. A new browser profile or a separately downloaded file has its own storage.
 
-The browser saves the first answer before showing the solution. It retains the exposure and any correct first-answer event until Flagsmith acknowledges delivery. After an interruption, it retries with the original identity, variation and interaction timestamps. The warehouse counts exposed identities and whether each one resolved the drill. Replaying the same event after a lost acknowledgement preserves those counts.
+The browser saves the first answer before showing the solution. If the participant site cannot read or save the first desk, it keeps the briefing open and offers a retry. The standalone download remains playable with browser storage disabled.
+
+The participant site retries interrupted exposures and correct first-answer events with the original identity, variation and timestamps. When Flagsmith accepts an event, its receipt ends the retry. Flagsmith rejects events older than ten days. If its receipt reports that the delivery window has closed, the drill keeps the local result and tells the player. The warehouse counts exposed identities and whether each one resolved the drill. Replaying the same event after a lost acknowledgement preserves those counts.
 
 **Evidence.** A separate automated run against local Flagsmith recorded three exposures and two conversions in the QA environment. The checked-in Playwright suite intercepts SDK requests to test browser behaviour. The in-app **Experiment replay** uses warehouse results from 240 synthetic identities that the rehearsal script sent through the SDK to local Flagsmith. [QA snapshot](verification.json) · [Rehearsal results](rehearsal.json)
 

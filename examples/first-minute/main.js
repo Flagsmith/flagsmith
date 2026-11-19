@@ -1,5 +1,5 @@
 import './experiment-replay.js';
-import { clearPendingAnswer, pendingAnswer, updateRecord } from './attempt-store.js';
+import { claimAnswer, clearPendingAnswer, updateRecord } from './attempt-store.js';
 import { createEventDelivery } from './event-delivery.js';
 import flagsmith from '@flagsmith/flagsmith';
 
@@ -126,7 +126,7 @@ function refreshClock() {
     if (remaining === 0) finish('expired');
 }
 
-function openDesk() {
+function openDesk(held) {
     lastLayout = active.layout;
     $('preflight').hidden = true;
     $('desk').hidden = false;
@@ -142,7 +142,6 @@ function openDesk() {
     $('mode').textContent = active.measured ? 'Experiment · first attempt' : 'Practice · excluded from experiment';
     $('desk').focus({ preventScroll: true });
     $('desk').scrollIntoView({ block: 'start' });
-    const held = active === saved && pendingAnswer(journalKey, active.deadline);
     if (held) {
         active = null;
         void saveAnswer(held);
@@ -155,15 +154,10 @@ function openDesk() {
 async function claimFirstAttempt() {
     const flag = connected ? flagsmith.getAllFlags()[flagName] : null;
     const layout = flag?.enabled && flag.value === 'guided' ? 'guided' : 'control';
-    try {
-        saved = await updateRecord(attemptKey, (previous) => {
+    saved = await updateRecord(
+        attemptKey,
+        (previous, practised) => {
             if (previous) return previous;
-            let practised = false;
-            try {
-                practised = localStorage.getItem(unconfiguredPractice) === '1';
-            } catch {
-                /* IndexedDB is still available. */
-            }
             const measured = !practised && Boolean(flag?.enabled && flag.experiment?.inExperiment);
             return {
                 layout,
@@ -171,30 +165,48 @@ async function claimFirstAttempt() {
                 deadline: Date.now() + 60000,
                 ...(measured && { identifier: participant, variant: flag.variant, experimentId: flag.experiment.id }),
             };
-        });
-    } catch {
-        return { layout, measured: false, deadline: Date.now() + 60000 };
-    }
+        },
+        { relatedKey: unconfiguredPractice },
+    );
     // The earliest release stored completion without a verdict.
     if (saved.done && !saved.finishedAt) return { layout: saved.layout, measured: false, deadline: Date.now() + 60000 };
     return saved;
+}
+
+function showStorageRetry() {
+    $('mode').textContent = 'Browser storage is unavailable. Reload to open your first attempt.';
+    $('start').textContent = 'Reload briefing';
+    $('start').disabled = false;
+    $('start').onclick = () => location.reload();
 }
 
 async function begin(forcePractice = false) {
     if (active || starting) return;
     starting = true;
     try {
-        if (!experimentKey) {
+        if (!experimentKey && !forcePractice) {
             try {
                 localStorage.setItem(unconfiguredPractice, '1');
             } catch {
-                /* Downloaded files can disable storage. */
+                // IndexedDB can remember practice when localStorage is blocked.
+            }
+            try {
+                await updateRecord(unconfiguredPractice, () => true);
+            } catch {
+                // A standalone file can also be played with both storage mechanisms disabled.
             }
         }
-        const round =
-            participant && !forcePractice
-                ? await claimFirstAttempt()
-                : { layout: lastLayout, measured: false, deadline: Date.now() + 60000 };
+        let round;
+        if (experimentKey && !forcePractice) {
+            try {
+                round = await claimFirstAttempt();
+            } catch {
+                showStorageRetry();
+                return;
+            }
+        } else {
+            round = { layout: lastLayout, measured: false, deadline: Date.now() + 60000 };
+        }
         if (round.done) {
             displayResult(round);
             return;
@@ -215,8 +227,8 @@ function updateCapacity() {
         balance < 0
             ? `Queue grows by ${-balance} requests/s.`
             : balance === 0
-            ? 'Demand matches capacity, leaving no headroom.'
-            : `${balance} requests/s of spare capacity.`;
+              ? 'Demand matches capacity, leaving no headroom.'
+              : `${balance} requests/s of spare capacity.`;
     $('pool-value').value = String(connections);
     $('capacity-outcome').textContent = `${capacity} requests/s capacity. ${outcome}`;
 }
@@ -224,11 +236,14 @@ $('connections').oninput = updateCapacity;
 
 function showDelivery(record) {
     if (!displayed?.measured || displayed.deadline !== record.deadline) return;
-    const failed = Boolean(record.delivery?.failed);
-    $('delivery-status').textContent = failed
-        ? 'Event delivery unconfirmed. Your result is saved and will be retried.'
-        : '';
-    $('delivery-status').hidden = !failed;
+    let message = '';
+    if (record.delivery?.expired) {
+        message = 'Flagsmith’s event delivery window has closed. Your drill result is saved on this device.';
+    } else if (record.delivery?.failed) {
+        message = 'Event delivery unconfirmed. Your result is saved and will be retried.';
+    }
+    $('delivery-status').textContent = message;
+    $('delivery-status').hidden = !message;
 }
 
 function displayResult(attempt) {
@@ -265,8 +280,15 @@ function displayResult(attempt) {
 async function saveAnswer(submission) {
     $('retry-answer').disabled = true;
     try {
-        saved = await updateRecord(attemptKey, (current) =>
-            current?.done ? current : { ...(current ?? { ...saved, measured: false }), ...submission, done: true },
+        const first = await claimAnswer(journalKey, submission);
+        saved = await updateRecord(
+            attemptKey,
+            (current, journal) => {
+                if (current?.done) return current;
+                const answer = journal?.deadline === first.deadline ? journal : first;
+                return { ...(current ?? { ...saved, measured: false }), ...answer, done: true };
+            },
+            { relatedKey: journalKey },
         );
     } catch {
         $('form').hidden = true;
@@ -291,7 +313,7 @@ function finish(answer) {
     active = null;
     if (isFirstAttempt) {
         const submission = { deadline: outcome.deadline, finishedAt, answer: outcome.answer };
-        void saveAnswer(pendingAnswer(journalKey, outcome.deadline, submission));
+        void saveAnswer(submission);
     } else displayResult(outcome);
 }
 if (updates)
@@ -319,13 +341,12 @@ async function connectFlagsmith(participant) {
 
 async function initialise() {
     $('start').disabled = true;
+    let held;
     if (experimentKey) {
         try {
-            participant = await updateRecord(
-                identityKey,
-                (previous) => previous || crypto.randomUUID(),
-                (value) => value,
-            );
+            participant = await updateRecord(identityKey, (previous) => previous || crypto.randomUUID(), {
+                parseLegacy: (value) => value,
+            });
             journalKey = attemptKey + '.answer.' + participant;
             syncEvents = createEventDelivery({
                 key: attemptKey,
@@ -335,19 +356,33 @@ async function initialise() {
                 identifier: participant,
                 onChange: showDelivery,
             });
-            saved = await updateRecord(attemptKey, (previous) => previous);
-            if (!saved) connected = await connectFlagsmith(participant);
-        } catch (error) {
-            console.warn('Experiment unavailable.', error);
+            saved = await updateRecord(
+                attemptKey,
+                (previous, journal) => {
+                    if (journal && previous?.deadline === journal.deadline) held = journal;
+                    return previous;
+                },
+                { relatedKey: journalKey },
+            );
+        } catch {
+            showStorageRetry();
+            return;
+        }
+        if (!saved) {
+            try {
+                connected = await connectFlagsmith(participant);
+            } catch (error) {
+                console.warn('Experiment unavailable.', error);
+            }
         }
     }
     $('start').onclick = () => begin(Boolean(saved));
     $('start').disabled = false;
     if (saved?.measured) syncEvents();
-    if (saved && !saved.done && (saved.measured || pendingAnswer(journalKey, saved.deadline))) {
+    if (saved && !saved.done && (saved.measured || held)) {
         active = saved;
         lastLayout = saved.layout;
-        openDesk();
+        openDesk(held);
         return;
     }
     if (saved?.done && saved.finishedAt) {
@@ -361,7 +396,7 @@ async function initialise() {
     $('mode').textContent = saved
         ? 'Previous attempt · practice available'
         : connected
-        ? 'Connected to Flagsmith'
-        : 'Practice mode · experiment offline';
+          ? 'Connected to Flagsmith'
+          : 'Practice mode · experiment offline';
 }
 void initialise();

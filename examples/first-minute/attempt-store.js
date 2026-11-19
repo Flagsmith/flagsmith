@@ -22,17 +22,21 @@ function readLegacy(key, parse) {
     }
 }
 
-export function pendingAnswer(key, deadline, submission) {
-    const existing = readLegacy(key, JSON.parse);
-    if (existing?.deadline === deadline) return existing;
-    if (submission) {
+export function claimAnswer(key, submission) {
+    const claim = () =>
+        updateRecord(key, (existing) => (existing?.deadline === submission.deadline ? existing : submission));
+    if (!navigator.locks) return claim();
+    // Serialise the fallback with the database claim if a tab temporarily loses write access.
+    return navigator.locks.request(key, async () => {
         try {
-            localStorage.setItem(key, JSON.stringify(submission));
+            return await claim();
         } catch {
-            // The UI holds the original answer until IndexedDB confirms completion.
+            const existing = readLegacy(key, JSON.parse);
+            if (existing?.deadline === submission.deadline) return existing;
+            localStorage.setItem(key, JSON.stringify(submission));
+            return submission;
         }
-    }
-    return submission;
+    });
 }
 
 export function clearPendingAnswer(key) {
@@ -43,11 +47,13 @@ export function clearPendingAnswer(key) {
     }
 }
 
-export async function updateRecord(key, change, parseLegacy = JSON.parse) {
+export async function updateRecord(key, change, { parseLegacy = JSON.parse, relatedKey } = {}) {
     const database = await openDatabase();
     return new Promise((resolve, reject) => {
         const transaction = database.transaction('rounds', 'readwrite');
         const store = transaction.objectStore('rounds');
+        // Both reads see the same state, even if another tab is claiming the desk or an answer.
+        const related = relatedKey && store.get(relatedKey);
         const read = store.get(key);
         let next;
         let failure;
@@ -55,7 +61,8 @@ export async function updateRecord(key, change, parseLegacy = JSON.parse) {
         transaction.onabort = () => reject(failure || transaction.error);
         read.onsuccess = () => {
             try {
-                next = change(read.result ?? readLegacy(key, parseLegacy));
+                const relatedRecord = related && (related.result ?? readLegacy(relatedKey, JSON.parse));
+                next = change(read.result ?? readLegacy(key, parseLegacy), relatedRecord);
                 if (next !== undefined && next !== read.result) store.put(next, key);
             } catch (error) {
                 failure = error;

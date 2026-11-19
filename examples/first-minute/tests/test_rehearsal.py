@@ -67,6 +67,8 @@ def test_prepare_experiment__paused_experiment__resumes_only_when_requested(
 ):
     # Given an existing experiment with an equal split between control and guided
     rollout = {
+        "enabled": True,
+        "rollout_percentage": 100,
         "feature_state_value": {"type": "string", "value": "control"},
         "multivariate_feature_state_values": [
             {"multivariate_feature_option": 7, "percentage_allocation": 50}
@@ -107,6 +109,30 @@ def test_prepare_experiment__paused_experiment__resumes_only_when_requested(
     setup_experiment.prepare_experiment(1, "Participant", resume_paused=True)
     # Then participant setup resumes precisely once
     assert starts == ["environments/test/experiments/1/start/"]
+
+    # A paused rehearsal can finish cleanup with enrolment already closed.
+    rollout["rollout_percentage"] = 0
+    setup_experiment.prepare_experiment(1, "Rehearsal")
+    with pytest.raises(SystemExit, match="100% of identities"):
+        setup_experiment.prepare_experiment(1, "Participant", resume_paused=True)
+    assert len(starts) == 1
+
+
+@pytest.mark.parametrize(
+    "changed",
+    [
+        {"enabled": False},
+        {"rollout_percentage": 0},
+        {"rollout_percentage": 20},
+        {"audience": {"segments": [{"id": 1}]}},
+    ],
+)
+def test_check_enrolment__rollout_excludes_players__refuses_setup(changed):
+    # Given a reused participant experiment that cannot enrol every player
+    rollout = {"enabled": True, "rollout_percentage": 100, **changed}
+    # When / Then the participant experiment cannot be advertised as ready
+    with pytest.raises(SystemExit, match="100% of identities"):
+        setup_experiment.check_enrolment({"experiment_rollout": rollout})
 
 
 @pytest.mark.parametrize("response", [None, [], {}])

@@ -110,6 +110,27 @@ test('a stalled Flagsmith lookup still allows an unmeasured practice round', asy
     expect(events).toEqual([]);
 });
 
+test('the standalone drill remains playable when both storage mechanisms are blocked', async ({ page }) => {
+    await page.addInitScript(() => {
+        for (const name of ['indexedDB', 'localStorage']) {
+            Object.defineProperty(window, name, {
+                get() {
+                    throw new DOMException('Storage blocked', 'SecurityError');
+                },
+            });
+        }
+    });
+    await page.route('**/offline-practice.html', (route) =>
+        route.fulfill({ contentType: 'text/html', path: 'dist/first-minute.html' }),
+    );
+    await page.goto('/offline-practice.html');
+    await page.locator('#start').click();
+    await expect(page.locator('#mode')).toHaveText('Practice · excluded from experiment');
+    await page.locator('input[value=pool]').check();
+    await page.locator('#submit').click();
+    await expect(page.locator('#verdict')).toHaveText('Root cause found.');
+});
+
 test('a returning participant can answer with the flag endpoint unavailable', async ({ page, context }) => {
     const events = await interceptSdk(context);
     await page.goto('/');
@@ -282,7 +303,9 @@ test('a reload during exposure delivery recovers the original assignment', async
     expect(attempts[1]).toEqual(attempts[0]);
     await page.locator('input[value=pool]').check();
     await page.locator('#submit').click();
-    await expect.poll(() => attempts.map((e) => e.event)).toEqual(['$flag_exposure', '$flag_exposure', 'drill_resolved']);
+    await expect
+        .poll(() => attempts.map((e) => e.event))
+        .toEqual(['$flag_exposure', '$flag_exposure', 'drill_resolved']);
 });
 
 test('reading an offline briefing leaves the first connected round eligible', async ({ page, context }) => {
@@ -296,4 +319,158 @@ test('reading an offline briefing leaves the first connected round eligible', as
     await expect(page.locator('#mode')).toHaveText('Connected to Flagsmith');
     await page.locator('#start').click();
     await expect.poll(() => events.map((e) => e.event)).toEqual(['$flag_exposure']);
+});
+
+for (const fallback of [false, true]) {
+    test(`two tabs recover the first answer from ${fallback ? 'locked localStorage' : 'IndexedDB'} after a failed save`, async ({
+        page,
+        context,
+    }) => {
+        const events = await interceptSdk(context);
+        const second = await context.newPage();
+        await Promise.all([page.goto('/'), second.goto('/')]);
+        for (const tab of [page, second]) await expect(tab.locator('#mode')).toHaveText('Connected to Flagsmith');
+        for (const tab of [page, second]) {
+            await tab.locator('#start').click();
+            await expect(tab.locator('#desk')).toBeVisible();
+            await tab.evaluate((blockJournal) => {
+                const put = IDBObjectStore.prototype.put;
+                IDBObjectStore.prototype.put = function (value, key) {
+                    if (value?.done || (blockJournal && String(key).includes('.answer.'))) {
+                        throw new DOMException('Test write interruption', 'QuotaExceededError');
+                    }
+                    return put.call(this, value, key);
+                };
+            }, fallback);
+        }
+        await page.locator('input[value=traffic]').check();
+        await second.locator('input[value=pool]').check();
+        await page.locator('#submit').click();
+        await expect(page.locator('#save-error')).toBeVisible();
+        await second.locator('#submit').click();
+        await expect(second.locator('#save-error')).toBeVisible();
+        await Promise.all([page.reload(), second.reload()]);
+        for (const tab of [page, second])
+            await expect(tab.locator('#verdict')).toHaveText('Look at the connection queue.');
+        expect(events.map((e) => e.event)).toEqual(['$flag_exposure']);
+    });
+}
+
+test('an expired receipt stops retries and keeps the original local verdict', async ({ page, context }) => {
+    const attempts = [];
+    await page.addInitScript(() => {
+        const key = 'first-minute.first-attempt.v1.browser-test';
+        if (localStorage.getItem(key)) return;
+        const started = Date.now() - 11 * 24 * 60 * 60 * 1000;
+        localStorage.setItem(
+            key,
+            JSON.stringify({
+                measured: true,
+                done: true,
+                identifier: 'late-player',
+                layout: 'guided',
+                variant: 'guided',
+                deadline: started + 60000,
+                finishedAt: started + 2000,
+                answer: 'pool',
+                delivery: { $flag_exposure: true },
+            }),
+        );
+    });
+    await context.route('**/api/v1/events', (route) => {
+        attempts.push(route.request().postDataJSON().events[0]);
+        return route.fulfill({
+            status: 400,
+            json: { accepted: 0, rejected: [{ index: 0, error: 'timestamp: Timestamp is older than 10 days.' }] },
+        });
+    });
+    await page.goto('/');
+    await expect(page.locator('#verdict')).toHaveText('Root cause found.');
+    await expect(page.locator('#delivery-status')).toContainText('delivery window has closed');
+    await page.reload();
+    await expect(page.locator('#delivery-status')).toContainText('delivery window has closed');
+    await page.clock.install();
+    await page.evaluate(() => window.dispatchEvent(new Event('online')));
+    await page.clock.fastForward(61000);
+    expect(attempts.map((event) => event.event)).toEqual(['drill_resolved']);
+});
+
+test('a failed first-desk write keeps the solution hidden until storage recovers', async ({ page, context }) => {
+    const events = await interceptSdk(context);
+    await page.goto('/');
+    await expect(page.locator('#mode')).toHaveText('Connected to Flagsmith');
+    await page.evaluate(() => {
+        const put = IDBObjectStore.prototype.put;
+        IDBObjectStore.prototype.put = function (value, key) {
+            if (key === 'first-minute.first-attempt.v1.browser-test')
+                throw new DOMException('No space', 'QuotaExceededError');
+            return put.call(this, value, key);
+        };
+    });
+    await page.locator('#start').click();
+    await expect(page.locator('#start')).toHaveText('Reload briefing');
+    await expect(page.locator('#desk')).toBeHidden();
+    await expect(page.locator('#result')).toBeHidden();
+    expect(events).toEqual([]);
+    await page.locator('#start').click();
+    await expect(page.locator('#mode')).toHaveText('Connected to Flagsmith');
+    await page.locator('#start').click();
+    await expect(page.locator('#guide')).toBeVisible();
+    await expect.poll(() => events.map((e) => e.event)).toEqual(['$flag_exposure']);
+});
+
+test('an unavailable attempt database preserves an enrolled round', async ({ page, context }) => {
+    const events = await interceptSdk(context);
+    await page.addInitScript(() => {
+        if (sessionStorage.getItem('block-attempt-db')) {
+            IDBFactory.prototype.open = () => {
+                throw new DOMException('Database unavailable', 'InvalidStateError');
+            };
+        }
+    });
+    await page.goto('/');
+    await expect(page.locator('#mode')).toHaveText('Connected to Flagsmith');
+    await page.locator('#start').click();
+    await expect.poll(() => events.length).toBe(1);
+    await page.evaluate(() => sessionStorage.setItem('block-attempt-db', '1'));
+    await page.reload();
+    await expect(page.locator('#start')).toHaveText('Reload briefing');
+    await expect(page.locator('#desk')).toBeHidden();
+    await page.evaluate(() => sessionStorage.removeItem('block-attempt-db'));
+    await page.locator('#start').click();
+    await expect(page.locator('#guide')).toBeVisible();
+    await page.locator('input[value=pool]').check();
+    await page.locator('#submit').click();
+    await expect.poll(() => events.map((e) => e.event)).toEqual(['$flag_exposure', 'drill_resolved']);
+    expect(events[1].identifier).toBe(events[0].identifier);
+});
+
+test('standalone practice still excludes later enrolment when localStorage is unavailable', async ({
+    page,
+    context,
+}) => {
+    const events = await interceptSdk(context);
+    await page.addInitScript(() => {
+        Object.defineProperty(window, 'localStorage', {
+            get() {
+                throw new DOMException('Storage blocked', 'SecurityError');
+            },
+        });
+    });
+    await page.route('**/offline-practice.html', (route) =>
+        route.fulfill({ contentType: 'text/html', path: 'dist/first-minute.html' }),
+    );
+    await page.goto('/offline-practice.html');
+    await page.locator('#start').click();
+    await page.locator('input[value=pool]').check();
+    await page.locator('#submit').click();
+    await expect(page.locator('#verdict')).toHaveText('Root cause found.');
+    await page.goto('/');
+    await expect(page.locator('#start')).toBeEnabled();
+    await page.locator('#start').click();
+    await expect(page.locator('#mode')).toHaveText('Practice · excluded from experiment');
+    await page.locator('input[value=pool]').check();
+    await page.locator('#submit').click();
+    await expect(page.locator('#verdict')).toHaveText('Root cause found.');
+    expect(events).toEqual([]);
 });

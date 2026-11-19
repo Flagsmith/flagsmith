@@ -120,6 +120,18 @@ def check_rollout(experiment, guided_id):
         )
 
 
+def check_enrolment(experiment):
+    rollout = experiment.get("experiment_rollout") or {}
+    if (
+        not rollout.get("enabled")
+        or rollout.get("rollout_percentage") != 100
+        or (rollout.get("audience") or {}).get("segments")
+    ):
+        raise SystemExit(
+            "The drill needs an enabled rollout for 100% of identities with no audience restriction. Check enrolment in Flagsmith."
+        )
+
+
 def prepare_experiment(org_id, environment_name, *, resume_paused=False):
     project_name = "First Minute"
     project = ensure(
@@ -229,9 +241,12 @@ def prepare_experiment(org_id, environment_name, *, resume_paused=False):
             "The existing experiment uses a different flag or metric. Check the experiment in Flagsmith."
         )
     check_rollout(experiment, variant["id"])
-    if experiment["status"] == "created" or (
+    should_start = experiment["status"] == "created" or (
         resume_paused and experiment["status"] == "paused"
-    ):
+    )
+    if should_start or experiment["status"] == "running":
+        check_enrolment(experiment)
+    if should_start:
         request(detail + "start/", {})
     return env, metric, variant, detail
 
@@ -245,6 +260,7 @@ def setup(org_id):
         raise SystemExit(
             "The experiment is not running. Check its status in the dashboard."
         )
+    check_enrolment(experiment)
     print("Participant experiment is running.", file=sys.stderr)
     # Only the client-side environment key belongs in a browser configuration.
     print("VITE_FLAGSMITH_ENVIRONMENT_ID=" + env["api_key"])
