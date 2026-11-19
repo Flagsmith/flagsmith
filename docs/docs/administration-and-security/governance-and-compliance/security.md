@@ -169,7 +169,7 @@ The response for `/api/v1/identities` will change from this:
    "identity": null,
    "feature_segment": null,
    "enabled": false,
-   "reason": "STATIC"
+   "reason": "DEFAULT"
   },
   {
    "id": 27597,
@@ -187,7 +187,7 @@ The response for `/api/v1/identities` will change from this:
    "identity": null,
    "feature_segment": null,
    "enabled": false,
-   "reason": "STATIC"
+   "reason": "DEFAULT"
   }
  ]
 }

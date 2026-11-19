@@ -48,7 +48,7 @@ Flagsmith will send a `POST` request to the Webhook url you provide, with the fo
    "feature_state_value": null,
    "id": 2,
    "identity": null,
-   "reason": "STATIC"
+   "reason": "DEFAULT"
   },
   {
    "enabled": true,
@@ -66,7 +66,7 @@ Flagsmith will send a `POST` request to the Webhook url you provide, with the fo
    "feature_state_value": null,
    "id": 4,
    "identity": null,
-   "reason": "STATIC"
+   "reason": "DEFAULT"
   }
  ],
  "identity": "user_test",
