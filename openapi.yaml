@@ -22088,7 +22088,7 @@ components:
       properties:
         rollout_decision:
           $ref: '#/components/schemas/RolloutDecisionEnum'
-        variant_id:
+        rollout_variant:
           type: integer
       required:
         - rollout_decision

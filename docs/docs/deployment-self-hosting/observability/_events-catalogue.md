@@ -195,7 +195,7 @@ Attributes:
 ### `experimentation.experiment.completed`
 
 Logged at `info` from:
- - `api/experimentation/services.py:639`
+ - `api/experimentation/services.py:640`
 
 Attributes:
  - `environment.id`
@@ -252,7 +252,7 @@ Attributes:
 ### `experimentation.rollout.applied`
 
 Logged at `info` from:
- - `api/experimentation/services.py:1153`
+ - `api/experimentation/services.py:1168`
 
 Attributes:
  - `audience.match`
@@ -268,7 +268,7 @@ Attributes:
 ### `experimentation.rollout.superseded`
 
 Logged at `info` from:
- - `api/experimentation/services.py:744`
+ - `api/experimentation/services.py:759`
 
 Attributes:
  - `environment.id`
@@ -279,7 +279,7 @@ Attributes:
 ### `experimentation.sdk_events.rejected`
 
 Logged at `warning` from:
- - `api/experimentation/services.py:223`
+ - `api/experimentation/services.py:224`
 
 Attributes:
  - `environment.id`
@@ -945,7 +945,7 @@ Attributes:
 ### `warehouse.connection.connected`
 
 Logged at `info` from:
- - `api/experimentation/services.py:1329`
+ - `api/experimentation/services.py:1344`
 
 Attributes:
  - `environment.id`
@@ -976,7 +976,7 @@ Attributes:
 ### `warehouse.connection.test_event_sent`
 
 Logged at `info` from:
- - `api/experimentation/services.py:1272`
+ - `api/experimentation/services.py:1287`
 
 Attributes:
  - `environment.id`
@@ -985,7 +985,7 @@ Attributes:
 ### `warehouse.connection.verification_failed`
 
 Logged at `warning` from:
- - `api/experimentation/services.py:1304`
+ - `api/experimentation/services.py:1319`
 
 Attributes:
  - `environment.id`
@@ -995,7 +995,7 @@ Attributes:
 ### `warehouse.connection.verification_succeeded`
 
 Logged at `info` from:
- - `api/experimentation/services.py:1314`
+ - `api/experimentation/services.py:1329`
 
 Attributes:
  - `environment.id`
@@ -1004,7 +1004,7 @@ Attributes:
 ### `warehouse.srm.overallocated`
 
 Logged at `error` from:
- - `api/experimentation/services.py:462`
+ - `api/experimentation/services.py:463`
 
 Attributes:
  - `environment.id`
@@ -1014,7 +1014,7 @@ Attributes:
 ### `warehouse.srm.unkeyed_variant`
 
 Logged at `error` from:
- - `api/experimentation/services.py:448`
+ - `api/experimentation/services.py:449`
 
 Attributes:
  - `environment.id`
