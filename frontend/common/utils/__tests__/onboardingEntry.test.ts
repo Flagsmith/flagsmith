@@ -21,24 +21,25 @@ jest.mock('common/safeLocalStorage', () => ({
   storageSet: (key: string, value: string) => storage.set(key, value),
 }))
 
-const mockFlagsmith = flagsmith as jest.Mocked<typeof flagsmith>
+const mockFlagsmith = jest.mocked(flagsmith)
 
 describe('decideOnboardingEntry', () => {
   beforeEach(() => {
     storage.clear()
     jest.resetAllMocks()
-    mockFlagsmith.identify.mockResolvedValue(undefined as any)
+    mockFlagsmith.identify.mockResolvedValue(undefined)
     mockFlagsmith.getContext.mockReturnValue({
       identity: { identifier: 'anon-123' },
-    } as any)
+    })
   })
 
   it('returns the decision without persisting anything', async () => {
     // Given
     mockFlagsmith.getExperimentFlag.mockReturnValue({
       enabled: true,
+      value: null,
       variant: 'single_page',
-    } as any)
+    })
 
     // When
     const decision = await decideOnboardingEntry()
@@ -57,7 +58,8 @@ describe('decideOnboardingEntry', () => {
     // Given
     mockFlagsmith.getExperimentFlag.mockReturnValue({
       enabled: false,
-    } as any)
+      value: null,
+    })
 
     // When
     const decision = await decideOnboardingEntry()
