@@ -4,6 +4,8 @@ from typing_extensions import TypedDict
 
 ExposureGranularity = Literal["hour", "day"]
 
+RolloutDecisionType = Literal["control", "variant", "disable"]
+
 
 class MetricDefinitionV1(TypedDict):
     """The recipe a metric is computed from.

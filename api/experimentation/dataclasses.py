@@ -3,7 +3,7 @@ from datetime import datetime
 
 from core.dataclasses import AuthorData
 from experimentation.stats import Inference, VariantStats
-from experimentation.types import ExposureGranularity
+from experimentation.types import ExposureGranularity, RolloutDecisionType
 from features.feature_states.models import FeatureValueType
 from features.future.types import Variant
 
@@ -27,7 +27,7 @@ class RolloutSpec:
 
 @dataclass(frozen=True)
 class RolloutDecisionSpec:
-    decision: str
+    decision: RolloutDecisionType
     variant_id: int | None = None
 
 

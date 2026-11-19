@@ -475,16 +475,19 @@ class ExperimentViewSet(
         )
 
     def perform_destroy(self, instance: Experiment) -> None:
-        if instance.status == ExperimentStatus.RUNNING:
-            raise serializers.ValidationError(
-                {
-                    "detail": (
-                        "Cannot delete a running experiment. "
-                        "Pause or complete it first."
-                    )
-                }
-            )
         with transaction.atomic():
+            instance.refresh_from_db(
+                from_queryset=Experiment.objects.select_for_update()
+            )
+            if instance.status == ExperimentStatus.RUNNING:
+                raise serializers.ValidationError(
+                    {
+                        "detail": (
+                            "Cannot delete a running experiment. "
+                            "Pause or complete it first."
+                        )
+                    }
+                )
             delete_experiment_rollout_override(
                 instance, AuthorData.from_request(self.request)
             )

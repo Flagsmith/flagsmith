@@ -59,7 +59,6 @@ from experimentation.models import (
     ExperimentStatus,
     MetricAggregation,
     MetricDirection,
-    RolloutDecision,
     SDKExperimentationEvent,
     WarehouseConnection,
     WarehouseConnectionStatus,
@@ -661,7 +660,7 @@ def _apply_rollout_decision(
     rollout override. The rollout segment is kept: it records the audience."""
     environment_default: EnvironmentDefaultRequest = (
         {"enabled": False}
-        if rollout_decision.decision == RolloutDecision.DISABLE
+        if rollout_decision.decision == "disable"
         else {
             "enabled": True,
             "variants": [
