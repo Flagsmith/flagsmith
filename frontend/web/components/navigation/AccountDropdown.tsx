@@ -1,5 +1,6 @@
 import React, { useLayoutEffect, useRef, useState } from 'react'
 import Icon from 'components/icons/Icon'
+import { colorIconSecondary, colorTextSecondary } from 'common/theme/tokens'
 import classNames from 'classnames'
 import useOutsideClick from 'common/useOutsideClick'
 import { createPortal } from 'react-dom'
@@ -77,7 +78,7 @@ const AccountDropdown: React.FC = () => {
             <div
               className='feature-action__item feature-action__header'
               style={{
-                color: '#656D7B',
+                color: colorTextSecondary,
                 cursor: 'default',
                 fontSize: '12px',
                 fontWeight: 600,
@@ -95,7 +96,7 @@ const AccountDropdown: React.FC = () => {
               })}
               onClick={() => handleViewModeChange('release-manager')}
             >
-              <Icon name='rocket' width={18} fill='#9DA4AE' />
+              <Icon name='rocket' width={18} fill={colorIconSecondary} />
               Release Manager
             </div>
             <div
@@ -105,7 +106,7 @@ const AccountDropdown: React.FC = () => {
               })}
               onClick={() => handleViewModeChange('executive')}
             >
-              <Icon name='bar-chart' width={18} fill='#9DA4AE' />
+              <Icon name='bar-chart' width={18} fill={colorIconSecondary} />
               Executive View
             </div>
             <div
@@ -114,7 +115,7 @@ const AccountDropdown: React.FC = () => {
               })}
               onClick={() => handleViewModeChange('dev')}
             >
-              <Icon name='code' width={18} fill='#9DA4AE' />
+              <Icon name='code' width={18} fill={colorIconSecondary} />
               Dev View
             </div>
             <div
@@ -130,7 +131,7 @@ const AccountDropdown: React.FC = () => {
               id='account-settings'
               data-test='account-settings'
             >
-              <Icon name='setting' width={18} fill='#9DA4AE' />
+              <Icon name='setting' width={18} fill={colorIconSecondary} />
               Account Settings
             </div>
           </div>,

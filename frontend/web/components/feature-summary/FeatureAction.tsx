@@ -5,6 +5,7 @@ import Utils from 'common/utils/utils'
 import Constants from 'common/constants'
 import Permission from 'common/providers/Permission'
 import Icon from 'components/icons/Icon'
+import { colorIconSecondary } from 'common/theme/tokens'
 import { Tag } from 'common/types/responses'
 import color from 'color'
 import { getTagColor } from 'components/tags/Tag'
@@ -104,7 +105,7 @@ const FeatureAction: FC<FeatureActionProps> = ({
         <div ref={listRef} className='feature-action__list'>
           <ActionItem
             disableE2E={disableE2E}
-            icon={<Icon name='copy' width={18} fill='#9DA4AE' />}
+            icon={<Icon name='copy' width={18} fill={colorIconSecondary} />}
             label='Copy Feature Name'
             handleActionClick={() => {
               handleActionClick('copy')
@@ -116,7 +117,7 @@ const FeatureAction: FC<FeatureActionProps> = ({
           {!hideAudit && (
             <ActionItem
               disableE2E={disableE2E}
-              icon={<Icon name='list' width={18} fill='#9DA4AE' />}
+              icon={<Icon name='list' width={18} fill={colorIconSecondary} />}
               label='Show Audit Logs'
               handleActionClick={() => {
                 handleActionClick('audit')
@@ -128,8 +129,8 @@ const FeatureAction: FC<FeatureActionProps> = ({
           )}
           {!hideHistory && (
             <ActionItem
-              e2edisableE2E={disableE2E}
-              icon={<Icon name='clock' width={18} fill='#9DA4AE' />}
+              disableE2E={disableE2E}
+              icon={<Icon name='clock' width={18} fill={colorIconSecondary} />}
               label='Show History'
               handleActionClick={() => {
                 handleActionClick('history')
@@ -156,7 +157,13 @@ const FeatureAction: FC<FeatureActionProps> = ({
                     title={
                       <ActionItem
                         disableE2E={disableE2E}
-                        icon={<Icon name='trash-2' width={18} fill='#9DA4AE' />}
+                        icon={
+                          <Icon
+                            name='trash-2'
+                            width={18}
+                            fill={colorIconSecondary}
+                          />
+                        }
                         label='Remove feature'
                         handleActionClick={() => {
                           handleActionClick('remove')
