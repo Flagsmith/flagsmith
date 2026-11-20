@@ -1,17 +1,15 @@
-// Outranks the global h1 to h6 rules, which size by tag.
+// The level owns the size. Outranks the global h1 to h6 rules.
 .ds-heading-text {
   margin: 0;
   color: var(--color-text-default);
+  font-size: var(--font-size-heading-sm);
   font-weight: var(--font-weight-semibold);
   line-height: var(--line-height-heading);
 
-  &--lg {
+  &:is(h1) {
     font-size: var(--font-size-heading-lg);
   }
-  &--md {
+  &:is(h2) {
     font-size: var(--font-size-heading-md);
-  }
-  &--sm {
-    font-size: var(--font-size-heading-sm);
   }
 }

@@ -1,3 +1,2 @@
 export { default } from './HeadingText'
-export type { HeadingTextProps } from './HeadingText'
-export type { HeadingLevel } from './headingSize'
+export type { HeadingLevel, HeadingTextProps } from './HeadingText'
