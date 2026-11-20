@@ -21,6 +21,7 @@ from django.forms import model_to_dict
 from django.urls import reverse
 from django.utils import timezone
 from flag_engine.segments.constants import IS_NOT_SET, IS_SET, NOT_EQUAL
+from flag_engine.segments.types import ConditionOperator
 from freezegun import freeze_time
 from pytest_django import DjangoAssertNumQueries
 from pytest_django.fixtures import SettingsWrapper
@@ -44,6 +45,7 @@ from environments.dynamodb import (
 from environments.identities.models import Identity
 from environments.models import Environment, EnvironmentAPIKey
 from environments.permissions.models import UserEnvironmentPermission
+from evaluation import services as evaluation_services
 from features import views
 from features.dataclasses import EnvironmentFeatureOverridesData
 from features.feature_types import MULTIVARIATE, STANDARD
@@ -61,7 +63,9 @@ from permissions.models import PermissionModel
 from projects.code_references.models import ScannedCodeReferences, VCSRepository
 from projects.models import Project, UserProjectPermission
 from projects.tags.models import Tag
-from segments.models import Condition, Segment, SegmentRule
+from segments.models import Segment
+from segments.services import write_segment_rules
+from segments.types import SegmentRule as SegmentRuleType
 from tests.types import (
     WithEnvironmentPermissionsCallable,
     WithProjectPermissionsCallable,
@@ -125,16 +129,21 @@ def checkout_prerequisites_segment(
 def payments_prerequisite_rule(
     payments_feature: Feature,
     checkout_prerequisites_segment: Segment,
-) -> SegmentRule:
-    rule: SegmentRule = SegmentRule.objects.create(
-        segment=checkout_prerequisites_segment, type=SegmentRule.ALL_RULE
-    )
-    Condition.objects.create(
-        rule=rule,
-        property=f'$.flags["{payments_feature.name}"].enabled',
-        operator=NOT_EQUAL,
-        value="true",
-    )
+) -> SegmentRuleType:
+    rule: SegmentRuleType = {
+        "type": "ALL",
+        "conditions": [
+            {
+                "property": f'$.flags["{payments_feature.name}"].enabled',
+                "operator": NOT_EQUAL,
+                "value": "true",
+                "description": None,
+            }
+        ],
+    }
+    checkout_prerequisites_segment.rules_data = [rule]
+    checkout_prerequisites_segment.save(update_fields=["rules_data"])
+    write_segment_rules(checkout_prerequisites_segment, [rule])
     return rule
 
 
@@ -834,20 +843,30 @@ def test_get_flags__empty_feature_filter__returns_all_flags(
     ],
 )
 def test_get_flags__prerequisite_disabled__returns_dependent_disabled(
-    conditions: list[tuple[str, str, str | None]],
+    conditions: list[tuple[str, ConditionOperator, str | None]],
     api_client: APIClient,
     client_api_key: str,
     payments_feature: Feature,
     checkout_prerequisites_segment: Segment,
 ) -> None:
     # Given
-    rule = SegmentRule.objects.create(
-        segment=checkout_prerequisites_segment, type=SegmentRule.ALL_RULE
-    )
-    for property_, operator, value in conditions:
-        Condition.objects.create(
-            rule=rule, property=property_, operator=operator, value=value
-        )
+    rules: list[SegmentRuleType] = [
+        {
+            "type": "ALL",
+            "conditions": [
+                {
+                    "property": property_,
+                    "operator": operator,
+                    "value": value,
+                    "description": None,
+                }
+                for property_, operator, value in conditions
+            ],
+        }
+    ]
+    checkout_prerequisites_segment.rules_data = rules
+    checkout_prerequisites_segment.save(update_fields=["rules_data"])
+    write_segment_rules(checkout_prerequisites_segment, rules)
     api_client.credentials(HTTP_X_ENVIRONMENT_KEY=client_api_key)
 
     # When
@@ -866,16 +885,31 @@ def test_get_flags__dependency_for_some_identities__returns_dependent_default(
     identity_property: str,
     api_client: APIClient,
     client_api_key: str,
-    payments_prerequisite_rule: SegmentRule,
+    checkout_prerequisites_segment: Segment,
+    payments_prerequisite_rule: SegmentRuleType,
 ) -> None:
     # Given
-    Condition.objects.create(
-        rule=SegmentRule.objects.create(
-            rule=payments_prerequisite_rule, type=SegmentRule.ALL_RULE
-        ),
-        property=identity_property,
-        operator=IS_NOT_SET,
-    )
+    rules: list[SegmentRuleType] = [
+        {
+            **payments_prerequisite_rule,
+            "rules": [
+                {
+                    "type": "ALL",
+                    "conditions": [
+                        {
+                            "property": identity_property,
+                            "operator": IS_NOT_SET,
+                            "value": None,
+                            "description": None,
+                        }
+                    ],
+                }
+            ],
+        }
+    ]
+    checkout_prerequisites_segment.rules_data = rules
+    checkout_prerequisites_segment.save(update_fields=["rules_data"])
+    write_segment_rules(checkout_prerequisites_segment, rules)
     api_client.credentials(HTTP_X_ENVIRONMENT_KEY=client_api_key)
 
     # When
@@ -901,7 +935,7 @@ def test_get_flags__server_key_only_prerequisite__returns_dependent_disabled(
     expected_flags: dict[str, bool],
     api_client: APIClient,
     payments_feature: Feature,
-    payments_prerequisite_rule: SegmentRule,
+    payments_prerequisite_rule: SegmentRuleType,
 ) -> None:
     # Given
     payments_feature.is_server_key_only = True
@@ -925,7 +959,7 @@ def test_get_flags__enabled_server_key_only_prerequisite_with_client_key__return
     environment: Environment,
     client_api_key: str,
     payments_feature: Feature,
-    payments_prerequisite_rule: SegmentRule,
+    payments_prerequisite_rule: SegmentRuleType,
 ) -> None:
     # Given
     environment.hide_disabled_flags = hide_disabled_flags
@@ -951,7 +985,7 @@ def test_get_flags__hide_disabled_flags__hides_dependent(
     api_client: APIClient,
     environment: Environment,
     client_api_key: str,
-    payments_prerequisite_rule: SegmentRule,
+    payments_prerequisite_rule: SegmentRuleType,
 ) -> None:
     # Given
     environment.hide_disabled_flags = True
@@ -964,6 +998,83 @@ def test_get_flags__hide_disabled_flags__hides_dependent(
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert response.json() == []
+
+
+@pytest.fixture()
+def beta_testers_checkout_segment(
+    checkout_prerequisites_segment: Segment,
+) -> Segment:
+    rules: list[SegmentRuleType] = [
+        {
+            "type": "ALL",
+            "conditions": [
+                {
+                    "property": "beta_tester",
+                    "operator": IS_SET,
+                    "value": None,
+                    "description": None,
+                }
+            ],
+        }
+    ]
+    checkout_prerequisites_segment.rules_data = rules
+    checkout_prerequisites_segment.save(update_fields=["rules_data"])
+    write_segment_rules(checkout_prerequisites_segment, rules)
+    return checkout_prerequisites_segment
+
+
+@pytest.mark.parametrize(
+    "segment",
+    [
+        pytest.param(None, id="no_segments"),
+        pytest.param(
+            lazy_fixture("beta_testers_checkout_segment"), id="identity_segment"
+        ),
+    ],
+)
+def test_get_flags__feature_filter_without_identity_free_segments__evaluates_that_feature_only(
+    segment: Segment | None,
+    api_client: APIClient,
+    client_api_key: str,
+    payments_feature: Feature,
+    checkout_feature: Feature,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    get_evaluation_result_spy = mocker.spy(evaluation_services, "get_evaluation_result")
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=client_api_key)
+
+    # When
+    response = api_client.get("/api/v1/flags/?feature=checkout")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["enabled"] is True
+    context = get_evaluation_result_spy.call_args.args[0]
+    assert context["features"].keys() == {"checkout"}
+    assert context["segments"] == {}
+
+
+def test_get_flags__feature_filter_with_prerequisite_segment__evaluates_environment(
+    api_client: APIClient,
+    client_api_key: str,
+    checkout_prerequisites_segment: Segment,
+    payments_prerequisite_rule: SegmentRuleType,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    get_evaluation_result_spy = mocker.spy(evaluation_services, "get_evaluation_result")
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=client_api_key)
+
+    # When
+    response = api_client.get("/api/v1/flags/?feature=checkout")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["enabled"] is False
+    context = get_evaluation_result_spy.call_args.args[0]
+    assert context["features"].keys() == {"payments", "checkout"}
+    assert context["segments"].keys() == {str(checkout_prerequisites_segment.pk)}
 
 
 @pytest.mark.parametrize("cache_flags_seconds", [0, 30])
