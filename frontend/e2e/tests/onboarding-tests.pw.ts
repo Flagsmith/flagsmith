@@ -1,4 +1,5 @@
 import { test, expect } from '../test-setup';
+import Project from '../../common/project';
 import { byId, createHelpers, getFlagsmith, log, visualSnapshot } from '../helpers';
 import {
   E2E_ONBOARDING_RELOAD_USER,
@@ -193,6 +194,9 @@ test.describe('Onboarding', () => {
   test('A reload before the organisation exists keeps a new user on the onboarding flow @oss', async ({
     page,
   }) => {
+    // Production's teardown can't delete this user until the API is
+    // released with #9017
+    test.skip(Project.env === 'prod', 'Needs the next API release');
     const { addErrorLogging, click, setText, waitForElementVisible } =
       createHelpers(page);
     await addErrorLogging();
