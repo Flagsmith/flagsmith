@@ -1,5 +1,22 @@
 # Changelog
 
+## [2.294.0](https://github.com/Flagsmith/flagsmith/compare/v2.293.0...v2.294.0) (2026-11-20)
+
+
+### Features
+
+* **SDK:** Surface engine reasons in flag responses ([#8944](https://github.com/Flagsmith/flagsmith/issues/8944)) ([9a69843](https://github.com/Flagsmith/flagsmith/commit/9a69843d3cfdb65c3b2b2f769e3a129d4d481621))
+
+
+### Bug Fixes
+
+* **tabs:** measure real CSS gaps so modal tabs overflow into the menu ([#9029](https://github.com/Flagsmith/flagsmith/issues/9029)) ([85f8d1d](https://github.com/Flagsmith/flagsmith/commit/85f8d1da003b99ab3ec95ecbdc3fc92bb656d752))
+
+
+### Docs
+
+* add self-hosted upgrade and rollback guide ([#8890](https://github.com/Flagsmith/flagsmith/issues/8890)) ([6e0f9da](https://github.com/Flagsmith/flagsmith/commit/6e0f9da6f8a6aed7052a35f5f00fdeb313e7ed3b))
+
 ## [2.293.0](https://github.com/Flagsmith/flagsmith/compare/v2.292.0...v2.293.0) (2026-11-19)
 
 
