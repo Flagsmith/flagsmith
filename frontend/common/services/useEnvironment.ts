@@ -1,8 +1,6 @@
-import { FetchBaseQueryError } from '@reduxjs/toolkit/query'
-import { Environment, Res } from 'common/types/responses'
+import { Res } from 'common/types/responses'
 import { Req } from 'common/types/requests'
 import { service } from 'common/service'
-import { fetchAllPages } from 'common/utils/fetchAllPages'
 
 export const environmentService = service
   .enhanceEndpoints({ addTagTypes: ['Environment'] })
@@ -18,19 +16,6 @@ export const environmentService = service
           method: 'POST',
           url: `environments/`,
         }),
-      }),
-      getAllEnvironments: builder.query<
-        Res['allEnvironments'],
-        Req['getAllEnvironments']
-      >({
-        providesTags: [{ id: 'LIST', type: 'Environment' }],
-        queryFn: ({ projectId }, _, _2, baseQuery) =>
-          fetchAllPages<Environment, FetchBaseQueryError>(async (page) => {
-            const { data, error } = await baseQuery({
-              url: `environments/?project=${projectId}&page=${page}`,
-            })
-            return { data: data as Res['environments'] | undefined, error }
-          }),
       }),
       getEnvironment: builder.query<Res['environment'], Req['getEnvironment']>({
         providesTags: (res) => [{ id: res?.id, type: 'Environment' }],
@@ -111,7 +96,6 @@ export async function updateEnvironment(
 
 export const {
   useCreateEnvironmentMutation,
-  useGetAllEnvironmentsQuery,
   useGetEnvironmentMetricsQuery,
   useGetEnvironmentQuery,
   useGetEnvironmentsQuery,
