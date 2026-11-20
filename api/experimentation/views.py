@@ -480,7 +480,14 @@ class ExperimentViewSet(
         except Experiment.DoesNotExist as exc:
             raise NotFound from exc
         except ValueError as exc:
-            raise serializers.ValidationError({"detail": str(exc)}) from exc
+            raise serializers.ValidationError(
+                {
+                    "detail": (
+                        "Cannot delete a running experiment. "
+                        "Pause or complete it first."
+                    )
+                }
+            ) from exc
 
     @action(detail=True, methods=["post"])
     def start(self, request: Request, **kwargs: object) -> Response:
