@@ -481,16 +481,18 @@ Attributes:
 ### `features.flag.staged`
 
 Logged at `info` from:
- - `api/features/future/services.py:463`
+ - `api/features/future/services.py:719`
 
 Attributes:
  - `change_request.id`
  - `environment.id`
+ - `environment_default.updated`
  - `feature.id`
  - `organisation.id`
  - `project.id`
  - `segment_overrides.created.segment.ids`
  - `segment_overrides.deleted.segment.ids`
+ - `segment_overrides.updated.segment.ids`
 
 ### `features.flag.update_rejected`
 
@@ -507,8 +509,8 @@ Attributes:
 ### `features.flag.updated`
 
 Logged at `info` from:
- - `api/features/future/services.py:559`
- - `api/features/future/services.py:628`
+ - `api/features/future/services.py:821`
+ - `api/features/future/services.py:894`
 
 Attributes:
  - `environment.id`
