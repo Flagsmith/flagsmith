@@ -210,10 +210,14 @@ flagsmith = Flagsmith(
     #     events_api_url="https://events.flagsmith.example.com/",
     # ),
 )
+
+# Before your application exits
+flagsmith.close()
 ```
 
-Events still buffered when the interpreter exits are dropped. In short-lived scripts and jobs, pass `max_buffer_items=1`
-to `EventProcessorConfig` so each event is sent as it is tracked.
+The client does not send buffered events by itself when the interpreter exits, so call `close()` from your framework's
+shutdown hook, or register it with `atexit.register(flagsmith.close)`. It waits up to 5 seconds for the events to be
+sent; pass `timeout_seconds` to change that.
 
 </TabItem>
 <TabItem value="java" label="Java">
