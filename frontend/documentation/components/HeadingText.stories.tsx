@@ -9,7 +9,7 @@ const meta: Meta<typeof HeadingText> = {
     docs: {
       description: {
         component:
-          'A heading. `level` sets both the tag and the size: 1 is 24px, 2 is 18px, 3 to 6 are 16px. Pick the level from the page structure, not from the size you want.',
+          'A heading. `level` sets the tag and, by default, the size: 1 is 24px, 2 is 18px, 3 to 6 are 16px. Pick the level from the page structure. `size` (`lg`, `md`, `sm`) overrides the size only when the design needs it.',
       },
     },
   },
@@ -27,6 +27,10 @@ export const Level2: Story = {
 
 export const Level3: Story = {
   args: { children: 'Segment overrides', level: 3 },
+}
+
+export const Level1Small: Story = {
+  args: { children: 'Settings', level: 1, size: 'sm' },
 }
 
 export const AllLevels: Story = {

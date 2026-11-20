@@ -1,4 +1,4 @@
-// The level owns the size. Outranks the global h1 to h6 rules.
+// The level sets the default size. Outranks the global h1 to h6 rules.
 .ds-heading-text {
   margin: 0;
   color: var(--color-text-default);
@@ -11,5 +11,16 @@
   }
   &:is(h2) {
     font-size: var(--font-size-heading-md);
+  }
+
+  // Doubled class so an explicit size beats the level's default.
+  &.ds-heading-text--lg {
+    font-size: var(--font-size-heading-lg);
+  }
+  &.ds-heading-text--md {
+    font-size: var(--font-size-heading-md);
+  }
+  &.ds-heading-text--sm {
+    font-size: var(--font-size-heading-sm);
   }
 }
