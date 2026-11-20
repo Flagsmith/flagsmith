@@ -1,6 +1,7 @@
 import { OptionProps } from 'react-select'
 import { MultiSelectOption } from './MultiSelect'
 import Icon from 'components/icons/Icon'
+import { colorIconAction } from 'common/theme/tokens'
 import { useEffect, useRef } from 'react'
 import { getDarkMode } from 'project/darkMode'
 
@@ -81,7 +82,7 @@ export const CustomOption = ({
       </div>
       {props.isSelected && (
         <div aria-hidden='true'>
-          <Icon width={14} name='checkmark-circle' fill='#6837fc' />
+          <Icon width={14} name='checkmark-circle' fill={colorIconAction} />
         </div>
       )}
     </div>
