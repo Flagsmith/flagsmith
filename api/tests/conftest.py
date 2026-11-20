@@ -1365,6 +1365,17 @@ def admin_client_new(
     return admin_client_original
 
 
+@pytest.fixture
+def admin_client_new_user_context(
+    admin_client_auth_type: AdminClientAuthType,
+    admin_user: FFAdminUser,
+) -> dict[str, str]:
+    """Request context bound for the user making `admin_client_new`'s requests"""
+    if admin_client_auth_type == "master_api_key":
+        return {}  # Master API keys aren't users
+    return {"user__id": str(admin_user.uuid)}
+
+
 @pytest.fixture()
 def superuser():  # type: ignore[no-untyped-def]
     return FFAdminUser.objects.create_superuser(  # type: ignore[no-untyped-call]

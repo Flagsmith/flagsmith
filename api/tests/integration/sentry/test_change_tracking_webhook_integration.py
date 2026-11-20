@@ -44,6 +44,7 @@ def test_sentry_change_tracking__flag_created__sends_update_to_sentry(
     project: int,
     responses: RequestsMock,
     sentry_configuration: SentryChangeTrackingConfiguration,
+    organisation: int,
 ) -> None:
     # Given
     if use_v2_versioning:
@@ -85,6 +86,9 @@ def test_sentry_change_tracking__flag_created__sends_update_to_sentry(
             "event": "sending",
             "http__request__method": "POST",
             "http__route": "/api/v1/projects/{project_pk}/features/",
+            "user__id": str(admin_user.uuid),
+            "organisation__id": organisation,
+            "project__id": project,
             "feature_name": feature_name,
             "headers": ANY,
             "level": "debug",
@@ -96,6 +100,9 @@ def test_sentry_change_tracking__flag_created__sends_update_to_sentry(
             "event": "success",
             "http__request__method": "POST",
             "http__route": "/api/v1/projects/{project_pk}/features/",
+            "user__id": str(admin_user.uuid),
+            "organisation__id": organisation,
+            "project__id": project,
             "feature_name": feature_name,
             "level": "info",
             "sentry_action": "created",
@@ -112,6 +119,7 @@ def test_sentry_change_tracking__flag_state_change__sends_update_to_sentry(
     log: StructuredLogCapture,
     responses: RequestsMock,
     sentry_configuration: SentryChangeTrackingConfiguration,
+    organisation: int,
 ) -> None:
     # Given
     responses.post(sentry_configuration.webhook_url, status=200, body="")
@@ -148,6 +156,8 @@ def test_sentry_change_tracking__flag_state_change__sends_update_to_sentry(
             "event": "sending",
             "http__request__method": "PATCH",
             "http__route": "/api/v1/environments/{environment_api_key}/featurestates/{id}/",
+            "user__id": str(admin_user.uuid),
+            "organisation__id": organisation,
             "feature_name": feature_name,
             "headers": ANY,
             "level": "debug",
@@ -159,6 +169,8 @@ def test_sentry_change_tracking__flag_state_change__sends_update_to_sentry(
             "event": "success",
             "http__request__method": "PATCH",
             "http__route": "/api/v1/environments/{environment_api_key}/featurestates/{id}/",
+            "user__id": str(admin_user.uuid),
+            "organisation__id": organisation,
             "feature_name": feature_name,
             "level": "info",
             "sentry_action": "updated",
@@ -176,6 +188,7 @@ def test_sentry_change_tracking__flag_state_change_in_v2_environment__sends_upda
     responses: RequestsMock,
     sentry_configuration: SentryChangeTrackingConfiguration,
     environment_v2_versioning: int,
+    organisation: int,
 ) -> None:
     # Given
     responses.post(sentry_configuration.webhook_url, status=200, body="")
@@ -256,6 +269,8 @@ def test_sentry_change_tracking__flag_state_change_in_v2_environment__sends_upda
             "event": "sending",
             "http__request__method": "POST",
             "http__route": "/api/v1/environments/{environment_pk}/features/{feature_pk}/versions/{id}/publish/",
+            "user__id": str(admin_user.uuid),
+            "organisation__id": organisation,
             "feature_name": feature_name,
             "headers": ANY,
             "level": "debug",
@@ -267,6 +282,8 @@ def test_sentry_change_tracking__flag_state_change_in_v2_environment__sends_upda
             "event": "success",
             "http__request__method": "POST",
             "http__route": "/api/v1/environments/{environment_pk}/features/{feature_pk}/versions/{id}/publish/",
+            "user__id": str(admin_user.uuid),
+            "organisation__id": organisation,
             "feature_name": feature_name,
             "level": "info",
             "sentry_action": "updated",
@@ -431,6 +448,7 @@ def test_sentry_change_tracking__flag_deleted__sends_update_to_sentry(
     log: StructuredLogCapture,
     responses: RequestsMock,
     sentry_configuration: SentryChangeTrackingConfiguration,
+    organisation: int,
 ) -> None:
     # Given
     responses.post(sentry_configuration.webhook_url, status=200, body="")
@@ -464,6 +482,8 @@ def test_sentry_change_tracking__flag_deleted__sends_update_to_sentry(
             "event": "sending",
             "http__request__method": "DELETE",
             "http__route": "/api/v1/environments/{environment_api_key}/featurestates/{id}/",
+            "user__id": str(admin_user.uuid),
+            "organisation__id": organisation,
             "feature_name": feature_name,
             "headers": ANY,
             "level": "debug",
@@ -475,6 +495,8 @@ def test_sentry_change_tracking__flag_deleted__sends_update_to_sentry(
             "event": "success",
             "http__request__method": "DELETE",
             "http__route": "/api/v1/environments/{environment_api_key}/featurestates/{id}/",
+            "user__id": str(admin_user.uuid),
+            "organisation__id": organisation,
             "feature_name": feature_name,
             "level": "info",
             "sentry_action": "deleted",
@@ -512,6 +534,8 @@ def test_sentry_change_tracking__failing_integration__fails_gracefully(
     responses: RequestsMock,
     sentry_response: dict[str, Any],
     sentry_configuration: SentryChangeTrackingConfiguration,
+    admin_user: FFAdminUser,
+    organisation: int,
 ) -> None:
     # Given
     responses.post(sentry_configuration.webhook_url, **sentry_response)
@@ -531,6 +555,8 @@ def test_sentry_change_tracking__failing_integration__fails_gracefully(
             "event": "sending",
             "http__request__method": "PATCH",
             "http__route": "/api/v1/environments/{environment_api_key}/featurestates/{id}/",
+            "user__id": str(admin_user.uuid),
+            "organisation__id": organisation,
             "feature_name": feature_name,
             "headers": ANY,
             "level": "debug",
@@ -542,6 +568,8 @@ def test_sentry_change_tracking__failing_integration__fails_gracefully(
             "feature_name": feature_name,
             "http__request__method": "PATCH",
             "http__route": "/api/v1/environments/{environment_api_key}/featurestates/{id}/",
+            "user__id": str(admin_user.uuid),
+            "organisation__id": organisation,
             "level": "warning",
             "sentry_action": "updated",
             **error_log,

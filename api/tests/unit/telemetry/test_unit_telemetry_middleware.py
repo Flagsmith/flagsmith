@@ -25,8 +25,8 @@ def test_client_usage_logger_middleware__no_mcp_baggage__logs_nothing(
     assert log.events == []
 
 
-@pytest.mark.usefixtures("mcp_baggage", "recording_span", "organisation")
-def test_client_usage_logger_middleware__mcp_organisation_id_span_attribute__logs_span_organisation_id(
+@pytest.mark.usefixtures("mcp_baggage", "organisation")
+def test_client_usage_logger_middleware__mcp_organisation_id_in_request_context__logs_bound_organisation_id(
     staff_client: APIClient,
     staff_user: FFAdminUser,
     log: StructuredLogCapture,
@@ -50,6 +50,7 @@ def test_client_usage_logger_middleware__mcp_organisation_id_span_attribute__log
             "http__route": "/api/v1/organisations/{organisation_pk}/invites/",
             "organisation__id": other_organisation.pk,
             "status": "success",
+            "user__id": str(staff_user.uuid),
         }
     ]
 
@@ -57,6 +58,7 @@ def test_client_usage_logger_middleware__mcp_organisation_id_span_attribute__log
 @pytest.mark.usefixtures("mcp_baggage")
 def test_client_usage_logger_middleware__mcp_user_with_single_organisation__logs_user_organisation_id(
     staff_client: APIClient,
+    staff_user: FFAdminUser,
     organisation: Organisation,
     log: StructuredLogCapture,
 ) -> None:
@@ -73,6 +75,7 @@ def test_client_usage_logger_middleware__mcp_user_with_single_organisation__logs
             "http__route": "/api/v1/projects/",
             "organisation__id": organisation.pk,
             "status": "success",
+            "user__id": str(staff_user.uuid),
         }
     ]
 
@@ -99,6 +102,7 @@ def test_client_usage_logger_middleware__mcp_user_without_organisations__logs_wa
             "http__route": "/api/v1/projects/",
             "organisation__id": None,
             "status": "success",
+            "user__id": str(staff_user.uuid),
         }
     ]
 
@@ -126,6 +130,7 @@ def test_client_usage_logger_middleware__mcp_user_with_multiple_organisations__l
             "http__route": "/api/v1/projects/",
             "organisation__id": None,
             "status": "success",
+            "user__id": str(staff_user.uuid),
         }
     ]
 
@@ -146,6 +151,7 @@ def test_client_usage_logger_middleware__mcp_unauthenticated_request__logs_nothi
 @pytest.mark.usefixtures("mcp_baggage")
 def test_client_usage_logger_middleware__mcp_error_response__logs_error_status(
     staff_client: APIClient,
+    staff_user: FFAdminUser,
     organisation: Organisation,
     log: StructuredLogCapture,
 ) -> None:
@@ -162,6 +168,7 @@ def test_client_usage_logger_middleware__mcp_error_response__logs_error_status(
             "http__route": "/api/v1/organisations/{organisation_pk}/invites/",
             "organisation__id": organisation.pk,
             "status": "error",
+            "user__id": str(staff_user.uuid),
         }
     ]
 
@@ -224,8 +231,8 @@ def test_client_usage_logger_middleware__user_agent_not_matching_cli_pattern__lo
     assert log.events == []
 
 
-@pytest.mark.usefixtures("recording_span", "organisation")
-def test_client_usage_logger_middleware__cli_organisation_id_span_attribute__logs_span_organisation_id(
+@pytest.mark.usefixtures("organisation")
+def test_client_usage_logger_middleware__cli_organisation_id_in_request_context__logs_bound_organisation_id(
     staff_client: APIClient,
     staff_user: FFAdminUser,
     log: StructuredLogCapture,
@@ -253,6 +260,7 @@ def test_client_usage_logger_middleware__cli_organisation_id_span_attribute__log
             "cli__arch": "arm64",
             "organisation__id": other_organisation.pk,
             "status": "success",
+            "user__id": str(staff_user.uuid),
             "amplitude__user_id": str(staff_user.uuid),
         }
     ]
@@ -280,6 +288,7 @@ def test_client_usage_logger_middleware__cli_user_with_single_organisation__logs
             "cli__arch": "arm64",
             "organisation__id": organisation.pk,
             "status": "success",
+            "user__id": str(staff_user.uuid),
             "amplitude__user_id": str(staff_user.uuid),
         }
     ]
@@ -309,6 +318,7 @@ def test_client_usage_logger_middleware__cli_user_without_organisations__logs_wa
             "cli__arch": "arm64",
             "organisation__id": None,
             "status": "success",
+            "user__id": str(staff_user.uuid),
             "amplitude__user_id": str(staff_user.uuid),
         }
     ]
@@ -340,6 +350,7 @@ def test_client_usage_logger_middleware__cli_user_with_multiple_organisations__l
             "cli__arch": "arm64",
             "organisation__id": None,
             "status": "success",
+            "user__id": str(staff_user.uuid),
             "amplitude__user_id": str(staff_user.uuid),
         }
     ]
@@ -410,6 +421,7 @@ def test_client_usage_logger_middleware__cli_error_response__logs_error_status(
             "cli__arch": "arm64",
             "organisation__id": organisation.pk,
             "status": "error",
+            "user__id": str(staff_user.uuid),
             "amplitude__user_id": str(staff_user.uuid),
         }
     ]
@@ -496,6 +508,7 @@ def test_client_usage_logger_middleware__cli_user_agent__passes_version_through_
             "cli__arch": expected_arch,
             "organisation__id": organisation.pk,
             "status": "success",
+            "user__id": str(staff_user.uuid),
             "amplitude__user_id": str(staff_user.uuid),
         }
     ]

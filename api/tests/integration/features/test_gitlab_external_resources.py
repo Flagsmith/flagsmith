@@ -10,6 +10,7 @@ from features.models import Feature
 from integrations.github.models import GithubConfiguration
 from integrations.gitlab.models import GitLabConfiguration, GitLabWebhook
 from projects.models import Project
+from users.models import FFAdminUser
 
 
 def test_create_external_resource__gitlab_issue__returns_201(
@@ -17,6 +18,7 @@ def test_create_external_resource__gitlab_issue__returns_201(
     project: int,
     feature: int,
     log: StructuredLogCapture,
+    admin_user: FFAdminUser,
 ) -> None:
     # Given
     metadata = {"title": "Fix login bug", "state": "opened"}
@@ -48,6 +50,7 @@ def test_create_external_resource__gitlab_issue__returns_201(
             "event": "resource.linked",
             "http__request__method": "POST",
             "http__route": "/api/v1/projects/{project_pk}/features/{feature_pk}/feature-external-resources/",
+            "user__id": str(admin_user.uuid),
             "organisation__id": organisation_id,
             "project__id": project,
             "feature__id": feature,
@@ -61,6 +64,7 @@ def test_create_external_resource__gitlab_merge_request__returns_201(
     project: int,
     feature: int,
     log: StructuredLogCapture,
+    admin_user: FFAdminUser,
 ) -> None:
     # Given
     metadata = {"title": "Add login button", "state": "opened"}
@@ -93,6 +97,7 @@ def test_create_external_resource__gitlab_merge_request__returns_201(
             "event": "resource.linked",
             "http__request__method": "POST",
             "http__route": "/api/v1/projects/{project_pk}/features/{feature_pk}/feature-external-resources/",
+            "user__id": str(admin_user.uuid),
             "organisation__id": organisation_id,
             "project__id": project,
             "feature__id": feature,
@@ -155,6 +160,7 @@ def test_create_external_resource__gitlab_issue__registers_webhook_and_tags_feat
     project: int,
     feature: int,
     log: StructuredLogCapture,
+    admin_user: FFAdminUser,
 ) -> None:
     # Given
     expected_gitlab_hook_id = 42
@@ -222,6 +228,7 @@ def test_create_external_resource__gitlab_issue__registers_webhook_and_tags_feat
             "event": "webhook.registered",
             "http__request__method": "POST",
             "http__route": "/api/v1/projects/{project_pk}/features/{feature_pk}/feature-external-resources/",
+            "user__id": str(admin_user.uuid),
             "organisation__id": organisation,
             "project__id": project,
             "gitlab__project__id": expected_gitlab_project_id,
@@ -233,6 +240,7 @@ def test_create_external_resource__gitlab_issue__registers_webhook_and_tags_feat
             "event": "comment.posted",
             "http__request__method": "POST",
             "http__route": "/api/v1/projects/{project_pk}/features/{feature_pk}/feature-external-resources/",
+            "user__id": str(admin_user.uuid),
             "organisation__id": organisation,
             "project__id": project,
             "feature__id": feature,
@@ -244,6 +252,7 @@ def test_create_external_resource__gitlab_issue__registers_webhook_and_tags_feat
             "event": "resource.linked",
             "http__request__method": "POST",
             "http__route": "/api/v1/projects/{project_pk}/features/{feature_pk}/feature-external-resources/",
+            "user__id": str(admin_user.uuid),
             "organisation__id": organisation,
             "project__id": project,
             "feature__id": feature,
@@ -259,6 +268,7 @@ def test_create_external_resource__gitlab_mr__registers_webhook_and_tags_feature
     project: int,
     feature: int,
     log: StructuredLogCapture,
+    admin_user: FFAdminUser,
 ) -> None:
     # Given
     project_instance = Project.objects.get(id=project)
@@ -309,6 +319,7 @@ def test_create_external_resource__gitlab_mr__registers_webhook_and_tags_feature
             "event": "webhook.registered",
             "http__request__method": "POST",
             "http__route": "/api/v1/projects/{project_pk}/features/{feature_pk}/feature-external-resources/",
+            "user__id": str(admin_user.uuid),
             "organisation__id": organisation,
             "project__id": project,
             "gitlab__project__id": 777,
@@ -320,6 +331,7 @@ def test_create_external_resource__gitlab_mr__registers_webhook_and_tags_feature
             "event": "comment.posted",
             "http__request__method": "POST",
             "http__route": "/api/v1/projects/{project_pk}/features/{feature_pk}/feature-external-resources/",
+            "user__id": str(admin_user.uuid),
             "organisation__id": organisation,
             "project__id": project,
             "feature__id": feature,
@@ -331,6 +343,7 @@ def test_create_external_resource__gitlab_mr__registers_webhook_and_tags_feature
             "event": "resource.linked",
             "http__request__method": "POST",
             "http__route": "/api/v1/projects/{project_pk}/features/{feature_pk}/feature-external-resources/",
+            "user__id": str(admin_user.uuid),
             "organisation__id": organisation,
             "project__id": project,
             "feature__id": feature,
@@ -346,6 +359,7 @@ def test_create_external_resource__second_link_same_gitlab_project__reuses_webho
     project: int,
     feature: int,
     log: StructuredLogCapture,
+    admin_user: FFAdminUser,
 ) -> None:
     # Given
     project_instance = Project.objects.get(id=project)
@@ -394,6 +408,7 @@ def test_create_external_resource__second_link_same_gitlab_project__reuses_webho
             "event": "comment.posted",
             "http__request__method": "POST",
             "http__route": "/api/v1/projects/{project_pk}/features/{feature_pk}/feature-external-resources/",
+            "user__id": str(admin_user.uuid),
             "organisation__id": organisation,
             "project__id": project,
             "feature__id": feature,
@@ -405,6 +420,7 @@ def test_create_external_resource__second_link_same_gitlab_project__reuses_webho
             "event": "resource.linked",
             "http__request__method": "POST",
             "http__route": "/api/v1/projects/{project_pk}/features/{feature_pk}/feature-external-resources/",
+            "user__id": str(admin_user.uuid),
             "organisation__id": organisation,
             "project__id": project,
             "feature__id": feature,
@@ -450,6 +466,7 @@ def test_delete_external_resource__last_link_for_path__deregisters_webhook_and_p
     feature: int,
     feature_name: str,
     log: StructuredLogCapture,
+    admin_user: FFAdminUser,
 ) -> None:
     # Given
     project_instance = Project.objects.get(id=project)
@@ -500,6 +517,7 @@ def test_delete_external_resource__last_link_for_path__deregisters_webhook_and_p
             "event": "comment.posted",
             "http__request__method": "DELETE",
             "http__route": "/api/v1/projects/{project_pk}/features/{feature_pk}/feature-external-resources/{id}/",
+            "user__id": str(admin_user.uuid),
             "organisation__id": organisation,
             "project__id": project,
             "feature__id": feature,
@@ -511,6 +529,7 @@ def test_delete_external_resource__last_link_for_path__deregisters_webhook_and_p
             "event": "webhook.deregistered",
             "http__request__method": "DELETE",
             "http__route": "/api/v1/projects/{project_pk}/features/{feature_pk}/feature-external-resources/{id}/",
+            "user__id": str(admin_user.uuid),
             "organisation__id": organisation,
             "project__id": project,
             "gitlab__project__id": 777,
@@ -521,6 +540,7 @@ def test_delete_external_resource__last_link_for_path__deregisters_webhook_and_p
             "event": "resource.unlinked",
             "http__request__method": "DELETE",
             "http__route": "/api/v1/projects/{project_pk}/features/{feature_pk}/feature-external-resources/{id}/",
+            "user__id": str(admin_user.uuid),
             "organisation__id": organisation,
             "project__id": project,
             "feature__id": feature,

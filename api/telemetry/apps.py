@@ -26,3 +26,7 @@ class TelemetryConfig(AppConfig):
 
     def ready(self):  # type: ignore[no-untyped-def]
         post_migrate.connect(send_telemetry_callback, sender=self)
+
+        from telemetry import request_context
+
+        request_context.install()
