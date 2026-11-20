@@ -3,11 +3,10 @@ from collections.abc import Callable
 from typing import Literal
 
 import structlog
+from common.core.request_context import get_request_context
 from django.http.request import HttpRequest
 from django.http.response import HttpResponse
 from opentelemetry import baggage
-
-from telemetry.spans import get_span_attribute
 
 # e.g. `flagsmith-cli/2.0.0 (darwin/arm64)`
 CLI_USER_AGENT_PATTERN = re.compile(
@@ -80,8 +79,9 @@ class ClientUsageLoggerMiddleware:
         """Obtain the organisation ID from the request context."""
         from organisations.models import Organisation
 
-        # Set by the permission layer for organisations the user belongs to
-        if isinstance(organisation_id := get_span_attribute("organisation.id"), int):
+        # Bound by the permission layer for organisations the user belongs to,
+        # or on authentication for master API keys
+        if isinstance(organisation_id := get_request_context("organisation__id"), int):
             return organisation_id
 
         assert request.user.is_authenticated  # NOTE: protected upstream

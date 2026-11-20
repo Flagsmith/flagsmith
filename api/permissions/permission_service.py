@@ -6,7 +6,6 @@ from django.db.models import Q, QuerySet
 from environments.models import Environment
 from organisations.models import Organisation, OrganisationRole
 from projects.models import Project
-from telemetry.spans import set_span_attribute
 
 from .rbac_wrapper import (  # type: ignore[attr-defined]
     get_permitted_environments_for_master_api_key_using_roles,
@@ -42,9 +41,13 @@ def get_active_membership_filter(user: "FFAdminUser", prefix: str = "") -> Q:
 def is_user_organisation_admin(
     user: "FFAdminUser", organisation: Union[Organisation, int]
 ) -> bool:
+    # NOTE: Imported here, as it imports DRF, which imports this module's
+    # importers, i.e. the authentication classes, through its settings
+    from common.core.request_context import bind_request_context
+
     user_organisation = user.get_user_organisation(organisation)
     if user_organisation is not None and user_organisation.is_active:
-        set_span_attribute("organisation.id", user_organisation.organisation_id)
+        bind_request_context(organisation__id=user_organisation.organisation_id)
         return user_organisation.role == OrganisationRole.ADMIN.name
     return False
 

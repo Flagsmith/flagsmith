@@ -12,6 +12,7 @@ if TYPE_CHECKING:
     from rest_framework.test import APIClient
 
     from projects.models import Project
+    from users.models import FFAdminUser
 
 
 @pytest.mark.usefixtures("gitlab_config")
@@ -20,6 +21,7 @@ def test_gitlab_project_list__valid_config__returns_paginated_response(
     project: Project,
     mocker: MockerFixture,
     log: StructuredLogCapture,
+    admin_user: FFAdminUser,
 ) -> None:
     # Given
     mocker.patch(
@@ -52,6 +54,7 @@ def test_gitlab_project_list__valid_config__returns_paginated_response(
             "event": "projects.fetched",
             "http__request__method": "GET",
             "http__route": "/api/v1/projects/{project_pk}/gitlab/projects/",
+            "user__id": str(admin_user.uuid),
             "organisation__id": project.organisation_id,
             "project__id": project.id,
         },
@@ -77,6 +80,7 @@ def test_gitlab_issue_list__valid_config__returns_issues(
     project: Project,
     mocker: MockerFixture,
     log: StructuredLogCapture,
+    admin_user: FFAdminUser,
 ) -> None:
     # Given
     mocker.patch(
@@ -113,6 +117,7 @@ def test_gitlab_issue_list__valid_config__returns_issues(
             "event": "issues.fetched",
             "http__request__method": "GET",
             "http__route": "/api/v1/projects/{project_pk}/gitlab/issues/",
+            "user__id": str(admin_user.uuid),
             "organisation__id": project.organisation_id,
             "project__id": project.id,
             "gitlab__project__id": 42,
@@ -140,6 +145,7 @@ def test_gitlab_merge_request_list__valid_config__returns_merge_requests(
     project: Project,
     mocker: MockerFixture,
     log: StructuredLogCapture,
+    admin_user: FFAdminUser,
 ) -> None:
     # Given
     mocker.patch(
@@ -178,6 +184,7 @@ def test_gitlab_merge_request_list__valid_config__returns_merge_requests(
             "event": "merge_requests.fetched",
             "http__request__method": "GET",
             "http__route": "/api/v1/projects/{project_pk}/gitlab/merge-requests/",
+            "user__id": str(admin_user.uuid),
             "organisation__id": project.organisation_id,
             "project__id": project.id,
             "gitlab__project__id": 42,
@@ -219,6 +226,7 @@ def test_browse_gitlab__api_unreachable__returns_503(
     project: Project,
     mocker: MockerFixture,
     log: StructuredLogCapture,
+    admin_user: FFAdminUser,
 ) -> None:
     # Given
     mocker.patch(
@@ -241,6 +249,7 @@ def test_browse_gitlab__api_unreachable__returns_503(
             "event": "api_call.failed",
             "http__request__method": "GET",
             "http__route": "/api/v1/projects/{project_pk}/gitlab/projects/",
+            "user__id": str(admin_user.uuid),
             "organisation__id": project.organisation_id,
             "project__id": project.id,
             "exc_info": mocker.ANY,

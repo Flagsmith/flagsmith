@@ -402,8 +402,8 @@ REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "api.openapi.AutoSchema",
 }
 MIDDLEWARE = [
+    "common.core.request_context.RequestContextMiddleware",  # Must come first!
     "common.core.middleware.APIResponseVersionHeaderMiddleware",
-    "common.gunicorn.middleware.RouteLoggerMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
