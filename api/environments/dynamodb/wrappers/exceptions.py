@@ -19,3 +19,13 @@ class CapacityBudgetExceeded(Exception):
     ) -> None:
         self.capacity_budget = capacity_budget
         self.capacity_spent = capacity_spent
+
+
+class BatchGetItemAttemptsExhausted(Exception):
+    def __init__(self, table_name: str) -> None:
+        super().__init__(
+            f"Gave up reading items from {table_name!r}: DynamoDB kept returning "
+            "unprocessed keys. Treating them as absent would misreport existing "
+            "items as missing."
+        )
+        self.table_name = table_name
