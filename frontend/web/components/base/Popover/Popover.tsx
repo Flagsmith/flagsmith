@@ -51,7 +51,7 @@ const Popover: FC<PopoverProps> = ({
   const close = () => setIsOpen(false)
   const asSheet = useBreakpoint('isPhone')
 
-  const { context, floatingStyles, refs } = useFloating({
+  const { context, refs, x, y } = useFloating({
     middleware: [
       offset(TRIGGER_GAP),
       flip(),
@@ -96,7 +96,12 @@ const Popover: FC<PopoverProps> = ({
         isOpen,
       )}
       {asSheet ? (
-        <BottomSheet open={isOpen} onOpenChange={setIsOpen} title={ariaLabel}>
+        <BottomSheet
+          open={isOpen}
+          onOpenChange={setIsOpen}
+          title={ariaLabel}
+          className={className}
+        >
           {typeof children === 'function' ? children(close) : children}
         </BottomSheet>
       ) : (
@@ -106,7 +111,10 @@ const Popover: FC<PopoverProps> = ({
               <div
                 ref={refs.setFloating}
                 // Runtime position from Floating UI.
-                style={floatingStyles}
+                style={{
+                  '--ds-popover-x': `${x}px`,
+                  '--ds-popover-y': `${y}px`,
+                }}
                 className={classNames('ds-popover', className)}
                 data-placement={context.placement}
                 aria-label={ariaLabel}

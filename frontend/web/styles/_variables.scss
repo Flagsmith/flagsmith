@@ -177,6 +177,9 @@ $modal-body-padding-y: $spacer * 1.5;
 $modal-body-padding-x: $spacer * 1.5;
 $modal-footer-margin-between: 0;
 
+// Smallest comfortable tap area on touch screens (WCAG 2.5.5).
+$touch-target-size: 44px;
+
 //Breakpoints
 $grid-breakpoints: (
         xs: 0,

@@ -1,5 +1,8 @@
 // The entry animation grows from the side nearest the trigger.
 .ds-popover {
+  position: absolute;
+  top: var(--ds-popover-y, 0);
+  left: var(--ds-popover-x, 0);
   // Same layer as portaled react-select menus (styles.scss): above every modal.
   z-index: 200000000001;
   max-width: calc(100vw - 16px);

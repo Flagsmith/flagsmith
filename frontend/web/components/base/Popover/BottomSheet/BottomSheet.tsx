@@ -1,4 +1,4 @@
-import { AnimationEvent, FC, ReactNode, useEffect, useRef } from 'react'
+import { AnimationEvent, FC, ReactNode, useEffect, useId, useRef } from 'react'
 import classNames from 'classnames'
 import IconButton from 'components/base/IconButton'
 import Icon from 'components/icons/Icon'
@@ -40,6 +40,7 @@ const BottomSheet: FC<BottomSheetProps> = ({
     useRole(context, { role: 'dialog' }),
   ])
   const sheetRef = useRef<HTMLDivElement | null>(null)
+  const titleId = useId()
 
   const focusInitialItem = () => {
     const items = sheetRef.current?.querySelectorAll<HTMLElement>(FOCUSABLE)
@@ -75,12 +76,17 @@ const BottomSheet: FC<BottomSheetProps> = ({
             }}
             tabIndex={-1}
             className={classNames('ds-bottom-sheet', className)}
-            aria-label={title}
+            aria-labelledby={titleId}
             onAnimationEnd={onAnimationEnd}
             {...getFloatingProps()}
           >
             <div className='ds-bottom-sheet__header d-flex align-items-center justify-content-between gap-2'>
-              <h2 className='ds-bottom-sheet__title mb-0'>{title}</h2>
+              <h2
+                id={titleId}
+                className='mb-0 fs-6 lh-sm fw-semibold text-default'
+              >
+                {title}
+              </h2>
               <IconButton
                 aria-label='Close'
                 variant='ghost'
@@ -89,7 +95,7 @@ const BottomSheet: FC<BottomSheetProps> = ({
                 <Icon name='close' width={20} />
               </IconButton>
             </div>
-            <div className='ds-bottom-sheet__body'>{children}</div>
+            {children}
           </div>
         </FloatingFocusManager>
       </FloatingOverlay>

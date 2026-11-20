@@ -7,11 +7,14 @@ import {
 const setMatchMedia = (
   matchMedia?: (query: string) => { matches: boolean },
 ) => {
-  ;(global as any).window = matchMedia ? { matchMedia } : {}
+  Object.defineProperty(globalThis, 'window', {
+    configurable: true,
+    value: matchMedia ? { matchMedia } : {},
+  })
 }
 
 afterEach(() => {
-  delete (global as any).window
+  Reflect.deleteProperty(globalThis, 'window')
 })
 
 describe('matchesBreakpoint', () => {
