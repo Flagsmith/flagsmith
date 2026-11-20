@@ -81,7 +81,7 @@ export const useOverflowVisibleCount = ({
       }
 
       // Reserve space for the overflow button and its gap
-      const reserve = extraWidth + gapPx + outerGapPx
+      const reserve = extraWidth + outerGapPx
       const maxWidth = containerWidth - reserve
 
       let count = 0

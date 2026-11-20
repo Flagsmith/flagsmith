@@ -25,8 +25,8 @@ interface TabsProps {
   cta?: ReactNode
 }
 
-// 32px button + ms-2 margin
-const OVERFLOW_BUTTON_WIDTH = 40
+// 40px rendered button (btn padding beats its 32px width) + ms-2 margin
+const OVERFLOW_BUTTON_WIDTH = 48
 
 const Tabs: React.FC<TabsProps> = ({
   buttonTheme,
