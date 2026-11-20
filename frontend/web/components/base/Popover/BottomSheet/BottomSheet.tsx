@@ -1,5 +1,7 @@
 import { AnimationEvent, FC, ReactNode, useEffect, useRef } from 'react'
 import classNames from 'classnames'
+import IconButton from 'components/base/IconButton'
+import Icon from 'components/icons/Icon'
 import {
   FloatingFocusManager,
   FloatingOverlay,
@@ -77,8 +79,16 @@ const BottomSheet: FC<BottomSheetProps> = ({
             onAnimationEnd={onAnimationEnd}
             {...getFloatingProps()}
           >
-            <div className='ds-bottom-sheet__handle' aria-hidden />
-            <div className='ds-bottom-sheet__title'>{title}</div>
+            <div className='ds-bottom-sheet__header d-flex align-items-center justify-content-between gap-2'>
+              <h2 className='ds-bottom-sheet__title mb-0'>{title}</h2>
+              <IconButton
+                aria-label='Close'
+                variant='ghost'
+                onClick={() => onOpenChange(false)}
+              >
+                <Icon name='close' width={20} />
+              </IconButton>
+            </div>
             <div className='ds-bottom-sheet__body'>{children}</div>
           </div>
         </FloatingFocusManager>
