@@ -413,4 +413,8 @@ def test_retrieve_audit_log__edge_identity_override_changed__returns_change_type
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["change_type"] == expected_change_type
-    assert response.json()["change_details"] == expected_change_details
+    change_details = response.json()["change_details"]
+    assert change_details == expected_change_details
+    assert [(type(item["old"]), type(item["new"])) for item in change_details] == [
+        (type(item["old"]), type(item["new"])) for item in expected_change_details
+    ]
