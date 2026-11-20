@@ -10,9 +10,15 @@ type VariantChoiceRowProps = {
 const VariantChoiceRow: FC<VariantChoiceRowProps> = ({ choice }) => (
   <div className='d-flex align-items-center gap-2'>
     <VariantName colour={choice.colour} name={choice.name} />
-    <code>{choice.value}</code>
+    <code
+      className='text-truncate'
+      style={{ minWidth: 0 }}
+      title={choice.value}
+    >
+      {choice.value}
+    </code>
     {choice.chanceToWin !== null && (
-      <span className='ms-auto text-secondary fs-caption'>
+      <span className='ms-auto flex-shrink-0 text-secondary fs-caption'>
         {formatChancePct(choice.chanceToWin)} chance to win
       </span>
     )}
