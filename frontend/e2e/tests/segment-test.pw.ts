@@ -137,6 +137,7 @@ test('Segment test 1 - Create, update, and manage segments with multivariate fla
   await navigateToSegment('segment_to_update')
   await setSegmentRule(0, 0, lastRule.name, lastRule.operator, lastRule.value + 1)
   await click(byId('update-segment'))
+  await expect(page.getByText('Updated segment')).toBeVisible()
   log('Check segment rule value')
   await gotoSegments()
   await navigateToSegment('segment_to_update')
@@ -460,6 +461,8 @@ test('Segment test 4 - Create ANY rule type segment and verify match changes whe
   // Change the first group's `team` condition from "alpha" to "gamma" — user has team=alpha so no longer matches.
   await setSegmentRule(0, 1, 'team', 'EQUAL', 'gamma')
   await click(byId('update-segment'))
+  // Leaving before the save finishes would keep the user in the segment
+  await expect(page.getByText('Updated segment')).toBeVisible()
 
   log('Verify user is no longer in the segment (gets default value)')
   await goToUser(E2E_TEST_IDENTITY)
