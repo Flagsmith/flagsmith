@@ -32,8 +32,13 @@ def _enable_telemetry(settings: SettingsWrapper) -> None:
 
 
 def _license_organisations(mocker: MockerFixture, *organisations: Organisation) -> None:
-    for organisation in organisations:
-        organisation.licence = mocker.Mock(signature="sig-1")
+    mocker.patch.object(
+        Organisation,
+        "licence",
+        new_callable=mocker.PropertyMock,
+        return_value=mocker.Mock(signature="sig-1"),
+        create=True,
+    )
     mocker.patch(
         "telemetry.services._get_licensed_organisations",
         return_value=list(organisations),
