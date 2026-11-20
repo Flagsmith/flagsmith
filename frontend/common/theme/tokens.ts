@@ -127,44 +127,28 @@ export const fontWeight: Record<string, TokenEntry> = {
 }
 // Font-size
 export const fontSize: Record<string, TokenEntry> = {
-  'body-lg': {
-    description: 'Body large (Figma B1). Default text.',
-    value: 'var(--font-size-body-lg, 14px)',
-  },
   'body-md': {
-    description: 'Body medium (Figma B2). Secondary text.',
-    value: 'var(--font-size-body-md, 13px)',
+    description: 'Default body text.',
+    value: 'var(--font-size-body-md, 14px)',
   },
   'body-sm': {
-    description: 'Body small (Figma B3). Captions, labels.',
-    value: 'var(--font-size-body-sm, 12px)',
+    description: 'Small body text. Secondary details.',
+    value: 'var(--font-size-body-sm, 13px)',
   },
   'body-xs': {
-    description: 'Body extra small (Figma B4). Fine print.',
-    value: 'var(--font-size-body-xs, 11px)',
-  },
-  'display-lg': {
-    description: 'Display large (Figma H1). Hero text, key figures.',
-    value: 'var(--font-size-display-lg, 42px)',
-  },
-  'display-md': {
-    description: 'Display medium (Figma H2).',
-    value: 'var(--font-size-display-md, 34px)',
-  },
-  'display-sm': {
-    description: 'Display small (Figma H3).',
-    value: 'var(--font-size-display-sm, 30px)',
+    description: 'Extra small body text. Captions, labels.',
+    value: 'var(--font-size-body-xs, 12px)',
   },
   'heading-lg': {
-    description: 'Heading large (Figma H4). Page titles.',
+    description: 'Level 1 headings. Page titles.',
     value: 'var(--font-size-heading-lg, 24px)',
   },
   'heading-md': {
-    description: 'Heading medium (Figma H5). Sections.',
+    description: 'Level 2 headings. Sections.',
     value: 'var(--font-size-heading-md, 18px)',
   },
   'heading-sm': {
-    description: 'Heading small (Figma H6). Cards, subsections.',
+    description: 'Level 3 to 6 headings. Cards, subsections.',
     value: 'var(--font-size-heading-sm, 16px)',
   },
 }
@@ -175,7 +159,7 @@ export const lineHeight: Record<string, TokenEntry> = {
     value: 'var(--line-height-body, 1.4)',
   },
   'heading': {
-    description: 'Display and heading styles.',
+    description: 'Headings.',
     value: 'var(--line-height-heading, 1.3)',
   },
 }
@@ -362,13 +346,9 @@ export const fontWeightRegular = 'var(--font-weight-regular, 400)'
 export const fontWeightSemibold = 'var(--font-weight-semibold, 600)'
 
 // Font-size
-export const fontSizeBodyLg = 'var(--font-size-body-lg, 14px)'
-export const fontSizeBodyMd = 'var(--font-size-body-md, 13px)'
-export const fontSizeBodySm = 'var(--font-size-body-sm, 12px)'
-export const fontSizeBodyXs = 'var(--font-size-body-xs, 11px)'
-export const fontSizeDisplayLg = 'var(--font-size-display-lg, 42px)'
-export const fontSizeDisplayMd = 'var(--font-size-display-md, 34px)'
-export const fontSizeDisplaySm = 'var(--font-size-display-sm, 30px)'
+export const fontSizeBodyMd = 'var(--font-size-body-md, 14px)'
+export const fontSizeBodySm = 'var(--font-size-body-sm, 13px)'
+export const fontSizeBodyXs = 'var(--font-size-body-xs, 12px)'
 export const fontSizeHeadingLg = 'var(--font-size-heading-lg, 24px)'
 export const fontSizeHeadingMd = 'var(--font-size-heading-md, 18px)'
 export const fontSizeHeadingSm = 'var(--font-size-heading-sm, 16px)'

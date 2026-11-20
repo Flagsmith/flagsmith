@@ -533,20 +533,6 @@ function generateUtilities() {
     lines.push('')
   }
 
-  // Text styles: size, line height and weight from one Figma text style
-  if (json['text-style']) {
-    lines.push('// Text styles')
-    for (const [key, s] of Object.entries(json['text-style'])) {
-      const size = json['font-size'][s.size].cssVar
-      const lineHeight = json['line-height'][s.lineHeight].cssVar
-      const weight = json['font-weight'][s.weight].cssVar
-      lines.push(
-        `.font-${key} { font-size: var(${size}); line-height: var(${lineHeight}); font-weight: var(${weight}); }`,
-      )
-    }
-    lines.push('')
-  }
-
   return lines.join('\n')
 }
 
