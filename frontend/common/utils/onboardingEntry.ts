@@ -18,7 +18,7 @@ export type OnboardingEntryDecision = {
  * Persists nothing: the caller races this against a timeout, and a late
  * decision must not be stored — by then the SDK identity may already be
  * the logged-in user, and the routing it should have driven has happened.
- * Call `persistOnboardingEntry` with an accepted decision.
+ * Call `resolveOnboardingVariant` with the result.
  */
 export async function decideOnboardingEntry(
   email?: string,
@@ -55,6 +55,15 @@ export function persistOnboardingEntry(
   return variant
 }
 
+// A stored variant wins over a new decision. A reload during onboarding logs
+// in again without isGettingStarted, and must not send a single_page user to
+// /create.
+export const resolveOnboardingVariant = (
+  stored: OnboardingVariant | null,
+  decision: OnboardingEntryDecision | null,
+): OnboardingVariant =>
+  stored ?? (decision ? persistOnboardingEntry(decision) : 'control')
+
 export const getStoredOnboardingVariant = (): OnboardingVariant | null => {
   const variant = storageGet(VARIANT_STORAGE_KEY)
   return variant === 'single_page' || variant === 'control' ? variant : null
@@ -67,3 +76,9 @@ export const getStoredOnboardingTargetingKey = (): string | null =>
 // reuse it, or two organisations would share one experiment subject.
 export const clearOnboardingTargetingKey = (): void =>
   storageRemove(TARGETING_KEY_STORAGE_KEY)
+
+// On logout, so the next user in this browser gets their own decision.
+export const clearOnboardingEntry = (): void => {
+  storageRemove(TARGETING_KEY_STORAGE_KEY)
+  storageRemove(VARIANT_STORAGE_KEY)
+}

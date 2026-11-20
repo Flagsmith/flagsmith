@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react'
 import { useGetEnvironmentOnboardingStatusQuery } from 'common/services/useEnvironmentOnboardingStatus'
+import { readOnboardingStatus } from './readOnboardingStatus'
 
 export type OnboardingConnectionStatus = 'listening' | 'connected'
 
 export type OnboardingConnection = {
   status: OnboardingConnectionStatus
   sdkLabel: string | null // null until the signal lands, or if unidentified
+  // True when a poll saw no evaluation first, so it happened on this page.
+  connectedOnPage: boolean
 }
 
 const POLL_INTERVAL_MS = 5000
@@ -20,9 +23,12 @@ export const useOnboardingConnection = (
   // lands, and a skipped query has no data to read.
   const [firstEvaluation, setFirstEvaluation] = useState<{
     sdkLabel: string | null
+    connectedOnPage: boolean
   } | null>(null)
+  const [sawListening, setSawListening] = useState(false)
+  const [mountedAt] = useState(Date.now)
 
-  const { data } = useGetEnvironmentOnboardingStatusQuery(
+  const { data, fulfilledTimeStamp } = useGetEnvironmentOnboardingStatusQuery(
     { environmentKey },
     {
       pollingInterval: POLL_INTERVAL_MS,
@@ -32,14 +38,20 @@ export const useOnboardingConnection = (
   )
 
   useEffect(() => {
-    if (!data?.first_evaluated_at) return
-    const label = data.first_evaluated_sdk_label
+    const reading = readOnboardingStatus(data, fulfilledTimeStamp, mountedAt)
+    if (reading === 'listening') {
+      setSawListening(true)
+    }
+    if (reading !== 'connected') return
+    const label = data?.first_evaluated_sdk_label
     setFirstEvaluation({
+      connectedOnPage: sawListening,
       sdkLabel: label && label !== UNIDENTIFIED_SDK ? label : null,
     })
-  }, [data])
+  }, [data, fulfilledTimeStamp, mountedAt, sawListening])
 
   return {
+    connectedOnPage: firstEvaluation?.connectedOnPage ?? false,
     sdkLabel: firstEvaluation?.sdkLabel ?? null,
     status: firstEvaluation ? 'connected' : 'listening',
   }

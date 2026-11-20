@@ -286,6 +286,12 @@ const Constants = {
       'category': 'Onboarding',
       'event': 'Onboarding AI connect used',
     },
+    // A new user fell back to the legacy page without an arm: the entry
+    // decision timed out or failed. reason: 'timeout' | 'error'.
+    'ONBOARDING_ENTRY_FALLBACK': {
+      'category': 'Onboarding',
+      'event': 'Onboarding entry fallback',
+    },
     'ONBOARDING_FLAG_TOGGLED': {
       'category': 'Onboarding',
       'event': 'Onboarding flag toggled',
@@ -312,6 +318,12 @@ const Constants = {
     'ONBOARDING_ROLLOUT_VIEWED': {
       'category': 'Onboarding',
       'event': 'Onboarding rollout quest viewed',
+    },
+    // The first SDK evaluation, as seen by the onboarding page. Users who
+    // connect after leaving it only show up in the backend.
+    'ONBOARDING_SDK_CONNECTED': {
+      'category': 'Onboarding',
+      'event': 'Onboarding SDK connected',
     },
     'ONBOARDING_SNIPPET_COPIED': {
       'category': 'Onboarding',

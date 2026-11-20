@@ -1,5 +1,10 @@
 // eslint-disable-next-line @dword-design/import-alias/prefer-alias
-import { E2E_CHANGE_MAIL, E2E_SIGN_UP_USER, E2E_USER } from '../e2e/config'
+import {
+  E2E_CHANGE_MAIL,
+  E2E_ONBOARDING_RELOAD_USER,
+  E2E_SIGN_UP_USER,
+  E2E_USER,
+} from '../e2e/config'
 
 const _globalThis = typeof window === 'undefined' ? global : window
 const Project = {
@@ -13,7 +18,12 @@ const Project = {
 
   env: 'prod',
 
-  excludeAnalytics: [E2E_SIGN_UP_USER, E2E_USER, E2E_CHANGE_MAIL],
+  excludeAnalytics: [
+    E2E_SIGN_UP_USER,
+    E2E_USER,
+    E2E_CHANGE_MAIL,
+    E2E_ONBOARDING_RELOAD_USER,
+  ],
 
   // This is our Bullet Train API key - Bullet Train runs on Bullet Train!
   flagsmith: '4vfqhypYjcPoGGu8ByrBaj',

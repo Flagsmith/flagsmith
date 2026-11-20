@@ -65,6 +65,7 @@ def teardown() -> None:
     )
     delete_user_and_its_organisations(user_email=settings.E2E_SEPARATE_TEST_USER)
     delete_user_and_its_organisations(user_email=settings.E2E_BILLING_USER)
+    delete_user_and_its_organisations(user_email=settings.E2E_ONBOARDING_RELOAD_USER)
 
 
 def seed_data() -> None:

@@ -15,12 +15,13 @@ import ProjectStore from 'common/stores/project-store'
 import {
   decideOnboardingEntry,
   getStoredOnboardingVariant,
-  persistOnboardingEntry,
+  resolveOnboardingVariant,
 } from 'common/utils/onboardingEntry'
 import { AUTHORISE_PATH } from 'common/utils/pendingAuthorisation'
 import { Provider } from 'react-redux'
 import { getStore } from 'common/store'
 import ConfigProvider from 'common/providers/ConfigProvider'
+import Constants from 'common/constants'
 import AccountStore from 'common/stores/account-store'
 import OrganisationLimit from './OrganisationLimit'
 import OrganisationStore from 'common/stores/organisation-store'
@@ -163,17 +164,36 @@ const App = class extends Component {
       // targeting key, so bucketing never diverges from this decision.
       // Capped at 2s: a degraded flags API falls back to the legacy page
       // instead of blocking the redirect.
+      const storedVariant = getStoredOnboardingVariant()
+      const deciding =
+        !storedVariant && !!AccountStore.getUser()?.isGettingStarted
+      let timedOut = false
       Promise.race([
-        AccountStore.getUser()?.isGettingStarted
+        deciding
           ? decideOnboardingEntry(AccountStore.getUser()?.email).catch(
               () => null,
             )
           : Promise.resolve(null),
-        new Promise((resolve) => setTimeout(() => resolve(null), 2000)),
+        new Promise((resolve) =>
+          setTimeout(() => {
+            timedOut = true
+            resolve(null)
+          }, 2000),
+        ),
       ]).then((decision) => {
+        if (deciding && !decision) {
+          API.trackEvent({
+            ...Constants.events.ONBOARDING_ENTRY_FALLBACK,
+            extra: { reason: timedOut ? 'timeout' : 'error' },
+          })
+        }
         // Only an accepted decision is persisted: a decision losing the
         // race must not store its assignment after routing has happened.
-        const variant = decision ? persistOnboardingEntry(decision) : 'control'
+        const variant = resolveOnboardingVariant(storedVariant, decision)
+        // Label both arms at the decision, before control's /create step.
+        if (storedVariant || decision) {
+          API.trackTraits({ onboarding_variant: variant })
+        }
         // Restore the logged-in identity for the rest of the app.
         Promise.resolve(API.flagsmithIdentify()).catch(() => {})
         if (variant === 'single_page') {
