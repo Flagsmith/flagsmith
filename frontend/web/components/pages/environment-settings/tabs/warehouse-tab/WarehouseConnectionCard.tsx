@@ -104,11 +104,16 @@ const WarehouseConnectionCard: FC<WarehouseConnectionCardProps> = ({
             <span className='font-weight-medium'>{connection.name}</span>
             <Tooltip
               title={
-                <ColorSwatch
-                  color={STATUS_COLOUR[connection.status]}
-                  size='sm'
-                  shape='circle'
-                />
+                <span
+                  className='d-inline-flex'
+                  data-test={`warehouse-connection-status-${connection.status}`}
+                >
+                  <ColorSwatch
+                    color={STATUS_COLOUR[connection.status]}
+                    size='sm'
+                    shape='circle'
+                  />
+                </span>
               }
               place='top'
             >
