@@ -35,7 +35,6 @@ const OverflowNav: FC<OverflowNavProps> = ({
   const { isMeasuring, visibleCount } = useOverflowVisibleCount({
     extraWidth: buttonWidth + 20,
     force,
-    gap,
     itemCount: items.length,
     itemsContainerRef,
     outerContainerRef,

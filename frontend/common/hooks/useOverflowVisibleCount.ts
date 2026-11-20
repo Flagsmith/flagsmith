@@ -1,13 +1,10 @@
 // hooks/useVisibleCount.ts
 import { useState, useLayoutEffect, RefObject } from 'react'
 
-const GAP_MULTIPLIER = 5
-
 type UseOverflowVisibleCountOptions = {
   outerContainerRef: RefObject<HTMLDivElement>
   itemsContainerRef: RefObject<HTMLDivElement>
   itemCount: number
-  gap: number
   extraWidth: number
   force?: boolean
 }
@@ -15,7 +12,6 @@ type UseOverflowVisibleCountOptions = {
 export const useOverflowVisibleCount = ({
   extraWidth,
   force,
-  gap,
   itemCount,
   itemsContainerRef,
   outerContainerRef,
@@ -55,9 +51,10 @@ export const useOverflowVisibleCount = ({
 
     const calculate = () => {
       const outerCont = outerContainerRef.current
-      if (!outerCont) return
+      const itemsCont = itemsContainerRef.current
+      if (!outerCont || !itemsCont) return
 
-      const gapPx = gap * GAP_MULTIPLIER
+      const gapPx = parseFloat(getComputedStyle(itemsCont).columnGap) || 0
 
       const sumWidths = (count: number) => {
         if (count === 0) return 0
@@ -72,6 +69,7 @@ export const useOverflowVisibleCount = ({
       // can't actually occupy. Subtract it so padded navbars don't over-estimate
       // the available width and let items clip off-screen.
       const outerStyle = getComputedStyle(outerCont)
+      const outerGapPx = parseFloat(outerStyle.columnGap) || 0
       const containerWidth =
         outerCont.clientWidth -
         (parseFloat(outerStyle.paddingLeft) || 0) -
@@ -83,7 +81,7 @@ export const useOverflowVisibleCount = ({
       }
 
       // Reserve space for the overflow button and its gap
-      const reserve = extraWidth + gapPx
+      const reserve = extraWidth + outerGapPx
       const maxWidth = containerWidth - reserve
 
       let count = 0
@@ -100,7 +98,14 @@ export const useOverflowVisibleCount = ({
       ro.observe(outerContainerRef.current)
     }
     return () => ro.disconnect()
-  }, [widths, force, gap, itemCount, extraWidth, outerContainerRef])
+  }, [
+    widths,
+    force,
+    itemCount,
+    extraWidth,
+    outerContainerRef,
+    itemsContainerRef,
+  ])
 
   const isMeasuring = !force && widths.length === 0 && itemCount > 0
 

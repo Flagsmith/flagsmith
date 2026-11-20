@@ -1,11 +1,4 @@
-import React, {
-  ReactNode,
-  useCallback,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react'
+import React, { ReactNode, useCallback, useMemo, useRef, useState } from 'react'
 import ModalHR from 'components/modals/ModalHR'
 import Utils from 'common/utils/utils'
 import { useHistory } from 'react-router-dom'
@@ -31,6 +24,9 @@ interface TabsProps {
   overflowX?: boolean
   cta?: ReactNode
 }
+
+// 40px rendered button (btn padding beats its 32px width) + ms-2 margin
+const OVERFLOW_BUTTON_WIDTH = 48
 
 const Tabs: React.FC<TabsProps> = ({
   buttonTheme,
@@ -72,24 +68,9 @@ const Tabs: React.FC<TabsProps> = ({
 
   const outerContainerRef = useRef<HTMLDivElement>(null)
   const itemsContainerRef = useRef<HTMLDivElement>(null)
-  const overflowButtonRef = useRef<HTMLDivElement>(null)
-  const [overflowButtonWidth, setOverflowButtonWidth] = useState(54) // fallback
-
-  useLayoutEffect(() => {
-    if (disableOverflow) return
-    if (overflowButtonRef.current) {
-      const width = overflowButtonRef.current.offsetWidth
-      const marginLeft =
-        parseInt(getComputedStyle(overflowButtonRef.current).marginLeft, 10) ||
-        0
-      setOverflowButtonWidth(width + marginLeft)
-    }
-  }, [disableOverflow])
-
   const { isMeasuring, visibleCount } = useOverflowVisibleCount({
-    extraWidth: overflowButtonWidth,
+    extraWidth: OVERFLOW_BUTTON_WIDTH,
     force: false,
-    gap: 0,
     itemCount: tabChildren.length,
     itemsContainerRef,
     outerContainerRef,
