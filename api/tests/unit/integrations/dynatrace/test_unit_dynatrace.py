@@ -14,10 +14,10 @@ from projects.models import Project
 from segments.models import Segment
 
 
-def test_dynatrace_wrapper__valid_config__initializes_correctly():  # type: ignore[no-untyped-def]
+@pytest.mark.parametrize("base_url", ["http://test.com", "http://test.com/"])
+def test_dynatrace_wrapper__valid_config__initializes_correctly(base_url: str) -> None:
     # Given
     api_key = "123key"
-    base_url = "http://test.com"
     entity_selector = "type(APPLICATION),entityName(docs)"
 
     # When initialized
@@ -26,7 +26,7 @@ def test_dynatrace_wrapper__valid_config__initializes_correctly():  # type: igno
     )
 
     # Then
-    expected_url = f"{base_url}{EVENTS_API_URI}?api-token={api_key}"
+    expected_url = f"http://test.com/{EVENTS_API_URI}?api-token={api_key}"
     assert dynatrace.url == expected_url
 
 
