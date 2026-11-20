@@ -28235,7 +28235,8 @@ components:
         identity:
           $ref: '#/components/schemas/IdentifierOnlyIdentity'
         trait_value:
-          description: 'Can be string, integer, float, or boolean'
+          description: 'Can be string, integer, float, or boolean. String values must be at most 2000 characters long.'
+          maxLength: 2000
           type:
             - string
             - integer
@@ -28254,7 +28255,8 @@ components:
         identity:
           $ref: '#/components/schemas/IdentifierOnlyIdentity'
         trait_value:
-          description: 'Can be string, integer, float, or boolean'
+          description: 'Can be string, integer, float, or boolean. String values must be at most 2000 characters long.'
+          maxLength: 2000
           type:
             - string
             - integer
