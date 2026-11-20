@@ -32,6 +32,25 @@
     background: var(--color-surface-hover);
   }
 
+  // Phones open this in a bottom sheet (useBreakpoint isPhone): fill it,
+  // let the sheet scroll instead of the list, and keep taps at 44px.
+  @media (max-width: 767.98px) {
+    width: 100%;
+
+    &__projects {
+      max-height: none;
+      overflow-y: visible;
+    }
+
+    &__project {
+      min-height: 44px;
+    }
+
+    .scope-mode-switch__option {
+      min-height: 44px;
+    }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     &__section {
       transition: none;
