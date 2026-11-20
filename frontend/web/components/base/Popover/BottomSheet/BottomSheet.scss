@@ -18,19 +18,14 @@
   box-shadow: var(--shadow-lg);
   animation: ds-bottom-sheet-in var(--duration-slow) var(--easing-entrance);
 
-  &__handle {
-    width: 40px;
-    height: 4px;
-    margin: 0 auto 12px;
-    border-radius: var(--radius-full);
-    background: var(--color-border-strong);
+  &__header {
+    padding: 0 0 8px 12px;
   }
 
   &__title {
-    padding: 0 12px 8px;
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--color-text-tertiary);
+    font-size: 16px;
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-default);
   }
 
   @media (prefers-reduced-motion: reduce) {
