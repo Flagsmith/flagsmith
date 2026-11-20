@@ -46,6 +46,8 @@ def test_create_external_resource__gitlab_issue__returns_201(
         {
             "level": "info",
             "event": "resource.linked",
+            "http__request__method": "POST",
+            "http__route": "/api/v1/projects/{project_pk}/features/{feature_pk}/feature-external-resources/",
             "organisation__id": organisation_id,
             "project__id": project,
             "feature__id": feature,
@@ -89,6 +91,8 @@ def test_create_external_resource__gitlab_merge_request__returns_201(
         {
             "level": "info",
             "event": "resource.linked",
+            "http__request__method": "POST",
+            "http__route": "/api/v1/projects/{project_pk}/features/{feature_pk}/feature-external-resources/",
             "organisation__id": organisation_id,
             "project__id": project,
             "feature__id": feature,
@@ -216,6 +220,8 @@ def test_create_external_resource__gitlab_issue__registers_webhook_and_tags_feat
         {
             "level": "info",
             "event": "webhook.registered",
+            "http__request__method": "POST",
+            "http__route": "/api/v1/projects/{project_pk}/features/{feature_pk}/feature-external-resources/",
             "organisation__id": organisation,
             "project__id": project,
             "gitlab__project__id": expected_gitlab_project_id,
@@ -225,6 +231,8 @@ def test_create_external_resource__gitlab_issue__registers_webhook_and_tags_feat
         {
             "level": "info",
             "event": "comment.posted",
+            "http__request__method": "POST",
+            "http__route": "/api/v1/projects/{project_pk}/features/{feature_pk}/feature-external-resources/",
             "organisation__id": organisation,
             "project__id": project,
             "feature__id": feature,
@@ -234,6 +242,8 @@ def test_create_external_resource__gitlab_issue__registers_webhook_and_tags_feat
         {
             "level": "info",
             "event": "resource.linked",
+            "http__request__method": "POST",
+            "http__route": "/api/v1/projects/{project_pk}/features/{feature_pk}/feature-external-resources/",
             "organisation__id": organisation,
             "project__id": project,
             "feature__id": feature,
@@ -297,6 +307,8 @@ def test_create_external_resource__gitlab_mr__registers_webhook_and_tags_feature
         {
             "level": "info",
             "event": "webhook.registered",
+            "http__request__method": "POST",
+            "http__route": "/api/v1/projects/{project_pk}/features/{feature_pk}/feature-external-resources/",
             "organisation__id": organisation,
             "project__id": project,
             "gitlab__project__id": 777,
@@ -306,6 +318,8 @@ def test_create_external_resource__gitlab_mr__registers_webhook_and_tags_feature
         {
             "level": "info",
             "event": "comment.posted",
+            "http__request__method": "POST",
+            "http__route": "/api/v1/projects/{project_pk}/features/{feature_pk}/feature-external-resources/",
             "organisation__id": organisation,
             "project__id": project,
             "feature__id": feature,
@@ -315,6 +329,8 @@ def test_create_external_resource__gitlab_mr__registers_webhook_and_tags_feature
         {
             "level": "info",
             "event": "resource.linked",
+            "http__request__method": "POST",
+            "http__route": "/api/v1/projects/{project_pk}/features/{feature_pk}/feature-external-resources/",
             "organisation__id": organisation,
             "project__id": project,
             "feature__id": feature,
@@ -376,6 +392,8 @@ def test_create_external_resource__second_link_same_gitlab_project__reuses_webho
         {
             "level": "info",
             "event": "comment.posted",
+            "http__request__method": "POST",
+            "http__route": "/api/v1/projects/{project_pk}/features/{feature_pk}/feature-external-resources/",
             "organisation__id": organisation,
             "project__id": project,
             "feature__id": feature,
@@ -385,6 +403,8 @@ def test_create_external_resource__second_link_same_gitlab_project__reuses_webho
         {
             "level": "info",
             "event": "resource.linked",
+            "http__request__method": "POST",
+            "http__route": "/api/v1/projects/{project_pk}/features/{feature_pk}/feature-external-resources/",
             "organisation__id": organisation,
             "project__id": project,
             "feature__id": feature,
@@ -478,6 +498,8 @@ def test_delete_external_resource__last_link_for_path__deregisters_webhook_and_p
         {
             "level": "info",
             "event": "comment.posted",
+            "http__request__method": "DELETE",
+            "http__route": "/api/v1/projects/{project_pk}/features/{feature_pk}/feature-external-resources/{id}/",
             "organisation__id": organisation,
             "project__id": project,
             "feature__id": feature,
@@ -487,6 +509,8 @@ def test_delete_external_resource__last_link_for_path__deregisters_webhook_and_p
         {
             "level": "info",
             "event": "webhook.deregistered",
+            "http__request__method": "DELETE",
+            "http__route": "/api/v1/projects/{project_pk}/features/{feature_pk}/feature-external-resources/{id}/",
             "organisation__id": organisation,
             "project__id": project,
             "gitlab__project__id": 777,
@@ -495,6 +519,8 @@ def test_delete_external_resource__last_link_for_path__deregisters_webhook_and_p
         {
             "level": "info",
             "event": "resource.unlinked",
+            "http__request__method": "DELETE",
+            "http__route": "/api/v1/projects/{project_pk}/features/{feature_pk}/feature-external-resources/{id}/",
             "organisation__id": organisation,
             "project__id": project,
             "feature__id": feature,

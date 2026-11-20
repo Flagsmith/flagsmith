@@ -83,6 +83,8 @@ def test_sentry_change_tracking__flag_created__sends_update_to_sentry(
     assert log.events == [
         {
             "event": "sending",
+            "http__request__method": "POST",
+            "http__route": "/api/v1/projects/{project_pk}/features/",
             "feature_name": feature_name,
             "headers": ANY,
             "level": "debug",
@@ -92,6 +94,8 @@ def test_sentry_change_tracking__flag_created__sends_update_to_sentry(
         },
         {
             "event": "success",
+            "http__request__method": "POST",
+            "http__route": "/api/v1/projects/{project_pk}/features/",
             "feature_name": feature_name,
             "level": "info",
             "sentry_action": "created",
@@ -142,6 +146,8 @@ def test_sentry_change_tracking__flag_state_change__sends_update_to_sentry(
     assert log.events == [
         {
             "event": "sending",
+            "http__request__method": "PATCH",
+            "http__route": "/api/v1/environments/{environment_api_key}/featurestates/{id}/",
             "feature_name": feature_name,
             "headers": ANY,
             "level": "debug",
@@ -151,6 +157,8 @@ def test_sentry_change_tracking__flag_state_change__sends_update_to_sentry(
         },
         {
             "event": "success",
+            "http__request__method": "PATCH",
+            "http__route": "/api/v1/environments/{environment_api_key}/featurestates/{id}/",
             "feature_name": feature_name,
             "level": "info",
             "sentry_action": "updated",
@@ -246,6 +254,8 @@ def test_sentry_change_tracking__flag_state_change_in_v2_environment__sends_upda
     assert log.events == [
         {
             "event": "sending",
+            "http__request__method": "POST",
+            "http__route": "/api/v1/environments/{environment_pk}/features/{feature_pk}/versions/{id}/publish/",
             "feature_name": feature_name,
             "headers": ANY,
             "level": "debug",
@@ -255,6 +265,8 @@ def test_sentry_change_tracking__flag_state_change_in_v2_environment__sends_upda
         },
         {
             "event": "success",
+            "http__request__method": "POST",
+            "http__route": "/api/v1/environments/{environment_pk}/features/{feature_pk}/versions/{id}/publish/",
             "feature_name": feature_name,
             "level": "info",
             "sentry_action": "updated",
@@ -450,6 +462,8 @@ def test_sentry_change_tracking__flag_deleted__sends_update_to_sentry(
     assert log.events == [
         {
             "event": "sending",
+            "http__request__method": "DELETE",
+            "http__route": "/api/v1/environments/{environment_api_key}/featurestates/{id}/",
             "feature_name": feature_name,
             "headers": ANY,
             "level": "debug",
@@ -459,6 +473,8 @@ def test_sentry_change_tracking__flag_deleted__sends_update_to_sentry(
         },
         {
             "event": "success",
+            "http__request__method": "DELETE",
+            "http__route": "/api/v1/environments/{environment_api_key}/featurestates/{id}/",
             "feature_name": feature_name,
             "level": "info",
             "sentry_action": "deleted",
@@ -513,6 +529,8 @@ def test_sentry_change_tracking__failing_integration__fails_gracefully(
     assert log.events == [
         {
             "event": "sending",
+            "http__request__method": "PATCH",
+            "http__route": "/api/v1/environments/{environment_api_key}/featurestates/{id}/",
             "feature_name": feature_name,
             "headers": ANY,
             "level": "debug",
@@ -522,6 +540,8 @@ def test_sentry_change_tracking__failing_integration__fails_gracefully(
         },
         {
             "feature_name": feature_name,
+            "http__request__method": "PATCH",
+            "http__route": "/api/v1/environments/{environment_api_key}/featurestates/{id}/",
             "level": "warning",
             "sentry_action": "updated",
             **error_log,

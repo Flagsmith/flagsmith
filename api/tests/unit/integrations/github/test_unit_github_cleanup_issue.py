@@ -140,6 +140,8 @@ def test_create_cleanup_issue__valid_request__returns_204(
     assert log.events == [
         {
             "event": "cleanup_issues.created",
+            "http__request__method": "POST",
+            "http__route": "/api/v1/organisations/{organisation_pk}/github/create-cleanup-issue/",
             "level": "info",
             "organisation__id": organisation.id,
             "issues_created__count": 2,

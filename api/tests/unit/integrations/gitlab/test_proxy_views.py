@@ -50,6 +50,8 @@ def test_gitlab_project_list__valid_config__returns_paginated_response(
         {
             "level": "info",
             "event": "projects.fetched",
+            "http__request__method": "GET",
+            "http__route": "/api/v1/projects/{project_pk}/gitlab/projects/",
             "organisation__id": project.organisation_id,
             "project__id": project.id,
         },
@@ -109,6 +111,8 @@ def test_gitlab_issue_list__valid_config__returns_issues(
         {
             "level": "info",
             "event": "issues.fetched",
+            "http__request__method": "GET",
+            "http__route": "/api/v1/projects/{project_pk}/gitlab/issues/",
             "organisation__id": project.organisation_id,
             "project__id": project.id,
             "gitlab__project__id": 42,
@@ -172,6 +176,8 @@ def test_gitlab_merge_request_list__valid_config__returns_merge_requests(
         {
             "level": "info",
             "event": "merge_requests.fetched",
+            "http__request__method": "GET",
+            "http__route": "/api/v1/projects/{project_pk}/gitlab/merge-requests/",
             "organisation__id": project.organisation_id,
             "project__id": project.id,
             "gitlab__project__id": 42,
@@ -233,6 +239,8 @@ def test_browse_gitlab__api_unreachable__returns_503(
         {
             "level": "error",
             "event": "api_call.failed",
+            "http__request__method": "GET",
+            "http__route": "/api/v1/projects/{project_pk}/gitlab/projects/",
             "organisation__id": project.organisation_id,
             "project__id": project.id,
             "exc_info": mocker.ANY,

@@ -414,6 +414,8 @@ def test_dcr_register__invalid_request__logs_rejection(
         {
             "level": "error",
             "event": "registration.rejected",
+            "http__request__method": "POST",
+            "http__route": "/o/register/",
             "error": "invalid_redirect_uri",
             "error_description": (
                 "Scheme is not permitted in redirect URIs: javascript:alert(1)"
