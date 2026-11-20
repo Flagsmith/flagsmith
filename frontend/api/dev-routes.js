@@ -5,6 +5,9 @@ const bodyParser = require('body-parser')
 module.exports = function setupRoutes(app) {
   app.get('/config/project-overrides', (req, res) => {
     const getVariable = ({ name, value }) => {
+      if (typeof value === 'number') {
+        return `    ${name}: ${value},\n            `
+      }
       if (!value || value === 'undefined') {
         if (typeof value === 'boolean') {
           return `    ${name}: false,\n                `
@@ -22,6 +25,17 @@ module.exports = function setupRoutes(app) {
         return defaultVal
       }
       return envVar === 'true' || envVar === '1'
+    }
+    const envToInt = (name) => {
+      const raw = process.env[name]
+      if (raw === undefined || raw.trim() === '') {
+        return undefined
+      }
+      const parsed = Number(raw)
+      if (!Number.isFinite(parsed) || parsed < 0) {
+        return undefined
+      }
+      return Math.floor(parsed)
     }
     const sha = ''
     const values = [
@@ -56,6 +70,7 @@ module.exports = function setupRoutes(app) {
       { name: 'githubAppURL', value: process.env.GITHUB_APP_URL },
       { name: 'e2eToken', value: process.env[`E2E_TEST_TOKEN_${(process.env.ENV || 'dev').toUpperCase()}`] || process.env.E2E_TEST_TOKEN || '' },
       { name: 'evaluationAnalyticsServerUrl', value: process.env.EVALUATION_ANALYTICS_SERVER_URL },
+      { name: 'featureValueLimit', value: envToInt('FEATURE_VALUE_LIMIT') },
     ]
     let output = values.map(getVariable).join('')
     res.setHeader('Cache-Control', 's-max-age=1, stale-while-revalidate')

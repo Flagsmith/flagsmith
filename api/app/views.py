@@ -35,6 +35,7 @@ def project_overrides(request: Request) -> HttpResponse:
         "cookieSameSite": "COOKIE_SAME_SITE",
         "crispChat": "CRISP_CHAT_API_KEY",
         "disableAnalytics": "DISABLE_ANALYTICS_FEATURES",
+        "featureValueLimit": "FEATURE_VALUE_LIMIT",
         "flagsmith": "FLAGSMITH_ON_FLAGSMITH_API_KEY",
         "flagsmithAnalytics": "FLAGSMITH_ANALYTICS",
         "flagsmithClientAPI": "FLAGSMITH_ON_FLAGSMITH_API_URL",

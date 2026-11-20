@@ -91,6 +91,7 @@ class Highlight extends React.Component {
     if (nextProps.disabled !== this.props.disabled) return true
     if (nextProps.role !== this.props.role) return true
     if (nextProps['aria-readonly'] !== this.props['aria-readonly']) return true
+    if (nextProps['aria-invalid'] !== this.props['aria-invalid']) return true
     if (nextProps['aria-labelledby'] !== this.props['aria-labelledby'])
       return true
     if (!nextProps.onChange !== !this.props.onChange) return true
@@ -171,6 +172,7 @@ class Highlight extends React.Component {
             // form controls and pass nothing.
             role={this.props.role}
             aria-readonly={this.props['aria-readonly']}
+            aria-invalid={this.props['aria-invalid']}
             aria-multiline={this.props.role === 'textbox' ? true : undefined}
             contentEditable={!!this.props.onChange}
             onBlur={this.onBlur}

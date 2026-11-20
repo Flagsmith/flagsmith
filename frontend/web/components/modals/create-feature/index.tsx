@@ -35,6 +35,10 @@ import {
 import { saveFeatureWithValidation } from 'components/saveFeatureWithValidation'
 import FeatureHistory from 'components/FeatureHistory'
 import { getChangeRequests } from 'common/services/useChangeRequest'
+import {
+  formatFeatureValueLengthErrors,
+  getFeatureSaveLengthErrors,
+} from 'common/utils/featureValueValidation'
 import FeatureHealthTabContent from 'components/feature-health/FeatureHealthTabContent'
 import FeaturePipelineStatus from 'components/release-pipelines/FeaturePipelineStatus'
 import { History } from 'history'
@@ -353,7 +357,11 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
     return { featureError, featureWarning }
   }
 
-  const save = (func: (...args: any[]) => void, isSaving: boolean) => {
+  const getSubmittedFlagValue = () => {
+    if (!identity) {
+      return cleanInputValue(environmentFlag.feature_state_value)
+    }
+
     const hasMultivariate =
       props.environmentFlag?.multivariate_feature_state_values?.length
 
@@ -368,6 +376,32 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
       variationOverrides: environmentFlag.multivariate_feature_state_values,
     })
 
+    return hasMultivariate && !keepsOwnValue
+      ? props.environmentFlag?.feature_state_value
+      : cleanInputValue(environmentFlag.feature_state_value)
+  }
+
+  const getValueLengthErrors = () =>
+    getFeatureSaveLengthErrors({
+      flagValue: getSubmittedFlagValue(),
+      isIdentity: !!identity,
+      multivariateOptions: identity
+        ? undefined
+        : projectFlag.multivariate_options,
+      segmentOverrides: identity ? undefined : segmentOverrides,
+    })
+
+  const showValueLengthErrors = (errors = getValueLengthErrors()) => {
+    if (!errors.length) return false
+    toast(formatFeatureValueLengthErrors(errors), 'danger')
+    return true
+  }
+
+  const save = (func: (...args: any[]) => void, isSaving: boolean) => {
+    if (showValueLengthErrors()) return
+
+    const submittedFlagValue = getSubmittedFlagValue()
+
     if (identity) {
       !isSaving &&
         projectFlag.name &&
@@ -377,10 +411,7 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
           identity,
           identityFlag: Object.assign({}, props.identityFlag || {}, {
             enabled: environmentFlag.enabled,
-            feature_state_value:
-              hasMultivariate && !keepsOwnValue
-                ? props.environmentFlag?.feature_state_value
-                : cleanInputValue(environmentFlag.feature_state_value),
+            feature_state_value: submittedFlagValue,
             multivariate_options:
               environmentFlag.multivariate_feature_state_values,
           }),
@@ -399,7 +430,7 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
             description: projectFlag.description,
             ...(ownerIds.length ? { owners: ownerIds } : {}),
             ...(groupOwnerIds.length ? { group_owners: groupOwnerIds } : {}),
-            initial_value: cleanInputValue(environmentFlag.feature_state_value),
+            initial_value: submittedFlagValue,
             is_archived: projectFlag.is_archived,
             is_server_key_only: projectFlag.is_server_key_only,
             metadata:
@@ -489,6 +520,11 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
     !!projectFlag.multivariate_options &&
     projectFlag.multivariate_options.length &&
     controlValue < 0
+  const validateValueLengths =
+    (cb: (schedule?: boolean) => void) => (schedule?: boolean) => {
+      if (showValueLengthErrors()) return
+      cb(schedule)
+    }
   const isVersionedChangeRequest = existingChangeRequest && isVersioned
   const hideIdentityOverridesTab = Utils.getShouldHideIdentityOverridesTab()
   const isDependenciesTabEnabled = !existingChangeRequest
@@ -613,7 +649,11 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
         const hasVariationChanges =
           variationChanges.values || variationChanges.added
 
-        const onSaveVariationValues = () =>
+        const onSaveVariationValues = () => {
+          const valueLengthErrors = getFeatureSaveLengthErrors({
+            multivariateOptions: projectFlag.multivariate_options,
+          })
+          if (showValueLengthErrors(valueLengthErrors)) return
           openConfirm({
             body: 'Variation values belong to the feature, so this applies to every environment straight away and is not part of a change request.',
             noText: 'Cancel',
@@ -660,9 +700,11 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
             title: 'Save variation values',
             yesText: 'Save for all environments',
           })
+        }
 
         const saveFeatureValue = saveFeatureWithValidation(
           (schedule?: boolean) => {
+            if (showValueLengthErrors()) return
             if ((is4Eyes || schedule) && !identity) {
               const approvable =
                 dependenciesChanged ||
@@ -721,7 +763,7 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                   ...props.environmentFlag,
                   enabled: environmentFlag.enabled,
                   feature_state_value: Utils.valueToFeatureState(
-                    environmentFlag.feature_state_value,
+                    cleanInputValue(environmentFlag.feature_state_value),
                   ),
                   multivariate_feature_state_values:
                     environmentFlag.multivariate_feature_state_values,
@@ -861,7 +903,9 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                       hasVariationChanges={hasVariationChanges}
                       onSaveVariationValues={onSaveVariationValues}
                       originalMultivariateOptions={originalMultivariateOptions}
-                      onSaveFeatureValue={saveFeatureValue}
+                      onSaveFeatureValue={validateValueLengths(
+                        saveFeatureValue,
+                      )}
                       onEnvironmentFlagChange={(changes: any) => {
                         setEnvironmentFlag((prev: any) => ({
                           ...prev,

@@ -426,6 +426,7 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
           <div className='form-group'>
             <ValueEditor
               label={valueTitle}
+              validateLength
               labelAfter={
                 hasVariations && (
                   <ControlWeightChip percentage={controlPercentage} />

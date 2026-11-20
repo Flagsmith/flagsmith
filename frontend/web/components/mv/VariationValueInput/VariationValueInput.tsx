@@ -72,6 +72,7 @@ export const VariationValueInput: React.FC<VariationValueProps> = ({
             : Constants.projectPermissions(ProjectPermission.CREATE_FEATURE),
           <ValueEditor
             label='Variation Value'
+            validateLength
             labelTooltip={Constants.strings.REMOTE_CONFIG_DESCRIPTION_VARIATION}
             className='full-width code-medium'
             value={Utils.getTypedValue(Utils.featureStateToValue(value))}

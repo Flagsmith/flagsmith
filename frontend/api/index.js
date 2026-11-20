@@ -17,6 +17,11 @@ const port = process.env.PORT || 8080
 
 app.get('/config/project-overrides', (req, res) => {
   const getVariable = ({ name, value }) => {
+    if (typeof value === 'number') {
+      return `    ${name}: ${value},
+            `
+    }
+
     if (!value || value === 'undefined') {
       if (typeof value === 'boolean') {
         return `    ${name}: false,
@@ -39,6 +44,17 @@ app.get('/config/project-overrides', (req, res) => {
       return defaultVal
     }
     return envVar === 'true' || envVar === '1'
+  }
+  const envToInt = (name) => {
+    const raw = process.env[name]
+    if (raw === undefined || raw.trim() === '') {
+      return undefined
+    }
+    const parsed = Number(raw)
+    if (!Number.isFinite(parsed) || parsed < 0) {
+      return undefined
+    }
+    return Math.floor(parsed)
   }
   const sha = ''
   /*
@@ -123,6 +139,10 @@ app.get('/config/project-overrides', (req, res) => {
     {
       name: 'evaluationAnalyticsServerUrl',
       value: process.env.EVALUATION_ANALYTICS_SERVER_URL,
+    },
+    {
+      name: 'featureValueLimit',
+      value: envToInt('FEATURE_VALUE_LIMIT'),
     },
   ]
   let output = values.map(getVariable).join('')

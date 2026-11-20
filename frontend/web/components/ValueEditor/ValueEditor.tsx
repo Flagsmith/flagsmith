@@ -9,9 +9,11 @@ import React, {
 } from 'react'
 import cx from 'classnames'
 
+import { FlagsmithValue } from 'common/types/responses'
+import { getFeatureValueLengthError } from 'common/utils/featureValueValidation'
+import ErrorMessage from 'components/ErrorMessage'
 import FieldLabel from 'components/base/forms/FieldLabel'
 import Highlight from 'components/Highlight'
-import { FlagsmithValue } from 'common/types/responses'
 
 import CopyValueButton from './components/CopyValueButton'
 import LanguageSelector from './components/LanguageSelector'
@@ -38,6 +40,7 @@ export interface ValueEditorProps {
   // Not editable, but shown at full strength, unlike `disabled`.
   readOnly?: boolean
   value?: FlagsmithValue
+  validateLength?: boolean
 }
 
 const ValueEditor: FC<ValueEditorProps> = ({
@@ -50,6 +53,7 @@ const ValueEditor: FC<ValueEditorProps> = ({
   onBlur,
   onChange,
   readOnly,
+  validateLength = false,
   value,
 }) => {
   const [picked, setPicked] = useState<ValueEditorLanguage>()
@@ -59,6 +63,16 @@ const ValueEditor: FC<ValueEditorProps> = ({
   const language = languageProp ?? picked ?? detected ?? 'txt'
   const labelId = useId()
   const text = value === undefined || value === null ? '' : `${value}`
+  const lengthError = useMemo(
+    () =>
+      validateLength
+        ? getFeatureValueLengthError(
+            text,
+            typeof label === 'string' ? label : 'Value',
+          )
+        : undefined,
+    [text, label, validateLength],
+  )
 
   // Detection waits for a value rather than running on mount: values load
   // after mount, and a mount-only check left JSON rendering as plaintext.
@@ -116,12 +130,18 @@ const ValueEditor: FC<ValueEditorProps> = ({
         </div>
       )}
 
+      {!!lengthError && (
+        <div role='alert' className='mb-2'>
+          <ErrorMessage error={lengthError} />
+        </div>
+      )}
       <div className='value-editor__field position-relative'>
         {showControls && <CopyValueButton value={text} />}
 
         <Highlight
           aria-labelledby={label ? labelId : undefined}
           aria-readonly={locked || undefined}
+          aria-invalid={!!lengthError || undefined}
           disabled={locked}
           onChange={locked ? null : onChange}
           onBlur={locked ? null : onBlur}
