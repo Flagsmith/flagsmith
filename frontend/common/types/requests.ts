@@ -1222,7 +1222,7 @@ export type Req = {
   completeExperiment: {
     environmentId: string
     experimentId: number
-    body: CompleteExperimentBody
+    body?: CompleteExperimentBody
   }
   updateExperiment: {
     environmentId: string
