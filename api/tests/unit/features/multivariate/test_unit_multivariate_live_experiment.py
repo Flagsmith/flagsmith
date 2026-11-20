@@ -135,23 +135,48 @@ def test_update_mv_option__running_experiment_default_allocation_only__returns_2
 
 
 @pytest.mark.parametrize(
-    "field, new_value",
-    [("string_value", "edited"), ("key", "edited-key")],
+    "option_kwargs, patch",
+    [
+        (
+            {"type": "unicode", "string_value": "original", "key": "variation-a"},
+            {"string_value": "edited"},
+        ),
+        (
+            {"type": "unicode", "string_value": "original", "key": "variation-a"},
+            {"key": "edited-key"},
+        ),
+        (
+            {"type": "unicode", "string_value": "original", "key": "variation-a"},
+            {"type": "int", "integer_value": 1, "string_value": None},
+        ),
+        (
+            {"type": "int", "integer_value": 42, "key": "variation-int"},
+            {"integer_value": 99},
+        ),
+        (
+            {"type": "bool", "boolean_value": True, "key": "variation-bool"},
+            {"boolean_value": False},
+        ),
+    ],
 )
 def test_update_mv_option__running_experiment_changed_field__returns_400(
     admin_client: APIClient,
     project: Project,
     multivariate_feature: Feature,
     live_experiment: Experiment,
-    field: str,
-    new_value: str,
+    option_kwargs: dict[str, Any],
+    patch: dict[str, Any],
 ) -> None:
     # Given
     option = multivariate_feature.multivariate_options.first()
     assert option is not None
-    option.key = "variation-a"
+    option.type = option_kwargs["type"]
+    option.string_value = option_kwargs.get("string_value")
+    option.integer_value = option_kwargs.get("integer_value")
+    option.boolean_value = option_kwargs.get("boolean_value")
+    option.key = option_kwargs["key"]
     option.save()
-    payload = {**_dashboard_option_payload(option), field: new_value}
+    payload = {**_dashboard_option_payload(option), **patch}
 
     # When
     response = admin_client.put(
@@ -164,8 +189,11 @@ def test_update_mv_option__running_experiment_changed_field__returns_400(
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert response.json() == _expected_error(live_experiment)
     option.refresh_from_db()
-    assert option.string_value == "multivariate option for 30% of users."
-    assert option.key == "variation-a"
+    assert option.type == option_kwargs["type"]
+    assert option.string_value == option_kwargs.get("string_value")
+    assert option.integer_value == option_kwargs.get("integer_value")
+    assert option.boolean_value == option_kwargs.get("boolean_value")
+    assert option.key == option_kwargs["key"]
 
 
 @pytest.mark.parametrize(
@@ -459,3 +487,59 @@ def test_update_feature__live_experiment__unchanged_keyed_options_preserved(
         list(multivariate_feature.multivariate_options.values_list("id", flat=True))
         == stored_option_ids
     )
+
+
+def test_update_feature__live_experiment__default_allocation_only_persisted(
+    admin_client: APIClient,
+    project: Project,
+    environment: Environment,
+    multivariate_feature: Feature,
+    live_experiment: Experiment,
+) -> None:
+    # Given
+    options = list(multivariate_feature.multivariate_options.order_by("id"))
+    options[0].key = "stable-option"
+    options[0].save()
+    feature_state = environment.feature_states.get(
+        feature=multivariate_feature, identity=None, feature_segment=None
+    )
+    env_allocations_before = {
+        mv.multivariate_feature_option_id: mv.percentage_allocation
+        for mv in feature_state.multivariate_feature_state_values.all()
+    }
+    url = f"/api/v1/projects/{project.id}/features/{multivariate_feature.id}/"
+    new_default_allocations = [15.0, 25.0, 35.0]
+    payload = [
+        {
+            "id": option.id,
+            "type": option.type,
+            "string_value": option.string_value,
+            "default_percentage_allocation": new_alloc,
+        }
+        for option, new_alloc in zip(options, new_default_allocations)
+    ]
+
+    # When
+    response = admin_client.patch(
+        url,
+        data={"multivariate_options": payload},
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    returned_allocations = {
+        item["id"]: item["default_percentage_allocation"]
+        for item in response.json()["multivariate_options"]
+    }
+    for option, expected_alloc in zip(options, new_default_allocations):
+        option.refresh_from_db()
+        assert option.default_percentage_allocation == expected_alloc
+        assert returned_allocations[option.id] == expected_alloc
+
+    options[0].refresh_from_db()
+    assert options[0].key == "stable-option"
+    assert {
+        mv.multivariate_feature_option_id: mv.percentage_allocation
+        for mv in feature_state.multivariate_feature_state_values.all()
+    } == env_allocations_before

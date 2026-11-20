@@ -1,3 +1,5 @@
+from collections import defaultdict, deque
+from collections.abc import Mapping
 from datetime import datetime
 from functools import cached_property
 from typing import Any, Callable
@@ -22,6 +24,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 
 from app_analytics.serializers import LabelsQuerySerializerMixin, LabelsSerializer
+from core.constants import STRING
 from edge_api.utils import is_edge_enabled
 from environments.identities.models import Identity
 from environments.sdk.serializers_mixins import (
@@ -61,6 +64,7 @@ from .feature_segments.serializers import (
 )
 from .feature_types import FEATURE_TYPE_CHOICES, MULTIVARIATE
 from .models import Feature, FeatureSegment, FeatureState
+from .multivariate.models import MultivariateFeatureOption
 from .multivariate.serializers import NestedMultivariateFeatureOptionSerializer
 
 
@@ -315,11 +319,20 @@ class CreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
             if "multivariate_options" in validated_data and (
                 experiment := get_live_experiment(instance.id)
             ):
+                existing_options = list(
+                    MultivariateFeatureOption.objects.filter(feature=instance).order_by(
+                        "id"
+                    )
+                )
+                submitted_options = validated_data["multivariate_options"] or []
                 if self._changes_multivariate_options(
-                    validated_data["multivariate_options"], instance
+                    submitted_options, existing_options
                 ):
                     raise live_experiment_error(experiment)
                 validated_data.pop("multivariate_options")
+                self._update_option_default_allocations(
+                    instance, existing_options, submitted_options
+                )
             return super().update(instance, validated_data)  # type: ignore[no-any-return]
 
     def validate_multivariate_options(self, multivariate_options):  # type: ignore[no-untyped-def]
@@ -341,31 +354,110 @@ class CreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
                 raise serializers.ValidationError("Invalid percentage allocation")
         return multivariate_options
 
+    @staticmethod
+    def _option_signature(
+        option: MultivariateFeatureOption | Mapping[str, Any],
+    ) -> tuple[Any, ...]:
+        if isinstance(option, MultivariateFeatureOption):
+            return (
+                option.type,
+                option.integer_value,
+                option.string_value,
+                option.boolean_value,
+            )
+        return (
+            option.get("type", STRING),
+            option.get("integer_value"),
+            option.get("string_value"),
+            option.get("boolean_value"),
+        )
+
     def _changes_multivariate_options(
         self,
-        multivariate_options: list[dict[str, Any]] | None,
-        instance: Feature,
+        multivariate_options: list[dict[str, Any]],
+        existing_options: list[MultivariateFeatureOption],
     ) -> bool:
         # The frontend resubmits the whole feature, so only a real change to
         # variation value/type counts. `default_percentage_allocation` only
         # seeds new options or environments and does not affect live variants.
-        fields = (
-            "type",
-            "integer_value",
-            "string_value",
-            "boolean_value",
+        current_signatures = sorted(
+            (self._option_signature(option) for option in existing_options),
+            key=repr,
         )
-        current = NestedMultivariateFeatureOptionSerializer(
-            instance.multivariate_options.all(), many=True
-        ).data
+        submitted_signatures = sorted(
+            (self._option_signature(option) for option in multivariate_options),
+            key=repr,
+        )
+        return current_signatures != submitted_signatures
 
-        def signature(options) -> list[tuple[Any, ...]]:  # type: ignore[no-untyped-def]
-            return sorted(
-                (tuple(option.get(field) for field in fields) for option in options),
-                key=repr,
-            )
+    def _match_submitted_options(
+        self,
+        existing_options: list[MultivariateFeatureOption],
+        submitted_options: list[dict[str, Any]],
+    ) -> list[tuple[MultivariateFeatureOption, dict[str, Any]]]:
+        by_id = {option.id: option for option in existing_options}
+        by_signature: dict[tuple[Any, ...], deque[MultivariateFeatureOption]] = (
+            defaultdict(deque)
+        )
+        for option in existing_options:
+            by_signature[self._option_signature(option)].append(option)
 
-        return signature(current) != signature(multivariate_options or [])
+        initial_data = getattr(self, "initial_data", None)
+        raw_options = (
+            initial_data.get("multivariate_options")
+            if isinstance(initial_data, Mapping)
+            else None
+        )
+        has_raw = isinstance(raw_options, list) and len(raw_options) == len(
+            submitted_options
+        )
+
+        matched: dict[int, MultivariateFeatureOption] = {}
+        if has_raw:
+            for idx, (raw, submitted) in enumerate(
+                zip(raw_options, submitted_options)  # type: ignore[arg-type]
+            ):
+                raw_id = raw.get("id") if isinstance(raw, Mapping) else None
+                if not isinstance(raw_id, int) or raw_id not in by_id:
+                    continue
+                candidate = by_id[raw_id]
+                sig = self._option_signature(candidate)
+                if sig == self._option_signature(submitted):
+                    matched[idx] = candidate
+                    del by_id[raw_id]
+                    by_signature[sig].remove(candidate)
+
+        pairs: list[tuple[MultivariateFeatureOption, dict[str, Any]]] = []
+        for idx, submitted in enumerate(submitted_options):
+            selected = matched.get(idx)
+            if selected is None:
+                queue = by_signature[self._option_signature(submitted)]
+                if not queue:
+                    continue
+                selected = queue.popleft()
+            pairs.append((selected, submitted))
+        return pairs
+
+    def _update_option_default_allocations(
+        self,
+        instance: Feature,
+        existing_options: list[MultivariateFeatureOption],
+        submitted_options: list[dict[str, Any]],
+    ) -> None:
+        updated = False
+        for option, submitted in self._match_submitted_options(
+            existing_options, submitted_options
+        ):
+            if "default_percentage_allocation" not in submitted:
+                continue
+            new_allocation = submitted["default_percentage_allocation"]
+            if option.default_percentage_allocation != new_allocation:
+                option.default_percentage_allocation = new_allocation
+                option.save(update_fields=["default_percentage_allocation"])
+                updated = True
+
+        if updated and getattr(instance, "_prefetched_objects_cache", None):
+            instance._prefetched_objects_cache.pop("multivariate_options", None)
 
     def validate_owners(self, owners: list[FFAdminUser]) -> list[FFAdminUser]:
         project: Project = self.context["project"]

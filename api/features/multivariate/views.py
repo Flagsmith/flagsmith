@@ -107,30 +107,39 @@ class MultivariateFeatureOptionViewSet(viewsets.ModelViewSet):  # type: ignore[t
     def perform_update(self, serializer):  # type: ignore[no-untyped-def]
         instance = serializer.instance
         data = serializer.validated_data
-        # The dashboard PUTs every option on each save, changed or not, so only
-        # a change to the variation itself is checked against experiments.
-        if not any(
-            field in data and data[field] != getattr(instance, field)
-            for field in VARIATION_FIELDS
-        ):
-            super().perform_update(serializer)
-            return
-
-        features = {instance.feature, data.get("feature", instance.feature)}
+        target_feature = data.get("feature", instance.feature)
         with transaction.atomic():
+            locked_feature_ids = sorted({instance.feature_id, target_feature.pk})
             list(
                 Feature.objects.select_for_update()
-                .filter(pk__in=[feature.pk for feature in features])
+                .filter(pk__in=locked_feature_ids)
                 .order_by("pk")
                 .values_list("pk", flat=True)
             )
-            for feature in features:
-                check_no_live_experiment(feature.id)
+            instance.refresh_from_db()
+            if instance.feature_id not in locked_feature_ids:
+                Feature.objects.select_for_update().filter(
+                    pk=instance.feature_id
+                ).exists()
+            # The dashboard PUTs every option on each save, changed or not, so
+            # only a change to the variation itself is checked against experiments.
+            if any(
+                field in data and data[field] != getattr(instance, field)
+                for field in VARIATION_FIELDS
+            ):
+                for feature_id in {instance.feature_id, target_feature.pk}:
+                    check_no_live_experiment(feature_id)
             super().perform_update(serializer)
 
     def perform_destroy(self, instance):  # type: ignore[no-untyped-def]
         with transaction.atomic():
-            Feature.objects.select_for_update().filter(pk=instance.feature_id).exists()
+            locked_feature_id = instance.feature_id
+            Feature.objects.select_for_update().filter(pk=locked_feature_id).exists()
+            instance.refresh_from_db()
+            if instance.feature_id != locked_feature_id:
+                Feature.objects.select_for_update().filter(
+                    pk=instance.feature_id
+                ).exists()
             check_no_live_experiment(instance.feature_id)
             super().perform_destroy(instance)
 
