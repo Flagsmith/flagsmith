@@ -1,6 +1,6 @@
 import React, { useLayoutEffect, useRef, useState } from 'react'
 import Icon from 'components/icons/Icon'
-import { colorIconSecondary, colorTextSecondary } from 'common/theme/tokens'
+import { colorIconSecondary } from 'common/theme/tokens'
 import classNames from 'classnames'
 import useOutsideClick from 'common/useOutsideClick'
 import { createPortal } from 'react-dom'
@@ -76,14 +76,7 @@ const AccountDropdown: React.FC = () => {
         createPortal(
           <div ref={dropDownRef} className='feature-action__list'>
             <div
-              className='feature-action__item feature-action__header'
-              style={{
-                color: colorTextSecondary,
-                cursor: 'default',
-                fontSize: '12px',
-                fontWeight: 600,
-                padding: '8px 16px',
-              }}
+              className='px-3 py-2 text-secondary text-small fw-semibold'
               id='account-settings-view-mode'
               data-test='account-settings-view-mode'
             >
