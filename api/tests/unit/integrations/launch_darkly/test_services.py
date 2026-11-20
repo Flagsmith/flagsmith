@@ -395,7 +395,7 @@ def test_process_import_request__valid_segments__creates_segment_per_environment
                                 {
                                     "property": "p3",
                                     "operator": segment_constants.REGEX,
-                                    "value": "foo[0-9]{0,1}",
+                                    "value": "[\\s\\S]*(?:foo[0-9]{0,1})",
                                     "description": None,
                                 }
                             ],
@@ -494,6 +494,53 @@ def test_process_import_request__ends_with_clause__matches_suffix_only(
     expected_in_segment: bool,
 ) -> None:
     # Given
+    process_import_request(import_request)
+    environment = Environment.objects.get(project=project, name="Test")
+    identity = Identity.objects.create(identifier="user", environment=environment)
+    Trait.objects.create(
+        identity=identity,
+        trait_key="email",
+        value_type="unicode",
+        string_value=email,
+    )
+
+    # When
+    segment_names = {segment.name for segment in identity.get_segments()}
+
+    # Then
+    assert ("Dynamic List (Override for test)" in segment_names) is expected_in_segment
+
+
+@pytest.mark.parametrize(
+    "pattern, email, expected_in_segment",
+    [
+        (r"gmail\.com", "gmail.com", True),
+        (r"gmail\.com", "user@gmail.com", True),
+        (r"gmail\.com", "user@example.org", False),
+        (r"^gmail|corp", "user@corp.com", True),
+        (r"^gmail|corp", "user@gmail.com", False),
+        (r"(?i)GMAIL\.com", "user@gmail.com", True),
+        (r"corp", "first\nuser@corp.com", True),
+        (r"^corp", "first\ncorp", False),
+    ],
+)
+@pytest.mark.django_db(transaction=True)
+def test_process_import_request__matches_clause__matches_anywhere_in_value(
+    project: Project,
+    import_request: LaunchDarklyImportRequest,
+    ld_client_mock: MagicMock,
+    pattern: str,
+    email: str,
+    expected_in_segment: bool,
+) -> None:
+    # Given
+    segments = [
+        segment
+        for segment in ld_client_mock.get_segments.return_value
+        if segment["key"] == "dynamic-list"
+    ]
+    segments[0]["rules"][0]["clauses"][0].update(op="matches", values=[pattern])
+    ld_client_mock.get_segments.return_value = segments
     process_import_request(import_request)
     environment = Environment.objects.get(project=project, name="Test")
     identity = Identity.objects.create(identifier="user", environment=environment)
@@ -648,7 +695,7 @@ def test_process_import_request__valid_segments__imports_correctly_x_replaced_ab
             "property", "operator", "value"
         )
     ) == {
-        ("p3", segment_constants.REGEX, "foo[0-9]{0,1}"),
+        ("p3", segment_constants.REGEX, "[\\s\\S]*(?:foo[0-9]{0,1})"),
     }
 
     # Include individual users
