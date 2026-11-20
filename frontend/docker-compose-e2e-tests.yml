@@ -26,6 +26,8 @@ services:
       DISABLE_ANALYTICS_FEATURES: 'true'
       EMAIL_BACKEND: django.core.mail.backends.smtp.EmailBackend
       ACCESS_LOG_LOCATION: /dev/shm/log.txt
+      # The suite logs in more than the default 20 times a minute
+      LOGIN_THROTTLE_RATE: 1000/min
     ports:
       - 8000:8000
     depends_on:
