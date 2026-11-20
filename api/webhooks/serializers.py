@@ -29,5 +29,15 @@ class TestWebhookSuccessResponseSerializer(serializers.Serializer[None]):
 
 class TestWebhookErrorResponseSerializer(serializers.Serializer[None]):
     detail = serializers.CharField()
-    status = serializers.IntegerField()
+    status = serializers.IntegerField(
+        required=False,
+        help_text="HTTP status returned by the webhook, if it responded.",
+    )
     body = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    code = serializers.CharField(
+        required=False,
+        help_text=(
+            "Why the webhook could not be reached, if known: a POSIX error "
+            "name, or an OpenSSL certificate verification error name."
+        ),
+    )

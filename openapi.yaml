@@ -29065,14 +29065,17 @@ components:
         detail:
           type: string
         status:
+          description: 'HTTP status returned by the webhook, if it responded.'
           type: integer
         body:
           type:
             - string
             - 'null'
+        code:
+          description: 'Why the webhook could not be reached, if known: a POSIX error name, or an OpenSSL certificate verification error name.'
+          type: string
       required:
         - detail
-        - status
     TestWebhookSuccessResponse:
       type: object
       properties:
