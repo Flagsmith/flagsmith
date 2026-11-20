@@ -40,11 +40,3 @@ export const getFlagsmith = async function (): Promise<IFlagsmith> {
   await initProm;
   return flagsmith as IFlagsmith;
 };
-
-// Whether the API under test is a SaaS deployment, per its `/version/` endpoint.
-export const isSaas = async function (): Promise<boolean> {
-  const api = process.env.FLAGSMITH_API_URL || Project.api;
-  const res = await fetch(`${api.replace(/api\/v1\/$/, '')}version/`);
-  const version = (await res.json()) as { is_saas?: boolean };
-  return !!version.is_saas;
-};
