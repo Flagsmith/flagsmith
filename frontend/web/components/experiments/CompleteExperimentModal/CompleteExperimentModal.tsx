@@ -30,10 +30,12 @@ const CompleteExperimentModal: FC<CompleteExperimentModalProps> = ({
   experimentId,
 }) => {
   const params = { environmentId, experimentId }
-  const { data: experiment, isError } = useGetExperimentQuery(params)
+  const { data: experiment, isError: isExperimentError } =
+    useGetExperimentQuery(params)
   const { data: bayesianResults, isLoading: isLoadingResults } =
     useGetExperimentBayesianResultsQuery(params)
-  const { data: environment } = useGetEnvironmentQuery({ id: environmentId })
+  const { data: environment, isError: isEnvironmentError } =
+    useGetEnvironmentQuery({ id: environmentId })
   const [completeExperiment, { isLoading: isCompleting }] =
     useCompleteExperimentMutation()
   const [selection, setSelection] = useState<RolloutSelection>()
@@ -44,7 +46,7 @@ const CompleteExperimentModal: FC<CompleteExperimentModalProps> = ({
     [experiment, results],
   )
 
-  if (isError) {
+  if (isExperimentError || isEnvironmentError) {
     return (
       <div className='modal-body'>
         <ErrorMessage
