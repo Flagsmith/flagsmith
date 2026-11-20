@@ -3,7 +3,7 @@ import cn from 'classnames'
 import './BodyText.scss'
 
 export type BodyTextSize = 'sm' | 'xs'
-export type BodyTextWeight = 'medium' | 'semibold'
+export type BodyTextWeight = 'semibold'
 
 export type BodyTextProps = HTMLAttributes<HTMLElement> & {
   // Leave unset for the default 14px
