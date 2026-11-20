@@ -4591,6 +4591,24 @@
             ],
             "format": "date-time",
             "readOnly": true
+          },
+          "rollout_decision": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/RolloutDecisionEnum"
+              },
+              {
+                "$ref": "#/components/schemas/NullEnum"
+              }
+            ],
+            "readOnly": true
+          },
+          "rollout_variant": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "readOnly": true
           }
         },
         "required": [
@@ -4690,6 +4708,24 @@
               "null"
             ],
             "format": "date-time",
+            "readOnly": true
+          },
+          "rollout_decision": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/RolloutDecisionEnum"
+              },
+              {
+                "$ref": "#/components/schemas/NullEnum"
+              }
+            ],
+            "readOnly": true
+          },
+          "rollout_variant": {
+            "type": [
+              "integer",
+              "null"
+            ],
             "readOnly": true
           }
         },
@@ -4802,6 +4838,24 @@
               "null"
             ],
             "format": "date-time",
+            "readOnly": true
+          },
+          "rollout_decision": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/RolloutDecisionEnum"
+              },
+              {
+                "$ref": "#/components/schemas/NullEnum"
+              }
+            ],
+            "readOnly": true
+          },
+          "rollout_variant": {
+            "type": [
+              "integer",
+              "null"
+            ],
             "readOnly": true
           }
         },
@@ -7275,6 +7329,15 @@
         "enum": [
           "ADMIN",
           "USER"
+        ]
+      },
+      "RolloutDecisionEnum": {
+        "description": "* `control` - Control\n* `variant` - Variant\n* `disable` - Disable",
+        "type": "string",
+        "enum": [
+          "control",
+          "variant",
+          "disable"
         ]
       },
       "Segment": {

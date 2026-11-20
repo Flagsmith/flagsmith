@@ -13,6 +13,7 @@ from experimentation.constants import (
 )
 from experimentation.dataclasses import (
     AudienceSpec,
+    RolloutDecisionSpec,
     RolloutSpec,
     WarehouseEventStats,
 )
@@ -27,6 +28,7 @@ from experimentation.models import (
     ExperimentStatus,
     Metric,
     MetricDirection,
+    RolloutDecision,
     WarehouseConnection,
     WarehouseConnectionStatus,
     WarehouseType,
@@ -313,6 +315,39 @@ class ExperimentRolloutSerializer(serializers.Serializer):  # type: ignore[type-
         )
 
 
+class ExperimentRolloutDecisionSerializer(serializers.Serializer):  # type: ignore[type-arg]
+    rollout_decision = serializers.ChoiceField(choices=RolloutDecision.choices)
+    rollout_variant = serializers.IntegerField(required=False)
+
+    def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
+        experiment: Experiment = self.context["experiment"]
+        rollout_variant: int | None = attrs.get("rollout_variant")
+        if attrs["rollout_decision"] != RolloutDecision.VARIANT:
+            if rollout_variant is not None:
+                raise serializers.ValidationError(
+                    {"rollout_variant": "Only allowed when rolling out a variant."}
+                )
+            return attrs
+        if rollout_variant is None:
+            raise serializers.ValidationError(
+                {"rollout_variant": "Required when rolling out a variant."}
+            )
+        if not experiment.feature.multivariate_options.filter(
+            id=rollout_variant
+        ).exists():
+            raise serializers.ValidationError(
+                {"rollout_variant": "Variant not found for the experiment's feature."}
+            )
+        return attrs
+
+    @staticmethod
+    def to_spec(data: dict[str, Any]) -> RolloutDecisionSpec:
+        return RolloutDecisionSpec(
+            decision=data["rollout_decision"],
+            rollout_variant_id=data.get("rollout_variant"),
+        )
+
+
 class ExperimentSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
     # Annotated with the common base type so ExperimentListSerializer can
     # override the field with a read-only representation.
@@ -339,6 +374,8 @@ class ExperimentSerializer(serializers.ModelSerializer):  # type: ignore[type-ar
             "updated_at",
             "started_at",
             "ended_at",
+            "rollout_decision",
+            "rollout_variant",
         )
         read_only_fields = (
             "id",
@@ -347,6 +384,8 @@ class ExperimentSerializer(serializers.ModelSerializer):  # type: ignore[type-ar
             "updated_at",
             "started_at",
             "ended_at",
+            "rollout_decision",
+            "rollout_variant",
         )
 
     def validate_feature(self, feature: Any) -> Any:
