@@ -39,7 +39,7 @@ ORDER BY applied DESC
 2. Run the rollback command inside a Flagsmith API container running the _current_ version of Flagsmith:
 
 ```bash
-python manage.py rollbackmigrationsafter "<datetime from step 1>"
+python manage.py rollbackmigrationsappliedafter "<datetime from step 1>"
 ```
 
 3. Roll back the Flagsmith API to the desired version.
@@ -195,8 +195,21 @@ To roll back safely, unapply the database migrations first, then roll back the c
    helm rollback flagsmith <revision> -n flagsmith --wait --timeout 20m
    ```
 
-If the rollback command fails partway, some migrations stay applied. In that case, restore the backup you took before
-the upgrade. See the [PostgreSQL documentation](https://www.postgresql.org/docs/current/backup.html).
+:::warning
+
+Before Flagsmith 2.287.0, the migration `experimentation.0014_drop_ingestion_infrastructure_and_delivery_log` could not
+be reversed. If the upgrade applied that migration and you run the rollback command in an earlier version, the command
+stops partway with this error:
+
+```text
+django.core.exceptions.FieldDoesNotExist: WarehouseDeliveryLog has no field named 'connection'
+```
+
+Migrations that were already unapplied stay unapplied, and the rest stay applied. If this happens, restore the backup
+you took before the upgrade. See the [PostgreSQL documentation](https://www.postgresql.org/docs/current/backup.html).
+The migration was made reversible in [2.287.0](https://github.com/Flagsmith/flagsmith/releases/tag/v2.287.0).
+
+:::
 
 If you are rolling back from a version earlier than v2.151.0, replace step 2 with the steps in
 [Steps for Versions Earlier Than v2.151.0](#steps-for-versions-earlier-than-v21510).
