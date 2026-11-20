@@ -66,13 +66,17 @@ const ValueEditor: FC<ValueEditorProps> = ({
   const language = languageProp ?? picked ?? detected ?? 'txt'
   const labelId = useId()
   const text = value === undefined || value === null ? '' : `${value}`
-  const lengthError = validateLength
-    ? getFeatureValueLengthError(
-        text,
-        typeof label === 'string' ? label : 'Value',
-        MAX_FEATURE_VALUE_LENGTH,
-      )
-    : undefined
+  const lengthError = useMemo(
+    () =>
+      validateLength
+        ? getFeatureValueLengthError(
+            text,
+            typeof label === 'string' ? label : 'Value',
+            MAX_FEATURE_VALUE_LENGTH,
+          )
+        : undefined,
+    [text, label, validateLength],
+  )
 
   // Detection waits for a value rather than running on mount: values load
   // after mount, and a mount-only check left JSON rendering as plaintext.

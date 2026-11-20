@@ -35,7 +35,10 @@ import {
 import { saveFeatureWithValidation } from 'components/saveFeatureWithValidation'
 import FeatureHistory from 'components/FeatureHistory'
 import { getChangeRequests } from 'common/services/useChangeRequest'
-import { getFeatureValueLengthErrors } from 'common/utils/featureValueValidation'
+import {
+  formatFeatureValueLengthErrors,
+  getFeatureSaveLengthErrors,
+} from 'common/utils/featureValueValidation'
 import FeatureHealthTabContent from 'components/feature-health/FeatureHealthTabContent'
 import FeaturePipelineStatus from 'components/release-pipelines/FeaturePipelineStatus'
 import { History } from 'history'
@@ -355,28 +358,17 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
   }
 
   const getValueLengthErrors = () =>
-    getFeatureValueLengthErrors([
-      {
-        label: identity ? 'Identity override' : 'Flag value',
-        value: environmentFlag.feature_state_value,
-      },
-      ...(projectFlag.multivariate_options || []).map(
-        (option: any, index: number) => ({
-          label: `Variant ${option.key || index + 1} value`,
-          value: option.string_value,
-        }),
-      ),
-      ...(segmentOverrides || [])
-        .filter((override: any) => !override.toRemove)
-        .map((override: any, index: number) => ({
-          label: `Segment override ${override.segment_name || index + 1} value`,
-          value: override.value,
-        })),
-    ])
+    getFeatureSaveLengthErrors({
+      flagValue: cleanInputValue(environmentFlag.feature_state_value),
+      isIdentity: !!identity,
+      multivariateOptions: projectFlag.multivariate_options,
+      segmentOverrides,
+    })
 
   const showValueLengthErrors = (errors = getValueLengthErrors()) => {
-    errors.forEach((error) => toast(error, 'danger'))
-    return errors.length > 0
+    if (!errors.length) return false
+    toast(formatFeatureValueLengthErrors(errors), 'danger')
+    return true
   }
 
   const save = (func: (...args: any[]) => void, isSaving: boolean) => {
@@ -647,14 +639,9 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
           variationChanges.values || variationChanges.added
 
         const onSaveVariationValues = () => {
-          const valueLengthErrors = getFeatureValueLengthErrors(
-            (projectFlag.multivariate_options || []).map(
-              (option: any, index: number) => ({
-                label: `Variant ${option.key || index + 1} value`,
-                value: option.string_value,
-              }),
-            ),
-          )
+          const valueLengthErrors = getFeatureSaveLengthErrors({
+            multivariateOptions: projectFlag.multivariate_options,
+          })
           if (showValueLengthErrors(valueLengthErrors)) return
           openConfirm({
             body: 'Variation values belong to the feature, so this applies to every environment straight away and is not part of a change request.',
@@ -765,7 +752,7 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                   ...props.environmentFlag,
                   enabled: environmentFlag.enabled,
                   feature_state_value: Utils.valueToFeatureState(
-                    environmentFlag.feature_state_value,
+                    cleanInputValue(environmentFlag.feature_state_value),
                   ),
                   multivariate_feature_state_values:
                     environmentFlag.multivariate_feature_state_values,
