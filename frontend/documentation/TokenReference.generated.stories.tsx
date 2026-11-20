@@ -1151,6 +1151,102 @@ export const AllTokens: StoryObj = {
           </tr>
         </tbody>
       </table>
+      <h3>Font-size</h3>
+      <table className='docs-table'>
+        <thead>
+          <tr>
+            <th>Token</th>
+            <th>Value</th>
+            <th>Usage</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <code>--font-size-heading-lg</code>
+            </td>
+            <td>
+              <code>24px</code>
+            </td>
+            <td>Level 1 headings. Page titles.</td>
+          </tr>
+          <tr>
+            <td>
+              <code>--font-size-heading-md</code>
+            </td>
+            <td>
+              <code>18px</code>
+            </td>
+            <td>Level 2 headings. Sections.</td>
+          </tr>
+          <tr>
+            <td>
+              <code>--font-size-heading-sm</code>
+            </td>
+            <td>
+              <code>16px</code>
+            </td>
+            <td>Level 3 to 6 headings. Cards, subsections.</td>
+          </tr>
+          <tr>
+            <td>
+              <code>--font-size-body-md</code>
+            </td>
+            <td>
+              <code>14px</code>
+            </td>
+            <td>Default body text.</td>
+          </tr>
+          <tr>
+            <td>
+              <code>--font-size-body-sm</code>
+            </td>
+            <td>
+              <code>13px</code>
+            </td>
+            <td>Small body text. Secondary details.</td>
+          </tr>
+          <tr>
+            <td>
+              <code>--font-size-body-xs</code>
+            </td>
+            <td>
+              <code>12px</code>
+            </td>
+            <td>Extra small body text. Captions, labels.</td>
+          </tr>
+        </tbody>
+      </table>
+      <h3>Line-height</h3>
+      <table className='docs-table'>
+        <thead>
+          <tr>
+            <th>Token</th>
+            <th>Value</th>
+            <th>Usage</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <code>--line-height-heading</code>
+            </td>
+            <td>
+              <code>1.3</code>
+            </td>
+            <td>Headings.</td>
+          </tr>
+          <tr>
+            <td>
+              <code>--line-height-body</code>
+            </td>
+            <td>
+              <code>1.4</code>
+            </td>
+            <td>Body text.</td>
+          </tr>
+        </tbody>
+      </table>
     </DocPage>
   ),
 }
