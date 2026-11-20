@@ -357,22 +357,10 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
     return { featureError, featureWarning }
   }
 
-  const getValueLengthErrors = () =>
-    getFeatureSaveLengthErrors({
-      flagValue: cleanInputValue(environmentFlag.feature_state_value),
-      isIdentity: !!identity,
-      multivariateOptions: projectFlag.multivariate_options,
-      segmentOverrides,
-    })
-
-  const showValueLengthErrors = (errors = getValueLengthErrors()) => {
-    if (!errors.length) return false
-    toast(formatFeatureValueLengthErrors(errors), 'danger')
-    return true
-  }
-
-  const save = (func: (...args: any[]) => void, isSaving: boolean) => {
-    if (showValueLengthErrors()) return
+  const getSubmittedFlagValue = () => {
+    if (!identity) {
+      return cleanInputValue(environmentFlag.feature_state_value)
+    }
 
     const hasMultivariate =
       props.environmentFlag?.multivariate_feature_state_values?.length
@@ -388,6 +376,32 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
       variationOverrides: environmentFlag.multivariate_feature_state_values,
     })
 
+    return hasMultivariate && !keepsOwnValue
+      ? props.environmentFlag?.feature_state_value
+      : cleanInputValue(environmentFlag.feature_state_value)
+  }
+
+  const getValueLengthErrors = () =>
+    getFeatureSaveLengthErrors({
+      flagValue: getSubmittedFlagValue(),
+      isIdentity: !!identity,
+      multivariateOptions: identity
+        ? undefined
+        : projectFlag.multivariate_options,
+      segmentOverrides: identity ? undefined : segmentOverrides,
+    })
+
+  const showValueLengthErrors = (errors = getValueLengthErrors()) => {
+    if (!errors.length) return false
+    toast(formatFeatureValueLengthErrors(errors), 'danger')
+    return true
+  }
+
+  const save = (func: (...args: any[]) => void, isSaving: boolean) => {
+    if (showValueLengthErrors()) return
+
+    const submittedFlagValue = getSubmittedFlagValue()
+
     if (identity) {
       !isSaving &&
         projectFlag.name &&
@@ -397,10 +411,7 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
           identity,
           identityFlag: Object.assign({}, props.identityFlag || {}, {
             enabled: environmentFlag.enabled,
-            feature_state_value:
-              hasMultivariate && !keepsOwnValue
-                ? props.environmentFlag?.feature_state_value
-                : cleanInputValue(environmentFlag.feature_state_value),
+            feature_state_value: submittedFlagValue,
             multivariate_options:
               environmentFlag.multivariate_feature_state_values,
           }),
@@ -419,7 +430,7 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
             description: projectFlag.description,
             ...(ownerIds.length ? { owners: ownerIds } : {}),
             ...(groupOwnerIds.length ? { group_owners: groupOwnerIds } : {}),
-            initial_value: cleanInputValue(environmentFlag.feature_state_value),
+            initial_value: submittedFlagValue,
             is_archived: projectFlag.is_archived,
             is_server_key_only: projectFlag.is_server_key_only,
             metadata:

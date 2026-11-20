@@ -10,10 +10,7 @@ import React, {
 import cx from 'classnames'
 
 import { FlagsmithValue } from 'common/types/responses'
-import {
-  getFeatureValueLengthError,
-  MAX_FEATURE_VALUE_LENGTH,
-} from 'common/utils/featureValueValidation'
+import { getFeatureValueLengthError } from 'common/utils/featureValueValidation'
 import ErrorMessage from 'components/ErrorMessage'
 import FieldLabel from 'components/base/forms/FieldLabel'
 import Highlight from 'components/Highlight'
@@ -72,7 +69,6 @@ const ValueEditor: FC<ValueEditorProps> = ({
         ? getFeatureValueLengthError(
             text,
             typeof label === 'string' ? label : 'Value',
-            MAX_FEATURE_VALUE_LENGTH,
           )
         : undefined,
     [text, label, validateLength],
