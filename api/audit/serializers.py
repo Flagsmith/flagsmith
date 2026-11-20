@@ -84,19 +84,24 @@ class AuditLogRetrieveSerializer(serializers.ModelSerializer):  # type: ignore[t
                 many=True,
             ).data
 
+        if instance.change_data:
+            return instance.change_data["change_details"]  # type: ignore[no-any-return]
+
         return []
 
     def get_change_type(self, instance: AuditLog) -> ChangeType:
-        if not (history_record := instance.history_record):
+        if history_record := instance.history_record:
+            symbol = history_record.history_type  # type: ignore[attr-defined]
+        elif instance.change_data:
+            symbol = instance.change_data["change_type"]
+        else:
             return "UNKNOWN"
 
         return {  # type: ignore[return-value]
             "+": "CREATE",
             "-": "DELETE",
             "~": "UPDATE",
-        }.get(
-            history_record.history_type  # type: ignore[attr-defined]
-        )
+        }.get(symbol)
 
 
 class AuditLogsQueryParamSerializer(serializers.Serializer):  # type: ignore[type-arg]

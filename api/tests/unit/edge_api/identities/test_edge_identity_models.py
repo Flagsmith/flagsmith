@@ -446,13 +446,15 @@ def test_edge_identity_save_called__feature_override_removed__expected_tasks_cal
         (True, "initial", True, "updated"),
         (False, "initial", True, "initial"),
         (False, "initial", True, "updated"),
+        (True, False, True, 0),
+        (True, True, True, 1),
     ),
 )
 def test_save__feature_override_updated__generates_audit_records(
     initial_enabled: bool,
-    initial_value: str,
+    initial_value: str | int | bool,
     new_enabled: bool,
-    new_value: str,
+    new_value: str | int | bool,
     mocker: MockerFixture,
     edge_identity_model: EdgeIdentity,
     edge_identity_dynamo_wrapper_mock: MagicMock,
@@ -528,6 +530,11 @@ def test_save__feature_override_updated__generates_audit_records(
             "identifier": edge_identity_model.identifier,
         }
     )
+    actual_change = mocked_generate_audit_log_records.delay.call_args.kwargs["kwargs"][
+        "changes"
+    ]["feature_overrides"]["test_feature"]
+    assert type(actual_change["old"]["feature_state_value"]) is type(initial_value)
+    assert type(actual_change["new"]["feature_state_value"]) is type(new_value)
 
 
 def test_get_all_feature_states__post_v2_versioning_migration__returns_latest_overrides(
