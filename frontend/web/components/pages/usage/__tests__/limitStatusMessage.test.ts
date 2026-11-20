@@ -71,24 +71,50 @@ describe('limitStatusMessage', () => {
     ).toContain('Overage charges will apply for the last 30 days.')
   })
 
-  it('tells a restricted organisation how to get access back', () => {
+  it('tells an API-limited organisation how access returns', () => {
     const { body, title } = limitStatusMessage(
-      { flagsPaused: false, kind: 'restricted', over },
+      {
+        apiLimitAccessBlocked: true,
+        flagsPaused: false,
+        kind: 'restricted',
+        over,
+      },
       billed,
     )
 
     expect(title).toBe('Your organisation is restricted')
     expect(body).toBe(
       'You reached your plan limit of 50K API calls on 2 Aug.' +
-        ' If this is due to API usage, access returns after 30 days under' +
-        ' the limit or on upgrade. Otherwise, contact support.',
+        ' Access returns after 30 days under the limit or on upgrade.',
+    )
+  })
+
+  it('tells a support-blocked organisation only support can help', () => {
+    const { body } = limitStatusMessage(
+      {
+        apiLimitAccessBlocked: false,
+        flagsPaused: false,
+        kind: 'restricted',
+        over,
+      },
+      billed,
+    )
+
+    expect(body).toBe(
+      'You reached your plan limit of 50K API calls on 2 Aug.' +
+        ' Only support can lift this block, so contact support to get access back.',
     )
   })
 
   it('says flags are paused when serving has stopped', () => {
     expect(
       limitStatusMessage(
-        { flagsPaused: true, kind: 'restricted', over },
+        {
+          apiLimitAccessBlocked: true,
+          flagsPaused: true,
+          kind: 'restricted',
+          over,
+        },
         billed,
       ).body,
     ).toMatch(/^Flags are not being served for your organisation\. /)
@@ -97,13 +123,17 @@ describe('limitStatusMessage', () => {
   // Most of that 30 day window has no overage left to report.
   it('explains the restriction with no overage to report', () => {
     const { body } = limitStatusMessage(
-      { flagsPaused: false, kind: 'restricted', over: undefined },
+      {
+        apiLimitAccessBlocked: true,
+        flagsPaused: false,
+        kind: 'restricted',
+        over: undefined,
+      },
       billed,
     )
 
     expect(body).toBe(
-      'If this is due to API usage, access returns after 30 days under the' +
-        ' limit or on upgrade. Otherwise, contact support.',
+      'Access returns after 30 days under the limit or on upgrade.',
     )
   })
 
