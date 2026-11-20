@@ -12,6 +12,7 @@ import Button from 'components/base/forms/Button'
 import Tabs from 'components/navigation/TabMenu/Tabs'
 import TabItem from 'components/navigation/TabMenu/TabItem'
 import ErrorMessage from 'components/ErrorMessage'
+import { colorSurfaceDefault } from 'common/theme/tokens'
 
 const AdminDashboardPage: FC = () => {
   const [days, setDays] = useState<30 | 60 | 90>(30)
@@ -67,7 +68,7 @@ const AdminDashboardPage: FC = () => {
         <div
           className='d-flex gap-2 align-items-center'
           style={{
-            background: isStuck ? 'var(--body-bg, #fff)' : 'transparent',
+            background: isStuck ? colorSurfaceDefault : 'transparent',
             borderRadius: isStuck ? '0 0 8px 8px' : 0,
             boxShadow: isStuck ? '0 4px 8px rgba(0,0,0,0.12)' : 'none',
             padding: '8px 16px',
