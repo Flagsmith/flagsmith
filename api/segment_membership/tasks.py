@@ -55,7 +55,10 @@ _INSERT_IDENTITIES_SQL = (
     # 4h fits several large environments back-to-back at SaaS scale.
     timeout=timedelta(hours=4),
 )
-def seed_organisation_identities(organisation_id: int) -> None:
+def seed_organisation_identities(
+    organisation_id: int,
+    ignore_feature_flag: bool = False,
+) -> None:
     """Mirror one organisation's current Dynamo identities into IDENTITIES,
     dispatching a refresh per project as each completes.
 
@@ -64,6 +67,10 @@ def seed_organisation_identities(organisation_id: int) -> None:
 
     Identities carrying no traits are skipped as they carry little to no value
     for segment membership.
+
+    `ignore_feature_flag` lets an operator populate ClickHouse before the
+    organisation is let into the beta, so the first counts it sees are complete;
+    see the `seed_segment_membership` management command.
     """
     log = logger.bind(organisation__id=organisation_id)
     if not settings.CLICKHOUSE_ENABLED:
@@ -71,7 +78,7 @@ def seed_organisation_identities(organisation_id: int) -> None:
         return
 
     organisation = Organisation.objects.get(pk=organisation_id)
-    if not is_membership_enabled(organisation):
+    if not ignore_feature_flag and not is_membership_enabled(organisation):
         log.info("seed.skipped", reason="ff_disabled")
         return
 
