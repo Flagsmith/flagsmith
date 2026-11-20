@@ -5,6 +5,7 @@ import {
   E2E_NON_ADMIN_USER_WITH_A_ROLE,
   E2E_USER,
   E2E_TEST_IDENTITY,
+  E2E_PROJECT_WITH_ROLE,
 } from '../config'
 
 test.describe('Roles Tests', () => {
@@ -15,6 +16,7 @@ test.describe('Roles Tests', () => {
       createFeature,
       createRole,
       deleteFeature,
+      gotoProject,
       gotoTraits,
       login,
       logout,
@@ -22,10 +24,9 @@ test.describe('Roles Tests', () => {
       waitForToastsToClear,
     } = createHelpers(page);
 
-    const rolesProject = 'project-my-test-project-7-role'
     log('Login')
     await login(E2E_USER, PASSWORD)
-    await click(byId(rolesProject))
+    await gotoProject(E2E_PROJECT_WITH_ROLE)
     await createFeature({ name: 'test_feature', value: false })
     await waitForToastsToClear()
     log('Go to Roles')
@@ -57,7 +58,7 @@ test.describe('Roles Tests', () => {
     await page.evaluate(() => location.reload());
     await page.waitForTimeout(2000);
     await login(E2E_NON_ADMIN_USER_WITH_A_ROLE, PASSWORD)
-    await click(byId(rolesProject))
+    await gotoProject(E2E_PROJECT_WITH_ROLE)
     log('User with permissions can Handle the Features')
     const flagName = 'test_feature'
     await deleteFeature(flagName)
