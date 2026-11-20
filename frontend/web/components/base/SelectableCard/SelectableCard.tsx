@@ -77,7 +77,11 @@ const SelectableCard: FC<SelectableCardProps> = ({
           </div>
         )}
       </BareButton>
-      {footer && <div className='px-3 pb-3'>{footer}</div>}
+      {footer && (
+        <div className='px-3 pb-3' inert={disabled}>
+          {footer}
+        </div>
+      )}
     </div>
   )
 }
