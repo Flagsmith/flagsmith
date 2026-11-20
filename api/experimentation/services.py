@@ -79,7 +79,7 @@ from features.feature_segments.services import get_next_segment_override_priorit
 from features.feature_states.models import API_VALUE_TYPES
 from features.future.services import delete_segment_override, update_flag
 from features.future.types import SegmentOverrideRequest
-from features.models import FeatureState
+from features.models import Feature, FeatureState
 from features.value_types import BOOLEAN, STRING
 from features.versioning.versioning_service import get_environment_flags_list
 from integrations.flagsmith.client import get_openfeature_client
@@ -617,6 +617,9 @@ def transition_experiment_status(
 
         experiment.status = target_status
         if target_status == ExperimentStatus.RUNNING and not experiment.started_at:
+            Feature.objects.select_for_update().filter(
+                pk=experiment.feature_id
+            ).exists()
             experiment.started_at = timezone.now()
             _remove_superseded_experiment_rollouts(
                 experiment, AuthorData.from_user(user)
