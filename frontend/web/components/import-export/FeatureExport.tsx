@@ -33,8 +33,11 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
   const [page, setPage] = useState(1)
   const [tagStrategy, setTagStrategy] = useState<TagStrategy>('UNION')
 
-  const { getEnvironmentIdFromKey, isLoading: isLoadingEnvs } =
-    useProjectEnvironments(parseInt(projectId))
+  const {
+    environments,
+    getEnvironmentIdFromKey,
+    isLoading: isLoadingEnvs,
+  } = useProjectEnvironments(parseInt(projectId))
 
   const environmentId = environment
     ? getEnvironmentIdFromKey(environment)
@@ -206,7 +209,9 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
               <Flex className='table-column px-3'>Export</Flex>
             </Row>
           }
-          renderRow={(data) => <FeatureExportItem data={data} />}
+          renderRow={(data) => (
+            <FeatureExportItem data={data} environments={environments} />
+          )}
         />
       )}
     </div>

@@ -185,10 +185,12 @@ export default (WrappedComponent) => {
               })),
             )
           }
+          // Priorities are kept as stored, as system segment overrides'
+          // can't change.
           segmentOverrides = segmentOverrides.map((v, i) => ({
             ...v,
-            originalPriority: i,
-            priority: i,
+            originalPriority: v.priority ?? i,
+            priority: v.priority ?? i,
           }))
 
           const originalSegmentOverrides = cloneDeep(segmentOverrides)

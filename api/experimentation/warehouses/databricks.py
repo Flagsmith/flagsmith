@@ -1,3 +1,5 @@
+import hashlib
+import json
 import math
 import re
 import time
@@ -77,6 +79,9 @@ CONNECT_TIMEOUT_SECONDS = 5
 POLL_INTERVAL_SECONDS = 1
 MAX_WAIT_TIMEOUT_SECONDS = 30
 MIN_WAIT_TIMEOUT_SECONDS = 5
+TOKEN_CACHE_SECONDS = 600
+WAREHOUSE_STARTING_CACHE_SECONDS = 10
+EVENT_STATS_TIMEOUT_SECONDS = 15
 _TERMINAL_STATES = {"SUCCEEDED", "FAILED", "CANCELED", "CLOSED"}
 
 VERIFY_QUERY = "SELECT 1 FROM events LIMIT 0"
@@ -193,6 +198,21 @@ def _convert_rows(payload: dict[str, Any]) -> QueryResult:
     return QueryResult(rows, [column["name"] for column in columns])
 
 
+def _token_cache_key(
+    config: DatabricksConfig, credentials: DatabricksCredentials
+) -> str:
+    details = json.dumps(
+        [
+            config["host"],
+            config["workspace_id"],
+            credentials["client_id"],
+            credentials["client_secret"],
+        ]
+    )
+    digest = hashlib.sha256(details.encode()).hexdigest()
+    return f"experimentation:databricks_token:{digest}"
+
+
 class _Session:
     def __init__(
         self,
@@ -205,7 +225,7 @@ class _Session:
         self._config = config
         self._base_url = f"https://{config['host']}"
         self._deadline = deadline
-        self._headers = {"Authorization": f"Bearer {self._fetch_token(credentials)}"}
+        self._headers = {"Authorization": f"Bearer {self._get_token(credentials)}"}
 
     def _remaining(self) -> float:
         return self._deadline - time.monotonic()
@@ -235,6 +255,14 @@ class _Session:
             raise DatabricksWorkspaceMismatch()
         payload: dict[str, Any] = response.json()
         return payload
+
+    def _get_token(self, credentials: DatabricksCredentials) -> str:
+        cache_key = _token_cache_key(self._config, credentials)
+        if cached_token := cache.get(cache_key):
+            return typing.cast(str, cached_token)
+        token = self._fetch_token(credentials)
+        cache.set(cache_key, token, TOKEN_CACHE_SECONDS)
+        return token
 
     def _fetch_token(self, credentials: DatabricksCredentials) -> str:
         try:
@@ -496,8 +524,14 @@ class DatabricksWarehouse:
                 connection, budget_seconds=budget_seconds
             ) as session:
                 result = read(session)
-        except Exception:
-            cache.set(cache_key, CUSTOMER_EVENT_UNAVAILABLE, failure_seconds)
+        except Exception as exc:
+            cache.set(
+                cache_key,
+                CUSTOMER_EVENT_UNAVAILABLE,
+                WAREHOUSE_STARTING_CACHE_SECONDS
+                if isinstance(exc, DatabricksWarehouseStarting)
+                else failure_seconds,
+            )
             logger.warning(
                 f"connection.{kind}_failed",
                 environment__id=connection.environment_id,
@@ -538,7 +572,7 @@ class DatabricksWarehouse:
             result_type=WarehouseEventStats,
             success_seconds=CUSTOMER_EVENT_STATS_CACHE_SECONDS,
             failure_seconds=CUSTOMER_EVENT_STATS_CACHE_SECONDS,
-            budget_seconds=VERIFY_TIMEOUT_SECONDS,
+            budget_seconds=EVENT_STATS_TIMEOUT_SECONDS,
             read=lambda session: build_event_stats(
                 session.run(
                     event_stats_query(DATABRICKS_DIALECT),

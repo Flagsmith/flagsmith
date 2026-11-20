@@ -1,12 +1,6 @@
-import React, { FC, Ref, useEffect, useState } from 'react'
+import React, { FC, Ref, useState } from 'react'
 import { EditPermissionsModal } from './EditPermissions'
-import {
-  Environment,
-  Project,
-  Role,
-  User,
-  UserGroupSummary,
-} from 'common/types/responses'
+import { Project, Role, User, UserGroupSummary } from 'common/types/responses'
 import Tabs from './navigation/TabMenu/Tabs'
 import TabItem from './navigation/TabMenu/TabItem'
 import Input from './base/forms/Input'
@@ -16,6 +10,8 @@ import ProjectFilter from './ProjectFilter'
 import OrganisationStore from 'common/stores/organisation-store'
 import PlanBasedAccess from './PlanBasedAccess'
 import WarningMessage from './WarningMessage'
+import EmptyState from './EmptyState'
+import { useSortedProjectEnvironments } from 'common/hooks/useSortedProjectEnvironments'
 
 type PermissionsTabsType = {
   orgId?: number
@@ -42,16 +38,8 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
   const [searchEnv, setSearchEnv] = useState<string>('')
   const projectData: Project[] | undefined = OrganisationStore.getProjects()
   const [project, setProject] = useState<string>('')
-  const [environments, setEnvironments] = useState<Environment[]>([])
-
-  useEffect(() => {
-    if (project && projectData) {
-      const environments = projectData.find(
-        (p) => p.id === parseInt(project),
-      )?.environments
-      setEnvironments(environments || [])
-    }
-  }, [project, projectData])
+  const { environments, isError, isLoading, refetch } =
+    useSortedProjectEnvironments(Number(project) || undefined)
 
   if (!orgId) {
     return
@@ -154,13 +142,21 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
             />
           </div>
           <div className='mt-2'>
-            {environments.length > 0 && (
+            {isLoading && <Loader />}
+            {isError && !environments?.length && (
+              <EmptyState
+                status='error'
+                title='Could not load environments'
+                onRetry={refetch}
+              />
+            )}
+            {!!environments?.length && (
               <RolePermissionsList
                 user={user}
                 orgId={orgId}
                 group={group}
                 filter={searchEnv}
-                mainItems={(environments || [])?.map((v) => {
+                mainItems={environments.map((v) => {
                   return {
                     id: role ? v.id : v.api_key,
                     name: v.name,

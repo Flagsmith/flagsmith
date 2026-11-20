@@ -37,6 +37,7 @@ import { getVersionFeatureState } from 'common/services/useVersionFeatureState'
 import { getFeatureStates } from 'common/services/useFeatureState'
 import { getSegments } from 'common/services/useSegment'
 import {
+  actionChangeRequest,
   changeRequestService,
   updateChangeRequest,
 } from 'common/services/useChangeRequest'
@@ -63,7 +64,7 @@ const convertSegmentOverrideToFeatureState = (
     feature: override.feature,
     feature_segment: {
       id: override.id,
-      priority: i,
+      priority: override.priority ?? i,
       segment: override.segment,
       uuid: override.uuid,
     },
@@ -361,7 +362,11 @@ const controller = {
               },
               id: segmentOverride.data.feature_segment.id,
               multivariate_options: segmentOverrides[i].multivariate_options,
-              priority: segmentOverride.data.feature_segment.priority,
+              // Where the override was moved to, rather than where it was
+              // created, so the priorities saved next keep it there.
+              priority:
+                segmentOverrides[i].priority ??
+                segmentOverride.data.feature_segment.priority,
               segment: segmentOverride.data.feature_segment.segment,
               segment_name: v.segment_name,
               uuid: segmentOverride.data.feature_segment.uuid,
@@ -443,14 +448,15 @@ const controller = {
                     getStore(),
                     segmentOverrides.map((override, index) => ({
                       id: override.id,
-                      priority: index,
+                      priority: override.priority ?? index,
                     })),
                   )
                 : Promise.resolve([])
               ).then(() =>
                 Promise.all(
                   segmentOverrides.map((override) =>
-                    !override.created
+                    // System segment overrides can't be changed directly.
+                    !override.created && !override.is_system_segment
                       ? data.put(
                           `${Project.api}features/featurestates/${override.feature_segment_value.id}/`,
                           {
@@ -666,7 +672,6 @@ const controller = {
             : `${Project.api}environments/${environmentId}/create-change-request/`
           return data[reqType](url, req).then(
             (updatedChangeRequest: ChangeRequest) => {
-              let prom = Promise.resolve()
               const shouldUpdateMv =
                 multivariate_options && updatedChangeRequest.feature_states?.[0]
               if (shouldUpdateMv) {
@@ -693,7 +698,7 @@ const controller = {
                   )
               }
 
-              prom = (
+              void (
                 shouldUpdateMv || (commit && ignore_conflicts)
                   ? updateChangeRequest(
                       getStore(),
@@ -705,32 +710,23 @@ const controller = {
                         : updatedChangeRequest,
                     )
                   : Promise.resolve()
-              ).then(() => {
+              ).then(async () => {
                 if (commit) {
-                  AppActions.actionChangeRequest(
-                    updatedChangeRequest.id,
-                    'commit',
-                    () => {
-                      AppActions.refreshFeatures(projectId, environmentId)
-                    },
-                  )
+                  const res = await actionChangeRequest(getStore(), {
+                    actionType: 'commit',
+                    id: `${updatedChangeRequest.id}`,
+                  })
+                  if ('error' in res) {
+                    toast(
+                      'The change request was saved but could not be published',
+                      'danger',
+                    )
+                  } else {
+                    AppActions.refreshFeatures(projectId, environmentId)
+                  }
                 } else {
                   getStore().dispatch(
                     changeRequestService.util.invalidateTags(['ChangeRequest']),
-                  )
-                  AppActions.getChangeRequest(
-                    updatedChangeRequest.id,
-                    projectId,
-                    environmentId,
-                  )
-                }
-              })
-              prom.then(() => {
-                if (featureStateId) {
-                  AppActions.getChangeRequest(
-                    changeRequestData.id,
-                    projectId,
-                    environmentId,
                   )
                 }
               })

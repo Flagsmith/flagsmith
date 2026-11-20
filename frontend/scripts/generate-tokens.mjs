@@ -479,7 +479,6 @@ function generateUtilities() {
 
   // Colour utilities
   const colourMappings = {
-    border: { prefix: 'border', property: 'border-color' },
     icon: { prefix: 'icon', property: null }, // special: color + fill
     surface: { prefix: 'bg-surface', property: 'background-color' },
     text: { prefix: 'text', property: 'color' },

@@ -1,2 +1,2 @@
-export { default } from './Chip'
-export type { ChipProps, ChipSize, ChipVariant } from './Chip'
+export { default, chipClassName } from './Chip'
+export type { ChipProps, ChipSize, ChipVariant, ChipVariantProps } from './Chip'

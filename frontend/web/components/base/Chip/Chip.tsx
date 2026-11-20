@@ -1,15 +1,26 @@
-import React, { KeyboardEvent, ReactNode, Ref } from 'react'
+import React, { CSSProperties, KeyboardEvent, ReactNode, Ref } from 'react'
 import classNames from 'classnames'
 import Icon from 'components/icons/Icon'
 import { colorIconSecondary } from 'common/theme/tokens'
+import { toHexColour } from 'common/utils/hexColour'
 import './Chip.scss'
 
 export type ChipSize = 'default' | 'sm' | 'xs'
-export type ChipVariant = 'neutral' | 'accent'
+export type ChipVariant =
+  | 'neutral'
+  | 'accent'
+  | 'success'
+  | 'warning'
+  | 'tinted'
+type TokenVariant = Exclude<ChipVariant, 'tinted'>
 
-export type ChipProps = {
+// 'tinted' takes a 6-digit hex colour; the token variants take none.
+export type ChipVariantProps =
+  | { variant?: TokenVariant; colour?: never }
+  | { variant: 'tinted'; colour: string }
+
+export type ChipProps = ChipVariantProps & {
   children: ReactNode
-  variant?: ChipVariant
   size?: ChipSize
   truncate?: boolean
   onRemove?: () => void
@@ -28,10 +39,29 @@ export type ChipProps = {
 }
 
 // bg + text come from token utilities; the variant border lives in Chip.scss.
-const VARIANT_UTILITIES: Record<ChipVariant, string> = {
+const VARIANT_UTILITIES: Record<TokenVariant, string> = {
   accent: 'bg-surface-action-subtle text-action',
   neutral: 'bg-surface-subtle text-default',
+  success: 'bg-surface-success text-success',
+  warning: 'bg-surface-warning text-warning',
 }
+
+// The classes for a token chip, for markup built as an HTML string (tooltips).
+export const chipClassName = ({
+  size = 'default',
+  variant = 'neutral',
+}: {
+  size?: ChipSize
+  variant?: ChipVariant
+}) =>
+  classNames(
+    'ds-chip d-inline-flex align-items-center align-middle gap-1 rounded-sm',
+    variant !== 'tinted' && VARIANT_UTILITIES[variant],
+    {
+      [`ds-chip--${variant}`]: variant !== 'neutral',
+      [`ds-chip--${size}`]: size !== 'default',
+    },
+  )
 
 // Token-based chip primitive. Uses `ds-chip` rather than the legacy `.chip`
 // (old SCSS vars + a manual `.dark {}` block, ~35 usages) so the two coexist
@@ -43,6 +73,7 @@ const Chip = ({
   'aria-expanded': ariaExpanded,
   children,
   className,
+  colour,
   onClick,
   onKeyDown,
   onRemove,
@@ -54,16 +85,21 @@ const Chip = ({
   variant = 'neutral',
 }: ChipProps) => {
   const interactive = !!onClick || !!role
+  // An invalid colour falls back to the neutral look.
+  const tint = variant === 'tinted' ? toHexColour(colour) : null
+  const tintStyle: (CSSProperties & { '--chip-colour': string }) | undefined =
+    tint ? { '--chip-colour': tint } : undefined
+  const tokenVariant: TokenVariant = variant === 'tinted' ? 'neutral' : variant
+
   return (
     <span
       ref={ref}
+      // Data, not styling: Chip.scss derives the shades from these.
+      style={tintStyle}
       className={classNames(
-        'ds-chip d-inline-flex align-items-center align-middle gap-1 rounded-sm',
-        VARIANT_UTILITIES[variant],
+        chipClassName({ size, variant: tint ? 'tinted' : tokenVariant }),
         {
-          'ds-chip--accent': variant === 'accent',
           'ds-chip--clickable': interactive,
-          [`ds-chip--${size}`]: size !== 'default',
           'ds-chip--truncate': truncate,
         },
         className,

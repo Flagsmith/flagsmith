@@ -1,0 +1,64 @@
+.scope-card {
+  // As wide as the scope switch; the steps below wrap to it.
+  width: max-content;
+  max-width: 100%;
+
+  // Steps open by height, and the gap opens with them.
+  &__section {
+    contain: inline-size;
+    display: grid;
+    grid-template-rows: 0fr;
+    transition:
+      grid-template-rows var(--duration-slow) var(--easing-standard),
+      margin-top var(--duration-slow) var(--easing-standard);
+
+    &.open {
+      grid-template-rows: 1fr;
+      margin-top: 8px;
+    }
+  }
+
+  &__section-inner {
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  &__projects {
+    max-height: 280px;
+    overflow-y: auto;
+  }
+
+  &__project:not(:has(input:checked)):hover {
+    background: var(--color-surface-hover);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &__section {
+      transition: none;
+    }
+  }
+}
+
+.scope-mode-switch {
+  gap: 2px;
+
+  &__option {
+    // Grow to share the track, never shrink below the label.
+    flex: 1 0 auto;
+    padding: 6px 12px;
+    color: var(--color-text-secondary);
+    background-color: transparent;
+    transition:
+      color var(--duration-normal) var(--easing-standard),
+      background-color var(--duration-normal) var(--easing-standard);
+
+    &[aria-checked='true'] {
+      color: var(--color-text-default);
+      background-color: var(--color-surface-default);
+      // The ring keeps it visible where the surface is darker than the track.
+      box-shadow:
+        var(--shadow-sm),
+        inset 0 0 0 1px var(--color-border-strong);
+    }
+  }
+}

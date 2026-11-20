@@ -122,11 +122,13 @@ def test_list_audit_log__filter_by_project__returns_matching_logs(
     assert response.json()["results"][1]["project"]["id"] == project.id
 
 
+@pytest.mark.parametrize("is_system_event", [True, False])
 def test_list_audit_log__filter_by_is_system_event__returns_matching_logs(
     admin_client: APIClient,
     project: Project,
     environment: Environment,
     organisation: Organisation,
+    is_system_event: bool,
 ) -> None:
     # Given
     AuditLog.objects.create(project=project, is_system_event=True)
@@ -134,15 +136,13 @@ def test_list_audit_log__filter_by_is_system_event__returns_matching_logs(
         project=project, environment=environment, is_system_event=False
     )
 
-    url = reverse("api-v1:audit-list")
-
     # When
-    response = admin_client.get(url, {"is_system_event": True})
+    response = admin_client.get("/api/v1/audit/", {"is_system_event": is_system_event})
 
     # Then
     assert response.json()["count"] == 1
     assert response.status_code == status.HTTP_200_OK
-    assert response.json()["results"][0]["is_system_event"] is True
+    assert response.json()["results"][0]["is_system_event"] is is_system_event
 
 
 def test_list_audit_log__regular_user__returns_empty(

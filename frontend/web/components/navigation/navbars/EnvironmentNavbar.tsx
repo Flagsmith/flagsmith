@@ -1,10 +1,13 @@
-import React, { FC, useRef } from 'react'
+import React, { FC } from 'react'
 import Utils from 'common/utils/utils'
 import Permission from 'common/providers/Permission'
 import classNames from 'classnames'
 import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
 import SidebarLink from 'components/navigation/SidebarLink'
-import { useGetChangeRequestsQuery } from 'common/services/useChangeRequest'
+import {
+  useGetChangeRequestsQuery,
+  useGetScheduledChangeRequestsQuery,
+} from 'common/services/useChangeRequest'
 import { useExperimentationEnabled } from 'common/hooks/useExperimentationEnabled'
 
 type EnvironmentNavType = {
@@ -20,8 +23,6 @@ const EnvironmentNavbar: FC<EnvironmentNavType> = ({
   mobile,
   projectId,
 }) => {
-  const date = useRef(moment().toISOString())
-
   const { data: environments } = useGetEnvironmentsQuery(
     {
       projectId: `${projectId}`,
@@ -29,10 +30,8 @@ const EnvironmentNavbar: FC<EnvironmentNavType> = ({
     { skip: !projectId },
   )
 
-  const { data: scheduledData } = useGetChangeRequestsQuery({
-    committed: true,
+  const { data: scheduledData } = useGetScheduledChangeRequestsQuery({
     environmentId,
-    live_from_after: date.current,
     page_size: 1,
   })
 

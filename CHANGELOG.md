@@ -1,5 +1,128 @@
 # Changelog
 
+## [2.293.0](https://github.com/Flagsmith/flagsmith/compare/v2.292.0...v2.293.0) (2026-11-19)
+
+
+### Features
+
+* **Audit logs:** Emit authentication audit logs ([#8931](https://github.com/Flagsmith/flagsmith/issues/8931)) ([e9acd24](https://github.com/Flagsmith/flagsmith/commit/e9acd24beaf4fa7b280fcf25fe8507cdef42a2bc))
+* **AuditLog:** Filter the organisation audit log by scope ([#8941](https://github.com/Flagsmith/flagsmith/issues/8941)) ([fe9eee8](https://github.com/Flagsmith/flagsmith/commit/fe9eee89a99162e5099dfc7e4c9148ae865f5a88))
+* **chip:** add success and warning variants ([#9002](https://github.com/Flagsmith/flagsmith/issues/9002)) ([0dd2d9a](https://github.com/Flagsmith/flagsmith/commit/0dd2d9ae64567818d4f007fef61fbd08cb787abe))
+* **Flags:** Show flag dependencies on the Value tab ([#8989](https://github.com/Flagsmith/flagsmith/issues/8989)) ([dba691d](https://github.com/Flagsmith/flagsmith/commit/dba691d4f82f69deac6e023ec17275752a7018af))
+* **Flags:** Show system segment overrides as read-only ([#8792](https://github.com/Flagsmith/flagsmith/issues/8792)) ([b5fc451](https://github.com/Flagsmith/flagsmith/commit/b5fc4517ecfd98eadd3bd601d2f86a2c7b8d230b))
+* **Telemetry:** Emit CLI usage events from an API middleware ([#9010](https://github.com/Flagsmith/flagsmith/issues/9010)) ([7ec6a0e](https://github.com/Flagsmith/flagsmith/commit/7ec6a0e70084ea33055f484015b9ef69b80ecf5a))
+
+
+### Bug Fixes
+
+* **docker:** restart long-running services after a host reboot ([#9014](https://github.com/Flagsmith/flagsmith/issues/9014)) ([fe9b4cd](https://github.com/Flagsmith/flagsmith/commit/fe9b4cd9a1e28fea0cc18af4331f35f02bf12823))
+* **Permissions:** Colour the permission summary chips by access level ([#9004](https://github.com/Flagsmith/flagsmith/issues/9004)) ([15033bd](https://github.com/Flagsmith/flagsmith/commit/15033bd8538bccdabaa6ad87c10ce826f152b3a1))
+* **Projects:** Remove N+1 calls to get project environments ([#8957](https://github.com/Flagsmith/flagsmith/issues/8957)) ([484b24b](https://github.com/Flagsmith/flagsmith/commit/484b24bbdce12cf7b040766706e94b2777ab0bd3))
+* **segments:** use chip and tokens for the system segment override label ([#9005](https://github.com/Flagsmith/flagsmith/issues/9005)) ([d465e74](https://github.com/Flagsmith/flagsmith/commit/d465e74ffa9d60b6e67ab8efe65a507a92d83f5d))
+* **Tokens:** make border colours apply and follow dark mode ([#9003](https://github.com/Flagsmith/flagsmith/issues/9003)) ([a117a65](https://github.com/Flagsmith/flagsmith/commit/a117a650d82e67ca828f6318dd94b7fce1e6ae1e))
+
+
+### Dependency Updates
+
+* **api:** update dependency flagsmith-private to &gt;=0.16.0,&lt;1 ([#9024](https://github.com/Flagsmith/flagsmith/issues/9024)) ([ea1b7b0](https://github.com/Flagsmith/flagsmith/commit/ea1b7b099a227a7faa1101da765528fc877a8e0b))
+* **mcp:** update dependency flagsmith-common to v3.16.2 ([#9020](https://github.com/Flagsmith/flagsmith/issues/9020)) ([5bc8688](https://github.com/Flagsmith/flagsmith/commit/5bc8688e2f8e2287a5d8f33d9215167818d2f12f))
+
+
+### Docs
+
+* update what we can change for SaaS customers  ([#8946](https://github.com/Flagsmith/flagsmith/issues/8946)) ([a436d5b](https://github.com/Flagsmith/flagsmith/commit/a436d5bf6328041521ce81bfbc6a152243d3bc1e))
+
+## [2.292.0](https://github.com/Flagsmith/flagsmith/compare/v2.291.0...v2.292.0) (2026-11-17)
+
+
+### Features
+
+* Add SSRF allowlist ([#8993](https://github.com/Flagsmith/flagsmith/issues/8993)) ([47c774b](https://github.com/Flagsmith/flagsmith/commit/47c774ba543c992e584b4cd4897345d1982829ba))
+* **AuditLog:** Add the organisation audit log page ([#8940](https://github.com/Flagsmith/flagsmith/issues/8940)) ([339f8b0](https://github.com/Flagsmith/flagsmith/commit/339f8b0f5cdb0fd9cf9924d74fd8a1a4140fb8d9))
+* **Environments:** Standardise environment Chip across the UI ([#8971](https://github.com/Flagsmith/flagsmith/issues/8971)) ([eeb1fb7](https://github.com/Flagsmith/flagsmith/commit/eeb1fb70010268e86eb018c20fb3f497576a3c5b))
+* **Popover:** Rebuild the base Popover on Floating UI ([#8969](https://github.com/Flagsmith/flagsmith/issues/8969)) ([67e727a](https://github.com/Flagsmith/flagsmith/commit/67e727a9bac335d9c691ed274471a7fb870fab04))
+* **Radio:** Rebuild Radio around a native input ([#8970](https://github.com/Flagsmith/flagsmith/issues/8970)) ([59ef92a](https://github.com/Flagsmith/flagsmith/commit/59ef92a8e4d35fff9951423cf648472ec02a6ff4))
+
+
+### Bug Fixes
+
+* added condition to render edit identity alias button ([#8967](https://github.com/Flagsmith/flagsmith/issues/8967)) ([c57f84b](https://github.com/Flagsmith/flagsmith/commit/c57f84b16eecf155dd9e3e8cce04fa5d70028235))
+* **Change requests:** Fix flaky E2E tests and a stale deleted feature ([#8951](https://github.com/Flagsmith/flagsmith/issues/8951)) ([450eb5d](https://github.com/Flagsmith/flagsmith/commit/450eb5d9622c02b3c26ddad6bf13fb965a92b9df))
+* **Environments:** Use every palette colour and drop tests that guard nothing ([#8975](https://github.com/Flagsmith/flagsmith/issues/8975)) ([b6d94bb](https://github.com/Flagsmith/flagsmith/commit/b6d94bb046fe0be51e15df70d1722cfd8cfb773f))
+* **Flag Dependency:** Serve dependency overrides' value from the environment default ([#8793](https://github.com/Flagsmith/flagsmith/issues/8793)) ([7751408](https://github.com/Flagsmith/flagsmith/commit/77514087018b370eed92d164dbc76883f6ad695b))
+* Scope nested writes to the object being saved ([#8986](https://github.com/Flagsmith/flagsmith/issues/8986)) ([7208bde](https://github.com/Flagsmith/flagsmith/commit/7208bdeac2f45c4d8e51fb9deec409decb0ff1a0))
+* **Usage:** API call counts just under a magnitude display as 1000K ([#8804](https://github.com/Flagsmith/flagsmith/issues/8804)) ([18638a8](https://github.com/Flagsmith/flagsmith/commit/18638a85822f935d041db75ed8bb3b74379bbe44))
+* **usage:** Stop usage tasks dying on a single organisation ([#8753](https://github.com/Flagsmith/flagsmith/issues/8753)) ([a9b66f5](https://github.com/Flagsmith/flagsmith/commit/a9b66f51ba74a2e084a80f44febbac23e2ec87ef))
+
+
+### Dependency Updates
+
+* **api:** update dependency flagsmith-private to &gt;=0.15.1,&lt;1 ([#8988](https://github.com/Flagsmith/flagsmith/issues/8988)) ([da995e7](https://github.com/Flagsmith/flagsmith/commit/da995e7bb59b94abc0b2074d4c3b7a1d2029b728))
+* **mcp:** update dependency dnspython to v2.9.2 [security] ([#8963](https://github.com/Flagsmith/flagsmith/issues/8963)) ([05b073c](https://github.com/Flagsmith/flagsmith/commit/05b073cbbf29fb3ea8c3a1bbba8e3a61f69168e5))
+
+
+### Docs
+
+* pin jsDelivr SDK snippet with Subresource Integrity ([#8990](https://github.com/Flagsmith/flagsmith/issues/8990)) ([4a45da1](https://github.com/Flagsmith/flagsmith/commit/4a45da1d04367b9e424c6a3b0fb0d5ffc9bfea74))
+
+
+### Refactoring
+
+* **Change requests:** Replace the Flux change request store with RTK Query ([#8923](https://github.com/Flagsmith/flagsmith/issues/8923)) ([00b7931](https://github.com/Flagsmith/flagsmith/commit/00b7931de44805df55347a088073bbe215da271f))
+
+## [2.291.0](https://github.com/Flagsmith/flagsmith/compare/v2.290.0...v2.291.0) (2026-11-13)
+
+
+### Features
+
+* **Audit logs:** Emit and serve organisation-level audit logs ([#8921](https://github.com/Flagsmith/flagsmith/issues/8921)) ([e39de59](https://github.com/Flagsmith/flagsmith/commit/e39de590793a76a575315353df4a38b5d82b28f0))
+* **docker:** Run experimentation on the Flagsmith Postgres database in docker compose ([#8884](https://github.com/Flagsmith/flagsmith/issues/8884)) ([1ec1049](https://github.com/Flagsmith/flagsmith/commit/1ec1049e6e40ab539242417c645b0ed5e2181f48))
+* **Feature Health:** Send a `feature_health_updated` signal when a feature's health changes ([#8949](https://github.com/Flagsmith/flagsmith/issues/8949)) ([64c1ebe](https://github.com/Flagsmith/flagsmith/commit/64c1ebe7bcf8257ad829dfd2b3ce8c36a29931cb))
+* **Release Pipelines:** Add an abort if unhealthy option to wait stages ([#8950](https://github.com/Flagsmith/flagsmith/issues/8950)) ([7264f03](https://github.com/Flagsmith/flagsmith/commit/7264f03014de25042e2e18c41125d9a770b517af))
+
+
+### Bug Fixes
+
+* **Audit Log:** DynamoDB Edge migration status fetch N+1 ([#8909](https://github.com/Flagsmith/flagsmith/issues/8909)) ([1dfc2b3](https://github.com/Flagsmith/flagsmith/commit/1dfc2b31471ff42b51df5718c5a122459b9a60b5))
+* **Checkbox:** Make checkboxes reachable by keyboard and screen readers ([#8954](https://github.com/Flagsmith/flagsmith/issues/8954)) ([a7cb23a](https://github.com/Flagsmith/flagsmith/commit/a7cb23a10affbf61ac577f3a98b8766e50af52b5))
+* **Diff display:** Segment rules diff showing up as [Object object] ([#8910](https://github.com/Flagsmith/flagsmith/issues/8910)) ([13539af](https://github.com/Flagsmith/flagsmith/commit/13539afcb99c20b4351e26f215d01b49f2a9be03))
+* **E2E:** Lift the E2E organisation's plan limits on SaaS ([#8918](https://github.com/Flagsmith/flagsmith/issues/8918)) ([ca7a393](https://github.com/Flagsmith/flagsmith/commit/ca7a393f1f992b974ce70e9f1284276b179333f0))
+* **identities:** Identities search may bring the database down ([#8933](https://github.com/Flagsmith/flagsmith/issues/8933)) ([d9c857a](https://github.com/Flagsmith/flagsmith/commit/d9c857ae4980b0ff332b7f5ef0bc3a5fae4cfd81))
+* Revoke DRF token after password change ([#8698](https://github.com/Flagsmith/flagsmith/issues/8698)) ([773f1c0](https://github.com/Flagsmith/flagsmith/commit/773f1c06ca20768351dac722724bf87fcbc8453e))
+* **scheduling:** Stop counting published change requests in the badge ([#8914](https://github.com/Flagsmith/flagsmith/issues/8914)) ([fd6c366](https://github.com/Flagsmith/flagsmith/commit/fd6c366b2c6d200383098a8fcac637a967b08d00))
+* **Segments:** Incorrect audit logs when changing segment rules ([#8908](https://github.com/Flagsmith/flagsmith/issues/8908)) ([a002217](https://github.com/Flagsmith/flagsmith/commit/a002217f1e94487813a25e537e59bc8adec97d55))
+* signup last name field rendered as a password input ([#8943](https://github.com/Flagsmith/flagsmith/issues/8943)) ([e1d64e6](https://github.com/Flagsmith/flagsmith/commit/e1d64e6f15842f93dc67f30273e50ceb1d14bcc8))
+
+
+### Dependency Updates
+
+* **api:** update dependency flagsmith-private to &gt;=0.15.0,&lt;1 ([#8952](https://github.com/Flagsmith/flagsmith/issues/8952)) ([351bb23](https://github.com/Flagsmith/flagsmith/commit/351bb2305c95a7780b48a6cc33be5bbd411c868b))
+* **api:** update dependency oauthlib to v4.0.1 [security] ([#8924](https://github.com/Flagsmith/flagsmith/issues/8924)) ([21c9f44](https://github.com/Flagsmith/flagsmith/commit/21c9f441387362b1a07bbb4197f952c97ce67817))
+* bump Node and uv to distrust compromised eMudhra CAs ([#8898](https://github.com/Flagsmith/flagsmith/issues/8898)) ([4449ad4](https://github.com/Flagsmith/flagsmith/commit/4449ad4231392545807649e3b52a595999e0512d))
+
+
+### CI
+
+* **Renovate:** Upgrade to Renovate 44 and drop uv lock file maintenance ([#8912](https://github.com/Flagsmith/flagsmith/issues/8912)) ([b1ecf70](https://github.com/Flagsmith/flagsmith/commit/b1ecf7026d56ee92adb224309eb756795afd7e9f))
+
+
+### Docs
+
+* **experimentation:** document PostgreSQL warehouses ([#8873](https://github.com/Flagsmith/flagsmith/issues/8873)) ([a130da6](https://github.com/Flagsmith/flagsmith/commit/a130da6f417d657d784c36e03cbc245db9d2e187))
+* **experimentation:** group warehouse pages under Connect a Warehouse ([#8883](https://github.com/Flagsmith/flagsmith/issues/8883)) ([6102623](https://github.com/Flagsmith/flagsmith/commit/610262351b43323bb90f6562565a2656459c1779))
+* **experimentation:** Point the coding agent prompts at the Flagsmith database ([#8892](https://github.com/Flagsmith/flagsmith/issues/8892)) ([eeac04b](https://github.com/Flagsmith/flagsmith/commit/eeac04bd70b936314b6384cc91da442ce450140c))
+* **Release Pipelines:** Document aborting a wait stage when a flag becomes unhealthy ([#8947](https://github.com/Flagsmith/flagsmith/issues/8947)) ([7dce291](https://github.com/Flagsmith/flagsmith/commit/7dce2919eadc626424da03fed0d6a57b86acf050))
+
+
+### Performance Improvements
+
+* cache Databricks OAuth token and retry while warehouse starts ([#8906](https://github.com/Flagsmith/flagsmith/issues/8906)) ([674c63b](https://github.com/Flagsmith/flagsmith/commit/674c63bfbcae5274fa54d5ae083c43811d21de6c))
+
+
+### Tests
+
+* **Change requests:** Cover versioned, edited and scheduled change requests ([#8818](https://github.com/Flagsmith/flagsmith/issues/8818)) ([4cfa405](https://github.com/Flagsmith/flagsmith/commit/4cfa405e0ac06a7d105fc0f1136d19f21e03cf30))
+
 ## [2.290.0](https://github.com/Flagsmith/flagsmith/compare/v2.289.0...v2.290.0) (2026-11-05)
 
 

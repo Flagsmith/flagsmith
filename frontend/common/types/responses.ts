@@ -253,7 +253,12 @@ export type Segment = {
   managed_by?: SegmentManagedBy
 }
 // What creates and edits the segment, empty where users do.
-export type SegmentManagedBy = '' | 'cohort' | 'dependency' | 'experiment'
+export type SegmentManagedBy =
+  | ''
+  | 'cohort'
+  | 'dependency'
+  | 'experiment'
+  | 'release_pipeline'
 export type ProjectChangeRequest = Omit<
   ChangeRequest,
   | 'environment_feature_versions'
@@ -546,23 +551,52 @@ export type GroupPermission = Omit<UserPermission, 'user'> & {
   group: UserGroupSummary
 }
 
+// Mirrors api/audit/related_object_type.py (the enum names are stored).
+export type AuditLogRelatedObjectType =
+  | 'FEATURE'
+  | 'FEATURE_STATE'
+  | 'SEGMENT'
+  | 'ENVIRONMENT'
+  | 'CHANGE_REQUEST'
+  | 'EDGE_IDENTITY'
+  | 'IMPORT_REQUEST'
+  | 'EF_VERSION'
+  | 'FEATURE_HEALTH'
+  | 'RELEASE_PIPELINE'
+  | 'WAREHOUSE_CONNECTION'
+  | 'EXPERIMENT'
+  | 'METRIC'
+
+export type AuditLogChangeType = 'CREATE' | 'UPDATE' | 'DELETE' | 'UNKNOWN'
+
+// EnvironmentSerializerLight: everything but these, plus uuid.
+export type AuditLogEnvironment = Omit<
+  Environment,
+  'metadata' | 'show_disabled_flags' | 'description' | 'banner_colour'
+> & {
+  uuid: string
+  description: string | null
+  banner_colour: string | null
+}
+
 export type AuditLogItem = {
   id: number
   created_date: string
   log: string
-  author?: User
-  environment?: Environment
-  project: ProjectSummary
-  related_object_uuid?: number
-  related_feature_id?: number
-  related_object_type:
-    | 'FEATURE'
-    | 'FEATURE_STATE'
-    | 'ENVIRONMENT'
-    | 'CHANGE_REQUEST'
-    | 'SEGMENT'
-    | 'EF_VERSION'
-    | 'EDGE_IDENTITY'
+  // UserListSerializer's default fields.
+  author:
+    | (Pick<User, 'id' | 'email' | 'first_name' | 'last_name' | 'uuid'> & {
+        // Null for a user who has never logged in.
+        last_login: string | null
+      })
+    | null
+  organisation: { id: number; name: string } | null
+  environment: AuditLogEnvironment | null
+  // ProjectListSerializer.
+  project: ProjectSummary | null
+  related_object_id: number | null
+  related_object_uuid: string | null
+  related_object_type: AuditLogRelatedObjectType | null
   is_system_event: boolean
 }
 
@@ -572,6 +606,7 @@ export type AuditLogDetail = AuditLogItem & {
     old: DiffValue
     new: DiffValue
   }[]
+  change_type: AuditLogChangeType
 }
 export type PaymentMethod = 'CHARGEBEE' | 'XERO' | 'AWS_MARKETPLACE'
 
@@ -907,6 +942,19 @@ export type IdentityOverride = FeatureState & {
   identity: { id: string; identifier: string }
   segment?: null
   overridden_by?: string | null
+}
+
+export type FeatureSegment = {
+  id: number
+  uuid: string
+  segment: number
+  priority: number
+  environment: number
+  segment_name: string
+  is_feature_specific: boolean
+  // System segments and their overrides are managed by what owns them.
+  is_system_segment: boolean
+  segment_managed_by: SegmentManagedBy
 }
 
 export type FeatureState = {
@@ -1337,7 +1385,12 @@ export enum StageTriggerType {
   WAIT_FOR = 'WAIT_FOR',
 }
 
-export type StageTriggerBody = { wait_for?: string } | null
+export type StageAbortCondition = { unhealthy?: boolean }
+
+export type StageTriggerBody = {
+  wait_for?: string
+  abort_if?: StageAbortCondition
+} | null
 
 export type StageTrigger = {
   trigger_type: StageTriggerType
@@ -1661,6 +1714,8 @@ export type Res = {
   users: User[]
   enableFeatureVersioning: { id: string }
   auditLogItem: AuditLogDetail
+  organisationAuditLogs: PagedResponse<AuditLogItem>
+  organisationAuditLogItem: AuditLogDetail
   featureExport: { id: string }
   featureExports: PagedResponse<FeatureExport>
   flagsmithProjectImport: { id: string }
@@ -1686,6 +1741,9 @@ export type Res = {
   projectChangeRequests: PagedResponse<ChangeRequestSummary>
   projectChangeRequest: ProjectChangeRequest
   actionChangeRequest: {}
+  changeRequest: ChangeRequest
+  // null when the environment has no state for the feature
+  environmentFeatureState: FeatureState | null
   identityTrait: { id: string }
   identityTraits: IdentityTrait[]
   conversionEvents: PagedResponse<ConversionEvent>

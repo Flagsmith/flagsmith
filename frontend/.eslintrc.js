@@ -1,3 +1,86 @@
+// Patterns we keep catching in review. Warnings only, on changed lines only
+// (CI and pre-commit), so they never block a PR. For a real exception,
+// disable the rule on that line and say why.
+const colourMessage = 'Use a colour token, not a hex, rgb or hsl literal.'
+const fetchMessage =
+  'Add an RTK Query endpoint in common/services/ instead of fetch().'
+
+const colourLiterals = [
+  {
+    message: colourMessage,
+    selector:
+      'Literal[value=/^\\s*(#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$|(rgba?|hsla?)\\()/]',
+  },
+  {
+    message: colourMessage,
+    selector:
+      'TemplateElement[value.raw=/#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})\\b|(rgba?|hsla?)\\(/]',
+  },
+]
+
+// Legacy classes that have a DS component. Keep this list short: add a class
+// only once its replacement exists, remove it once the last use migrates.
+const legacyClasses = [
+  { re: '(^|\\s)chip(--|\\s|$)', use: 'Chip' },
+  { re: '(^|\\s)alert(\\s|$)', use: 'Banner' },
+].flatMap(({ re, use }) => {
+  const message = `Use the DS ${use} instead of the legacy class.`
+  return [
+    {
+      message,
+      selector: `JSXAttribute[name.name='className'] Literal[value=/${re}/]:not(CallExpression Literal)`,
+    },
+    {
+      message,
+      selector: `JSXAttribute[name.name='className'] TemplateElement[value.raw=/${re}/]`,
+    },
+    {
+      message,
+      selector: `CallExpression[callee.name=/^(cn|classNames|cx)$/] Literal[value=/${re}/]`,
+    },
+  ]
+})
+
+// A style object that only sets CSS custom properties is allowed.
+const styleMessage =
+  'Use a SCSS class with tokens. For a runtime value, set a CSS custom property.'
+// `as const` only narrows, so it stays allowed.
+const assertionMessage = 'Type the value instead of asserting its type.'
+const otherPatterns = [
+  ...legacyClasses,
+  {
+    message: assertionMessage,
+    selector: "TSAsExpression:not([typeAnnotation.typeName.name='const'])",
+  },
+  {
+    message: assertionMessage,
+    selector: 'TSTypeAssertion',
+  },
+  {
+    message: styleMessage,
+    selector:
+      "JSXAttribute[name.name='style'] > JSXExpressionContainer > :not(ObjectExpression)",
+  },
+  {
+    message: styleMessage,
+    selector:
+      "JSXAttribute[name.name='style'] > JSXExpressionContainer > ObjectExpression > :not(Property[key.value=/^--/])",
+  },
+  {
+    message: "Use BareButton instead of role='button'.",
+    selector: "JSXAttribute[name.name='role'] Literal[value='button']",
+  },
+  {
+    message: 'Give the element a role or accessible name instead of data-test.',
+    selector: "JSXAttribute[name.name='data-test']",
+  },
+  {
+    message: fetchMessage,
+    selector:
+      "CallExpression[callee.object.name=/^(window|globalThis|self)$/][callee.property.name='fetch']",
+  },
+]
+
 module.exports = {
   'env': {
     'browser': true,
@@ -11,9 +94,9 @@ module.exports = {
     'plugin:prettier/recommended',
     'plugin:@dword-design/import-alias/recommended',
     'plugin:storybook/recommended',
-    // Lints only changed lines in CI (no-op locally), so the pre-existing
-    // eslint backlog doesn't fail PRs that merely touch a file.
-    'plugin:diff/ci',
+    // Lints only changed lines in CI and in the pre-commit hook (which sets
+    // LINT_STAGED), so the pre-existing backlog doesn't fail a commit or PR.
+    process.env.LINT_STAGED ? 'plugin:diff/staged' : 'plugin:diff/ci',
   ],
   'globals': {
     '$': true,
@@ -99,6 +182,29 @@ module.exports = {
     'zE': true,
   },
   'ignorePatterns': ['server/index.js', 'next.config.js', 'babel.config.js'],
+  'overrides': [
+    {
+      // Where raw colour values are defined or are brand colours.
+      'files': [
+        '.storybook/**',
+        'common/constants.ts',
+        'common/theme/**',
+        'common/utils/paletteColour.ts',
+        'documentation/**',
+        'web/components/icons/**',
+      ],
+      'rules': {
+        'no-restricted-syntax': ['warn', ...otherPatterns],
+      },
+    },
+    {
+      // The legacy request layer RTK Query is built on.
+      'files': ['common/data/base/**'],
+      'rules': {
+        'no-restricted-globals': 'off',
+      },
+    },
+  ],
   'parser': '@typescript-eslint/parser',
   'parserOptions': {
     'ecmaFeatures': {
@@ -132,6 +238,7 @@ module.exports = {
     '@typescript-eslint/no-empty-function': 'off',
     '@typescript-eslint/no-explicit-any': 'off',
     '@typescript-eslint/no-namespace': 'off',
+    '@typescript-eslint/no-non-null-assertion': 'warn',
     '@typescript-eslint/no-unused-vars': 'off',
     '@typescript-eslint/no-var-requires': 'off',
     'default-case': 'error',
@@ -144,6 +251,29 @@ module.exports = {
     'no-empty': 'off',
     'no-empty-pattern': 'off',
     'no-nested-ternary': 'error',
+    'no-restricted-globals': [
+      'warn',
+      {
+        message: fetchMessage,
+        name: 'fetch',
+      },
+    ],
+    'no-restricted-imports': [
+      'warn',
+      {
+        patterns: [
+          {
+            group: ['**/ErrorMessage', '**/InfoMessage', '**/WarningMessage'],
+            message: 'Use the DS Banner (components/base/Banner) instead.',
+          },
+          {
+            group: ['@ionic/react', 'ionicons', 'ionicons/*'],
+            message: 'Use components/icons/Icon, our own SVG icons.',
+          },
+        ],
+      },
+    ],
+    'no-restricted-syntax': ['warn', ...colourLiterals, ...otherPatterns],
     'no-unused-vars': 'off',
     'no-var': 'error',
     'object-curly-spacing': ['error', 'always'],

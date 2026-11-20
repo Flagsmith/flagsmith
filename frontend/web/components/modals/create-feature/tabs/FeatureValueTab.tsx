@@ -8,6 +8,7 @@ import { AddVariationButton } from 'components/mv/AddVariationButton'
 import ErrorMessage from 'components/ErrorMessage'
 import InfoMessage from 'components/InfoMessage'
 import WarningMessage from 'components/WarningMessage'
+import Banner from 'components/base/Banner'
 import Tooltip from 'components/Tooltip'
 import Icon from 'components/icons/Icon'
 import Switch from 'components/Switch'
@@ -33,6 +34,7 @@ import {
 import { FeatureExperimentFreeze } from 'common/hooks/useFeatureExperimentFreeze'
 import { useExperimentationEnabled } from 'common/hooks/useExperimentationEnabled'
 import ExperimentFreezeNotice from 'components/modals/create-feature/components/ExperimentFreezeNotice'
+import { BlockedBanner, PrerequisiteRow } from './FeatureDependenciesTab'
 import { useHasPermission } from 'common/providers/Permission'
 import { ProjectPermission } from 'common/types/permissions.types'
 
@@ -49,6 +51,11 @@ function isNegativeNumberString(str: any) {
 
 type FeatureValueTabProps = {
   error: any
+  // The flag's prerequisites in the environment, which serve it off while any
+  // is off. Undefined where they don't apply, e.g. to identity overrides.
+  prerequisites?: PrerequisiteRow[]
+  // Shows the flag's dependencies, where they can be changed.
+  onViewDependencies?: () => void
   projectId: number | string
   identity?: string
   noPermissions: boolean
@@ -105,7 +112,9 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
   onRemoveMultivariateOption,
   onSaveFeatureValue,
   onSaveVariationValues,
+  onViewDependencies,
   originalMultivariateOptions,
+  prerequisites,
   preventFlagDefaults,
   projectFlag,
   projectId,
@@ -367,6 +376,19 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
 
   return (
     <div className={`${identity ? 'mx-3' : ''}`}>
+      {prerequisites && environmentName && (
+        <BlockedBanner
+          environmentName={environmentName}
+          rows={prerequisites}
+          action={
+            onViewDependencies && (
+              <Button theme='text' size='small' onClick={onViewDependencies}>
+                View dependencies
+              </Button>
+            )
+          }
+        />
+      )}
       {freeze?.isFrozen && freeze.experiment && environmentId && (
         <ExperimentFreezeNotice
           experiment={freeze.experiment}
@@ -472,9 +494,9 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
               <WarningMessage warningMessage="This identity override contains a value that is not one of this flag's variations. We recommend changing it." />
             )}
             {!!divergedVariantOverride && (
-              <WarningMessage
-                warningMessage={`This identity is served a stale copy of variation '${divergedVariantOverride.key}', taken when the override was saved. Press Update Feature to refresh it.`}
-              />
+              <Banner type='warning' className='mb-3'>
+                {`This identity is served a stale copy of variation '${divergedVariantOverride.key}', taken when the override was saved. Press Update Feature to refresh it.`}
+              </Banner>
             )}
             <VariationOptions
               canCreateFeature={false}

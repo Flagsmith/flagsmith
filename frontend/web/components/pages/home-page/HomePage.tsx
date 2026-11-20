@@ -484,6 +484,7 @@ const HomePage: React.FC = () => {
                             )}
                             {!preventEmailPassword && (
                               <form
+                                key='login'
                                 id='form'
                                 name='form'
                                 onSubmit={(e) => {
@@ -562,6 +563,7 @@ const HomePage: React.FC = () => {
                                     type='password'
                                     data-test='password'
                                     id='password'
+                                    value={password}
                                   />
                                   {!disableForgotPassword && (
                                     <div className='d-flex justify-content-end mb-2'>
@@ -650,6 +652,7 @@ const HomePage: React.FC = () => {
                           )}
                           {!preventEmailPassword && (
                             <form
+                              key='signup'
                               id='form'
                               name='form'
                               onSubmit={(e) => {
@@ -731,6 +734,7 @@ const HomePage: React.FC = () => {
                                   className='input-default full-width'
                                   type='text'
                                   id='firstName'
+                                  value={firstName}
                                 />
                                 <InputGroup
                                   title='Last Name'
@@ -748,6 +752,7 @@ const HomePage: React.FC = () => {
                                   className='input-default full-width'
                                   type='text'
                                   id='lastName'
+                                  value={lastName}
                                 />
                                 <InputGroup
                                   title='Email Address'
@@ -769,6 +774,7 @@ const HomePage: React.FC = () => {
                                   className='input-default full-width'
                                   type='email'
                                   id='email'
+                                  value={email}
                                 />
                                 {blockGenericEmailDomain ? (
                                   <ErrorMessage error='Please use your work email address to create your account.' />
@@ -797,6 +803,7 @@ const HomePage: React.FC = () => {
                                   className='input-default full-width'
                                   type='password'
                                   id='password'
+                                  value={password}
                                 />
                                 <PasswordRequirements
                                   password={password}

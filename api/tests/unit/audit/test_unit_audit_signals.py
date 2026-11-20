@@ -1,6 +1,7 @@
 import json
 from datetime import timedelta
 
+import pytest
 import responses
 from django.utils import timezone
 from pytest_django.fixtures import SettingsWrapper
@@ -15,6 +16,7 @@ from audit.signals import (
     send_feature_flag_went_live_signal,
     trigger_feature_state_change_webhooks,
 )
+from audit.signals.authentication import create_user_logged_out_audit_logs
 from environments.models import Environment
 from features.models import Feature, FeatureState
 from features.versioning.models import EnvironmentFeatureVersion
@@ -76,14 +78,16 @@ def test_call_webhooks__organisation_has_no_webhooks__does_not_create_task(
     mocked_call_organisation_webhooks.delay.assert_not_called()
 
 
+@pytest.mark.parametrize("related_object", ["project", "environment"])
 def test_call_webhooks__organisation_has_webhooks__creates_task(
     organisation: Organisation,
-    project: Project,
+    related_object: str,
+    request: pytest.FixtureRequest,
     settings: SettingsWrapper,
     mocker: MockerFixture,
 ) -> None:
     # Given
-    audit_log = AuditLog.objects.create(project=project)
+    audit_log = AuditLog(**{related_object: request.getfixturevalue(related_object)})
     OrganisationWebhook.objects.create(
         organisation=organisation,
         name="Example webhook",
@@ -572,6 +576,16 @@ def test_send_feature_flag_went_live_signal__scheduled_feature_state__skips_sign
 
     # Then
     mock_signal_send.assert_not_called()
+
+
+def test_create_user_logged_out_audit_logs__anonymous_user__creates_no_audit_log(
+    organisation: Organisation,
+) -> None:
+    # Given / When
+    create_user_logged_out_audit_logs(sender=FFAdminUser, user=None)
+
+    # Then
+    assert not AuditLog.objects.exists()
 
 
 def test_send_feature_flag_went_live_signal__non_feature_state_instance__skips_signal(

@@ -1,5 +1,6 @@
 import { test, expect } from '../test-setup'
 import {
+  byId,
   createHelpers,
   log,
   LONG_TIMEOUT,
@@ -37,7 +38,8 @@ test.describe('Flag Dependencies', () => {
 
     const openDependencies = async (feature: string) => {
       await gotoFeature(feature)
-      await page.getByRole('button', { name: 'Dependencies' }).click()
+      // The tab's name goes on to count the prerequisites met.
+      await page.getByRole('button', { name: /^Dependencies/ }).click()
     }
 
     log('The dependent has no prerequisites yet')
@@ -65,8 +67,26 @@ test.describe('Flag Dependencies', () => {
     log('The prerequisite is off, so the flag is held off')
     await expect(row.getByRole('img', { name: 'Off' })).toBeVisible()
     await expect(row.getByText('No', { exact: true })).toBeVisible()
-    await expect(page.getByText(/Serving off in/)).toBeVisible()
+    // The Value tab's banner stays in the page behind the open tab, and the
+    // role skips hidden elements, so this only matches the open tab's.
+    const servingOff = page
+      .getByRole('status')
+      .filter({ hasText: /Serving off in/ })
+    await expect(servingOff).toBeVisible()
     await visualSnapshot(page, 'dependencies-blocked', testInfo)
+
+    log('The tab counts the prerequisites met, and the Value tab says why')
+    await expect(
+      page.getByRole('button', { name: /0 of 1 prerequisites met/ }),
+    ).toBeVisible()
+    await page.getByRole('button', { exact: true, name: 'Value' }).click()
+    await expect(servingOff).toBeVisible()
+    await visualSnapshot(page, 'dependencies-blocked-value', testInfo)
+    await page
+      .getByRole('button', { exact: true, name: 'View dependencies' })
+      .click()
+    await expect(page).toHaveURL(/tab=dependencies/)
+    await expect(row).toBeVisible()
 
     log('Turning the prerequisite on satisfies it')
     await closeModal()
@@ -75,8 +95,25 @@ test.describe('Flag Dependencies', () => {
     await openDependencies(DEPENDENT)
     await expect(row.getByRole('img', { name: 'On' })).toBeVisible()
     await expect(row.getByText('Yes', { exact: true })).toBeVisible()
-    await expect(page.getByText(/Serving off in/)).toBeHidden()
+    await expect(servingOff).toBeHidden()
+    await expect(
+      page.getByRole('button', { name: /1 of 1 prerequisites met/ }),
+    ).toBeVisible()
     await visualSnapshot(page, 'dependencies-satisfied', testInfo)
+
+    log('The dependency manages its segment override')
+    await page.getByRole('button', { name: 'Segment Overrides' }).click()
+    await expect(page.getByText('Managed by a flag dependency')).toBeVisible()
+    await expect(page.locator(byId('segment-override-scope-0'))).toContainText(
+      'Applies to the whole environment',
+    )
+    await expect(page.locator(byId('segment-override-toggle-0'))).toBeDisabled()
+    await visualSnapshot(page, 'dependencies-segment-override', testInfo)
+    await page
+      .getByRole('button', { exact: true, name: 'View dependencies' })
+      .click()
+    await expect(page).toHaveURL(/tab=dependencies/)
+    await expect(row).toBeVisible()
 
     log('The prerequisite names its dependent and cannot take one of its own')
     await closeModal()

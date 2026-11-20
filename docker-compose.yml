@@ -44,6 +44,7 @@ volumes:
 services:
   postgres:
     image: postgres:15.5-alpine
+    restart: unless-stopped
     environment:
       POSTGRES_PASSWORD: password
       POSTGRES_DB: flagsmith
@@ -71,6 +72,7 @@ services:
 
   flagsmith:
     image: docker.flagsmith.com/flagsmith/flagsmith:latest
+    restart: unless-stopped
     command:
       - serve
     environment:
@@ -85,6 +87,7 @@ services:
   # in the application environment
   flagsmith-task-processor:
     image: docker.flagsmith.com/flagsmith/flagsmith:latest
+    restart: unless-stopped
     environment:
       <<: *flagsmith-env
     ports:

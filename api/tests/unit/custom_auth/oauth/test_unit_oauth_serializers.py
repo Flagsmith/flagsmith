@@ -60,7 +60,7 @@ def test_oauth_login_serializer__valid_access_token__creates_user_and_returns_to
         "last_name": last_name,
         "google_user_id": google_user_id,
     }
-    serializer = OAuthLoginSerializer(data=data, context={"request": request})  # type: ignore[abstract]
+    serializer = GoogleLoginSerializer(data=data, context={"request": request})
     mock_create_hubspot_contact_for_user = mocker.patch(
         "integrations.lead_tracking.hubspot.services.create_hubspot_contact_for_user"
     )
@@ -147,9 +147,7 @@ def test_oauth_login_serializer__auth_controller_installed__calls_is_authenticat
         "sys.modules", {"auth_controller.controller": mocked_auth_controller}
     )
 
-    serializer = OAuthLoginSerializer(  # type: ignore[abstract]
-        data=data, context={"request": request}
-    )
+    serializer = GoogleLoginSerializer(data=data, context={"request": request})
     # monkey patch the get_user_info method to return the mock user data
     serializer.get_user_info = lambda: {"email": user_email}  # type: ignore[method-assign]
 
@@ -189,10 +187,7 @@ def test_oauth_login_serializer__sign_up_type_invite_link__allows_registration( 
     request = Request(django_request, parsers=[JSONParser()])
     user_email = "test_user@test.com"
 
-    serializer = OAuthLoginSerializer(  # type: ignore[abstract]
-        data=data,
-        context={"request": request},
-    )
+    serializer = GoogleLoginSerializer(data=data, context={"request": request})
     # monkey patch the get_user_info method to return the mock user data
     serializer.get_user_info = lambda: {"email": user_email}  # type: ignore[method-assign]
 

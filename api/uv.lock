@@ -1474,7 +1474,7 @@ requires-dist = [
     { name = "django-filter", specifier = ">=2.4.0,<2.5.0" },
     { name = "django-health-check", specifier = ">=3.18.2,<3.19.0" },
     { name = "django-lifecycle", specifier = ">=1.2.4,<1.2.5" },
-    { name = "django-oauth-toolkit", specifier = ">=3.0.1,<4.0.0" },
+    { name = "django-oauth-toolkit", specifier = ">=3.4.0,<4.0.0" },
     { name = "django-ordered-model", specifier = ">=3.4.1,<3.5.0" },
     { name = "django-redis", specifier = ">=5.4.0,<6.0.0" },
     { name = "django-ses", specifier = ">=3.5.0,<3.6.0" },
@@ -1495,10 +1495,10 @@ requires-dist = [
     { name = "drf-writable-nested", specifier = ">=0.6.2,<0.7.0" },
     { name = "environs", specifier = ">=14.1.1,<15.0.0" },
     { name = "flagsmith", specifier = ">=6.2.0,<7.0.0" },
-    { name = "flagsmith-common", extras = ["common-core", "flagsmith-schemas", "task-processor"], specifier = ">=3.16.1,<4" },
+    { name = "flagsmith-common", extras = ["common-core", "flagsmith-schemas", "task-processor"], specifier = ">=3.16.2,<4" },
     { name = "flagsmith-common", extras = ["test-tools"], marker = "extra == 'dev'" },
     { name = "flagsmith-flag-engine", specifier = ">=11.1.0,<12.0.0" },
-    { name = "flagsmith-private", marker = "extra == 'private'", specifier = ">=0.14.2,<1", index = "https://flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-production/simple/" },
+    { name = "flagsmith-private", marker = "extra == 'private'", specifier = ">=0.16.0,<1", index = "https://flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-production/simple/" },
     { name = "flagsmith-sql-flag-engine", specifier = ">=0.2.0,<0.3.0" },
     { name = "google-api-python-client", specifier = ">=1.12.5,<1.13.0" },
     { name = "google-re2", specifier = ">=1.0,<2.0.0" },
@@ -1568,11 +1568,11 @@ provides-extras = ["private", "dev"]
 
 [[package]]
 name = "flagsmith-common"
-version = "3.16.1"
+version = "3.16.2"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/f5/5c/434fa2ab9cc8707c865a1b17dbe90387d4b08df4fe15b114ce907253d884/flagsmith_common-3.16.1.tar.gz", hash = "sha256:7404133b3342b206c87b49a6d03b758bf8e7ce323a749d3fc40a2e2c093fdc80", size = 68648, upload-time = "2026-11-05T17:38:35.886Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/f5/bf/d49da35fc3f1e38061db035ec34e43030e280f2f3660806615358d38356e/flagsmith_common-3.16.2.tar.gz", hash = "sha256:7af9e22d51371ef465f932bd446a2097f9a7fb722a01dfa31bc277a2a95d9ed9", size = 68718, upload-time = "2026-11-19T15:56:59.969Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/db/5a/a203df00c5b1cf5fcd6df5857113cf81dcf42b6c6d0887508b86ca808161/flagsmith_common-3.16.1-py3-none-any.whl", hash = "sha256:d1a64ff5bbeaf66e9b651a5341999be09016e74a9cacf8c3958b89f8ef45b8ca", size = 100878, upload-time = "2026-11-05T17:38:34.213Z" },
+    { url = "https://files.pythonhosted.org/packages/c6/7c/20a16b39d27f63291695b4bef9f1e3c26eccdf16aec4f55df0de6d276219/flagsmith_common-3.16.2-py3-none-any.whl", hash = "sha256:0d69bcfca75d920f74ed9a89f7e21c5bf49f9b6c3b5045ff02f8b99607f3f506", size = 100807, upload-time = "2026-11-19T15:56:58.651Z" },
 ]
 
 [package.optional-dependencies]
@@ -1582,7 +1582,6 @@ common-core = [
     { name = "djangorestframework" },
     { name = "djangorestframework-recursive" },
     { name = "drf-spectacular" },
-    { name = "drf-writable-nested" },
     { name = "environs" },
     { name = "gunicorn" },
     { name = "inflection" },
@@ -1636,7 +1635,7 @@ wheels = [
 
 [[package]]
 name = "flagsmith-private"
-version = "0.14.2"
+version = "0.16.0"
 source = { registry = "https://flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-production/simple/" }
 dependencies = [
     { name = "cryptography" },
@@ -1647,9 +1646,9 @@ dependencies = [
     { name = "pysaml2" },
     { name = "scim2-filter-parser" },
 ]
-sdist = { url = "https://flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-production/simple/flagsmith-private/0.14.2/flagsmith_private-0.14.2.tar.gz", hash = "sha512:88bc239f77f5376b90a5dd0b84d11497942e968f2e08042c7d8633d4bae0ef4806bcfba056abc20c325ba82a17f8aba19c8e03013081b336a8a2a6fd1e5f1d79", size = 71962, upload-time = "2026-10-15T16:18:16.234Z" }
+sdist = { url = "https://flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-production/simple/flagsmith-private/0.16.0/flagsmith_private-0.16.0.tar.gz", hash = "sha512:961d2260986d540866e94987746a8aad0d447acd334abc55079a81aaa0652ead378687d6d64e1873da08213623c82032356aa16ff5e3441b5ec8ba4e364feb2f", size = 74645, upload-time = "2026-11-19T16:40:06.784Z" }
 wheels = [
-    { url = "https://flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-production/simple/flagsmith-private/0.14.2/flagsmith_private-0.14.2-py3-none-any.whl", hash = "sha512:9a37b612caed89a50b3e19a9b4787b1a556bdcb4e3aad9ed8deba23fe4c927412a4dd33bcb61c769bc21a5765a75e2266256233cf8b94d3bb3ef684cfb14a01d", size = 108807, upload-time = "2026-10-15T16:18:15.764Z" },
+    { url = "https://flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-production/simple/flagsmith-private/0.16.0/flagsmith_private-0.16.0-py3-none-any.whl", hash = "sha512:69cc7500565510dc60096f16400ec755fc00e86697c142ccfb34a4e1b366ae1aa8f0844a80d67a67d78bf887ecebeb3ad12f295f5737f6f54c64f8470ee5e4ee", size = 111917, upload-time = "2026-11-19T16:40:06.331Z" },
 ]
 
 [[package]]
@@ -2423,11 +2422,11 @@ wheels = [
 
 [[package]]
 name = "oauthlib"
-version = "4.0.0"
+version = "4.0.1"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/7a/d8/a1bcc8ba112a627f8ffbdc212a78ce18d3ac07e91a5ca65d27918eee25a1/oauthlib-4.0.0.tar.gz", hash = "sha256:efb274799819440f95b4ab3b818869f1ce9ae26c5beacba0201d1a1b76b54f86", size = 187232, upload-time = "2026-09-28T06:01:18.77Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/33/17/2bb072de0b990303c985f26869fd47bb179024a051f47e7f9d208eb92f8e/oauthlib-4.0.1.tar.gz", hash = "sha256:3d73febdb6faa00f277c81fb04be7b7586fb96fc3b7f0b9c772dada69a25ede7", size = 191219, upload-time = "2026-10-31T09:52:58.008Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/d9/f4/78229a1066068ca14fc60fb26cf7381cabe4382261392b90e5f9552722d4/oauthlib-4.0.0-py3-none-any.whl", hash = "sha256:624c28c13a0a59cabf9747dfa52af63be3e512a7f2714df16e91b5b3a145e6cd", size = 159715, upload-time = "2026-09-28T06:01:17.008Z" },
+    { url = "https://files.pythonhosted.org/packages/df/ef/3b8adde1b32a6f540758bff734d3442c621734c83708e5f02b0ba2f43b84/oauthlib-4.0.1-py3-none-any.whl", hash = "sha256:498a298876e996301950a5b053d12c31628bb7b895db03666430c69ce182eb61", size = 161934, upload-time = "2026-10-31T09:52:56.206Z" },
 ]
 
 [[package]]

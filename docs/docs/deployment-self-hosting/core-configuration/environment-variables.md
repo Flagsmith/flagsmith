@@ -13,6 +13,8 @@ relevant section below for more details.
 ## API Environment Variables
 
 - `DJANGO_ALLOWED_HOSTS`: Comma-separated list of domains that can access the API. Alternatively `*` to allow any.
+- `SSRF_ALLOWED_HOSTS`: Comma-separated list of trusted hosts that webhook and integration URLs can target, even if they
+  resolve to a private network address, e.g. `.internal.example.com`.
 - `DATABASE_URL`: The URL of your PostgreSQL database. Both `postgres://` and `postgresql://` schemas are supported.
 - `DJANGO_DB_CONN_MAX_AGE`: Lifetime of a database connection, in seconds. Defaults to `60`. Set to `-1` to close the
   connection at the end of each request (Django's default behaviour). See

@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Dict, List, Optional
 from uuid import UUID
 
 from environments.constants import IDENTITY_INTEGRATIONS_RELATION_NAMES
+from features.dependencies.mappers import map_override_to_value_source
 from features.versioning.models import EnvironmentFeatureVersion
 from util.engine_models.environments.integrations.models import IntegrationModel
 from util.engine_models.environments.models import (
@@ -131,8 +132,15 @@ def map_feature_state_to_engine(
     *,
     mv_fs_values: Optional[Iterable["MultivariateFeatureStateValue"]] = None,
     metadata: Optional[dict[str, object]] = None,
+    value_source: Optional["FeatureState"] = None,
 ) -> FeatureStateModel:
+    """
+    :param mv_fs_values: the variants of `value_source`, if given.
+    :param value_source: the feature state to serve the value and variants
+        from, if not `feature_state` itself.
+    """
     feature = feature_state.feature
+    value_source = value_source or feature_state
     feature_segment: Optional["FeatureSegment"] = feature_state.feature_segment
 
     if feature_segment:
@@ -149,8 +157,8 @@ def map_feature_state_to_engine(
         # so feeding it the bucketing seed keeps variant assignment stable when
         # a feature state is recreated, without changing the engine model or
         # environment document schema. See issue #7913.
-        django_id=feature_state.mv_hashing_seed,
-        feature_state_value=feature_state.get_feature_state_value(),
+        django_id=value_source.mv_hashing_seed,
+        feature_state_value=value_source.get_feature_state_value(),
         featurestate_uuid=feature_state.uuid,
         feature_segment=feature_segment_model,
         feature=map_feature_to_engine(feature),
@@ -260,6 +268,11 @@ def map_environment_to_engine(
         for feature_state in all_environment_feature_states
     }
 
+    environment_defaults = {
+        feature_state.feature_id: feature_state
+        for feature_state in environment_feature_states
+    }
+
     # Read integrations.
     integration_configs: dict[
         str, "EnvironmentIntegrationModel | WebhookConfiguration | None"
@@ -273,6 +286,25 @@ def map_environment_to_engine(
     # No reading from ORM past this point!
 
     # Prepare relationships.
+    def map_segment_override_to_engine(
+        feature_state: "FeatureState",
+        *,
+        segment: "Segment",
+    ) -> FeatureStateModel:
+        value_source = map_override_to_value_source(
+            feature_state,
+            segment=segment,
+            environment_defaults=environment_defaults,
+        )
+        return map_feature_state_to_engine(
+            feature_state,
+            mv_fs_values=multivariate_feature_state_values_by_feature_state_id[
+                value_source.pk
+            ],
+            metadata=get_feature_state_metadata(feature_state),
+            value_source=value_source,
+        )
+
     organisation_model = OrganisationModel(
         id=organisation.pk,
         name=organisation.name,
@@ -289,13 +321,7 @@ def map_environment_to_engine(
                 for segment_rule in project_segment_rules_by_segment_id.pop(segment.pk)
             ],
             feature_states=[
-                map_feature_state_to_engine(
-                    feature_state,
-                    mv_fs_values=multivariate_feature_state_values_by_feature_state_id.pop(
-                        feature_state.pk,
-                    ),
-                    metadata=get_feature_state_metadata(feature_state),
-                )
+                map_segment_override_to_engine(feature_state, segment=segment)
                 for feature_state in project_segment_feature_states_by_segment_id.pop(
                     segment.pk
                 )

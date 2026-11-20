@@ -75,6 +75,8 @@ USE_X_FORWARDED_HOST = env.bool("USE_X_FORWARDED_HOST", default=False)
 
 CSRF_TRUSTED_ORIGINS: list[str] = env.list("DJANGO_CSRF_TRUSTED_ORIGINS", default=[])
 
+SSRF_ALLOWED_HOSTS: list[str] = env.list("SSRF_ALLOWED_HOSTS", default=[])
+
 INTERNAL_IPS = ["127.0.0.1"]
 
 # Application definition
@@ -412,7 +414,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "simple_history.middleware.HistoryRequestMiddleware",
-    "telemetry.middleware.MCPUsageLoggerMiddleware",  # Must come last!
+    "telemetry.middleware.ClientUsageLoggerMiddleware",  # Must come last!
 ]
 
 ADD_NEVER_CACHE_HEADERS = env.bool("ADD_NEVER_CACHE_HEADERS", True)

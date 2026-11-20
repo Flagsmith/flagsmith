@@ -27,6 +27,20 @@ export const auditLogService = service
         },
         transformResponse: (res, _, req) => transformCorePaging(req, res),
       }),
+      getOrganisationAuditLogs: builder.query<
+        Res['organisationAuditLogs'],
+        Req['getOrganisationAuditLogs']
+      >({
+        providesTags: (_, _2, q) => [
+          { id: `ORG-LIST-${q.organisationId}`, type: 'AuditLog' },
+        ],
+        query: ({ organisationId, ...params }) => ({
+          url: `organisations/${organisationId}/audit/?${Utils.toParam(
+            params,
+          )}`,
+        }),
+        transformResponse: (res, _, req) => transformCorePaging(req, res),
+      }),
       // END OF ENDPOINTS
     }),
   })
@@ -47,6 +61,7 @@ export async function getAuditLogs(
 
 export const {
   useGetAuditLogsQuery,
+  useGetOrganisationAuditLogsQuery,
   // END OF EXPORTS
 } = auditLogService
 

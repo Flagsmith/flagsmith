@@ -4,7 +4,6 @@ import structlog
 from django.conf import settings
 from django.db import transaction
 from drf_spectacular.utils import extend_schema_field
-from drf_writable_nested.serializers import WritableNestedModelSerializer
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
@@ -27,6 +26,7 @@ from segments.types import (
 
 # TODO: Delete alias as per https://github.com/Flagsmith/flagsmith/issues/7818
 from segments.types import SegmentRule as SegmentRuleType
+from util.drf_writable_nested.serializers import WritableNestedModelSerializer
 
 logger = structlog.get_logger(__name__)
 

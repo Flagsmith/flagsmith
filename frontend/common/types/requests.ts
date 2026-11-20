@@ -39,6 +39,8 @@ import {
 } from './responses'
 import { UtmsType } from './utms'
 
+export type ChangeRequestAction = 'approve' | 'commit'
+
 export type UpdateProjectBody = {
   name: string
   hide_disabled_flags?: boolean
@@ -63,6 +65,18 @@ export type UpdateFeatureStateBody = {
   feature_state_value?: FeatureStateValue
   multivariate_feature_state_values?: MultivariateOption[] | null
 }
+
+// The API refuses organisation level together with a project or environments.
+export type OrganisationAuditLogScopeQuery =
+  | { is_organisation_level: true; project?: never; environments?: never }
+  | {
+      is_organisation_level?: false
+      project?: number
+      environments?: number[]
+    }
+export type OrganisationAuditLogQuery = {
+  search?: string
+} & OrganisationAuditLogScopeQuery
 
 export type PagedRequest<T> = T & {
   page?: number
@@ -256,6 +270,10 @@ export type Req = {
     project: number
     environments?: number
   }>
+  getOrganisationAuditLogs: PagedRequest<
+    { organisationId: number } & OrganisationAuditLogQuery
+  >
+  getOrganisationAuditLogItem: { organisationId: number; id: number }
   getOrganisations: {}
   getOrganisation: { id: number }
   updateOrganisation: { id: number; body: UpdateOrganisationBody }
@@ -700,7 +718,18 @@ export type Req = {
     live_from_after?: string
     committed?: boolean
   }>
+  getScheduledChangeRequests: PagedRequest<{
+    environmentId: string
+  }>
   updateChangeRequest: ChangeRequest
+  getChangeRequest: { id: string }
+  getEnvironmentFeatureState: { environmentId: string; feature: number }
+  actionChangeRequest: { id: string; actionType: ChangeRequestAction }
+  updateChangeRequestAssignees: {
+    id: string
+    approvals: ChangeRequest['approvals']
+    group_assignments: ChangeRequest['group_assignments']
+  }
   getGroupSummaries: {
     orgId: number
   }

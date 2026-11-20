@@ -1,12 +1,15 @@
 import logging
 import math
-from datetime import timedelta
+from datetime import datetime, timedelta
 
+import structlog
 from dateutil.relativedelta import relativedelta
 from django.conf import settings
 from django.core.mail import send_mail
+from django.db import transaction
 from django.db.models import F, Max, Q
 from django.utils import timezone
+from openfeature.client import OpenFeatureClient
 from task_processor.decorators import (
     register_recurring_task,
     register_task_handler,
@@ -29,7 +32,10 @@ from organisations.models import (
     Subscription,
 )
 from organisations.services import get_api_limit_enforcement
-from organisations.subscriptions.constants import FREE_PLAN_ID
+from organisations.subscriptions.constants import (
+    FREE_PLAN_ID,
+    MAX_API_CALLS_IN_FREE_PLAN,
+)
 from organisations.usage_reporting.services import push_usage_snapshots
 from users.models import FFAdminUser
 
@@ -49,6 +55,8 @@ from .task_helpers import (
 )
 
 logger = logging.getLogger(__name__)
+
+api_usage_logger = structlog.get_logger("api_usage")
 
 
 @register_task_handler()
@@ -215,6 +223,15 @@ def charge_for_api_call_count_overages():  # type: ignore[no-untyped-def]
             continue
 
         subscription_cache = organisation.subscription_information_cache
+
+        # A zero allowance means a broken cache, not a limit to bill against.
+        if not subscription_cache.allowed_30d_api_calls:
+            api_usage_logger.error(
+                "overage.missing_allowance",
+                organisation__id=organisation.id,
+            )
+            continue
+
         # TODO: Default to get_total_events_count — https://github.com/Flagsmith/flagsmith/issues/6985
         if openfeature_client.get_boolean_value(
             "get_current_api_usage_deprecated",
@@ -236,7 +253,13 @@ def charge_for_api_call_count_overages():  # type: ignore[no-untyped-def]
             not hasattr(organisation, "breached_grace_period")
             and api_usage / subscription_cache.allowed_30d_api_calls < 2.0
         ):
-            logger.info("API Usage below normal usage or grace period.")
+            api_usage_logger.info(
+                "overage.skipped",
+                organisation__id=organisation.id,
+                reason="within_grace_period",
+                api_usage=api_usage,
+                allowed_30d_api_calls=subscription_cache.allowed_30d_api_calls,
+            )
 
             # Set organisation grace period breach for following months.
             if api_usage / subscription_cache.allowed_30d_api_calls > 1.0:
@@ -254,32 +277,16 @@ def charge_for_api_call_count_overages():  # type: ignore[no-untyped-def]
         api_limit = subscription_cache.allowed_30d_api_calls + previous_api_overage
         api_overage = api_usage - api_limit
         if api_overage <= 0:
-            logger.info("API Usage below current API limit.")
+            api_usage_logger.info(
+                "overage.skipped",
+                organisation__id=organisation.id,
+                reason="under_api_limit",
+                api_usage=api_usage,
+                api_limit=api_limit,
+            )
             continue
 
-        try:
-            match organisation.subscription.subscription_plan_family:
-                case SubscriptionPlanFamily.START_UP:
-                    add_100k_api_calls_start_up(
-                        organisation.subscription.subscription_id,
-                        math.ceil(api_overage / 100_000),
-                    )
-                case SubscriptionPlanFamily.SCALE_UP:
-                    add_100k_api_calls_scale_up(
-                        organisation.subscription.subscription_id,
-                        math.ceil(api_overage / 100_000),
-                    )
-                case _:
-                    logger.error(
-                        "Unknown subscription plan when trying to bill for overages"
-                        f" {organisation.id=} {organisation.subscription.plan=}"
-                    )
-                    continue
-        except Exception:
-            logger.error(
-                f"Unable to charge organisation {organisation.id} due to billing error",
-                exc_info=True,
-            )
+        if not _add_api_call_addons(organisation, api_overage):
             continue
 
         # Save a copy of what was just billed in order to avoid
@@ -290,6 +297,51 @@ def charge_for_api_call_count_overages():  # type: ignore[no-untyped-def]
             immediate_invoice=False,
             billed_at=now,
         )
+
+
+def _add_api_call_addons(organisation: Organisation, api_overage: int) -> bool:
+    """
+    Charge the 100k API call addons covering `api_overage`, returning whether
+    anything was billed.
+    """
+    subscription_id = organisation.subscription.subscription_id
+    if not subscription_id:
+        # Nothing to add the addon to, e.g. a subscription billed outside Chargebee.
+        api_usage_logger.error(
+            "overage.missing_subscription_id",
+            organisation__id=organisation.id,
+        )
+        return False
+
+    quantity = math.ceil(api_overage / 100_000)
+    try:
+        match organisation.subscription.subscription_plan_family:
+            case SubscriptionPlanFamily.START_UP:
+                add_100k_api_calls_start_up(subscription_id, quantity)
+            case SubscriptionPlanFamily.SCALE_UP:
+                add_100k_api_calls_scale_up(subscription_id, quantity)
+            case _:
+                api_usage_logger.error(
+                    "overage.unknown_plan",
+                    organisation__id=organisation.id,
+                    subscription__plan=organisation.subscription.plan,
+                )
+                return False
+    except Exception:
+        api_usage_logger.exception(
+            "overage.charge_failed",
+            organisation__id=organisation.id,
+            api_overage=api_overage,
+        )
+        return False
+
+    api_usage_logger.info(
+        "overage.charged",
+        organisation__id=organisation.id,
+        api_overage=api_overage,
+        quantity=quantity,
+    )
+    return True
 
 
 # Task enqueued in register_recurring_tasks below.
@@ -338,54 +390,87 @@ def restrict_use_due_to_api_limit_grace_period_over() -> None:
         )
     )
 
-    api_limit_access_blocks = []
     openfeature_client = get_openfeature_client()
 
     for organisation in organisations:
-        enforcement = get_api_limit_enforcement(organisation)
-        if not enforcement.enabled:
-            continue
-
-        if not organisation.has_subscription_information_cache():
-            continue
-
-        OrganisationBreachedGracePeriod.objects.get_or_create(organisation=organisation)
-
-        ctx = organisation.openfeature_evaluation_context
-        subscription_cache = organisation.subscription_information_cache
-        # TODO: Default to get_total_events_count — https://github.com/Flagsmith/flagsmith/issues/6985
-        if openfeature_client.get_boolean_value(
-            "get_current_api_usage_deprecated",
-            default_value=False,
-            evaluation_context=ctx,
-        ):  # pragma: no cover
-            api_usage = get_total_events_count(
-                organisation,
-                date_start=now - timedelta(days=30),
+        try:
+            _restrict_use_for_organisation(organisation, now, openfeature_client)
+        except Exception:
+            # Prevent an error with a single organisation killing the task.
+            api_usage_logger.exception(
+                "restriction.failed",
+                organisation__id=organisation.id,
             )
-        else:
-            api_usage = get_current_api_usage(
-                organisation_id=organisation.id,
-                date_start=now - timedelta(days=30),
-            )
-        if api_usage / subscription_cache.allowed_30d_api_calls < 1.0:
-            logger.info(
-                f"API use for organisation {organisation.id} has fallen to below limit, so not restricting use."
-            )
-            continue
 
-        organisation.stop_serving_flags = enforcement.stops_serving_flags
-        organisation.block_access_to_admin = enforcement.blocks_access_to_admin
 
-        if enforcement.stops_serving_flags:
-            send_api_flags_blocked_notification(organisation)
+def _restrict_use_for_organisation(
+    organisation: Organisation,
+    now: datetime,
+    openfeature_client: OpenFeatureClient,
+) -> None:
+    """
+    Restrict a single organisation whose API use is still over its limit.
+    """
+    enforcement = get_api_limit_enforcement(organisation)
+    if not enforcement.enabled:
+        return
 
+    if not organisation.has_subscription_information_cache():
+        return
+
+    OrganisationBreachedGracePeriod.objects.get_or_create(organisation=organisation)
+
+    ctx = organisation.openfeature_evaluation_context
+    subscription_cache = organisation.subscription_information_cache
+    # TODO: Default to get_total_events_count — https://github.com/Flagsmith/flagsmith/issues/6985
+    if openfeature_client.get_boolean_value(
+        "get_current_api_usage_deprecated",
+        default_value=False,
+        evaluation_context=ctx,
+    ):  # pragma: no cover
+        api_usage = get_total_events_count(
+            organisation,
+            date_start=now - timedelta(days=30),
+        )
+    else:
+        api_usage = get_current_api_usage(
+            organisation_id=organisation.id,
+            date_start=now - timedelta(days=30),
+        )
+
+    # The cache is sometimes left with a zero allowance, which would otherwise
+    # fail the whole task with a ZeroDivisionError.
+    allowed_30d_api_calls = (
+        subscription_cache.allowed_30d_api_calls or MAX_API_CALLS_IN_FREE_PLAN
+    )
+    if api_usage / allowed_30d_api_calls < 1.0:
+        api_usage_logger.info(
+            "restriction.skipped",
+            organisation__id=organisation.id,
+            api_usage=api_usage,
+            allowed_30d_api_calls=allowed_30d_api_calls,
+        )
+        return
+
+    organisation.stop_serving_flags = enforcement.stops_serving_flags
+    organisation.block_access_to_admin = enforcement.blocks_access_to_admin
+
+    with transaction.atomic():
         # Save models individually to allow lifecycle hooks to fire.
         organisation.save()
+        APILimitAccessBlock.objects.create(organisation=organisation)
 
-        api_limit_access_blocks.append(APILimitAccessBlock(organisation=organisation))
+    if enforcement.stops_serving_flags:
+        send_api_flags_blocked_notification(organisation)
 
-    APILimitAccessBlock.objects.bulk_create(api_limit_access_blocks)
+    api_usage_logger.info(
+        "restriction.applied",
+        organisation__id=organisation.id,
+        api_usage=api_usage,
+        allowed_30d_api_calls=allowed_30d_api_calls,
+        stop_serving_flags=enforcement.stops_serving_flags,
+        block_access_to_admin=enforcement.blocks_access_to_admin,
+    )
 
 
 # Task enqueued in register_recurring_tasks below.

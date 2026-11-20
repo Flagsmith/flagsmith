@@ -149,6 +149,12 @@ export const projectFlagService = service
               .join('-'),
             type: 'ProjectFlag',
           },
+          // Refreshed with the feature list, as it carries the same states.
+          {
+            id: `${req?.project}-${req?.environment}`,
+            type: 'FeatureList',
+          },
+          { id: 'LIST', type: 'FeatureList' },
         ],
         queryFn: async (args, _, _2, baseQuery) => {
           return await recursivePageGet<ProjectFlag>(
@@ -187,7 +193,9 @@ export const projectFlagService = service
       }),
 
       removeProjectFlag: builder.mutation<void, Req['removeProjectFlag']>({
-        invalidatesTags: [
+        // The feature's own entry too, so a page holding it sees the delete
+        invalidatesTags: (_res, _error, { flag_id }) => [
+          { id: flag_id, type: 'ProjectFlag' },
           { id: 'LIST', type: 'ProjectFlag' },
           { id: 'LIST', type: 'FeatureList' },
           { id: 'METRICS', type: 'Environment' },
