@@ -20,7 +20,7 @@ import find from 'lodash/find'
 import PageTitle from 'components/PageTitle'
 import { getStore } from 'common/store'
 import { getRoles } from 'common/services/useRole'
-import AccountStore from 'common/stores/account-store'
+import { useCurrentOrganisation } from 'common/hooks/useCurrentOrganisation'
 import { Link, useHistory, useRouteMatch } from 'react-router-dom'
 import { enableFeatureVersioning } from 'common/services/useEnableFeatureVersioning'
 import AddMetadataToEntity from 'components/metadata/AddMetadataToEntity'
@@ -60,6 +60,7 @@ const showDisabledFlagOptions: { label: string; value: boolean | null }[] = [
 ]
 
 const EnvironmentSettingsPage: React.FC = () => {
+  const organisation = useCurrentOrganisation()
   const [createWebhook] = useCreateWebhookMutation()
   const [deleteWebhook] = useDeleteWebhookMutation()
   const [saveWebhook] = useUpdateWebhookMutation()
@@ -128,13 +129,13 @@ const EnvironmentSettingsPage: React.FC = () => {
   )
 
   const getEnvironment = useCallback(async () => {
-    if (!env) return
+    if (!env || !organisation) return
 
     setCurrentEnv(env)
 
     const roles = await getRoles(
       store,
-      { organisation_id: AccountStore.getOrganisation().id },
+      { organisation_id: organisation.id },
       { forceRefetch: true },
     )
     if (roles?.data?.results) {
@@ -144,7 +145,7 @@ const EnvironmentSettingsPage: React.FC = () => {
 
     if (Utils.getPlansPermission('METADATA')) {
       const supportedContentType = await getSupportedContentType(getStore(), {
-        organisation_id: AccountStore.getOrganisation().id,
+        organisation_id: organisation.id,
       })
       const environmentContentType = Utils.getContentType(
         supportedContentType.data,
@@ -153,7 +154,7 @@ const EnvironmentSettingsPage: React.FC = () => {
       )
       setEnvironmentContentType(environmentContentType)
     }
-  }, [store, env])
+  }, [store, env, organisation])
 
   useEffect(() => {
     AppActions.getProject(projectId)
@@ -927,35 +928,37 @@ const EnvironmentSettingsPage: React.FC = () => {
                       </div>
                     </TabItem>
                   )}
-                  {metadataEnable && environmentContentType?.id && (
-                    <TabItem tabLabel='Custom Fields'>
-                      <FormGroup className='mt-5 setting'>
-                        <div className='form-group'>
-                          <FieldLabel
-                            tooltip={`${Constants.strings.TOOLTIP_METADATA_DESCRIPTION(
-                              'environments',
-                            )}`}
-                            tooltipPlace='right'
-                          >
-                            Custom fields
-                          </FieldLabel>
-                          <AddMetadataToEntity
-                            organisationId={AccountStore.getOrganisation().id}
-                            projectId={projectId}
-                            entityId={currentEnv?.api_key ?? ''}
-                            envName={currentEnv?.name}
-                            entityContentType={environmentContentType?.id}
-                            entity={environmentContentType.model}
-                            onMetadataSave={(metadata) => {
-                              setCurrentEnv((prev) =>
-                                prev ? { ...prev, metadata } : null,
-                              )
-                            }}
-                          />
-                        </div>
-                      </FormGroup>
-                    </TabItem>
-                  )}
+                  {metadataEnable &&
+                    environmentContentType?.id &&
+                    organisation && (
+                      <TabItem tabLabel='Custom Fields'>
+                        <FormGroup className='mt-5 setting'>
+                          <div className='form-group'>
+                            <FieldLabel
+                              tooltip={`${Constants.strings.TOOLTIP_METADATA_DESCRIPTION(
+                                'environments',
+                              )}`}
+                              tooltipPlace='right'
+                            >
+                              Custom fields
+                            </FieldLabel>
+                            <AddMetadataToEntity
+                              organisationId={organisation.id}
+                              projectId={projectId}
+                              entityId={currentEnv?.api_key ?? ''}
+                              envName={currentEnv?.name}
+                              entityContentType={environmentContentType?.id}
+                              entity={environmentContentType.model}
+                              onMetadataSave={(metadata) => {
+                                setCurrentEnv((prev) =>
+                                  prev ? { ...prev, metadata } : null,
+                                )
+                              }}
+                            />
+                          </div>
+                        </FormGroup>
+                      </TabItem>
+                    )}
                 </Tabs>
               )}
             </>

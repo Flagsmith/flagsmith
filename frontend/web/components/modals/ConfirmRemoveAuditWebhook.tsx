@@ -1,5 +1,5 @@
 import React, { FC, FormEvent, useState } from 'react'
-import AccountStore from 'common/stores/account-store'
+import { useCurrentOrganisation } from 'common/hooks/useCurrentOrganisation'
 import InputGroup from 'components/base/forms/InputGroup'
 import Utils from 'common/utils/utils'
 import Button from 'components/base/forms/Button'
@@ -14,6 +14,7 @@ const ConfirmRemoveAuditWebhook: FC<ConfirmRemoveAuditWebhookType> = ({
   cb,
   url,
 }) => {
+  const organisation = useCurrentOrganisation()
   const [challenge, setChallenge] = useState()
 
   const submit = (e: FormEvent) => {
@@ -28,9 +29,9 @@ const ConfirmRemoveAuditWebhook: FC<ConfirmRemoveAuditWebhookType> = ({
       <div className='modal-body'>
         <p>
           This will remove <strong>{url}</strong> for the organisation{' '}
-          <strong>{AccountStore.getOrganisation().name}</strong>. You should
-          ensure that you do not contain any references to this webhook in your
-          applications before proceeding.
+          <strong>{organisation?.name}</strong>. You should ensure that you do
+          not contain any references to this webhook in your applications before
+          proceeding.
         </p>
 
         <InputGroup

@@ -16,7 +16,7 @@ import {
   PagedResponse,
   Project,
 } from 'common/types/responses'
-import AccountStore from 'common/stores/account-store'
+import { useCurrentOrganisation } from 'common/hooks/useCurrentOrganisation'
 import { useGetProjectsQuery } from 'common/services/useProject'
 import { useGetOrganisationsQuery } from 'common/services/useOrganisation'
 import { useHistory } from 'react-router-dom'
@@ -159,12 +159,13 @@ const BreadcrumbSeparator: FC<BreadcrumbSeparatorType> = ({
   const { data: organisationsData } = useGetOrganisationsQuery({})
   const organisations = organisationsData?.results || []
 
+  const organisation = useCurrentOrganisation()
   const [activeOrganisation, setActiveOrganisation] = useState<string>(
-    `${AccountStore.getOrganisation()?.id}`,
+    `${organisation?.id}`,
   )
-  const [hoveredOrganisation, setHoveredOrganisation] = useState<Organisation>(
-    AccountStore.getOrganisation(),
-  )
+  const [hoveredOrganisation, setHoveredOrganisation] = useState<
+    Organisation | undefined
+  >(organisation)
   const [hoveredProject, setHoveredProject] = useState<number | undefined>(
     focus === 'organisation' ? undefined : projectId,
   )
@@ -172,21 +173,12 @@ const BreadcrumbSeparator: FC<BreadcrumbSeparatorType> = ({
   const history = useHistory()
 
   useEffect(() => {
-    const onChangeAccountStore = () => {
-      if (
-        AccountStore.getOrganisation()?.id !== activeOrganisation &&
-        !!AccountStore.getOrganisation()?.id
-      ) {
-        setActiveOrganisation(AccountStore.getOrganisation()?.id)
-        setHoveredOrganisation(AccountStore.getOrganisation())
-      }
-    }
-    AccountStore.on('change', onChangeAccountStore)
-    return () => {
-      AccountStore.off('change', onChangeAccountStore)
+    if (organisation && `${organisation.id}` !== activeOrganisation) {
+      setActiveOrganisation(`${organisation.id}`)
+      setHoveredOrganisation(organisation)
     }
     //eslint-disable-next-line
-  }, [])
+  }, [organisation?.id])
 
   useEffect(() => {
     if (!open) {
@@ -323,7 +315,7 @@ const BreadcrumbSeparator: FC<BreadcrumbSeparatorType> = ({
           setOpen(false)
           setProjectSearch('')
           setOrganisationSearch('')
-          setHoveredOrganisation(AccountStore.getOrganisation())
+          setHoveredOrganisation(organisation)
         }}
         containerClassName={'p-0'}
         className={
@@ -418,14 +410,12 @@ const BreadcrumbSeparator: FC<BreadcrumbSeparatorType> = ({
                 footer={Utils.renderWithPermission(
                   canCreateProject,
                   Constants.organisationPermissions(
-                    Utils.getCreateProjectPermission(
-                      AccountStore.getOrganisation(),
-                    ),
+                    Utils.getCreateProjectPermission(organisation),
                   ),
                   <Button
                     theme='outline'
                     onClick={() => {
-                      document.location = `/organisation/${hoveredOrganisation.id}/projects/?create=1`
+                      document.location = `/organisation/${hoveredOrganisation?.id}/projects/?create=1`
                     }}
                     id='create-organisation-link'
                     size='small'

@@ -1,3 +1,4 @@
+import { skipToken } from '@reduxjs/toolkit/query'
 import React, {
   FC,
   FormEvent,
@@ -8,7 +9,7 @@ import React, {
 } from 'react'
 
 import Constants from 'common/constants'
-import AccountStore from 'common/stores/account-store'
+import { useCurrentOrganisation } from 'common/hooks/useCurrentOrganisation'
 import {
   EdgePagedResponse,
   Identity,
@@ -117,6 +118,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
   setPage,
   setSearchInput,
 }) => {
+  const organisation = useCurrentOrganisation()
   const defaultSegment: Omit<Segment, 'id' | 'uuid' | 'project'> & {
     id?: number
     uuid?: string
@@ -213,9 +215,9 @@ const CreateSegment: FC<CreateSegmentType> = ({
     maxSegmentsAllowed,
     THRESHOLD,
   )
-  const { data: supportedContentTypes } = useGetSupportedContentTypeQuery({
-    organisation_id: AccountStore.getOrganisation().id,
-  })
+  const { data: supportedContentTypes } = useGetSupportedContentTypeQuery(
+    organisation ? { organisation_id: organisation.id } : skipToken,
+  )
 
   const segmentContentType = useMemo(() => {
     if (supportedContentTypes) {
@@ -554,10 +556,10 @@ const CreateSegment: FC<CreateSegmentType> = ({
     </div>
   )
 
-  const MetadataTab = (
+  const MetadataTab = organisation && (
     <FormGroup className='mt-5 setting'>
       <AddMetadataToEntity
-        organisationId={AccountStore.getOrganisation().id}
+        organisationId={organisation.id}
         projectId={projectId}
         entityId={segment.id}
         entityContentType={segmentContentType?.id}
@@ -795,6 +797,7 @@ type LoadingCreateSegmentType = {
 }
 
 const LoadingCreateSegment: FC<LoadingCreateSegmentType> = (props) => {
+  const organisation = useCurrentOrganisation()
   const [environmentId, setEnvironmentId] = useState(props.environmentId)
   const { data: segmentData, isLoading: segmentLoading } = useGetSegmentQuery(
     {
@@ -807,9 +810,9 @@ const LoadingCreateSegment: FC<LoadingCreateSegmentType> = (props) => {
     { id: `${props.projectId}` },
     { skip: !props.projectId },
   )
-  const { isLoading: contentTypesLoading } = useGetSupportedContentTypeQuery({
-    organisation_id: AccountStore.getOrganisation().id,
-  })
+  const { isLoading: contentTypesLoading } = useGetSupportedContentTypeQuery(
+    organisation ? { organisation_id: organisation.id } : skipToken,
+  )
   const isLoading = projectLoading || segmentLoading || contentTypesLoading
   const [page, setPage] = useState<PageType>({
     number: 1,

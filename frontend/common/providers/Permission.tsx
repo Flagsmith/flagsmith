@@ -1,6 +1,6 @@
 import React, { FC, ReactNode, useMemo } from 'react'
 import { useGetPermissionQuery } from 'common/services/usePermission'
-import AccountStore from 'common/stores/account-store'
+import { useIsOrganisationAdmin } from 'common/hooks/useCurrentOrganisation'
 import { cloneDeep, intersection } from 'lodash'
 import Utils from 'common/utils/utils'
 import Constants from 'common/constants'
@@ -78,6 +78,7 @@ export const useHasPermission = ({
   permission,
   tags,
 }: UseHasPermissionParams) => {
+  const isAdmin = useIsOrganisationAdmin()
   const {
     data: permissionsData,
     isLoading,
@@ -103,7 +104,7 @@ export const useHasPermission = ({
   return {
     isLoading,
     isSuccess,
-    permission: !!hasPermission || !!AccountStore.isAdmin(),
+    permission: hasPermission || isAdmin,
   }
 }
 
@@ -178,8 +179,6 @@ const Permission: FC<PermissionType> = ({
     tags,
   })
 
-  const finalPermission = hasPermission || AccountStore.isAdmin()
-
   const getPermissionDescription = (): string => {
     switch (level) {
       case 'environment':
@@ -200,26 +199,26 @@ const Permission: FC<PermissionType> = ({
   if (typeof children === 'function') {
     const renderedChildren = children({
       isLoading,
-      permission: finalPermission,
+      permission: hasPermission,
     })
 
-    if (finalPermission || !showTooltip) {
+    if (hasPermission || !showTooltip) {
       return <>{renderedChildren || null}</>
     }
 
     return Utils.renderWithPermission(
-      finalPermission,
+      hasPermission,
       tooltipMessage,
       renderedChildren,
     )
   }
 
-  if (finalPermission) {
+  if (hasPermission) {
     return <>{children}</>
   }
 
   if (showTooltip) {
-    return Utils.renderWithPermission(finalPermission, tooltipMessage, children)
+    return Utils.renderWithPermission(hasPermission, tooltipMessage, children)
   }
 
   return <>{fallback || null}</>

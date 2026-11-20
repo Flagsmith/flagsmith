@@ -1,8 +1,9 @@
+import { skipToken } from '@reduxjs/toolkit/query'
 import React, { FC, useState } from 'react'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import { useGetFeatureVersionsQuery } from 'common/services/useFeatureVersion'
 import { useGetUsersQuery } from 'common/services/useUser'
-import AccountStore from 'common/stores/account-store'
+import { useCurrentOrganisation } from 'common/hooks/useCurrentOrganisation'
 import { FeatureVersion as TFeatureVersion } from 'common/types/responses'
 import Button from './base/forms/Button'
 import FeatureVersion from './FeatureVersion'
@@ -29,16 +30,17 @@ const FeatureHistory: FC<FeatureHistoryPageType> = ({
   feature,
   projectId,
 }) => {
+  const organisation = useCurrentOrganisation()
   const [open, setOpen] = useState(false)
-  const { data: subscriptionMeta } = useGetSubscriptionMetadataQuery({
-    id: AccountStore.getOrganisation()?.id,
-  })
+  const { data: subscriptionMeta } = useGetSubscriptionMetadataQuery(
+    organisation ? { id: organisation.id } : skipToken,
+  )
   const versionLimitDays = subscriptionMeta?.feature_history_visibility_days
 
   // @ts-ignore
-  const { data: users } = useGetUsersQuery({
-    organisationId: AccountStore.getOrganisation().id,
-  })
+  const { data: users } = useGetUsersQuery(
+    organisation ? { organisationId: organisation.id } : skipToken,
+  )
   const [page, setPage] = useState(1)
   const { data, isLoading } = useGetFeatureVersionsQuery(
     {

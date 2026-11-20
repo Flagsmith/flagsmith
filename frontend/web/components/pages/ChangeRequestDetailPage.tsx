@@ -4,7 +4,8 @@ import OrganisationStore from 'common/stores/organisation-store'
 import FeatureListStore from 'common/stores/feature-list-store'
 import { useGetMyGroupsQuery } from 'common/services/useMyGroup'
 import CreateFeatureModal from 'components/modals/create-feature'
-import AccountStore from 'common/stores/account-store'
+import { useCurrentUser } from 'common/hooks/useCurrentUser'
+import { useCurrentOrganisation } from 'common/hooks/useCurrentOrganisation'
 import AppActions from 'common/dispatcher/app-actions'
 import {
   mergeChangeSets,
@@ -444,7 +445,9 @@ export const ChangeRequestPageInner: FC<ChangeRequestPageInnerType> = ({
   removeOwner,
   scheduledDate,
 }) => {
-  const organisationId = AccountStore.getOrganisation()?.id
+  const currentUserId = useCurrentUser()?.id
+  const organisation = useCurrentOrganisation()
+  const organisationId = organisation?.id
   const { data: myGroups } = useGetMyGroupsQuery(
     {
       orgId: `${organisationId}`,
@@ -517,7 +520,7 @@ export const ChangeRequestPageInner: FC<ChangeRequestPageInnerType> = ({
 
   const approval =
     changeRequest &&
-    changeRequest.approvals.find((v) => v.user === AccountStore.getUser().id)
+    changeRequest.approvals.find((v) => v.user === currentUserId)
   const approvedBy = changeRequest.approvals
     .filter((v) => !!v.approved_at)
     .map((v) => {
@@ -530,7 +533,7 @@ export const ChangeRequestPageInner: FC<ChangeRequestPageInnerType> = ({
   const approved = !!approval && !!approval.approved_at
   // Locks the CR UI once any reviewer has approved.
   const hasApprovals = changeRequest.approvals.some((v) => !!v.approved_at)
-  const isYourChangeRequest = changeRequest.user === AccountStore.getUser().id
+  const isYourChangeRequest = changeRequest.user === currentUserId
 
   const user =
     changeRequest &&
@@ -663,7 +666,7 @@ export const ChangeRequestPageInner: FC<ChangeRequestPageInnerType> = ({
           </Row>
           {!hasApprovals && (
             <MyGroupsSelect
-              orgId={AccountStore.getOrganisation().id}
+              orgId={organisation?.id}
               value={ownerGroups && ownerGroups.map((v) => v.id)}
               onAdd={addOwner}
               onRemove={removeOwner}

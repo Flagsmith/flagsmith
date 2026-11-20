@@ -5,7 +5,7 @@ import { useClientPagination } from 'components/pages/feature-lifecycle/hooks/us
 import { useCreateCleanupIssueMutation } from 'common/services/useGithubIntegration'
 import { useLazyGetFeatureCodeReferencesQuery } from 'common/services/useCodeReferences'
 import WarningMessage from 'components/WarningMessage'
-import AccountStore from 'common/stores/account-store'
+import { useCurrentOrganisation } from 'common/hooks/useCurrentOrganisation'
 import Utils from 'common/utils/utils'
 import type { ProjectFlag } from 'common/types/responses'
 import type { FilterState } from 'common/types/featureFilters'
@@ -33,6 +33,7 @@ const StaleSection: FC<StaleSectionProps> = ({
   onFilterChange,
   projectId,
 }) => {
+  const organisation = useCurrentOrganisation()
   const [createCleanupIssue] = useCreateCleanupIssueMutation()
   const [triggerGetCodeReferences] = useLazyGetFeatureCodeReferencesQuery()
 
@@ -95,12 +96,13 @@ const StaleSection: FC<StaleSectionProps> = ({
           </div>
         ),
         onYes: async () => {
+          if (!organisation) return
           try {
             await createCleanupIssue({
               body: {
                 feature_id: flag.id,
               },
-              organisation_id: AccountStore.getOrganisation()?.id,
+              organisation_id: organisation.id,
             }).unwrap()
             toast(<span>Cleanup issue created.</span>)
           } catch {
@@ -111,7 +113,7 @@ const StaleSection: FC<StaleSectionProps> = ({
         yesText: 'Create Issue',
       })
     },
-    [createCleanupIssue],
+    [createCleanupIssue, organisation],
   )
 
   return (

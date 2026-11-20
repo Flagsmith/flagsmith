@@ -2,7 +2,8 @@ import React from 'react'
 import { Organisation, User } from 'common/types/responses'
 import classNames from 'classnames'
 import Constants from 'common/constants'
-import AccountStore from 'common/stores/account-store'
+import { useCurrentUser } from 'common/hooks/useCurrentUser'
+import { useIsOrganisationAdmin } from 'common/hooks/useCurrentOrganisation'
 import map from 'lodash/map'
 import Utils from 'common/utils/utils'
 import UserAction from 'components/UserAction'
@@ -28,8 +29,10 @@ const OrganisationUsersTableRow: React.FC<OrganisationUsersTableRowProps> = ({
   user,
   widths,
 }) => {
+  const currentUserId = useCurrentUser()?.id
+  const isAdmin = useIsOrganisationAdmin()
   const { email, first_name, id, last_login, last_name, role } = user
-  const isActiveUser = id === AccountStore.getUserId()
+  const isActiveUser = id === currentUserId
   const roleChanged = (id: number, { value: role }: { value: string }) => {
     AppActions.updateUserRole(id, role)
   }
@@ -117,9 +120,9 @@ const OrganisationUsersTableRow: React.FC<OrganisationUsersTableRowProps> = ({
           userName={email}
           onRemove={onRemoveClick}
           onEdit={onEditClick}
-          canRemove={AccountStore.isAdmin()}
-          canEdit={AccountStore.isAdmin()}
-          canInspectPermissions={AccountStore.isAdmin()}
+          canRemove={isAdmin}
+          canEdit={isAdmin}
+          canInspectPermissions={isAdmin}
           onInspectPermissions={() => {
             inspectPermissions(user, organisation.id)
           }}

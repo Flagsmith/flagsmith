@@ -992,7 +992,7 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                         <Row className='justify-content-center'>Links</Row>
                       }
                     >
-                      {hasIntegrationWithGithub && (
+                      {hasIntegrationWithGithub && !!organisationId && (
                         <GitHubLinkSection
                           githubId={githubId}
                           organisationId={organisationId}

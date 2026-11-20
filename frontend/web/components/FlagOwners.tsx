@@ -1,10 +1,11 @@
+import { skipToken } from '@reduxjs/toolkit/query'
 import React, { FC, useState } from 'react'
 import UserSelect from './UserSelect'
 import { IonIcon } from '@ionic/react'
 import { close } from 'ionicons/icons'
 import SettingsButton from './SettingsButton'
 import { useGetUsersQuery } from 'common/services/useUser'
-import AccountStore from 'common/stores/account-store'
+import { useCurrentOrganisation } from 'common/hooks/useCurrentOrganisation'
 import getUserDisplayName from 'common/utils/getUserDisplayName'
 
 type FlagOwnersProps = {
@@ -16,10 +17,9 @@ type FlagOwnersProps = {
 const FlagOwners: FC<FlagOwnersProps> = ({ onAdd, onRemove, selectedIds }) => {
   const [showUsers, setShowUsers] = useState(false)
 
-  const organisationId = AccountStore.getOrganisation()?.id
+  const organisationId = useCurrentOrganisation()?.id
   const { data: users } = useGetUsersQuery(
-    { organisationId },
-    { skip: !organisationId },
+    organisationId ? { organisationId } : skipToken,
   )
 
   const ownerUsers = users

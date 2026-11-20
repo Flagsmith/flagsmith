@@ -10,7 +10,7 @@ import FeatureFilters, {
 import Utils from 'common/utils/utils'
 import PanelSearch from 'components/PanelSearch'
 import JSONReference from 'components/JSONReference'
-import AccountStore from 'common/stores/account-store'
+import { useCurrentOrganisation } from 'common/hooks/useCurrentOrganisation'
 import FeatureListStore from 'common/stores/feature-list-store'
 import FeatureOverrideRow from 'components/feature-override/FeatureOverrideRow'
 import { useHistory } from 'react-router-dom'
@@ -28,6 +28,7 @@ const AssociatedSegmentOverrides: FC<AssociatedSegmentOverridesType> = ({
   projectId,
   segmentId,
 }) => {
+  const organisation = useCurrentOrganisation()
   const history = useHistory()
   const [environment, setEnvironment] = useState<Environment>()
   const preselect = Utils.fromParam().flag
@@ -171,7 +172,7 @@ const AssociatedSegmentOverrides: FC<AssociatedSegmentOverridesType> = ({
               <FeatureFilters
                 value={filter}
                 projectId={projectId!}
-                orgId={AccountStore.getOrganisation()?.id}
+                orgId={organisation?.id}
                 isLoading={projectFlagsLoading}
                 onChange={(next) => {
                   FeatureListStore.isLoading = true

@@ -4,7 +4,7 @@ import Tabs from 'components/navigation/TabMenu/Tabs'
 import TabItem from 'components/navigation/TabMenu/TabItem'
 import FieldLabel from 'components/base/forms/FieldLabel'
 import Utils from 'common/utils/utils'
-import AccountStore from 'common/stores/account-store'
+import { useCurrentOrganisation } from 'common/hooks/useCurrentOrganisation'
 import MCPSnippet from './mcp/MCPSnippet'
 import {
   buildMCPTabs,
@@ -36,7 +36,7 @@ const MCPIntegration: FC = () => {
   const isSaas = Utils.isSaas()
   const [connection, setConnection] = useState<Connection>('oauth')
   const tabs = buildMCPTabs(!isSaas, connection)
-  const organisationId = AccountStore.getOrganisation()?.id
+  const organisationId = useCurrentOrganisation()?.id
   const apiKeysHref = organisationId
     ? `/organisation/${organisationId}/settings?tab=api-keys`
     : undefined

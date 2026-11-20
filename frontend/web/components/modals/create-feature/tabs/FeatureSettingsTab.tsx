@@ -29,7 +29,7 @@ import Button from 'components/base/forms/Button'
 import Utils from 'common/utils/utils'
 import FormGroup from 'components/base/grid/FormGroup'
 import Row from 'components/base/grid/Row'
-import AccountStore from 'common/stores/account-store'
+import { useCurrentOrganisation } from 'common/hooks/useCurrentOrganisation'
 import { ProjectPermission } from 'common/types/permissions.types'
 import { getStore } from 'common/store'
 import { getSupportedContentType } from 'common/services/useSupportedContentType'
@@ -71,6 +71,7 @@ const FeatureSettingsTab: FC<FeatureSettingsTabProps> = ({
   projectFlag,
   projectId,
 }) => {
+  const organisation = useCurrentOrganisation()
   const [featureContentType, setFeatureContentType] = useState<any>({})
 
   const metadataEnable = Utils.getPlansPermission('METADATA')
@@ -94,15 +95,15 @@ const FeatureSettingsTab: FC<FeatureSettingsTabProps> = ({
   const [removeGroupOwners] = useRemoveFlagGroupOwnersMutation()
 
   useEffect(() => {
-    if (metadataEnable) {
+    if (metadataEnable && organisation) {
       getSupportedContentType(getStore(), {
-        organisation_id: AccountStore.getOrganisation().id,
+        organisation_id: organisation.id,
       }).then((res) => {
         const contentType = Utils.getContentType(res.data, 'model', 'feature')
         setFeatureContentType(contentType)
       })
     }
-  }, [metadataEnable])
+  }, [metadataEnable, organisation])
 
   const { permission: createFeature } = useHasPermission({
     id: projectId,
@@ -189,24 +190,29 @@ const FeatureSettingsTab: FC<FeatureSettingsTabProps> = ({
               </div>
             </FormGroup>
           )}
-          {metadataEnable && featureContentType?.id && !identity && (
-            <>
-              <label className='mt-1'>Custom Fields</label>
-              <AddMetadataToEntity
-                organisationId={AccountStore.getOrganisation().id}
-                projectId={
-                  typeof projectId === 'string'
-                    ? parseInt(projectId, 10)
-                    : projectId
-                }
-                entityId={projectFlag?.id}
-                entityContentType={featureContentType?.id}
-                entity={featureContentType?.model}
-                setHasMetadataRequired={onHasMetadataRequiredChange}
-                onChange={(metadata) => onChange({ ...projectFlag, metadata })}
-              />
-            </>
-          )}
+          {metadataEnable &&
+            featureContentType?.id &&
+            !identity &&
+            organisation && (
+              <>
+                <label className='mt-1'>Custom Fields</label>
+                <AddMetadataToEntity
+                  organisationId={organisation.id}
+                  projectId={
+                    typeof projectId === 'string'
+                      ? parseInt(projectId, 10)
+                      : projectId
+                  }
+                  entityId={projectFlag?.id}
+                  entityContentType={featureContentType?.id}
+                  entity={featureContentType?.model}
+                  setHasMetadataRequired={onHasMetadataRequiredChange}
+                  onChange={(metadata) =>
+                    onChange({ ...projectFlag, metadata })
+                  }
+                />
+              </>
+            )}
           {!identity && projectFlag?.id && createFeature && (
             <>
               <FormGroup className='mb-3 setting'>

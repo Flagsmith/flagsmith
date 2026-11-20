@@ -1,4 +1,5 @@
 import AccountStore from 'common/stores/account-store'
+import { getCurrentOrganisation } from 'common/hooks/useCurrentOrganisation'
 import ProjectStore from 'common/stores/project-store'
 import Project from 'common/project'
 import {
@@ -199,7 +200,7 @@ const Utils = Object.assign({}, BaseUtils, {
     return contentTypes?.find((c: ContentType) => c[model] === type) || null
   },
   getContrastColour,
-  getCreateProjectPermission(organisation: Organisation) {
+  getCreateProjectPermission(organisation?: Organisation) {
     if (organisation?.restrict_project_create_to_admin) {
       return OrganisationPermission.ADMIN
     }
@@ -397,7 +398,7 @@ const Utils = Object.assign({}, BaseUtils, {
   },
 
   getOrganisationHomePage(id?: string) {
-    const orgId = id || AccountStore.getOrganisation()?.id
+    const orgId = id || getCurrentOrganisation()?.id
     if (!orgId) {
       return `/organisations`
     }

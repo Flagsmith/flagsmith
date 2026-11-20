@@ -3,7 +3,7 @@ import { useGetMyGroupsQuery } from 'common/services/useMyGroup'
 import GroupSelect, { GroupSelectType } from './GroupSelect'
 
 type MyGroupsSelectType = Omit<GroupSelectType, 'groups'> & {
-  orgId: string | number
+  orgId: string | number | undefined
 }
 
 const MyGroupsSelect: FC<MyGroupsSelectType> = ({ orgId, ...props }) => {

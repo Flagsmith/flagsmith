@@ -12,7 +12,7 @@ import Utils from 'common/utils/utils'
 import every from 'lodash/every'
 import map from 'lodash/map'
 import ErrorMessage from 'components/ErrorMessage'
-import AccountStore from 'common/stores/account-store'
+import { useCurrentOrganisation } from 'common/hooks/useCurrentOrganisation'
 import { close as closeIcon } from 'ionicons/icons'
 import { MultiValueProps } from 'react-select'
 import { useGetGroupsQuery } from 'common/services/useGroup'
@@ -62,7 +62,7 @@ const InviteUsers: FC = () => {
   ])
   const inputRef = useRef<HTMLInputElement>(null)
 
-  const { id: orgId } = AccountStore.getOrganisation()
+  const orgId = useCurrentOrganisation()?.id
 
   const { data: groupData } = useGetGroupsQuery({ orgId: orgId, page: 1 })
 
@@ -131,6 +131,7 @@ const InviteUsers: FC = () => {
           <form
             onSubmit={(e) => {
               e.preventDefault()
+              if (!orgId) return
               createUserInvite(getPayload(invites, orgId))
                 .then(() => {
                   toast('Invite sent successfully')
