@@ -2315,6 +2315,8 @@ def test_post_sdk_events__mixed_batch__stores_valid_events_and_returns_202(
         {
             "level": "warning",
             "event": "sdk_events.rejected",
+            "http__request__method": "POST",
+            "http__route": "/api/v1/events/",
             "environment__id": environment.id,
             "submitted_events__count": 3,
             "rejected_events__count": 2,

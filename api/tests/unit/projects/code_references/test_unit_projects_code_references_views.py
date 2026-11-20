@@ -68,6 +68,8 @@ def test_create_code_reference__valid_payload__returns_201_with_accepted_referen
     assert log.events == [
         {
             "event": "scan.created",
+            "http__request__method": "POST",
+            "http__route": "/api/v1/projects/{project_pk}/code-references/",
             "level": "info",
             "organisation__id": project.organisation_id,
             "code_references__count": 3,
@@ -123,6 +125,8 @@ def test_create_code_reference__empty_references__returns_201_and_clears_previou
     assert references_response.json() == []
     assert log.events[-1] == {
         "event": "scan.created",
+        "http__request__method": "POST",
+        "http__route": "/api/v1/projects/{project_pk}/code-references/",
         "level": "info",
         "organisation__id": project.organisation_id,
         "code_references__count": 0,

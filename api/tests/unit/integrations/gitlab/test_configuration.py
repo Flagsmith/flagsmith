@@ -43,6 +43,8 @@ def test_create_configuration__valid_data__persists_and_masks_token(
     assert log.events == [
         {
             "event": "configuration.created",
+            "http__request__method": "POST",
+            "http__route": "/api/v1/projects/{project_pk}/integrations/gitlab/",
             "level": "info",
             "gitlab_instance_url": "https://gitlab.example.com",
             "project__id": project.id,
@@ -97,6 +99,8 @@ def test_update_configuration__valid_data__persists_and_masks_token(
     assert log.events == [
         {
             "event": "configuration.updated",
+            "http__request__method": "PUT",
+            "http__route": "/api/v1/projects/{project_pk}/integrations/gitlab/{id}/",
             "level": "info",
             "gitlab_instance_url": "https://gitlab.updated.com",
             "project__id": project.id,
@@ -123,6 +127,8 @@ def test_delete_configuration__existing__soft_deletes(
     assert log.events == [
         {
             "event": "configuration.deleted",
+            "http__request__method": "DELETE",
+            "http__route": "/api/v1/projects/{project_pk}/integrations/gitlab/{id}/",
             "level": "info",
             "project__id": project.id,
             "organisation__id": project.organisation_id,

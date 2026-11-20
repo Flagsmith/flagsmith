@@ -420,6 +420,8 @@ def test_publish_feature_version__change_requests_enabled__responds_409(
     assert log.events == [
         {
             "event": "version.publish_rejected",
+            "http__request__method": "POST",
+            "http__route": "/api/v1/environments/{environment_pk}/features/{feature_pk}/versions/{id}/publish/",
             "level": "warning",
             "organisation__id": environment_v2_versioning.project.organisation_id,
             "project__id": environment_v2_versioning.project_id,
@@ -996,6 +998,8 @@ def test_create_version__publish_immediately_with_change_requests_enabled__respo
     assert log.events == [
         {
             "event": "version.publish_rejected",
+            "http__request__method": "POST",
+            "http__route": "/api/v1/environments/{environment_pk}/features/{feature_pk}/versions/",
             "level": "warning",
             "organisation__id": environment_v2_versioning.project.organisation_id,
             "project__id": environment_v2_versioning.project_id,

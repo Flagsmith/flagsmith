@@ -669,6 +669,8 @@ def test_mixpanel_webhook__add_members_unknown_cohort__returns_404_failure(
         {
             "level": "warning",
             "event": "sync_webhook.rejected",
+            "http__request__method": "POST",
+            "http__route": "/api/v1/cohort-sync/mixpanel/webhook/",
             "source": "mixpanel",
             "action": "add_members",
             "environment__id": key.environment_id,

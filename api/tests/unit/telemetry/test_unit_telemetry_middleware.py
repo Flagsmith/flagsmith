@@ -46,6 +46,8 @@ def test_client_usage_logger_middleware__mcp_organisation_id_span_attribute__log
         {
             "level": "info",
             "event": "tool.called",
+            "http__request__method": "GET",
+            "http__route": "/api/v1/organisations/{organisation_pk}/invites/",
             "organisation__id": other_organisation.pk,
             "status": "success",
         }
@@ -67,6 +69,8 @@ def test_client_usage_logger_middleware__mcp_user_with_single_organisation__logs
         {
             "level": "info",
             "event": "tool.called",
+            "http__request__method": "GET",
+            "http__route": "/api/v1/projects/",
             "organisation__id": organisation.pk,
             "status": "success",
         }
@@ -91,6 +95,8 @@ def test_client_usage_logger_middleware__mcp_user_without_organisations__logs_wa
         {
             "level": "warning",
             "event": "tool.called",
+            "http__request__method": "GET",
+            "http__route": "/api/v1/projects/",
             "organisation__id": None,
             "status": "success",
         }
@@ -116,6 +122,8 @@ def test_client_usage_logger_middleware__mcp_user_with_multiple_organisations__l
         {
             "level": "warning",
             "event": "tool.called",
+            "http__request__method": "GET",
+            "http__route": "/api/v1/projects/",
             "organisation__id": None,
             "status": "success",
         }
@@ -150,6 +158,8 @@ def test_client_usage_logger_middleware__mcp_error_response__logs_error_status(
         {
             "level": "info",
             "event": "tool.called",
+            "http__request__method": "GET",
+            "http__route": "/api/v1/organisations/{organisation_pk}/invites/",
             "organisation__id": organisation.pk,
             "status": "error",
         }
@@ -236,6 +246,8 @@ def test_client_usage_logger_middleware__cli_organisation_id_span_attribute__log
         {
             "level": "info",
             "event": "request.made",
+            "http__request__method": "GET",
+            "http__route": "/api/v1/organisations/{organisation_pk}/invites/",
             "cli__version": "2.0.0",
             "cli__os": "darwin",
             "cli__arch": "arm64",
@@ -261,6 +273,8 @@ def test_client_usage_logger_middleware__cli_user_with_single_organisation__logs
         {
             "level": "info",
             "event": "request.made",
+            "http__request__method": "GET",
+            "http__route": "/api/v1/projects/",
             "cli__version": "2.0.0",
             "cli__os": "darwin",
             "cli__arch": "arm64",
@@ -288,6 +302,8 @@ def test_client_usage_logger_middleware__cli_user_without_organisations__logs_wa
         {
             "level": "warning",
             "event": "request.made",
+            "http__request__method": "GET",
+            "http__route": "/api/v1/projects/",
             "cli__version": "2.0.0",
             "cli__os": "darwin",
             "cli__arch": "arm64",
@@ -317,6 +333,8 @@ def test_client_usage_logger_middleware__cli_user_with_multiple_organisations__l
         {
             "level": "warning",
             "event": "request.made",
+            "http__request__method": "GET",
+            "http__route": "/api/v1/projects/",
             "cli__version": "2.0.0",
             "cli__os": "darwin",
             "cli__arch": "arm64",
@@ -344,6 +362,8 @@ def test_client_usage_logger_middleware__cli_master_api_key__logs_key_organisati
         {
             "level": "info",
             "event": "request.made",
+            "http__request__method": "GET",
+            "http__route": "/api/v1/projects/",
             "cli__version": "2.0.0",
             "cli__os": "darwin",
             "cli__arch": "arm64",
@@ -383,6 +403,8 @@ def test_client_usage_logger_middleware__cli_error_response__logs_error_status(
         {
             "level": "info",
             "event": "request.made",
+            "http__request__method": "GET",
+            "http__route": "/api/v1/organisations/{organisation_pk}/invites/",
             "cli__version": "2.0.0",
             "cli__os": "darwin",
             "cli__arch": "arm64",
@@ -467,6 +489,8 @@ def test_client_usage_logger_middleware__cli_user_agent__passes_version_through_
         {
             "level": "info",
             "event": "request.made",
+            "http__request__method": "GET",
+            "http__route": "/api/v1/projects/",
             "cli__version": expected_version,
             "cli__os": expected_os,
             "cli__arch": expected_arch,
