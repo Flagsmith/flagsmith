@@ -48,13 +48,13 @@
           "prerequisites": 0,
           "variations": {
             "0": {
-              "isFallthrough": true,
+              "isOff": true,
               "nullRules": 0,
               "rules": 0,
               "targets": 0
             },
             "1": {
-              "isOff": true,
+              "isFallthrough": true,
               "nullRules": 0,
               "rules": 0,
               "targets": 0
@@ -80,13 +80,13 @@
           "prerequisites": 0,
           "variations": {
             "0": {
-              "isFallthrough": true,
+              "isOff": true,
               "nullRules": 0,
               "rules": 0,
               "targets": 0
             },
             "1": {
-              "isOff": true,
+              "isFallthrough": true,
               "nullRules": 0,
               "rules": 0,
               "targets": 0
