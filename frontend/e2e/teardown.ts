@@ -1,5 +1,6 @@
 import fetch from 'node-fetch';
 import Project from '../common/project';
+import { clearLoginSessions } from './helpers/login-sessions';
 
 // Load environment variables
 require('dotenv').config();
@@ -38,6 +39,8 @@ export async function runTeardown(): Promise<boolean> {
       });
 
       if (res.ok) {
+        // Teardown recreates the users, so their saved tokens no longer work
+        clearLoginSessions();
         console.log('\x1b[32m%s\x1b[0m\n', '✓ E2E teardown successful');
         return true;
       } else {

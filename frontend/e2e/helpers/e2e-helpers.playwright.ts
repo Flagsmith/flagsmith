@@ -3,6 +3,7 @@ import { Locator, Page, expect } from '@playwright/test';
 // A CSS/data-test string, or a Locator built from role and accessible name.
 type SelectorOrLocator = string | Locator;
 import { LONG_TIMEOUT, SHORT_TIMEOUT, byId, log, logUsingLastSection, getFlagsmith } from './utils.playwright';
+import { forgetLoginSession, restoreLoginSession, saveLoginSession } from './login-sessions';
 
 // Re-export for backwards compatibility
 export { LONG_TIMEOUT, SHORT_TIMEOUT, byId, log, logUsingLastSection, getFlagsmith };
@@ -195,6 +196,22 @@ export class E2EHelpers {
     email: string = process.env.E2E_USER || '',
     password: string = process.env.E2E_PASS || '',
   ) {
+    if (await restoreLoginSession(this.page, email)) {
+      // The app sends a logged in user on from /login, as after the form
+      await this.page.goto('/login', { waitUntil: 'domcontentloaded' });
+      const restored = await this.page
+        .waitForURL(
+          (url) => url.pathname.includes('/organisation/') || url.pathname.includes('/create'),
+          { timeout: LONG_TIMEOUT },
+        )
+        .then(() => true)
+        .catch(() => false);
+      if (restored) {
+        await this.waitForProjectsLoaded();
+        return;
+      }
+      forgetLoginSession(email);
+    }
     for (let i = 0; i < 3; i++) {
       if (this.page.url().includes('/login')) break;
       try {
@@ -214,6 +231,11 @@ export class E2EHelpers {
       return url.pathname.includes('/organisation/') || url.pathname.includes('/create');
     }, { timeout: LONG_TIMEOUT });
 
+    await this.waitForProjectsLoaded();
+    await saveLoginSession(this.page, email);
+  }
+
+  async waitForProjectsLoaded() {
     // Check if we're on the create page (no organizations)
     const currentUrl = this.page.url();
     if (currentUrl.includes('/create')) {
