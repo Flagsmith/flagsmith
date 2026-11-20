@@ -241,11 +241,11 @@ def get_segment_members_page(
     # makes a cold read slow. Delegating the `traits` read to an outer query
     # limits them to the page.
     #
-    # Besides that, bypass FINAL, which is heavy, in favour of LIMIT 1 BY i.identifier,
-    # which is (tolerably) less correct but substantially faster.
+    # FINAL ensures ReplacingMergeTree deduplication occurs before is_deleted = false,
+    # honouring cleanup tombstones without waiting for background table merges.
     inner_sql = (
         "SELECT i.identifier "
-        "FROM IDENTITIES AS i "
+        "FROM IDENTITIES AS i FINAL "
         f"WHERE {' AND '.join(conditions)} "
         "ORDER BY i.identifier ASC, i.inserted_at DESC "
         "LIMIT 1 BY i.identifier "
@@ -253,7 +253,7 @@ def get_segment_members_page(
     )
     sql = (
         "SELECT m.identifier, m.identity_key, m.traits "
-        "FROM IDENTITIES AS m "
+        "FROM IDENTITIES AS m FINAL "
         "WHERE m.environment_id = %(env_key)s AND m.is_deleted = false "
         f"AND m.identifier IN ({inner_sql}) "
         "ORDER BY m.identifier ASC, m.inserted_at DESC "
