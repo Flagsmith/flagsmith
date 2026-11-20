@@ -543,3 +543,239 @@ def test_update_feature__live_experiment__default_allocation_only_persisted(
         mv.multivariate_feature_option_id: mv.percentage_allocation
         for mv in feature_state.multivariate_feature_state_values.all()
     } == env_allocations_before
+
+
+@pytest.mark.parametrize("identifier_field", ["id", "uuid", "key"])
+def test_update_feature__live_experiment__duplicate_values_matched_by_identifier(
+    admin_client: APIClient,
+    project: Project,
+    multivariate_feature: Feature,
+    live_experiment: Experiment,
+    identifier_field: str,
+) -> None:
+    # Given
+    options = list(multivariate_feature.multivariate_options.order_by("id"))
+    options[0].string_value = "shared-value"
+    options[0].key = "variant-first"
+    options[0].default_percentage_allocation = 10.0
+    options[0].save()
+    options[1].string_value = "shared-value"
+    options[1].key = "variant-second"
+    options[1].default_percentage_allocation = 20.0
+    options[1].save()
+    url = f"/api/v1/projects/{project.id}/features/{multivariate_feature.id}/"
+
+    def _identifier(opt: MultivariateFeatureOption) -> Any:
+        value = getattr(opt, identifier_field)
+        return str(value) if identifier_field == "uuid" else value
+
+    # Submit the duplicate-value options in reversed order so positional
+    # matching would assign allocations to the wrong option.
+    payload = [
+        {
+            identifier_field: _identifier(options[1]),
+            "type": options[1].type,
+            "string_value": options[1].string_value,
+            "default_percentage_allocation": 35.0,
+        },
+        {
+            identifier_field: _identifier(options[0]),
+            "type": options[0].type,
+            "string_value": options[0].string_value,
+            "default_percentage_allocation": 15.0,
+        },
+        {
+            identifier_field: _identifier(options[2]),
+            "type": options[2].type,
+            "string_value": options[2].string_value,
+            "default_percentage_allocation": 25.0,
+        },
+    ]
+
+    # When
+    response = admin_client.patch(
+        url,
+        data={"multivariate_options": payload},
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    options[0].refresh_from_db()
+    options[1].refresh_from_db()
+    options[2].refresh_from_db()
+    assert options[0].default_percentage_allocation == 15.0
+    assert options[1].default_percentage_allocation == 35.0
+    assert options[2].default_percentage_allocation == 25.0
+
+
+def test_update_feature__live_experiment__ambiguous_duplicate_values_without_id_returns_400(
+    admin_client: APIClient,
+    project: Project,
+    multivariate_feature: Feature,
+    live_experiment: Experiment,
+) -> None:
+    # Given
+    options = list(multivariate_feature.multivariate_options.order_by("id"))
+    options[0].string_value = "shared-value"
+    options[0].key = "variant-first"
+    options[0].default_percentage_allocation = 10.0
+    options[0].save()
+    options[1].string_value = "shared-value"
+    options[1].key = "variant-second"
+    options[1].default_percentage_allocation = 20.0
+    options[1].save()
+    url = f"/api/v1/projects/{project.id}/features/{multivariate_feature.id}/"
+    payload = [
+        {
+            "type": options[1].type,
+            "string_value": options[1].string_value,
+            "default_percentage_allocation": 35.0,
+        },
+        {
+            "type": options[0].type,
+            "string_value": options[0].string_value,
+            "default_percentage_allocation": 15.0,
+        },
+        {
+            "type": options[2].type,
+            "string_value": options[2].string_value,
+            "default_percentage_allocation": 25.0,
+        },
+    ]
+
+    # When
+    response = admin_client.patch(
+        url,
+        data={"multivariate_options": payload},
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "multivariate_options" in response.json()
+    options[0].refresh_from_db()
+    options[1].refresh_from_db()
+    assert options[0].default_percentage_allocation == 10.0
+    assert options[1].default_percentage_allocation == 20.0
+
+
+def test_delete_mv_option__concurrent_move_to_live_experiment__relocks_and_returns_400(
+    admin_client: APIClient,
+    project: Project,
+    environment: Environment,
+    multivariate_feature: Feature,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # Given
+    source_feature = Feature.objects.create(name="source feature", project=project)
+    option = MultivariateFeatureOption.objects.create(
+        feature=source_feature,
+        type="unicode",
+        string_value="moving option",
+        default_percentage_allocation=0,
+    )
+    experiment = Experiment.objects.create(
+        environment=environment,
+        feature=multivariate_feature,
+        name="live experiment",
+        hypothesis="new option wins",
+        status=ExperimentStatus.RUNNING,
+    )
+    locked_batches: list[list[int]] = []
+    original_select_for_update = Feature.objects.select_for_update
+
+    def _simulating_concurrent_move(*args: Any, **kwargs: Any) -> Any:
+        qs = original_select_for_update(*args, **kwargs)
+        original_filter = qs.filter
+
+        def _filter(*f_args: Any, **f_kwargs: Any) -> Any:
+            filtered = original_filter(*f_args, **f_kwargs)
+            pks = f_kwargs.get("pk__in")
+            if pks is not None:
+                locked_batches.append(list(pks))
+                if len(locked_batches) == 1:
+                    MultivariateFeatureOption.objects.filter(pk=option.pk).update(
+                        feature=multivariate_feature
+                    )
+            return filtered
+
+        qs.filter = _filter
+        return qs
+
+    monkeypatch.setattr(
+        Feature.objects, "select_for_update", _simulating_concurrent_move
+    )
+
+    # When
+    response = admin_client.delete(
+        f"{_options_url(project, source_feature)}{option.id}/"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json() == _expected_error(experiment)
+    assert locked_batches == [[source_feature.id], [multivariate_feature.id]]
+    assert MultivariateFeatureOption.objects.filter(id=option.id).exists()
+
+
+def test_update_mv_option__concurrent_move_to_live_experiment__relocks_and_returns_400(
+    admin_client: APIClient,
+    project: Project,
+    environment: Environment,
+    multivariate_feature: Feature,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # Given
+    source_feature = Feature.objects.create(name="source feature", project=project)
+    option = MultivariateFeatureOption.objects.create(
+        feature=source_feature,
+        type="unicode",
+        string_value="moving option",
+        default_percentage_allocation=0,
+    )
+    experiment = Experiment.objects.create(
+        environment=environment,
+        feature=multivariate_feature,
+        name="live experiment",
+        hypothesis="new option wins",
+        status=ExperimentStatus.RUNNING,
+    )
+    locked_batches: list[list[int]] = []
+    original_select_for_update = Feature.objects.select_for_update
+
+    def _simulating_concurrent_move(*args: Any, **kwargs: Any) -> Any:
+        qs = original_select_for_update(*args, **kwargs)
+        original_filter = qs.filter
+
+        def _filter(*f_args: Any, **f_kwargs: Any) -> Any:
+            filtered = original_filter(*f_args, **f_kwargs)
+            pks = f_kwargs.get("pk__in")
+            if pks is not None:
+                locked_batches.append(list(pks))
+                if len(locked_batches) == 1:
+                    MultivariateFeatureOption.objects.filter(pk=option.pk).update(
+                        feature=multivariate_feature
+                    )
+            return filtered
+
+        qs.filter = _filter
+        return qs
+
+    monkeypatch.setattr(
+        Feature.objects, "select_for_update", _simulating_concurrent_move
+    )
+
+    # When
+    response = admin_client.put(
+        f"{_options_url(project, source_feature)}{option.id}/",
+        data={**_dashboard_option_payload(option), "string_value": "edited"},
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json() == _expected_error(experiment)
+    assert locked_batches == [[source_feature.id], [multivariate_feature.id]]
+    option.refresh_from_db()
+    assert option.string_value == "moving option"

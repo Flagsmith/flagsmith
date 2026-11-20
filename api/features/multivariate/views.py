@@ -104,42 +104,51 @@ class MultivariateFeatureOptionViewSet(viewsets.ModelViewSet):  # type: ignore[t
             check_no_live_experiment(url_feature.id)
             super().perform_create(serializer)
 
-    def perform_update(self, serializer):  # type: ignore[no-untyped-def]
-        instance = serializer.instance
-        data = serializer.validated_data
-        target_feature = data.get("feature", instance.feature)
-        with transaction.atomic():
-            locked_feature_ids = sorted({instance.feature_id, target_feature.pk})
+    @staticmethod
+    def _lock_option_features(
+        instance: MultivariateFeatureOption,
+        target_feature_id: int | None = None,
+    ) -> None:
+        locked_ids: set[int] = set()
+        while True:
+            required_ids = {instance.feature_id}
+            if target_feature_id is not None:
+                required_ids.add(target_feature_id)
+            missing_ids = sorted(required_ids - locked_ids)
+            if not missing_ids:
+                return
             list(
                 Feature.objects.select_for_update()
-                .filter(pk__in=locked_feature_ids)
+                .filter(pk__in=missing_ids)
                 .order_by("pk")
                 .values_list("pk", flat=True)
             )
+            locked_ids.update(missing_ids)
             instance.refresh_from_db()
-            if instance.feature_id not in locked_feature_ids:
-                Feature.objects.select_for_update().filter(
-                    pk=instance.feature_id
-                ).exists()
+
+    def perform_update(self, serializer):  # type: ignore[no-untyped-def]
+        instance = serializer.instance
+        data = serializer.validated_data
+        target_feature = data.get("feature")
+        target_feature_id = target_feature.pk if target_feature is not None else None
+        with transaction.atomic():
+            self._lock_option_features(instance, target_feature_id=target_feature_id)
             # The dashboard PUTs every option on each save, changed or not, so
             # only a change to the variation itself is checked against experiments.
             if any(
                 field in data and data[field] != getattr(instance, field)
                 for field in VARIATION_FIELDS
             ):
-                for feature_id in {instance.feature_id, target_feature.pk}:
+                feature_ids = {instance.feature_id}
+                if target_feature_id is not None:
+                    feature_ids.add(target_feature_id)
+                for feature_id in sorted(feature_ids):
                     check_no_live_experiment(feature_id)
             super().perform_update(serializer)
 
     def perform_destroy(self, instance):  # type: ignore[no-untyped-def]
         with transaction.atomic():
-            locked_feature_id = instance.feature_id
-            Feature.objects.select_for_update().filter(pk=locked_feature_id).exists()
-            instance.refresh_from_db()
-            if instance.feature_id != locked_feature_id:
-                Feature.objects.select_for_update().filter(
-                    pk=instance.feature_id
-                ).exists()
+            self._lock_option_features(instance)
             check_no_live_experiment(instance.feature_id)
             super().perform_destroy(instance)
 

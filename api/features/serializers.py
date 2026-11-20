@@ -1,4 +1,4 @@
-from collections import defaultdict, deque
+from collections import defaultdict
 from collections.abc import Mapping
 from datetime import datetime
 from functools import cached_property
@@ -390,52 +390,131 @@ class CreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
         )
         return current_signatures != submitted_signatures
 
-    def _match_submitted_options(
+    @staticmethod
+    def _lookup_option_by_identifier(
+        raw: Mapping[str, Any],
+        by_id: dict[int, MultivariateFeatureOption],
+        by_uuid: dict[str, MultivariateFeatureOption],
+        by_key: dict[str, MultivariateFeatureOption],
+    ) -> tuple[bool, MultivariateFeatureOption | None]:
+        raw_id = raw.get("id")
+        if isinstance(raw_id, int) and not isinstance(raw_id, bool):
+            return True, by_id.get(raw_id)
+        raw_uuid = raw.get("uuid")
+        if raw_uuid not in (None, ""):
+            return True, by_uuid.get(str(raw_uuid))
+        raw_key = raw.get("key")
+        if isinstance(raw_key, str) and raw_key:
+            return True, by_key.get(raw_key)
+        return False, None
+
+    def _match_by_identifiers(
         self,
         existing_options: list[MultivariateFeatureOption],
         submitted_options: list[dict[str, Any]],
-    ) -> list[tuple[MultivariateFeatureOption, dict[str, Any]]]:
-        by_id = {option.id: option for option in existing_options}
-        by_signature: dict[tuple[Any, ...], deque[MultivariateFeatureOption]] = (
-            defaultdict(deque)
-        )
-        for option in existing_options:
-            by_signature[self._option_signature(option)].append(option)
-
+        by_signature: dict[tuple[Any, ...], list[MultivariateFeatureOption]],
+    ) -> dict[int, MultivariateFeatureOption]:
         initial_data = getattr(self, "initial_data", None)
         raw_options = (
             initial_data.get("multivariate_options")
             if isinstance(initial_data, Mapping)
             else None
         )
-        has_raw = isinstance(raw_options, list) and len(raw_options) == len(
+        if not isinstance(raw_options, list) or len(raw_options) != len(
             submitted_options
+        ):
+            return {}
+
+        by_id = {option.id: option for option in existing_options}
+        by_uuid = {str(option.uuid): option for option in existing_options}
+        by_key = {
+            option.key: option for option in existing_options if option.key is not None
+        }
+        matched: dict[int, MultivariateFeatureOption] = {}
+        for idx, (raw, submitted) in enumerate(zip(raw_options, submitted_options)):
+            if not isinstance(raw, Mapping):
+                continue
+            has_identifier, candidate = self._lookup_option_by_identifier(
+                raw, by_id, by_uuid, by_key
+            )
+            if not has_identifier:
+                continue
+            if candidate is None:
+                raise serializers.ValidationError(
+                    {
+                        "multivariate_options": (
+                            "Unable to match multivariate option to an "
+                            "existing option during a live experiment."
+                        )
+                    }
+                )
+            sig = self._option_signature(candidate)
+            if sig != self._option_signature(submitted):
+                raise serializers.ValidationError(
+                    {
+                        "multivariate_options": (
+                            "Multivariate option identifier does not "
+                            "match its existing value during a live "
+                            "experiment."
+                        )
+                    }
+                )
+            matched[idx] = candidate
+            del by_id[candidate.id]
+            del by_uuid[str(candidate.uuid)]
+            by_key.pop(candidate.key or "", None)
+            by_signature[sig].remove(candidate)
+        return matched
+
+    def _match_submitted_options(
+        self,
+        existing_options: list[MultivariateFeatureOption],
+        submitted_options: list[dict[str, Any]],
+    ) -> list[tuple[MultivariateFeatureOption, dict[str, Any]]]:
+        by_signature: dict[tuple[Any, ...], list[MultivariateFeatureOption]] = (
+            defaultdict(list)
+        )
+        for option in existing_options:
+            by_signature[self._option_signature(option)].append(option)
+
+        matched = self._match_by_identifiers(
+            existing_options, submitted_options, by_signature
         )
 
-        matched: dict[int, MultivariateFeatureOption] = {}
-        if has_raw:
-            for idx, (raw, submitted) in enumerate(
-                zip(raw_options, submitted_options)  # type: ignore[arg-type]
-            ):
-                raw_id = raw.get("id") if isinstance(raw, Mapping) else None
-                if not isinstance(raw_id, int) or raw_id not in by_id:
-                    continue
-                candidate = by_id[raw_id]
-                sig = self._option_signature(candidate)
-                if sig == self._option_signature(submitted):
-                    matched[idx] = candidate
-                    del by_id[raw_id]
-                    by_signature[sig].remove(candidate)
-
-        pairs: list[tuple[MultivariateFeatureOption, dict[str, Any]]] = []
+        unmatched_by_signature: dict[
+            tuple[Any, ...], list[tuple[int, dict[str, Any]]]
+        ] = defaultdict(list)
         for idx, submitted in enumerate(submitted_options):
-            selected = matched.get(idx)
-            if selected is None:
-                queue = by_signature[self._option_signature(submitted)]
-                if not queue:
-                    continue
-                selected = queue.popleft()
-            pairs.append((selected, submitted))
+            if idx not in matched:
+                unmatched_by_signature[self._option_signature(submitted)].append(
+                    (idx, submitted)
+                )
+
+        pairs: list[tuple[MultivariateFeatureOption, dict[str, Any]]] = [
+            (option, submitted_options[idx]) for idx, option in matched.items()
+        ]
+        for sig, unmatched in unmatched_by_signature.items():
+            remaining = by_signature[sig]
+            if len(remaining) > 1:
+                alloc_specs = {
+                    (
+                        "default_percentage_allocation" in item,
+                        item.get("default_percentage_allocation"),
+                    )
+                    for _, item in unmatched
+                }
+                if len(alloc_specs) > 1:
+                    raise serializers.ValidationError(
+                        {
+                            "multivariate_options": (
+                                "Ambiguous multivariate option update for "
+                                "duplicate values; include each option's "
+                                "id, uuid, or key."
+                            )
+                        }
+                    )
+            for (_, submitted), option in zip(unmatched, remaining):
+                pairs.append((option, submitted))
         return pairs
 
     def _update_option_default_allocations(
