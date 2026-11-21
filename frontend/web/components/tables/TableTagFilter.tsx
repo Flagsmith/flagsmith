@@ -8,6 +8,10 @@ import TableFilterItem from './TableFilterItem'
 import Constants from 'common/constants'
 import { TagStrategy } from 'common/types/responses'
 import TagContent from 'components/tags/TagContent'
+import {
+  isSpecialFilterItemVisible,
+  isTagMatchingFilter,
+} from './tagFilterHelpers'
 
 type TableFilterType = {
   projectId: number
@@ -20,19 +24,6 @@ type TableFilterType = {
   tagStrategy: TagStrategy
   onChangeStrategy: (value: TagStrategy) => void
   excludeTag?: (tag: { type: string; is_permanent: boolean }) => boolean
-}
-
-export const isTagMatchingFilter = (tagLabel: string, filter: string) => {
-  const search = filter.trim().toLowerCase()
-  return !search || tagLabel.toLowerCase().includes(search)
-}
-
-export const isSpecialFilterItemVisible = (
-  itemName: 'archived' | 'untagged',
-  filter: string,
-) => {
-  const search = filter.trim().toLowerCase()
-  return !search || itemName.includes(search)
 }
 
 const TableTagFilter: FC<TableFilterType> = ({
@@ -73,7 +64,8 @@ const TableTagFilter: FC<TableFilterType> = ({
   }, [flagGatedTags, search, filter])
 
   const hasMatches =
-    (filteredTags && filteredTags.length > 0) ||
+    filteredTags === undefined ||
+    filteredTags.length > 0 ||
     isArchivedVisible ||
     isUntaggedVisible
 
@@ -138,9 +130,7 @@ const TableTagFilter: FC<TableFilterType> = ({
               search
             />
           </div>
-          {!hasMatches && (
-            <div className='text-center'>No tags</div>
-          )}
+          {!hasMatches && <div className='text-center'>No tags</div>}
           <div className='table-filter-list'>
             {isArchivedVisible && (
               <TableFilterItem

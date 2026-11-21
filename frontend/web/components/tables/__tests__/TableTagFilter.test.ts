@@ -1,7 +1,7 @@
 import {
   isSpecialFilterItemVisible,
   isTagMatchingFilter,
-} from 'components/tables/TableTagFilter'
+} from 'components/tables/tagFilterHelpers'
 
 describe('TableTagFilter helpers', () => {
   describe('isTagMatchingFilter', () => {
