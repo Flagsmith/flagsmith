@@ -9,6 +9,7 @@ import JSONReference from './JSONReference'
 import PageTitle from './PageTitle'
 import PlanBasedBanner from './PlanBasedAccess'
 import Button from './base/forms/Button'
+import BareButton from './base/forms/BareButton'
 import FieldLabel from './base/forms/FieldLabel'
 import DateSelect from './DateSelect'
 import Icon from './icons/Icon'
@@ -189,9 +190,10 @@ export class CreateAPIKey extends PureComponent {
             <div>
               <Flex className='mb-3 mt-4'>
                 <div>
-                  <label>Name</label>
+                  <FieldLabel htmlFor='api-key-name'>Name</FieldLabel>
                 </div>
                 <Input
+                  id='api-key-name'
                   value={this.state.name}
                   onChange={(e) =>
                     this.setState({ name: Utils.safeParseEventValue(e) })
@@ -206,6 +208,7 @@ export class CreateAPIKey extends PureComponent {
                 <Row className='mb-3 mt-4 gap-2'>
                   <label className='mb-0'>Is admin</label>
                   <Switch
+                    aria-label='Is admin'
                     onChange={() => {
                       this.setState({
                         is_admin: !is_admin,
@@ -511,47 +514,55 @@ export default class ManagementAPIKeys extends PureComponent {
                 v.created_by && orgUsers?.find((u) => u.id === v.created_by)
               return (
                 !v.revoked && (
-                  <Row
-                    className='list-item'
-                    key={v.id}
-                    onClick={() => this.editAPIKey(v.name, v.id, v.prefix)}
-                  >
-                    <Flex className='table-column px-3'>
-                      <div className='font-weight-medium mb-1'>{v.name}</div>
-                      <div className='list-item-subtitle'>
-                        <div>{v.prefix}*****************</div>
-                      </div>
-                    </Flex>
-                    <Flex className='table-column fs-small lh-sm'>
-                      {moment(v.created).format('Do MMM YYYY HH:mma')}
-                    </Flex>
-                    {Utils.getFlagsmithHasFeature(
-                      'organisation_api_keys_created_by',
-                    ) && (
-                      <Flex className='table-column fs-small lh-sm'>
-                        {getUserDisplayName(createdByUser, '-')}
-                      </Flex>
-                    )}
-                    <Flex className='table-column fs-small lh-sm'>
-                      <Switch checked={v.is_admin} disabled={true} />
-                    </Flex>
-                    <Flex className='table-column fs-small lh-sm'>
-                      {v.has_expired ? (
-                        <div className='ml-1'>
-                          <Tooltip title={<Icon name='close-circle' />}>
-                            {'This API key has expired'}
-                          </Tooltip>
+                  <Row className='list-item' key={v.id}>
+                    <BareButton
+                      aria-label={`Edit API key ${v.name}`}
+                      className='flex-row flex-fill text-start p-0'
+                      onClick={() => this.editAPIKey(v.name, v.id, v.prefix)}
+                    >
+                      <Flex className='table-column px-3'>
+                        <div className='font-weight-medium mb-1'>{v.name}</div>
+                        <div className='list-item-subtitle'>
+                          <div>{v.prefix}*****************</div>
                         </div>
-                      ) : (
-                        <span className='ml-1'>
-                          <Icon
-                            name='checkmark-circle'
-                            fill='#27AB95'
-                            width={28}
-                          />
-                        </span>
+                      </Flex>
+                      <Flex className='table-column fs-small lh-sm'>
+                        {moment(v.created).format('Do MMM YYYY HH:mma')}
+                      </Flex>
+                      {Utils.getFlagsmithHasFeature(
+                        'organisation_api_keys_created_by',
+                      ) && (
+                        <Flex className='table-column fs-small lh-sm'>
+                          {getUserDisplayName(createdByUser, '-')}
+                        </Flex>
                       )}
-                    </Flex>
+                      <Flex className='table-column fs-small lh-sm'>
+                        <span
+                          aria-label={`Is admin for API key ${v.name}`}
+                          className={`rc-switch rc-switch-disabled ${
+                            v.is_admin ? 'rc-switch-checked' : ''
+                          }`}
+                          role='img'
+                        />
+                      </Flex>
+                      <Flex className='table-column fs-small lh-sm'>
+                        {v.has_expired ? (
+                          <div className='ml-1'>
+                            <Tooltip title={<Icon name='close-circle' />}>
+                              {'This API key has expired'}
+                            </Tooltip>
+                          </div>
+                        ) : (
+                          <span className='ml-1'>
+                            <Icon
+                              name='checkmark-circle'
+                              fill='#27AB95'
+                              width={28}
+                            />
+                          </span>
+                        )}
+                      </Flex>
+                    </BareButton>
                     <div
                       className='table-column  text-center'
                       style={{ width: '80px' }}
