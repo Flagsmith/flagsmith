@@ -4,6 +4,7 @@ describe('matchesTagFilter', () => {
   it.each([
     ['Onboarding', 'onboard', true],
     ['Onboarding', 'ONBOARD', true],
+    ['ΟΣ', 'οσ', true],
     ['archived', 'ARCH', true],
     ['untagged', 'TAG', true],
     ['Onboarding', 'release', false],
