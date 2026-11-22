@@ -172,7 +172,7 @@ flagsmith.trackEvent('purchase', {
 // Sends buffered events before your application exits
 await flagsmith.close();`,
     'Python': `# Requires flagsmith 6.3.0+
-from flagsmith import ${selfHosted ? 'EventProcessorConfig, ' : ''}Flagsmith
+from flagsmith import EventProcessorConfig, Flagsmith
 
 flagsmith = Flagsmith(
     environment_key="YOUR_ENVIRONMENT_KEY",

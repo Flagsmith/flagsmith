@@ -63,6 +63,12 @@ describe('getWarehouseEventSnippets', () => {
     })
   })
 
+  it('imports EventProcessorConfig in the Cloud Python snippet', () => {
+    expect(getWarehouseEventSnippets().Python).toContain(
+      'from flagsmith import EventProcessorConfig, Flagsmith',
+    )
+  })
+
   it.each([
     ['Flutter', "baseURI: '", "eventsURI: '"],
     ['Go', 'WithBaseURL("', 'WithEventsBaseURL("'],
