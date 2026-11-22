@@ -1,5 +1,6 @@
 import React, { FC } from 'react'
 import RCSwitch, { Props as RCSwitchProps } from 'rc-switch'
+import { colorIconDefault, colorIconSecondary } from 'common/theme/tokens'
 import Icon from './icons/Icon'
 
 export type SwitchProps = RCSwitchProps & {
@@ -56,8 +57,14 @@ const Switch: FC<SwitchProps> = ({
           onChange?.(!checked)
         }}
       >
-        <Icon name='sun' fill={checked ? '#656D7B' : '#1A2634'} />
-        <Icon name='moon' fill={checked ? '#FFFFFF' : '#9DA4AE'} />
+        <Icon
+          name='sun'
+          fill={checked ? colorIconSecondary : colorIconDefault}
+        />
+        <Icon
+          name='moon'
+          fill={checked ? colorIconDefault : colorIconSecondary}
+        />
       </button>
     )
   }
