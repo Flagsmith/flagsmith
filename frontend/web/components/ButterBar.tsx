@@ -66,12 +66,13 @@ const ButterBar: React.FC<ButterBarProps> = ({ billingStatus, projectId }) => {
       </div>
     )
   }
-  if (environment) {
-    const environmentDetail: Environment | null = ProjectStore.getEnvironment(
-      environment,
-    ) as Environment | null
-    if (environmentDetail?.banner_text) {
-      return (
+  const environmentDetail: Environment | null = environment
+    ? (ProjectStore.getEnvironment(environment) as Environment | null)
+    : null
+
+  return (
+    <>
+      {environmentDetail?.banner_text && (
         <div
           className='butter-bar font-weight-medium'
           style={{
@@ -81,35 +82,32 @@ const ButterBar: React.FC<ButterBarProps> = ({ billingStatus, projectId }) => {
         >
           {environmentDetail.banner_text}
         </div>
-      )
-    }
-  }
-
-  return (
-    <div className='announcement-container'>
-      {Utils.getFlagsmithValue('butter_bar') &&
-        !Utils.getFlagsmithHasFeature('read_only_mode') &&
-        (!billingStatus || billingStatus === 'ACTIVE') && (
-          <ReactMarkdown className='butter-bar'>
-            {Utils.getFlagsmithValue('butter_bar')}
-          </ReactMarkdown>
+      )}
+      <div className='announcement-container'>
+        {Utils.getFlagsmithValue('butter_bar') &&
+          !Utils.getFlagsmithHasFeature('read_only_mode') &&
+          (!billingStatus || billingStatus === 'ACTIVE') && (
+            <ReactMarkdown className='butter-bar'>
+              {Utils.getFlagsmithValue('butter_bar')}
+            </ReactMarkdown>
+          )}
+        {Utils.getFlagsmithHasFeature('read_only_mode') && (
+          <div className='butter-bar'>
+            Your organisation is over its usage limit, please{' '}
+            <Link to={Constants.getUpgradeUrl()}>upgrade your plan</Link>.
+          </div>
         )}
-      {Utils.getFlagsmithHasFeature('read_only_mode') && (
-        <div className='butter-bar'>
-          Your organisation is over its usage limit, please{' '}
-          <Link to={Constants.getUpgradeUrl()}>upgrade your plan</Link>.
-        </div>
-      )}
-      {billingStatus === 'DUNNING' && (
-        <div className='butter-bar text-white bg-danger'>
-          <span className='icon-alert mr-2'>
-            <Icon name='warning' fill='#fff' />
-          </span>
-          There was a problem with your paid subscription. Please check your
-          payment method to keep your subscription active.
-        </div>
-      )}
-    </div>
+        {billingStatus === 'DUNNING' && (
+          <div className='butter-bar text-white bg-danger'>
+            <span className='icon-alert mr-2'>
+              <Icon name='warning' fill='#fff' />
+            </span>
+            There was a problem with your paid subscription. Please check your
+            payment method to keep your subscription active.
+          </div>
+        )}
+      </div>
+    </>
   )
 }
 
