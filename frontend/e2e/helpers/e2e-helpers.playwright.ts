@@ -641,7 +641,11 @@ export class E2EHelpers {
   async addSegmentOverrideConfigForSegment(segmentName: string, value: string) {
     await this.click(byId('segment_overrides'));
     await this.page.getByRole('combobox', { name: 'Segment' }).first().click();
-    await this.page.getByRole('option', { name: segmentName, exact: true }).click();
+    await this.page
+      .getByRole('option')
+      .filter({ hasText: segmentName })
+      .first()
+      .click();
     await this.waitForElementVisible(this.segmentOverrideValueField(0));
     await this.setText(this.segmentOverrideValueField(0), value);
     await this.click(byId('segment-override-toggle-0'));
