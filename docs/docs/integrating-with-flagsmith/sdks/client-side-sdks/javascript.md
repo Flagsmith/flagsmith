@@ -253,6 +253,7 @@ await flagsmith.setContext({
 await flagsmith.updateContext({
  identity: {
   identifier: 'flagsmith_sample_user',
+  transient: true, // Optional: do not persist this identity.
   traits: {
    plan: { value: 'pro', transient: true },
   },

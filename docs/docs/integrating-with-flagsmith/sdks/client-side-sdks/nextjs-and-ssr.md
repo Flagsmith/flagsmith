@@ -67,16 +67,31 @@ await flagsmith.init({
 
 const serverState = flagsmith.getState();
 
-// On the client, use the instance from useFlagsmith or the provider to update it.
-await flagsmith.updateContext({
- identity: {
-  identifier: 'my_user_id',
-  traits: {
-   plan: { value: 'pro', transient: true },
-  },
- },
-});
-const context = flagsmith.getContext();
+// In a client component, use the instance from the provider to update it.
+// src/app/components/TransientTraitExample.tsx
+"use client";
+
+import { useFlagsmith } from "@flagsmith/flagsmith/react";
+
+export function TransientTraitExample() {
+ const flagsmith = useFlagsmith();
+
+ const updateContext = async () => {
+  await flagsmith.updateContext({
+   identity: {
+    identifier: 'my_user_id',
+    transient: true, // Optional: do not persist this identity.
+    traits: {
+     plan: { value: 'pro', transient: true },
+    },
+   },
+  });
+  const context = flagsmith.getContext();
+  return context;
+ };
+
+ return null;
+}
 ```
 
 Use `identify`, `setTrait`, and `setTraits` for ordinary, persisted traits. See the
