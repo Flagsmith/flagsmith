@@ -61,8 +61,10 @@ const ButterBar: React.FC<ButterBarProps> = ({ billingStatus, projectId }) => {
 
   if (processingImport) {
     return (
-      <div className='butter-bar font-weight-medium'>
-        Project import in progress, this may take several minutes. <Loader />
+      <div className='butter-bar-stack'>
+        <div className='butter-bar font-weight-medium'>
+          Project import in progress, this may take several minutes. <Loader />
+        </div>
       </div>
     )
   }
@@ -71,7 +73,7 @@ const ButterBar: React.FC<ButterBarProps> = ({ billingStatus, projectId }) => {
     : null
 
   return (
-    <>
+    <div className='butter-bar-stack'>
       {environmentDetail?.banner_text && (
         <div
           className='butter-bar font-weight-medium'
@@ -107,7 +109,7 @@ const ButterBar: React.FC<ButterBarProps> = ({ billingStatus, projectId }) => {
           </div>
         )}
       </div>
-    </>
+    </div>
   )
 }
 
