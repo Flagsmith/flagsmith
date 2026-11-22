@@ -1,3 +1,4 @@
+import re
 from datetime import date, timedelta
 
 import pytest
@@ -92,10 +93,8 @@ def test_get_organisation_info__valid_organisation__returns_event_list(
     assert "2026-06-27" in content
     # Both client applications' usage for the day, not just one of them.
     assert "241732" in content
-    assert "Stop serving flags" in content
-    assert "Block access to admin" in content
-    assert ">Yes</td>" in content
-    assert ">No</td>" in content
+    assert re.search(r"<td>Stop serving flags</td>\s*<td>Yes</td>", content)
+    assert re.search(r"<td>Block access to admin</td>\s*<td>No</td>", content)
     now = timezone.now()
     usage_data_mock.assert_called_once_with(
         organisation.id,
