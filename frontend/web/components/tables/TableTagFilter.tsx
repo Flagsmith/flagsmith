@@ -8,6 +8,7 @@ import TableFilterItem from './TableFilterItem'
 import Constants from 'common/constants'
 import { TagStrategy } from 'common/types/responses'
 import TagContent from 'components/tags/TagContent'
+import { matchesTagFilter } from './tableTagFilterUtils'
 
 type TableFilterType = {
   projectId: number
@@ -49,11 +50,12 @@ const TableTagFilter: FC<TableFilterType> = ({
     return tags
   }, [data, isFeatureHealthEnabled, excludeTag])
 
-  const filteredTags = useMemo(() => {
-    return filter
-      ? flagGatedTags?.filter((v) => v.label.toLowerCase().includes(filter))
-      : flagGatedTags?.filter((tag) => tag)
-  }, [flagGatedTags, filter])
+  const filteredTags = useMemo(
+    () => flagGatedTags?.filter((tag) => matchesTagFilter(tag.label, filter)),
+    [flagGatedTags, filter],
+  )
+  const showArchivedOption = matchesTagFilter('archived', filter)
+  const showUntaggedOption = matchesTagFilter('untagged', filter)
   const length = (value?.length || 0) + (showArchived ? 1 : 0)
   return (
     <div className={isLoading ? 'disabled' : ''}>
@@ -115,50 +117,54 @@ const TableTagFilter: FC<TableFilterType> = ({
               search
             />
           </div>
-          {filteredTags?.length === 0 && (
-            <div className='text-center'>No tags</div>
-          )}
+          {filteredTags?.length === 0 &&
+            !showArchivedOption &&
+            !showUntaggedOption && <div className='text-center'>No tags</div>}
           <div className='table-filter-list'>
-            <TableFilterItem
-              onClick={() => {
-                if (!isLoading) {
-                  onToggleArchived(!showArchived)
+            {showArchivedOption && (
+              <TableFilterItem
+                onClick={() => {
+                  if (!isLoading) {
+                    onToggleArchived(!showArchived)
+                  }
+                }}
+                isActive={showArchived}
+                title={
+                  <Row className='overflow-hidden'>
+                    <Tag
+                      isDot
+                      selected={showArchived}
+                      className='px-2 py-2 mr-1'
+                      tag={Constants.archivedTag}
+                    />
+                    <div className='ml-2 text-overflow'>archived</div>
+                  </Row>
                 }
-              }}
-              isActive={showArchived}
-              title={
-                <Row className='overflow-hidden'>
-                  <Tag
-                    isDot
-                    selected={showArchived}
-                    className='px-2 py-2 mr-1'
-                    tag={Constants.archivedTag}
-                  />
-                  <div className='ml-2 text-overflow'>archived</div>
-                </Row>
-              }
-            />
-            <TableFilterItem
-              onClick={() => {
-                if (value?.includes('')) {
-                  onChange((value || []).filter((v) => v !== ''))
-                } else {
-                  onChange((value || []).concat(['']))
+              />
+            )}
+            {showUntaggedOption && (
+              <TableFilterItem
+                onClick={() => {
+                  if (value?.includes('')) {
+                    onChange((value || []).filter((v) => v !== ''))
+                  } else {
+                    onChange((value || []).concat(['']))
+                  }
+                }}
+                isActive={value?.includes('')}
+                title={
+                  <Row className='overflow-hidden'>
+                    <Tag
+                      isDot
+                      selected={value?.includes('')}
+                      className='px-2 py-2 mr-1'
+                      tag={Constants.untaggedTag}
+                    />
+                    <div className='ml-2 text-overflow'>untagged</div>
+                  </Row>
                 }
-              }}
-              isActive={value?.includes('')}
-              title={
-                <Row className='overflow-hidden'>
-                  <Tag
-                    isDot
-                    selected={value?.includes('')}
-                    className='px-2 py-2 mr-1'
-                    tag={Constants.untaggedTag}
-                  />
-                  <div className='ml-2 text-overflow'>untagged</div>
-                </Row>
-              }
-            />
+              />
+            )}
             {filteredTags?.map((tag) => (
               <TableFilterItem
                 onClick={() => {
