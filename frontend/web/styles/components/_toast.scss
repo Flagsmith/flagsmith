@@ -36,6 +36,8 @@
 .toast-message {
   width: 250px;
   min-height: 50px;
+  --toast-icon-danger: #ef4d56;
+  --toast-icon-success: #27ab95;
   background-color: var(--color-surface-success);
   border: 1px solid
     color-mix(in srgb, var(--color-border-success) 40%, transparent);
@@ -66,9 +68,10 @@
   }
 
   &__body {
-    color: var(--color-text-secondary);
+    color: var(--color-text-default);
   }
 
+  body.dark &__close,
   &__close {
     color: var(--color-icon-secondary);
     padding-top: 2px;
@@ -85,4 +88,9 @@
   @media screen and (min-width: 768px) {
     width: 320px;
   }
+}
+
+body.dark .toast-message {
+  --toast-icon-danger: var(--color-icon-danger);
+  --toast-icon-success: var(--color-icon-success);
 }
