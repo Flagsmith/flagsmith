@@ -9,7 +9,7 @@ test.describe('Management API keys', () => {
     const roleName = 'management_api_key_e2e_role'
     const apiKeyName = 'Management API key E2E'
     const updatedApiKeyName = `${apiKeyName} updated`
-    const { login } = createHelpers(page)
+    const { login, waitForToastsToClear } = createHelpers(page)
 
     log('Login')
     await login(E2E_USER, PASSWORD)
@@ -66,12 +66,18 @@ test.describe('Management API keys', () => {
     await expect(
       apiKeyDialog.getByText('Your key has been created.', { exact: false }),
     ).toBeVisible()
+    await expect(
+      page
+        .locator('.toast-message')
+        .filter({ hasText: 'Role API Key was Created' }),
+    ).toBeVisible()
+    await waitForToastsToClear()
     await page.keyboard.press('Escape')
     await page.getByRole('button', { name: 'Confirm', exact: true }).click()
     await expect(page.locator('.modal-open')).toHaveCount(0)
 
     const editButton = page.getByRole('button', {
-      name: `Edit API key ${apiKeyName}`,
+      name: new RegExp(`^Edit API key ${apiKeyName}`),
     })
     await expect(editButton).toBeVisible()
     await editButton.click()
@@ -89,12 +95,22 @@ test.describe('Management API keys', () => {
     const editRoleOption = page.getByText(roleName, { exact: true }).last()
     await editRoleOption.click()
     await expect(
+      page
+        .locator('.toast-message')
+        .filter({ hasText: 'Role API Key was removed' }),
+    ).toBeVisible()
+    await expect(
       editDialog.locator('.chip').filter({ hasText: roleName }),
     ).toHaveCount(0)
     await editRoleOption.click()
     await expect(
       editDialog.locator('.chip').filter({ hasText: roleName }),
     ).toHaveCount(1)
+    await expect(
+      page
+        .locator('.toast-message')
+        .filter({ hasText: 'Role API Key was added' }),
+    ).toBeVisible()
     await editDialog
       .getByRole('button', { name: 'Select roles', exact: true })
       .click()
@@ -108,7 +124,9 @@ test.describe('Management API keys', () => {
       .getByRole('button', { name: 'Update', exact: true })
       .click()
     await expect(
-      page.getByRole('button', { name: `Edit API key ${updatedApiKeyName}` }),
+      page.getByRole('button', {
+        name: new RegExp(`^Edit API key ${updatedApiKeyName}`),
+      }),
     ).toBeVisible()
 
     await page
@@ -116,7 +134,9 @@ test.describe('Management API keys', () => {
       .click()
     await page.getByRole('button', { name: 'Confirm', exact: true }).click()
     await expect(
-      page.getByRole('button', { name: `Edit API key ${updatedApiKeyName}` }),
+      page.getByRole('button', {
+        name: new RegExp(`^Edit API key ${updatedApiKeyName}`),
+      }),
     ).toHaveCount(0)
   })
 })

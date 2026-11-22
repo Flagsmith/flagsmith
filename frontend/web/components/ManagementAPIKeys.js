@@ -512,11 +512,24 @@ export default class ManagementAPIKeys extends PureComponent {
               const orgUsers = OrganisationStore.model?.users
               const createdByUser =
                 v.created_by && orgUsers?.find((u) => u.id === v.created_by)
+              const createdAt = moment(v.created).format('Do MMM YYYY HH:mma')
+              const hasCreatedByFeature = Utils.getFlagsmithHasFeature(
+                'organisation_api_keys_created_by',
+              )
+              const editLabel = [
+                `Edit API key ${v.name}`,
+                `Created ${createdAt}`,
+                ...(hasCreatedByFeature
+                  ? [`Created by ${getUserDisplayName(createdByUser, '-')}`]
+                  : []),
+                v.is_admin ? 'Admin key' : 'Role-scoped key',
+                v.has_expired ? 'Expired' : 'Active',
+              ].join('. ')
               return (
                 !v.revoked && (
                   <Row className='list-item' key={v.id}>
                     <BareButton
-                      aria-label={`Edit API key ${v.name}`}
+                      aria-label={editLabel}
                       className='flex-row flex-fill text-start p-0'
                       onClick={() => this.editAPIKey(v.name, v.id, v.prefix)}
                     >
@@ -527,22 +540,19 @@ export default class ManagementAPIKeys extends PureComponent {
                         </div>
                       </Flex>
                       <Flex className='table-column fs-small lh-sm'>
-                        {moment(v.created).format('Do MMM YYYY HH:mma')}
+                        {createdAt}
                       </Flex>
-                      {Utils.getFlagsmithHasFeature(
-                        'organisation_api_keys_created_by',
-                      ) && (
+                      {hasCreatedByFeature && (
                         <Flex className='table-column fs-small lh-sm'>
                           {getUserDisplayName(createdByUser, '-')}
                         </Flex>
                       )}
                       <Flex className='table-column fs-small lh-sm'>
                         <span
-                          aria-label={`Is admin for API key ${v.name}`}
+                          aria-hidden='true'
                           className={`rc-switch rc-switch-disabled ${
                             v.is_admin ? 'rc-switch-checked' : ''
                           }`}
-                          role='img'
                         />
                       </Flex>
                       <Flex className='table-column fs-small lh-sm'>
