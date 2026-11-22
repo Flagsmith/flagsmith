@@ -43,6 +43,46 @@ The main flow with Next.js and any JavaScript-based SSR can be as follows:
 2. Pass the resulting state to the client with [`flagsmith.getState()`](/integrating-with-flagsmith/sdks/client-side-sdks/javascript#available-functions)
 3. Initialise flagsmith on the client with [`flagsmith.setState(state)`](/integrating-with-flagsmith/sdks/client-side-sdks/javascript#available-functions)
 
+### Using evaluation context with Next.js
+
+Pass `evaluationContext` when initialising Flagsmith on the server to evaluate flags for an identity and its traits. The
+resulting state can then be passed to `FlagsmithProvider` as usual. The context API also supports transient traits,
+which are not persisted:
+
+```javascript
+const flagsmith = createFlagsmithInstance();
+
+await flagsmith.init({
+ environmentID: '<YOUR_ENVIRONMENT_KEY>',
+ evaluationContext: {
+  identity: {
+   identifier: 'my_user_id',
+   transient: true, // Optional: do not persist this identity.
+   traits: {
+    plan: { value: 'enterprise', transient: true },
+   },
+  },
+ },
+});
+
+const serverState = flagsmith.getState();
+
+// On the client, use the instance from useFlagsmith or the provider to update it.
+await flagsmith.updateContext({
+ identity: {
+  identifier: 'my_user_id',
+  traits: {
+   plan: { value: 'pro', transient: true },
+  },
+ },
+});
+const context = flagsmith.getContext();
+```
+
+Use `identify`, `setTrait`, and `setTraits` for ordinary, persisted traits. See the
+[JavaScript SDK evaluation context guide](/integrating-with-flagsmith/sdks/client-side-sdks/javascript#evaluation-context)
+for the complete API reference.
+
 ### Example: Initialising the SDK with Next.js
 
 Taking the above into account, the following examples fetch flags on the server and initialises Flagsmith with the

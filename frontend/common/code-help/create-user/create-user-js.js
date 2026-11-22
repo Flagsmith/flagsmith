@@ -26,4 +26,15 @@ ${LIB_NAME}.init({
 
 // Option 2: identify after initialising
 ${LIB_NAME}.identify("${userId || USER_ID}", { "${TRAIT_NAME}": 21 });
+
+// Option 3: use the context API for transient traits
+${LIB_NAME}.setContext({
+    identity: {
+        identifier: "${userId || USER_ID}",
+        transient: true, // Optional: do not persist this identity.
+        traits: {
+            "${TRAIT_NAME}": { value: 21, transient: true },
+        },
+    },
+});
 `

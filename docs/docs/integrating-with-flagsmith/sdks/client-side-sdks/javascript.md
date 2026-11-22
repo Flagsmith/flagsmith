@@ -217,6 +217,53 @@ flagsmith.init({
 });
 ```
 
+### Evaluation context
+
+The evaluation context API is the current way to set an identity and its traits when you need to control whether values
+are persisted. The `evaluationContext` option can be used during initialisation, or you can update the context after
+initialisation with `setContext` and `updateContext`.
+
+```javascript
+import flagsmith from '@flagsmith/flagsmith';
+
+await flagsmith.init({
+ environmentID: '<YOUR_CLIENT_SIDE_ENVIRONMENT_KEY>',
+ evaluationContext: {
+  identity: {
+   identifier: 'flagsmith_sample_user',
+   traits: {
+    plan: { value: 'enterprise' },
+   },
+  },
+ },
+});
+
+// Set a transient trait without persisting its value.
+await flagsmith.setContext({
+ identity: {
+  identifier: 'flagsmith_sample_user',
+  transient: true, // Optional: do not persist this identity.
+  traits: {
+   plan: { value: 'enterprise', transient: true },
+  },
+ },
+});
+
+// Merge a new context and read the current context.
+await flagsmith.updateContext({
+ identity: {
+  identifier: 'flagsmith_sample_user',
+  traits: {
+   plan: { value: 'pro', transient: true },
+  },
+ },
+});
+const context = flagsmith.getContext();
+```
+
+Use the existing `identify`, `setTrait`, and `setTraits` methods for ordinary, persisted traits. Use the context API
+when a trait needs the `{ value, transient: true }` shape, or when the identity itself should be transient.
+
 ## API Reference
 
 All function and property types can be seen
@@ -242,6 +289,7 @@ All function and property types can be seen
 | `eventSourceUrl?: string`                                                                   |                                                       Use this property to define where you're getting real-time flag update events (server sent events) from, e.g. if you're self hosting.                                                       |          |                https://edge.api.flagsmith.com/api/v1/ |
 | `identity?: string`                                                                         |                                                                                Specifying an identity will fetch flags for that identity in the initial API call.                                                                                 |  **YES** |                                                  null |
 | `traits?:Record<string, string or number or boolean>`                                       |                                                                                 Specifying traits will send the traits for that identity in the initial API call.                                                                                 |  **YES** |                                                  null |
+| `evaluationContext?: ClientEvaluationContext`                                               |                                                                                  Set the identity and traits used to evaluate flags, including transient traits.                                                                                  |          |                                                  null |
 
 ### Available Functions
 
@@ -256,6 +304,9 @@ All function and property types can be seen
 | <code>setState(state: IState)=>void</code>                                                                                                          |                              Set the current state of flagsmith, [useful in NextJS / isomorphic applications.](/integrating-with-flagsmith/sdks/client-side-sdks/nextjs-and-ssr) e.g. `flagsmith.setState({identity: 'mary@mycompany.com'})`.                              |
 | <code>setTrait(key:string, value:string&#124;number&#124;boolean)=> Promise&lt;IFlags&gt;</code>                                                    |                                                              Once used with an identified user you can set the value of any trait relevant to them e.g. `flagsmith.setTrait("accepted_cookie_policy", true)`                                                              |
 | <code>setTraits(values:Record\<string, string&#124;number&#124;boolean>)=\> Promise&lt;IFlags&gt;</code>                                            |                                                           Set multiple traits e.g. `flagsmith.setTraits({foo:"bar",numericProp:1,boolProp:true})`. Setting a value of null for a trait will remove that trait.                                                            |
+| <code>setContext(context:ClientEvaluationContext)=> Promise&lt;void&gt;</code>                                                                      |                                                                                   Set the evaluation context and refresh flags. Use `{ value, transient: true }` for a transient trait.                                                                                   |
+| <code>updateContext(context:ClientEvaluationContext)=> Promise&lt;void&gt;</code>                                                                   |                                                                                             Merge the supplied evaluation context with the current context and refresh flags.                                                                                             |
+| <code>getContext()=> EvaluationContext</code>                                                                                                       |                                                                                                                    Get the current evaluation context.                                                                                                                    |
 | <code>incrementTrait(key:string, value:number)=> Promise&lt;IFlags&gt;</code>                                                                       |                                                                                You can also increment/decrement a particular trait them e.g. `flagsmith.incrementTrait("click_count", 1)`                                                                                 |
 | <code>startListening(ticks=1000:number)=>void</code>                                                                                                |                                                                                                               Poll the api for changes every x milliseconds                                                                                                               |
 | <code>stopListening()=>void</code>                                                                                                                  |                                                                                                                           Stop polling the api                                                                                                                            |

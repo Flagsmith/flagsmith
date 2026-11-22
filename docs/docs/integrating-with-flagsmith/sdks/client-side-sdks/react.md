@@ -105,6 +105,49 @@ You can find the exact definitions of these types
 | `options?: ` IInitConfig |    Initialisation options to use. If you don't provide this you will have to call flagsmith.init elsewhere.    |          |          null |
 | `serverState?: IState`   | Used to pass an initial state, in most cases as a result of SSR flagsmith.getState(). See [Next.js and SSR](/integrating-with-flagsmith/sdks/client-side-sdks/nextjs-and-ssr) |          |          null |
 
+### Using evaluation context
+
+The provider accepts the same `evaluationContext` option as the JavaScript SDK. Use it when an identity or trait needs
+the context API, including transient values:
+
+```javascript
+<FlagsmithProvider
+  options={{
+    environmentID: '<YOUR_ENVIRONMENT_KEY>',
+    evaluationContext: {
+      identity: {
+        identifier: 'flagsmith_sample_user',
+        transient: true, // Optional: do not persist this identity.
+        traits: {
+          plan: { value: 'enterprise', transient: true },
+        },
+      },
+    },
+  }}
+  flagsmith={flagsmith}>
+  {...Your app}
+</FlagsmithProvider>
+```
+
+The `useFlagsmith` hook exposes `setContext`, `updateContext`, and `getContext` for changes after initialisation:
+
+```javascript
+const flagsmith = useFlagsmith();
+
+await flagsmith.setContext({
+ identity: {
+  identifier: 'flagsmith_sample_user',
+  traits: {
+   plan: { value: 'pro', transient: true },
+  },
+ },
+});
+```
+
+Use `identify`, `setTrait`, and `setTraits` for ordinary, persisted traits. See the
+[JavaScript SDK evaluation context guide](/integrating-with-flagsmith/sdks/client-side-sdks/javascript#evaluation-context)
+for the complete API reference and examples.
+
 ### Step 3: Using useFlagsmith to access the Flagsmith instance
 
 Components that have been wrapped in a FlagsmithProvider will be able to access the instance of Flagsmith via the
