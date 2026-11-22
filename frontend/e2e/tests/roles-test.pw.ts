@@ -47,9 +47,10 @@ test.describe('Roles Tests', () => {
     log('Add environment permissions to the Role')
     await waitForElementVisible(byId('environment-permissions-tab'))
     await click(byId('environment-permissions-tab'))
-    await click(byId('project-select'))
-    await waitForElementVisible(byId('project-select-option-6'))
-    await click(byId('project-select-option-6'))
+    await page.getByRole('combobox', { name: 'Project' }).click()
+    await page
+      .getByRole('option', { name: E2E_PROJECT_WITH_ROLE, exact: true })
+      .click()
     await click(byId('permissions-development'))
     await click(byId('admin-switch-environment'))
     await closeModal()

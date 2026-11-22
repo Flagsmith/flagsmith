@@ -12,6 +12,7 @@ type SegmentSelectType = {
   disabled?: boolean
   projectId: string
   'data-test'?: string
+  'aria-label'?: string
   placeholder?: string
   className?: string
   value: number | string | undefined
@@ -66,6 +67,7 @@ const SegmentSelect: FC<SegmentSelectType> = ({
     //@ts-ignore
     <Select
       data-test={rest['data-test']}
+      aria-label={rest['aria-label'] || 'Segment'}
       placeholder={rest.placeholder}
       value={rest.value ? options.find((v) => v.value === rest.value) : null}
       isDisabled={rest.disabled}

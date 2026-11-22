@@ -31,7 +31,8 @@ test.describe('Invite Tests', () => {
     // ADMIN link may not exist after teardown, fall back to User role
     const hasAdminLink = await page.locator(byId('invite-link')).waitFor({ state: 'visible', timeout: 5000 }).then(() => true).catch(() => false)
     if (!hasAdminLink) {
-      await click(byId('invite-role-select-option-1'))
+      await page.getByRole('combobox', { name: 'Invite role' }).click()
+      await page.getByRole('option', { name: 'User', exact: true }).click()
       await waitForElementVisible(byId('invite-link'))
     }
     const inviteLink = await getInputValue(byId('invite-link'))

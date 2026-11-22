@@ -52,7 +52,7 @@ const ProjectFilter: FC<ProjectFilterType> = ({
         onChange(value.value || '', value.label || '')
       }
       inputId={inputId}
-      aria-label={ariaLabel}
+      aria-label={ariaLabel || 'Project'}
       data-test='project-select'
     />
   )

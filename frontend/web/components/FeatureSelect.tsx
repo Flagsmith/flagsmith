@@ -13,6 +13,7 @@ export type FeatureSelectOption = {
 type FeatureSelectProps = {
   className?: string
   disabled?: boolean
+  'aria-label'?: string
   // Feature ids to leave out, e.g. the feature being edited and the ones
   // already chosen.
   ignore?: number[]
@@ -24,6 +25,7 @@ type FeatureSelectProps = {
 }
 
 const FeatureSelect: FC<FeatureSelectProps> = ({
+  'aria-label': ariaLabel,
   className,
   disabled,
   environmentId,
@@ -68,6 +70,7 @@ const FeatureSelect: FC<FeatureSelectProps> = ({
   return (
     <Select
       className={className}
+      aria-label={ariaLabel || 'Feature'}
       isClearable={false}
       isDisabled={disabled}
       isLoading={isLoading}

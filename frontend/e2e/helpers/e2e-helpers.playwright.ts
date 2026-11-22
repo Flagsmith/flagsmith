@@ -609,12 +609,13 @@ export class E2EHelpers {
 
   // Open segment override dropdown and select a segment
   private async openSegmentOverride(index: number, selectionIndex: number = 0) {
-    const dropdownSelector = byId(`select-segment-option-${selectionIndex}`);
-    const isDropdownVisible = await this.page.locator(dropdownSelector).isVisible().catch(() => false);
+    const dropdown = this.page.getByRole('combobox', { name: 'Segment' }).first();
+    const isDropdownVisible = await dropdown.isVisible().catch(() => false);
     if (!isDropdownVisible) {
       await this.click(byId('segment_overrides'));
     }
-    await this.click(dropdownSelector);
+    await dropdown.click();
+    await this.page.getByRole('option').nth(selectionIndex).click();
     await this.waitForElementVisible(this.segmentOverrideValueField(index));
   }
 
@@ -639,12 +640,8 @@ export class E2EHelpers {
   // segments in a shared project can't shift the selection
   async addSegmentOverrideConfigForSegment(segmentName: string, value: string) {
     await this.click(byId('segment_overrides'));
-    // E2E builds render the select's options as plain links
-    await this.page
-      .locator('[data-test^="select-segment-option-"]')
-      .filter({ hasText: segmentName })
-      .first()
-      .click();
+    await this.page.getByRole('combobox', { name: 'Segment' }).first().click();
+    await this.page.getByRole('option', { name: segmentName, exact: true }).click();
     await this.waitForElementVisible(this.segmentOverrideValueField(0));
     await this.setText(this.segmentOverrideValueField(0), value);
     await this.click(byId('segment-override-toggle-0'));
