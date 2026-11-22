@@ -64,9 +64,15 @@ describe('getWarehouseEventSnippets', () => {
   })
 
   it('imports EventProcessorConfig in the Cloud Python snippet', () => {
-    expect(getWarehouseEventSnippets().Python).toContain(
-      'from flagsmith import EventProcessorConfig, Flagsmith',
-    )
+    // Given
+    const snippet = getWarehouseEventSnippets().Python
+
+    // When
+    const importStatement =
+      'from flagsmith import EventProcessorConfig, Flagsmith'
+
+    // Then
+    expect(snippet).toContain(importStatement)
   })
 
   it.each([
