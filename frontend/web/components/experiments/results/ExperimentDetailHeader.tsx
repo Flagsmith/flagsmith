@@ -6,7 +6,6 @@ import ButtonDropdown from 'components/base/forms/ButtonDropdown'
 import Icon from 'components/icons/Icon'
 import { colorIconAction, colorIconSecondary } from 'common/theme/tokens'
 import {
-  useCompleteExperimentMutation,
   useDeleteExperimentMutation,
   usePauseExperimentMutation,
   useStartExperimentMutation,
@@ -33,7 +32,6 @@ const ExperimentDetailHeader: FC<ExperimentDetailHeaderProps> = ({
 }) => {
   const [startExperiment] = useStartExperimentMutation()
   const [pauseExperiment] = usePauseExperimentMutation()
-  const [completeExperiment] = useCompleteExperimentMutation()
   const [deleteExperiment] = useDeleteExperimentMutation()
   const [updateExperiment, { isLoading: isUpdating }] =
     useUpdateExperimentMutation()
@@ -65,28 +63,6 @@ const ExperimentDetailHeader: FC<ExperimentDetailHeaderProps> = ({
   }, [pauseExperiment, params])
 
   const handleComplete = useCallback(() => {
-    if (!Utils.getFlagsmithHasFeature('experiment_rollout_decision')) {
-      openConfirm({
-        body: (
-          <span>
-            Are you sure you want to end <strong>{experiment.name}</strong>?
-            This action cannot be undone.
-          </span>
-        ),
-        noText: 'Cancel',
-        onYes: async () => {
-          try {
-            await completeExperiment(params).unwrap()
-            toast('Experiment completed')
-          } catch {
-            toast('Failed to complete experiment', 'danger')
-          }
-        },
-        title: 'End experiment?',
-        yesText: 'End Experiment',
-      })
-      return
-    }
     openModal(
       'Complete experiment',
       <CompleteExperimentModal
@@ -95,13 +71,7 @@ const ExperimentDetailHeader: FC<ExperimentDetailHeaderProps> = ({
       />,
       'p-0',
     )
-  }, [
-    completeExperiment,
-    environmentId,
-    experiment.id,
-    experiment.name,
-    params,
-  ])
+  }, [environmentId, experiment.id])
 
   const handleDelete = useCallback(() => {
     openConfirm({
