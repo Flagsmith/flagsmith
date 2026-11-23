@@ -3724,7 +3724,7 @@ paths:
   '/api/v1/environments/{environment_api_key}/experiments/{experiment_id}/complete/':
     post:
       operationId: api_v1_environments_experiments_complete_create
-      description: Manage experiments for an environment.
+      description: 'Completes an experiment and decides what its feature serves afterwards: control, one variant, or the flag disabled. The rollout override is removed.'
       parameters:
         - name: environment_api_key
           in: path
@@ -3742,13 +3742,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ExperimentList'
+              $ref: '#/components/schemas/ExperimentRolloutDecision'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/ExperimentList'
+              $ref: '#/components/schemas/ExperimentRolloutDecision'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/ExperimentList'
+              $ref: '#/components/schemas/ExperimentRolloutDecision'
       responses:
         '200':
           description: ''
@@ -21828,6 +21828,16 @@ components:
             - 'null'
           format: date-time
           readOnly: true
+        rollout_decision:
+          oneOf:
+            - $ref: '#/components/schemas/RolloutDecisionEnum'
+            - $ref: '#/components/schemas/NullEnum'
+          readOnly: true
+        rollout_variant:
+          type:
+            - integer
+            - 'null'
+          readOnly: true
       required:
         - feature
         - hypothesis
@@ -21895,6 +21905,16 @@ components:
             - string
             - 'null'
           format: date-time
+          readOnly: true
+        rollout_decision:
+          oneOf:
+            - $ref: '#/components/schemas/RolloutDecisionEnum'
+            - $ref: '#/components/schemas/NullEnum'
+          readOnly: true
+        rollout_variant:
+          type:
+            - integer
+            - 'null'
           readOnly: true
       required:
         - hypothesis
@@ -21970,6 +21990,16 @@ components:
             - string
             - 'null'
           format: date-time
+          readOnly: true
+        rollout_decision:
+          oneOf:
+            - $ref: '#/components/schemas/RolloutDecisionEnum'
+            - $ref: '#/components/schemas/NullEnum'
+          readOnly: true
+        rollout_variant:
+          type:
+            - integer
+            - 'null'
           readOnly: true
       required:
         - hypothesis
@@ -22050,6 +22080,15 @@ components:
         - feature_state_value
         - multivariate_feature_state_values
         - rollout_percentage
+    ExperimentRolloutDecision:
+      type: object
+      properties:
+        rollout_decision:
+          $ref: '#/components/schemas/RolloutDecisionEnum'
+        rollout_variant:
+          type: integer
+      required:
+        - rollout_decision
     ExperimentStatistics:
       description: Serializer for statistical analysis results.
       type: object
@@ -25733,6 +25772,16 @@ components:
             - 'null'
           format: date-time
           readOnly: true
+        rollout_decision:
+          oneOf:
+            - $ref: '#/components/schemas/RolloutDecisionEnum'
+            - $ref: '#/components/schemas/NullEnum'
+          readOnly: true
+        rollout_variant:
+          type:
+            - integer
+            - 'null'
+          readOnly: true
     PatchedExperimentMetric:
       type: object
       properties:
@@ -28188,6 +28237,16 @@ components:
       required:
         - permissions
         - project
+    RolloutDecisionEnum:
+      description: |-
+        * `control` - Control
+        * `variant` - Variant
+        * `disable` - Disable
+      type: string
+      enum:
+        - control
+        - variant
+        - disable
     RudderstackConfiguration:
       type: object
       properties:
