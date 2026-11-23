@@ -149,7 +149,7 @@ const controller = {
               Project.api
             }projects/${projectId}/features/?environment=${ProjectStore.getEnvironmentIdFromKey(
               environmentId,
-            )}`,
+            )}&sort_field=created_date&sort_direction=DESC`,
           ),
         ]).then(([features]) => {
           const environmentFeatures = features.results.map((v) => ({
