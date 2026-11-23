@@ -1,12 +1,9 @@
 import React, { FC } from 'react'
 import RCSwitch, { Props as RCSwitchProps } from 'rc-switch'
-import { colorIconDefault, colorIconSecondary } from 'common/theme/tokens'
-import Icon from './icons/Icon'
 
 export type SwitchProps = RCSwitchProps & {
   id?: string
   checked?: boolean
-  darkMode?: boolean
   offMarkup?: React.ReactNode
   onMarkup?: React.ReactNode
   onChange?: (checked: boolean) => void
@@ -14,7 +11,6 @@ export type SwitchProps = RCSwitchProps & {
 
 const Switch: FC<SwitchProps> = ({
   checked,
-  darkMode,
   offMarkup,
   onChange,
   onMarkup,
@@ -41,31 +37,6 @@ const Switch: FC<SwitchProps> = ({
           {checked ? offMarkup || 'On' : onMarkup || 'Off'}
         </button>
       </div>
-    )
-  }
-
-  if (darkMode) {
-    return (
-      <button
-        role='switch'
-        type='button'
-        className={`rc-switch flex-row justify-content-center gap-3 ${
-          checked ? 'rc-switch-checked' : 'rc-switch-unchecked'
-        }`}
-        {...rest}
-        onClick={() => {
-          onChange?.(!checked)
-        }}
-      >
-        <Icon
-          name='sun'
-          fill={checked ? colorIconSecondary : colorIconDefault}
-        />
-        <Icon
-          name='moon'
-          fill={checked ? colorIconDefault : colorIconSecondary}
-        />
-      </button>
     )
   }
 
