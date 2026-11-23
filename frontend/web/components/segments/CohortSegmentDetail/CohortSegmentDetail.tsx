@@ -56,7 +56,8 @@ const CohortSegmentDetail: FC<CohortSegmentDetailType> = ({
   // Poll while a synchronisation is in flight; the interval derives from the
   // response.
   const [pollingInterval, setPollingInterval] = useState(0)
-  const { data } = useGetCohortQuery(
+  // currentData, unlike data, never holds a previously selected cohort.
+  const { currentData: data } = useGetCohortQuery(
     {
       cohortId: cohort?.id ?? 0,
       environmentApiKey: cohort?.environment_api_key ?? '',

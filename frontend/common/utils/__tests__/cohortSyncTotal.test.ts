@@ -66,6 +66,17 @@ describe('saveCohortSyncTotal', () => {
     storage.clear()
   })
 
+  it('keeps the total of a newer sync', () => {
+    // Given
+    saveCohortSyncTotal(1, 3, 100)
+
+    // When
+    saveCohortSyncTotal(1, 2, 500)
+
+    // Then
+    expect(getCohortSyncProgress(1, 3, 40)).toEqual({ done: 60, total: 100 })
+  })
+
   it('saves nothing when the sync queued no work', () => {
     // Given / When
     saveCohortSyncTotal(1, 2, 0)

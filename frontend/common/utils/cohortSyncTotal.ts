@@ -19,7 +19,8 @@ export function saveCohortSyncTotal(
   version: number,
   total: number,
 ): void {
-  if (!total) {
+  const stored = getStoredCohortSyncTotal(cohortId)
+  if (!total || (stored && stored.version > version)) {
     return
   }
   storageSet(storageKey(cohortId), JSON.stringify({ total, version }))
