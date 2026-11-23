@@ -1,5 +1,32 @@
 # Changelog
 
+## [2.295.0](https://github.com/Flagsmith/flagsmith/compare/v2.294.0...v2.295.0) (2026-11-23)
+
+
+### Features
+
+* **experimentation:** choose the rollout when completing an experiment ([#9021](https://github.com/Flagsmith/flagsmith/issues/9021)) ([f5274bf](https://github.com/Flagsmith/flagsmith/commit/f5274bfebd57305a817c12a93dca51cc36666e98))
+* **experimentation:** decide the rollout when completing an experiment ([#9018](https://github.com/Flagsmith/flagsmith/issues/9018)) ([7052cea](https://github.com/Flagsmith/flagsmith/commit/7052ceae549f9bf8886e7b98230bcb41849feca6))
+
+
+### Bug Fixes
+
+* **DS:** load the SemiBold file for weight 600 ([#9039](https://github.com/Flagsmith/flagsmith/issues/9039)) ([b6f30a1](https://github.com/Flagsmith/flagsmith/commit/b6f30a12809d4d4ec768720bb54deb289d014581))
+* **DS:** replace undefined and hardcoded colour tokens ([#9035](https://github.com/Flagsmith/flagsmith/issues/9035)) ([60db0b6](https://github.com/Flagsmith/flagsmith/commit/60db0b60cd79d941cb1577d8bcde89117de2fef0))
+* **DS:** use theme tokens for secondary icon colours ([#9036](https://github.com/Flagsmith/flagsmith/issues/9036)) ([7334064](https://github.com/Flagsmith/flagsmith/commit/7334064a4da788a1ca1aba73ba676e358eb53ea7))
+* **E2E:** fix failing tests in CI ([#9043](https://github.com/Flagsmith/flagsmith/issues/9043)) ([be2bd72](https://github.com/Flagsmith/flagsmith/commit/be2bd72f1f61f3903704ba9eec9fb8c92fe98568))
+* **Onboarding:** Keep new users on their assigned flow ([#9017](https://github.com/Flagsmith/flagsmith/issues/9017)) ([71c831c](https://github.com/Flagsmith/flagsmith/commit/71c831c3f85fc404e8935ec27b59c24e9fa7ea77))
+
+
+### Dependency Updates
+
+* **mcp:** update dependency flagsmith-common to v3.17.0 ([#9038](https://github.com/Flagsmith/flagsmith/issues/9038)) ([51ed597](https://github.com/Flagsmith/flagsmith/commit/51ed597a1c5b3447503a5ef0d0ec33ab5ac76c3a))
+
+
+### Docs
+
+* **experimentation:** Drop the remote-evaluation-only note ([#9055](https://github.com/Flagsmith/flagsmith/issues/9055)) ([141b97f](https://github.com/Flagsmith/flagsmith/commit/141b97fe8b52ce0d2decc779be85abab21b5ab26))
+
 ## [2.294.0](https://github.com/Flagsmith/flagsmith/compare/v2.293.0...v2.294.0) (2026-11-20)
 
 
