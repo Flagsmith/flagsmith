@@ -121,6 +121,7 @@ services:
         hard: 262144
     volumes:
       - clickhouse_data:/var/lib/clickhouse
+      - ./clickhouse/config.d/system-log-ttl.xml:/etc/clickhouse-server/config.d/system-log-ttl.xml:ro
     ports:
       - 8123:8123
       - 9000:9000
