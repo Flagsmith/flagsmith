@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.295.2](https://github.com/Flagsmith/flagsmith/compare/v2.295.1...v2.295.2) (2026-11-23)
+
+
+### Bug Fixes
+
+* **experimentation:** remove the experiment_rollout_decision flag ([#9058](https://github.com/Flagsmith/flagsmith/issues/9058)) ([f02c65d](https://github.com/Flagsmith/flagsmith/commit/f02c65d408c1f2f63311442e52444c3aaa1e5c76))
+
 ## [2.295.1](https://github.com/Flagsmith/flagsmith/compare/v2.295.0...v2.295.1) (2026-11-23)
 
 
