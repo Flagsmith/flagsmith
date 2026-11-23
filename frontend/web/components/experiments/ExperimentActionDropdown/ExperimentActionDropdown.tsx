@@ -1,7 +1,6 @@
 import { FC, useCallback, useMemo } from 'react'
 import { ExperimentStatus } from 'common/types/responses'
 import {
-  useCompleteExperimentMutation,
   useDeleteExperimentMutation,
   usePauseExperimentMutation,
   useStartExperimentMutation,
@@ -25,7 +24,6 @@ const ExperimentActionDropdown: FC<ExperimentActionDropdownProps> = ({
 }) => {
   const [startExperiment] = useStartExperimentMutation()
   const [pauseExperiment] = usePauseExperimentMutation()
-  const [completeExperiment] = useCompleteExperimentMutation()
   const [deleteExperiment] = useDeleteExperimentMutation()
 
   const params = useMemo(
@@ -52,28 +50,6 @@ const ExperimentActionDropdown: FC<ExperimentActionDropdownProps> = ({
   }, [pauseExperiment, params])
 
   const handleComplete = useCallback(() => {
-    if (!Utils.getFlagsmithHasFeature('experiment_rollout_decision')) {
-      openConfirm({
-        body: (
-          <span>
-            Are you sure you want to mark <strong>{experimentName}</strong> as
-            completed? This action cannot be undone.
-          </span>
-        ),
-        noText: 'Cancel',
-        onYes: async () => {
-          try {
-            await completeExperiment(params).unwrap()
-            toast('Experiment completed')
-          } catch {
-            toast('Failed to complete experiment', 'danger')
-          }
-        },
-        title: 'Complete experiment?',
-        yesText: 'Complete',
-      })
-      return
-    }
     openModal(
       'Complete experiment',
       <CompleteExperimentModal
@@ -82,7 +58,7 @@ const ExperimentActionDropdown: FC<ExperimentActionDropdownProps> = ({
       />,
       'p-0',
     )
-  }, [completeExperiment, environmentId, experimentId, experimentName, params])
+  }, [environmentId, experimentId])
 
   const handleDelete = useCallback(() => {
     openConfirm({
