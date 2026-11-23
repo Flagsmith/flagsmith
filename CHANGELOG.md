@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.295.1](https://github.com/Flagsmith/flagsmith/compare/v2.295.0...v2.295.1) (2026-11-23)
+
+
+### CI
+
+* Drop the update-charts job ([#9034](https://github.com/Flagsmith/flagsmith/issues/9034)) ([935c48d](https://github.com/Flagsmith/flagsmith/commit/935c48d5766fc331e4957b1dff9b26c676b6ade1))
+
 ## [2.295.0](https://github.com/Flagsmith/flagsmith/compare/v2.294.0...v2.295.0) (2026-11-23)
 
 
