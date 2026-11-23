@@ -15,35 +15,71 @@ from typing import Any
 
 import jwt
 import requests
+import structlog
+from cryptography.exceptions import UnsupportedAlgorithm
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
+from django.core.cache import cache
 from rest_framework import serializers
 
+from experimentation.dataclasses import (
+    ExposureBucket,
+    ResultsAggregates,
+    WarehouseEventNames,
+    WarehouseEventStats,
+)
 from experimentation.types import (
     SNOWFLAKE_DEFAULTS,
     SnowflakeConfig,
     SnowflakeCredentials,
 )
+from experimentation.warehouses.base import is_disallowed_host
+from experimentation.warehouses.cache import (
+    CUSTOMER_EVENT_UNAVAILABLE,
+    cache_warehouse_read_unless_empty,
+    customer_cache_key,
+)
+from experimentation.warehouses.constants import (
+    BACKGROUND_QUERY_TIMEOUT_SECONDS,
+    CUSTOMER_EVENT_NAMES_FAILURE_CACHE_SECONDS,
+    CUSTOMER_EVENT_STATS_CACHE_SECONDS,
+    EVENT_NAMES_CACHE_SECONDS,
+    EVENT_NAMES_TIMEOUT_SECONDS,
+    MISSING_EVENTS_TABLE_DETAIL,
+    PERMISSION_DENIED_DETAIL,
+    QUERY_TIMEOUT_DETAIL,
+    SCHEMA_MISMATCH_DETAIL,
+    VERIFY_TIMEOUT_SECONDS,
+)
+from experimentation.warehouses.dialect import SNOWFLAKE_DIALECT
 from experimentation.warehouses.exceptions import (
     DeliveryConfigError,
-    UnsupportedWarehouseOperation,
+    EventsTableSchemaMismatchError,
 )
-from experimentation.warehouses.queries import QueryResult
+from experimentation.warehouses.queries import (
+    QueryResult,
+    build_event_names,
+    build_event_stats,
+    event_names_query,
+    event_names_query_params,
+    event_stats_query,
+    read_exposure_buckets,
+    read_results_aggregates,
+)
 
 if typing.TYPE_CHECKING:
     from collections.abc import Sequence
 
-    from experimentation.dataclasses import (
-        ExposureBucket,
-        MetricSpec,
-        ResultsAggregates,
-        WarehouseEventNames,
-        WarehouseEventStats,
-    )
+    from experimentation.dataclasses import MetricSpec
     from experimentation.models import WarehouseConnection
     from experimentation.types import ExposureGranularity
 
+logger = structlog.get_logger("warehouse")
+
+HOST_SUFFIX = ".snowflakecomputing.com"
 _ACCOUNT_IDENTIFIER = re.compile(r"[A-Za-z0-9_-]+")
+_ORGANISATION_ACCOUNT_IDENTIFIER = re.compile(r"[A-Za-z0-9]+-[A-Za-z0-9_-]+")
+_IDENTIFIER = re.compile(r"[A-Za-z_][A-Za-z0-9_$]*")
 _PLACEHOLDER = re.compile(r"%\((\w+)\)s")
 _EPOCH = datetime(1970, 1, 1, tzinfo=timezone.utc)
 
@@ -51,7 +87,38 @@ CONNECT_TIMEOUT_SECONDS = 5
 POLL_INTERVAL_SECONDS = 1
 MIN_STATEMENT_TIMEOUT_SECONDS = 1
 JWT_LIFETIME_SECONDS = 59 * 60
+MIN_RSA_KEY_SIZE_BITS = 2048
 USER_AGENT = "Flagsmith"
+
+DESCRIBE_EVENTS_TABLE_QUERY = "DESCRIBE TABLE events"
+WAREHOUSE_PROBE_QUERY = "SELECT environment_key FROM events LIMIT 1"
+
+EVENTS_TABLE_COLUMN_TYPES = {
+    "ENVIRONMENT_KEY": "VARCHAR",
+    "EVENT": "VARCHAR",
+    "FEATURE_NAME": "VARCHAR",
+    "TIMESTAMP": "TIMESTAMP_NTZ",
+    "COLLECTED_AT": "TIMESTAMP_NTZ",
+    "IDENTIFIER": "VARCHAR",
+    "VALUE": "VARCHAR",
+    "TRAITS": "VARCHAR",
+    "METADATA": "VARCHAR",
+    "SDK_LANGUAGE": "VARCHAR",
+    "SDK_VERSION": "VARCHAR",
+}
+
+ACCOUNT_NOT_FOUND_DETAIL = "Snowflake account not found."
+ROLE_NOT_GRANTED_DETAIL = "The role does not exist or is not granted to the user."
+WAREHOUSE_UNUSABLE_DETAIL = "Warehouse not found, or the role cannot use it."
+
+_ERROR_CODE_DETAILS = {
+    "390186": ROLE_NOT_GRANTED_DETAIL,
+    "390189": ROLE_NOT_GRANTED_DETAIL,
+    "002003": MISSING_EVENTS_TABLE_DETAIL,
+    "000904": SCHEMA_MISMATCH_DETAIL,
+    "391920": WAREHOUSE_UNUSABLE_DETAIL,
+    "003001": PERMISSION_DENIED_DETAIL,
+}
 
 
 class SnowflakeAuthError(Exception):
@@ -115,6 +182,7 @@ _CONVERTERS: dict[str, Callable[[str], object]] = {
     "real": float,
     "text": str,
     "boolean": lambda value: value == "true",
+    "object": str,
     "timestamp_ntz": _parse_epoch_seconds,
     "timestamp_ltz": _parse_epoch_seconds,
 }
@@ -140,6 +208,10 @@ def _convert_rows(payload: dict[str, Any]) -> QueryResult:
         for row in payload.get("data") or []
     ]
     return QueryResult(rows, [column["name"].lower() for column in columns])
+
+
+def account_host(account_identifier: str) -> str:
+    return f"{account_identifier.lower().replace('_', '-')}{HOST_SUFFIX}"
 
 
 def _sign_jwt(config: SnowflakeConfig, credentials: SnowflakeCredentials) -> str:
@@ -180,8 +252,7 @@ class _Session:
     ) -> None:
         self._http = http
         self._config = config
-        host = config["account_identifier"].lower().replace("_", "-")
-        self._base_url = f"https://{host}.snowflakecomputing.com"
+        self._base_url = f"https://{account_host(config['account_identifier'])}"
         self._deadline = deadline
         self._headers = {
             "Authorization": f"Bearer {_sign_jwt(config, credentials)}",
@@ -244,7 +315,13 @@ class _Session:
                 raise
         return response
 
-    def run(self, statement: str, params: Mapping[str, object]) -> QueryResult:
+    def run(
+        self,
+        statement: str,
+        params: Mapping[str, object],
+        *,
+        use_cached_result: bool = True,
+    ) -> QueryResult:
         positional_statement, bindings = _rewrite_to_positional_bindings(
             statement, params
         )
@@ -254,6 +331,9 @@ class _Session:
         statement_timeout_seconds = max(
             math.ceil(remaining_seconds), MIN_STATEMENT_TIMEOUT_SECONDS
         )
+        parameters = {"timezone": "UTC"}
+        if not use_cached_result:
+            parameters["use_cached_result"] = "false"
         try:
             response = self._request(
                 "POST",
@@ -268,7 +348,7 @@ class _Session:
                     "warehouse": self._config["warehouse"],
                     "role": self._config["role"],
                     "bindings": bindings,
-                    "parameters": {"timezone": "UTC"},
+                    "parameters": parameters,
                 },
             )
             response = self._poll_until_finished(response)
@@ -297,8 +377,84 @@ def snowflake_session(
         raise DeliveryConfigError(
             "Account identifier must contain only letters, digits, hyphens and underscores."
         )
+    if is_disallowed_host(account_host(config["account_identifier"])):
+        raise DeliveryConfigError(
+            "Host must not target internal or private network addresses."
+        )
     with requests.Session() as http:
         yield _Session(http, config, credentials, time.monotonic() + budget_seconds)
+
+
+def describe_snowflake_error(error: Exception) -> str:
+    if isinstance(error, DeliveryConfigError):
+        return str(error)
+    if isinstance(error, SnowflakeAuthError):
+        return "Authentication failed."
+    if isinstance(error, SnowflakeTimeout):
+        return QUERY_TIMEOUT_DETAIL
+    if isinstance(error, EventsTableSchemaMismatchError):
+        return SCHEMA_MISMATCH_DETAIL
+    if isinstance(error, (requests.ConnectionError, requests.Timeout)):
+        return "Could not connect to the host."
+    if isinstance(error, SnowflakeRequestError):
+        if error.status_code == 404 and error.error_code is None:
+            return ACCOUNT_NOT_FOUND_DETAIL
+        return _ERROR_CODE_DETAILS.get(
+            error.error_code or "", "The Snowflake account rejected the request."
+        )
+    return "Connection failed."
+
+
+def check_events_table(session: _Session) -> None:
+    """Raise if the events table's columns don't match the setup SQL."""
+    result = session.run(DESCRIBE_EVENTS_TABLE_QUERY, {})
+    name_index = result.columns.index("name")
+    type_index = result.columns.index("type")
+    column_types = {
+        row[name_index]: str(row[type_index]).split("(", 1)[0] for row in result.rows
+    }
+    if any(
+        column_types.get(column) != column_type
+        for column, column_type in EVENTS_TABLE_COLUMN_TYPES.items()
+    ):
+        raise EventsTableSchemaMismatchError()
+
+
+def _normalise_account_identifier(account_identifier: str) -> str:
+    host = account_identifier.strip().lower().split("://", 1)[-1]
+    host = host.split("/", 1)[0].split("?", 1)[0]
+    return host.removesuffix(HOST_SUFFIX).upper()
+
+
+def _validate_account_identifier(account_identifier: object) -> None:
+    if not account_identifier or not isinstance(account_identifier, str):
+        raise serializers.ValidationError(
+            {"config": {"account_identifier": "This field is required."}}
+        )
+    if not _ORGANISATION_ACCOUNT_IDENTIFIER.fullmatch(account_identifier):
+        raise serializers.ValidationError(
+            {
+                "config": {
+                    "account_identifier": (
+                        "Enter the account identifier in the ORGNAME-ACCOUNTNAME form."
+                    )
+                }
+            }
+        )
+    if is_disallowed_host(account_host(account_identifier)):
+        raise serializers.ValidationError(
+            {
+                "config": {
+                    "account_identifier": (
+                        "Host must not target internal or private network addresses."
+                    )
+                }
+            }
+        )
+
+
+def _private_key_error(message: str) -> serializers.ValidationError:
+    return serializers.ValidationError({"credentials": {"private_key": message}})
 
 
 class SnowflakeWarehouse:
@@ -314,46 +470,129 @@ class SnowflakeWarehouse:
             raise serializers.ValidationError(
                 {"config": {key: "Unknown field." for key in sorted(unknown_keys)}}
             )
-        for key, value in config.items():
-            if not isinstance(value, str):
-                raise serializers.ValidationError(
-                    {"config": {key: "Must be a string."}}
-                )
-        base = stored if stored is not None else dict(SNOWFLAKE_DEFAULTS)
-        merged: SnowflakeConfig = {
-            **base,  # type: ignore[typeddict-item]
-            **config,
-        }
-        if not merged.get("account_identifier"):
-            raise serializers.ValidationError(
-                {"config": {"account_identifier": "This field is required."}}
+        merged: dict[str, Any] = {**SNOWFLAKE_DEFAULTS, **(stored or {}), **config}
+        if isinstance(merged["account_identifier"], str):
+            merged["account_identifier"] = _normalise_account_identifier(
+                merged["account_identifier"]
             )
-        return merged
+        _validate_account_identifier(merged["account_identifier"])
+        for key in ("warehouse", "database", "schema", "role", "user"):
+            value = merged[key]
+            if not isinstance(value, str) or not _IDENTIFIER.fullmatch(value):
+                raise serializers.ValidationError(
+                    {"config": {key: "Enter a valid identifier."}}
+                )
+            merged[key] = value.upper()
+        return typing.cast(SnowflakeConfig, merged)
 
-    def validate_credentials(self, credentials: dict[str, Any]) -> dict[str, Any]:
-        raise UnsupportedWarehouseOperation(
-            "Snowflake connections take no credentials."
-        )
+    def validate_credentials(self, credentials: dict[str, Any]) -> SnowflakeCredentials:
+        if not isinstance(credentials, dict):
+            raise serializers.ValidationError({"credentials": "Must be an object."})
+        private_key = credentials.get("private_key")
+        if not private_key or not isinstance(private_key, str):
+            raise _private_key_error("This field is required.")
+        private_key = private_key.strip()
+        try:
+            loaded_key = serialization.load_pem_private_key(
+                private_key.encode(), password=None
+            )
+        except (ValueError, TypeError, UnsupportedAlgorithm) as exc:
+            raise _private_key_error(
+                "Enter an unencrypted private key in PEM format."
+            ) from exc
+        if not isinstance(loaded_key, rsa.RSAPrivateKey):
+            raise _private_key_error("Enter an RSA private key.")
+        if loaded_key.key_size < MIN_RSA_KEY_SIZE_BITS:
+            raise _private_key_error(
+                f"Enter an RSA private key of at least {MIN_RSA_KEY_SIZE_BITS} bits."
+            )
+        return {"private_key": private_key}
 
     def verify(self, connection: WarehouseConnection) -> None:
-        raise UnsupportedWarehouseOperation("Snowflake connections cannot be verified.")
+        with snowflake_session(
+            connection, budget_seconds=VERIFY_TIMEOUT_SECONDS
+        ) as session:
+            check_events_table(session)
+            session.run(WAREHOUSE_PROBE_QUERY, {}, use_cached_result=False)
 
     def describe_error(self, error: Exception) -> str:
-        raise UnsupportedWarehouseOperation("Snowflake connections cannot be verified.")
+        return describe_snowflake_error(error)
 
     def get_event_names(
         self,
         connection: WarehouseConnection,
         environment_key: str,
     ) -> WarehouseEventNames | None:
-        raise UnsupportedWarehouseOperation("Snowflake connections cannot be read.")
+        cache_key = customer_cache_key("event_names", connection)
+        cached = cache.get(cache_key)
+        if isinstance(cached, WarehouseEventNames):
+            return cached
+        if cached == CUSTOMER_EVENT_UNAVAILABLE:
+            return None
+        try:
+            with snowflake_session(
+                connection, budget_seconds=EVENT_NAMES_TIMEOUT_SECONDS
+            ) as session:
+                event_names = build_event_names(
+                    session.run(
+                        event_names_query(SNOWFLAKE_DIALECT),
+                        event_names_query_params(environment_key),
+                    )[0]
+                )
+        except Exception:
+            cache.set(
+                cache_key,
+                CUSTOMER_EVENT_UNAVAILABLE,
+                CUSTOMER_EVENT_NAMES_FAILURE_CACHE_SECONDS,
+            )
+            logger.warning(
+                "connection.event_names_failed",
+                environment__id=connection.environment_id,
+                exc_info=True,
+            )
+            return None
+        cache_warehouse_read_unless_empty(
+            cache_key, event_names, EVENT_NAMES_CACHE_SECONDS
+        )
+        return event_names
 
     def get_event_stats(
         self,
         connection: WarehouseConnection,
         environment_key: str,
     ) -> WarehouseEventStats | None:
-        raise UnsupportedWarehouseOperation("Snowflake connections cannot be read.")
+        cache_key = customer_cache_key("event_stats", connection)
+        cached = cache.get(cache_key)
+        if isinstance(cached, WarehouseEventStats):
+            return cached
+        if cached == CUSTOMER_EVENT_UNAVAILABLE:
+            return None
+        try:
+            with snowflake_session(
+                connection, budget_seconds=VERIFY_TIMEOUT_SECONDS
+            ) as session:
+                stats = build_event_stats(
+                    session.run(
+                        event_stats_query(SNOWFLAKE_DIALECT),
+                        {"environment_key": environment_key},
+                    )[0]
+                )
+        except Exception:
+            cache.set(
+                cache_key,
+                CUSTOMER_EVENT_UNAVAILABLE,
+                CUSTOMER_EVENT_STATS_CACHE_SECONDS,
+            )
+            logger.warning(
+                "connection.event_stats_failed",
+                environment__id=connection.environment_id,
+                exc_info=True,
+            )
+            return None
+        cache_warehouse_read_unless_empty(
+            cache_key, stats, CUSTOMER_EVENT_STATS_CACHE_SECONDS
+        )
+        return stats
 
     def get_exposure_buckets(
         self,
@@ -365,7 +604,18 @@ class SnowflakeWarehouse:
         window_end: datetime,
         granularity: ExposureGranularity,
     ) -> list[ExposureBucket]:
-        raise UnsupportedWarehouseOperation("Snowflake results are not supported.")
+        with snowflake_session(
+            connection, budget_seconds=BACKGROUND_QUERY_TIMEOUT_SECONDS
+        ) as session:
+            return read_exposure_buckets(
+                session.run,
+                SNOWFLAKE_DIALECT,
+                environment_key=environment_key,
+                feature_name=feature_name,
+                window_start=window_start,
+                window_end=window_end,
+                granularity=granularity,
+            )
 
     def get_results_aggregates(
         self,
@@ -378,4 +628,16 @@ class SnowflakeWarehouse:
         specs: Sequence[MetricSpec],
         granularity: ExposureGranularity,
     ) -> ResultsAggregates:
-        raise UnsupportedWarehouseOperation("Snowflake results are not supported.")
+        with snowflake_session(
+            connection, budget_seconds=BACKGROUND_QUERY_TIMEOUT_SECONDS
+        ) as session:
+            return read_results_aggregates(
+                session.run,
+                SNOWFLAKE_DIALECT,
+                environment_key=environment_key,
+                feature_name=feature_name,
+                window_start=window_start,
+                window_end=window_end,
+                specs=specs,
+                granularity=granularity,
+            )

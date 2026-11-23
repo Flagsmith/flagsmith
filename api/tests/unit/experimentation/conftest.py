@@ -189,29 +189,33 @@ def snowflake_private_key() -> rsa.RSAPrivateKey:
     return rsa.generate_private_key(public_exponent=65537, key_size=2048)
 
 
-@pytest.fixture()
-def snowflake_connection(
-    environment: Environment,
-    snowflake_private_key: rsa.RSAPrivateKey,
-) -> WarehouseConnection:
-    private_key = snowflake_private_key.private_bytes(
+@pytest.fixture(scope="session")
+def snowflake_private_key_pem(snowflake_private_key: rsa.RSAPrivateKey) -> str:
+    return snowflake_private_key.private_bytes(
         serialization.Encoding.PEM,
         serialization.PrivateFormat.PKCS8,
         serialization.NoEncryption(),
     ).decode()
+
+
+@pytest.fixture()
+def snowflake_connection(
+    environment: Environment,
+    snowflake_private_key_pem: str,
+) -> WarehouseConnection:
     connection: WarehouseConnection = WarehouseConnection.objects.create(
         environment=environment,
         warehouse_type=WarehouseType.SNOWFLAKE,
         name="Production Snowflake",
         config={
-            "account_identifier": "acme_org-prod",
+            "account_identifier": "acme-org_prod",
             "warehouse": "FLAGSMITH_WH",
             "database": "FLAGSMITH",
             "schema": "FLAGSMITH_EXP",
             "role": "FLAGSMITH_ROLE",
             "user": "flagsmith_service",
         },
-        credentials={"private_key": private_key},
+        credentials={"private_key": snowflake_private_key_pem},
     )
     return connection
 

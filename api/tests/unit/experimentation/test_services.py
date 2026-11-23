@@ -327,22 +327,6 @@ def test_get_warehouse_event_names__connection_details_changed__cache_keyed_by_c
     assert get_client.return_value.query.call_count == expected_query_count
 
 
-def test_get_warehouse_event_names__unsupported_type__raises(
-    environment: Environment,
-) -> None:
-    # Given
-    connection = WarehouseConnection(
-        environment=environment,
-        warehouse_type=WarehouseType.SNOWFLAKE,
-        name="Snowflake",
-        config={"account_identifier": "acme"},
-    )
-
-    # When / Then
-    with pytest.raises(UnsupportedWarehouseOperation):
-        services.get_warehouse_event_names(connection, "test-env-key")
-
-
 def test_get_exposure_buckets__day_granularity__queries_and_maps_rows(
     mocker: MockerFixture,
 ) -> None:
@@ -2798,6 +2782,23 @@ def test_annotate_warehouse_event_stats__clickhouse_connection__queries_customer
     # Then
     get_client.assert_called_once()
     assert getattr(fresh_connection, "event_stats", None) == expected_stats
+
+
+def test_annotate_warehouse_event_stats__stats_unsupported__leaves_stats_unset(
+    clickhouse_connection: WarehouseConnection,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    get_warehouse = mocker.patch("experimentation.services.get_warehouse")
+    get_warehouse.return_value.get_event_stats.side_effect = (
+        UnsupportedWarehouseOperation()
+    )
+
+    # When
+    annotate_warehouse_event_stats(clickhouse_connection, "test-env-key")
+
+    # Then
+    assert clickhouse_connection.event_stats is None
 
 
 @pytest.mark.parametrize(

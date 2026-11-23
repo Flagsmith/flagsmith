@@ -33,6 +33,8 @@ from experimentation.warehouses.constants import (
     FLAGSMITH_DATABASE_SOURCE,
     FLAGSMITH_DATABASE_UNAVAILABLE_DETAIL,
 )
+from experimentation.warehouses.exceptions import UnsupportedWarehouseOperation
+from experimentation.warehouses.snowflake import EVENTS_TABLE_COLUMN_TYPES
 from tests.unit.experimentation.conftest import (
     PostgresWarehouseSchema,
     SetWarehousesFlagFixture,
@@ -107,16 +109,12 @@ def test_post__different_type_already_exists__returns_409(
     environment: Environment,
     warehouse_connection: WarehouseConnection,
     warehouse_connection_url: str,
+    snowflake_payload: dict[str, object],
+    requests_mock: RequestsMockerFixture,
 ) -> None:
     # Given / When
     response = admin_client.post(
-        warehouse_connection_url,
-        data={
-            "warehouse_type": "snowflake",
-            "name": "My Snowflake",
-            "config": {"account_identifier": "xy12345.us-east-1"},
-        },
-        format="json",
+        warehouse_connection_url, data=snowflake_payload, format="json"
     )
 
     # Then
@@ -125,6 +123,7 @@ def test_post__different_type_already_exists__returns_409(
         response.json()["detail"]
         == "This environment already has an active warehouse connection."
     )
+    assert requests_mock.call_count == 0
 
 
 def test_post__soft_deleted_exists__creates_new_record_and_returns_201(
@@ -338,85 +337,89 @@ def test_get_detail__not_exists__returns_404(
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
-def test_post__snowflake_valid_config__returns_201(
+SNOWFLAKE_STATEMENTS_URL = (
+    "https://acme-org-prod.snowflakecomputing.com/api/v2/statements"
+)
+SNOWFLAKE_DESCRIBED_EVENTS_TABLE = {
+    "statementHandle": "01-handle",
+    "resultSetMetaData": {
+        "rowType": [{"name": "name", "type": "text"}, {"name": "type", "type": "text"}]
+    },
+    "data": [
+        [column, column_type]
+        for column, column_type in EVENTS_TABLE_COLUMN_TYPES.items()
+    ],
+}
+
+
+@pytest.fixture()
+def snowflake_payload(snowflake_private_key_pem: str) -> dict[str, object]:
+    return {
+        "warehouse_type": "snowflake",
+        "config": {"account_identifier": "acme-org_prod"},
+        "credentials": {"private_key": snowflake_private_key_pem},
+    }
+
+
+@pytest.fixture()
+def snowflake_account(
+    requests_mock: RequestsMockerFixture,
+) -> RequestsMockerFixture:
+    requests_mock.post(SNOWFLAKE_STATEMENTS_URL, json=SNOWFLAKE_DESCRIBED_EVENTS_TABLE)
+    return requests_mock
+
+
+@pytest.mark.parametrize(
+    "statement_error, expected_status, expected_detail",
+    [
+        (None, "connected", None),
+        (
+            {
+                "code": "002003",
+                "sqlState": "42S02",
+                "message": "SQL compilation error: Object 'EVENTS' does not exist or not authorized.",
+            },
+            "errored",
+            "Events table not found in the configured database. Run the setup SQL to create it.",
+        ),
+    ],
+    ids=["reachable", "missing-table"],
+)
+def test_post__snowflake__returns_201_with_verification_status(
     admin_client: APIClient,
     environment: Environment,
+    snowflake_account: RequestsMockerFixture,
+    snowflake_payload: dict[str, object],
+    statement_error: dict[str, str] | None,
+    expected_status: str,
+    expected_detail: str | None,
     warehouse_connection_url: str,
 ) -> None:
     # Given
-    config = {
-        "account_identifier": "xy12345.us-east-1",
-        "warehouse": "MY_WH",
-        "database": "MY_DB",
-        "schema": "MY_SCHEMA",
-        "role": "MY_ROLE",
-        "user": "MY_USER",
-    }
+    if statement_error is not None:
+        snowflake_account.post(
+            SNOWFLAKE_STATEMENTS_URL, status_code=422, json=statement_error
+        )
 
     # When
     response = admin_client.post(
-        warehouse_connection_url,
-        data={
-            "warehouse_type": "snowflake",
-            "name": "My Snowflake",
-            "config": config,
-        },
-        format="json",
+        warehouse_connection_url, data=snowflake_payload, format="json"
     )
 
     # Then
     assert response.status_code == status.HTTP_201_CREATED
-    data = response.json()
-    assert data["warehouse_type"] == "snowflake"
-    assert data["status"] == "created"
-    assert data["name"] == "My Snowflake"
-    assert data["config"] == config
-
-
-def test_post__snowflake_minimal_config__applies_defaults(
-    admin_client: APIClient,
-    environment: Environment,
-    warehouse_connection_url: str,
-) -> None:
-    # Given / When
-    response = admin_client.post(
-        warehouse_connection_url,
-        data={
-            "warehouse_type": "snowflake",
-            "name": "Minimal Snowflake",
-            "config": {"account_identifier": "xy12345.us-east-1"},
-        },
-        format="json",
-    )
-
-    # Then
-    assert response.status_code == status.HTTP_201_CREATED
-    data = response.json()
-    assert data["config"]["account_identifier"] == "xy12345.us-east-1"
-    assert data["config"]["warehouse"] == "COMPUTE_WH"
-    assert data["config"]["database"] == "FLAGSMITH"
-    assert data["config"]["schema"] == "ANALYTICS"
-    assert data["config"]["role"] == "FLAGSMITH_LOADER"
-    assert data["config"]["user"] == "FLAGSMITH_SERVICE"
-
-
-def test_post__snowflake_missing_account_identifier__returns_400(
-    admin_client: APIClient,
-    warehouse_connection_url: str,
-) -> None:
-    # Given / When
-    response = admin_client.post(
-        warehouse_connection_url,
-        data={
-            "warehouse_type": "snowflake",
-            "name": "Bad Snowflake",
-            "config": {"warehouse": "MY_WH"},
-        },
-        format="json",
-    )
-
-    # Then
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json()["status"] == expected_status
+    assert response.json()["status_detail"] == expected_detail
+    assert response.json()["config"] == {
+        "account_identifier": "ACME-ORG_PROD",
+        "warehouse": "FLAGSMITH_WH",
+        "database": "FLAGSMITH",
+        "schema": "FLAGSMITH_EXP",
+        "role": "FLAGSMITH_ROLE",
+        "user": "FLAGSMITH_SERVICE",
+    }
+    assert response.json()["name"] == f"Snowflake Warehouse - {environment.name}"
+    assert "credentials" not in response.json()
 
 
 def test_post__flagsmith_with_config__returns_400(
@@ -453,39 +456,17 @@ def test_post__custom_name__uses_provided_name(
     assert response.json()["name"] == "My Custom Name"
 
 
-def test_post__snowflake_no_name__auto_generates_name(
-    admin_client: APIClient,
-    environment: Environment,
-    warehouse_connection_url: str,
-) -> None:
-    # Given / When
-    response = admin_client.post(
-        warehouse_connection_url,
-        data={
-            "warehouse_type": "snowflake",
-            "config": {"account_identifier": "xy12345.us-east-1"},
-        },
-        format="json",
-    )
-
-    # Then
-    assert response.status_code == status.HTTP_201_CREATED
-    assert response.json()["name"] == f"Snowflake Warehouse - {environment.name}"
-
-
+@pytest.mark.usefixtures("snowflake_account")
 def test_post__snowflake_soft_deleted__creates_new_record_with_new_config(
     admin_client: APIClient,
     environment: Environment,
+    snowflake_payload: dict[str, object],
     warehouse_connection_url: str,
 ) -> None:
     # Given
     create_response = admin_client.post(
         warehouse_connection_url,
-        data={
-            "warehouse_type": "snowflake",
-            "name": "Original",
-            "config": {"account_identifier": "old.us-east-1"},
-        },
+        data={**snowflake_payload, "name": "Original"},
         format="json",
     )
     original_id = create_response.json()["id"]
@@ -499,9 +480,9 @@ def test_post__snowflake_soft_deleted__creates_new_record_with_new_config(
     response = admin_client.post(
         warehouse_connection_url,
         data={
-            "warehouse_type": "snowflake",
+            **snowflake_payload,
             "name": "Replacement",
-            "config": {"account_identifier": "new.us-west-2"},
+            "config": {"account_identifier": "acme-org_prod", "warehouse": "new_wh"},
         },
         format="json",
     )
@@ -510,25 +491,21 @@ def test_post__snowflake_soft_deleted__creates_new_record_with_new_config(
     assert response.status_code == status.HTTP_201_CREATED
     data = response.json()
     assert data["id"] != original_id
-    assert data["status"] == "created"
+    assert data["status"] == "connected"
     assert data["name"] == "Replacement"
-    assert data["config"]["account_identifier"] == "new.us-west-2"
+    assert data["config"]["warehouse"] == "NEW_WH"
 
 
+@pytest.mark.usefixtures("snowflake_account")
 def test_post__different_type_soft_deleted__creates_new_record(
     admin_client: APIClient,
     environment: Environment,
+    snowflake_payload: dict[str, object],
     warehouse_connection_url: str,
 ) -> None:
     # Given
     create_response = admin_client.post(
-        warehouse_connection_url,
-        data={
-            "warehouse_type": "snowflake",
-            "name": "Old Snowflake",
-            "config": {"account_identifier": "xy12345.us-east-1"},
-        },
-        format="json",
+        warehouse_connection_url, data=snowflake_payload, format="json"
     )
     original_id = create_response.json()["id"]
     url = reverse(
@@ -551,95 +528,49 @@ def test_post__different_type_soft_deleted__creates_new_record(
     assert data["warehouse_type"] == "flagsmith"
 
 
-def test_patch__snowflake_update_config__returns_200(
+def test_patch__snowflake_partial_config__keeps_stored_details_and_reverifies(
     admin_client: APIClient,
     environment: Environment,
-    warehouse_connection_url: str,
+    snowflake_account: RequestsMockerFixture,
+    snowflake_connection: WarehouseConnection,
+    snowflake_private_key_pem: str,
 ) -> None:
     # Given
-    create_response = admin_client.post(
-        warehouse_connection_url,
-        data={
-            "warehouse_type": "snowflake",
-            "name": "My Snowflake",
-            "config": {"account_identifier": "xy12345.us-east-1"},
-        },
-        format="json",
-    )
-    connection_id = create_response.json()["id"]
     url = reverse(
         "api-v1:environments:experimentation:warehouse-connections-detail",
-        args=[environment.api_key, connection_id],
+        args=[environment.api_key, snowflake_connection.id],
     )
 
     # When
     response = admin_client.patch(
         url,
-        data={"config": {"account_identifier": "new.us-west-2", "warehouse": "BIG_WH"}},
+        data={"config": {"warehouse": "big_wh"}},
         format="json",
     )
 
     # Then
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
-    assert data["config"]["account_identifier"] == "new.us-west-2"
+    assert data["status"] == "connected"
+    assert data["config"]["account_identifier"] == "ACME-ORG_PROD"
     assert data["config"]["warehouse"] == "BIG_WH"
-
-
-def test_patch__snowflake_partial_config__preserves_stored_account_identifier(
-    admin_client: APIClient,
-    environment: Environment,
-    warehouse_connection_url: str,
-) -> None:
-    # Given
-    create_response = admin_client.post(
-        warehouse_connection_url,
-        data={
-            "warehouse_type": "snowflake",
-            "name": "My Snowflake",
-            "config": {"account_identifier": "xy12345.us-east-1"},
-        },
-        format="json",
-    )
-    connection_id = create_response.json()["id"]
-    url = reverse(
-        "api-v1:environments:experimentation:warehouse-connections-detail",
-        args=[environment.api_key, connection_id],
-    )
-
-    # When
-    response = admin_client.patch(
-        url,
-        data={"config": {"warehouse": "BIG_WH"}},
-        format="json",
-    )
-
-    # Then
-    assert response.status_code == status.HTTP_200_OK
-    data = response.json()
-    assert data["config"]["account_identifier"] == "xy12345.us-east-1"
-    assert data["config"]["warehouse"] == "BIG_WH"
+    assert snowflake_account.request_history[-1].json()["warehouse"] == "BIG_WH"
+    snowflake_connection.refresh_from_db()
+    assert snowflake_connection.credentials == {
+        "private_key": snowflake_private_key_pem
+    }
 
 
 def test_patch__snowflake_update_name__returns_200(
     admin_client: APIClient,
     environment: Environment,
-    warehouse_connection_url: str,
+    snowflake_connection: WarehouseConnection,
+    requests_mock: RequestsMockerFixture,
 ) -> None:
     # Given
-    create_response = admin_client.post(
-        warehouse_connection_url,
-        data={
-            "warehouse_type": "snowflake",
-            "name": "Original Name",
-            "config": {"account_identifier": "xy12345.us-east-1"},
-        },
-        format="json",
-    )
-    connection_id = create_response.json()["id"]
     url = reverse(
         "api-v1:environments:experimentation:warehouse-connections-detail",
-        args=[environment.api_key, connection_id],
+        args=[environment.api_key, snowflake_connection.id],
     )
 
     # When
@@ -652,6 +583,7 @@ def test_patch__snowflake_update_name__returns_200(
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["name"] == "Updated Name"
+    assert requests_mock.call_count == 0
 
 
 def test_patch__flagsmith_update_name__returns_200(
@@ -753,41 +685,42 @@ def test_patch__exists__creates_audit_log(
 
 
 @pytest.mark.parametrize(
-    "warehouse_type, config, expected_total, expected_unique",
-    [
-        (WarehouseType.FLAGSMITH, None, 12, 3),
-        (
-            WarehouseType.SNOWFLAKE,
-            {"account_identifier": "xy12345.us-east-1"},
-            None,
-            None,
-        ),
-    ],
+    "connection_fixture, expected_total, expected_unique",
+    [("warehouse_connection", 12, 3), ("snowflake_connection", 5, 2)],
     ids=["flagsmith", "snowflake"],
 )
 def test_get__warehouse_type__returns_expected_event_stats(
     admin_client: APIClient,
-    environment: Environment,
     warehouse_connection_url: str,
     mocker: MockerFixture,
-    warehouse_type: str,
-    config: dict[str, str] | None,
-    expected_total: int | None,
-    expected_unique: int | None,
+    requests_mock: RequestsMockerFixture,
+    request: pytest.FixtureRequest,
+    connection_fixture: str,
+    expected_total: int,
+    expected_unique: int,
 ) -> None:
     # Given
-    WarehouseConnection.objects.create(
-        environment=environment,
-        warehouse_type=warehouse_type,
-        name="Warehouse",
-        config=config,
-    )
+    request.getfixturevalue(connection_fixture)
     mocker.patch(
         "experimentation.warehouses.flagsmith.get_warehouse_event_stats",
         return_value=WarehouseEventStats(
             total_events_received=12,
             unique_events_count=3,
         ),
+    )
+    requests_mock.post(
+        SNOWFLAKE_STATEMENTS_URL,
+        json={
+            "statementHandle": "01-handle",
+            "resultSetMetaData": {
+                "rowType": [
+                    {"name": "TOTAL", "type": "fixed", "scale": 0},
+                    {"name": "UNIQUE_EVENTS", "type": "fixed", "scale": 0},
+                    {"name": "LAST_EVENT_AT", "type": "timestamp_ntz"},
+                ]
+            },
+            "data": [["5", "2", "1767225600.000000000"]],
+        },
     )
 
     # When
@@ -834,46 +767,51 @@ def test_get__pending_connection_with_events__shows_stats_but_does_not_flip(
     assert connection.status == WarehouseConnectionStatus.PENDING_CONNECTION
 
 
-@pytest.mark.parametrize(
-    "warehouse_type, config, expected_status",
-    [
-        (WarehouseType.FLAGSMITH, None, status.HTTP_200_OK),
-        (
-            WarehouseType.SNOWFLAKE,
-            {"account_identifier": "xy12345.us-east-1"},
-            status.HTTP_400_BAD_REQUEST,
-        ),
-    ],
-    ids=["flagsmith", "snowflake"],
-)
-def test_test_warehouse_connection__warehouse_type__expected_status(
+def test_test_warehouse_connection__flagsmith__marks_pending_connection(
     admin_client: APIClient,
     environment: Environment,
-    warehouse_type: str,
-    config: dict[str, str] | None,
-    expected_status: int,
+    warehouse_connection: WarehouseConnection,
 ) -> None:
     # Given
-    connection = WarehouseConnection.objects.create(
-        environment=environment,
-        warehouse_type=warehouse_type,
-        name="Warehouse",
-        config=config,
-    )
     url = reverse(
         "api-v1:environments:experimentation:warehouse-connections-test-warehouse-connection",
-        args=[environment.api_key, connection.id],
+        args=[environment.api_key, warehouse_connection.id],
     )
 
     # When
     response = admin_client.post(url, format="json")
 
     # Then
-    assert response.status_code == expected_status
-    if expected_status == status.HTTP_200_OK:
-        assert response.json()["status"] == "pending_connection"
-        connection.refresh_from_db()
-        assert connection.status == WarehouseConnectionStatus.PENDING_CONNECTION
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["status"] == "pending_connection"
+    warehouse_connection.refresh_from_db()
+    assert warehouse_connection.status == WarehouseConnectionStatus.PENDING_CONNECTION
+
+
+def test_test_warehouse_connection__verification_unsupported__returns_400(
+    admin_client: APIClient,
+    environment: Environment,
+    clickhouse_connection: WarehouseConnection,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mocker.patch(
+        "experimentation.views.verify_warehouse_connection",
+        side_effect=UnsupportedWarehouseOperation(),
+    )
+    url = reverse(
+        "api-v1:environments:experimentation:warehouse-connections-test-warehouse-connection",
+        args=[environment.api_key, clickhouse_connection.id],
+    )
+
+    # When
+    response = admin_client.post(url, format="json")
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json() == {
+        "detail": "Connection testing is not supported for this warehouse type."
+    }
 
 
 def test_test_warehouse_connection__pending_with_events__flips_to_connected(
@@ -1243,11 +1181,11 @@ def test_post__clickhouse_minimal_payload__applies_defaults_and_generates_name(
         pytest.param(
             {
                 "warehouse_type": "snowflake",
-                "config": {"account_identifier": "xy12345.us-east-1"},
+                "config": {"account_identifier": "acme-org_prod"},
                 "credentials": {"password": "hunter2"},
             },
-            ("credentials",),
-            id="snowflake_with_credentials",
+            ("credentials", "private_key"),
+            id="snowflake_without_private_key",
         ),
         pytest.param(
             {"warehouse_type": "flagsmith", "credentials": {}},
@@ -1280,27 +1218,6 @@ def test_post__clickhouse_minimal_payload__applies_defaults_and_generates_name(
             },
             ("config", "database"),
             id="database_not_string",
-        ),
-        pytest.param(
-            {"warehouse_type": "snowflake", "config": "not-a-dict"},
-            ("config",),
-            id="snowflake_non_dict_config",
-        ),
-        pytest.param(
-            {
-                "warehouse_type": "snowflake",
-                "config": {"account_identifier": "xy12345", "extra": "bad"},
-            },
-            ("config", "extra"),
-            id="snowflake_unknown_key",
-        ),
-        pytest.param(
-            {
-                "warehouse_type": "snowflake",
-                "config": {"account_identifier": "xy12345", "warehouse": 123},
-            },
-            ("config", "warehouse"),
-            id="snowflake_non_string_value",
         ),
     ],
 )
@@ -1792,20 +1709,20 @@ def test_get_events__warehouse_availability__maps_to_response(
     assert response.json() == expected_body
 
 
-def test_get_events__unsupported_type__returns_400(
+def test_get_events__event_listing_unsupported__returns_400(
     admin_client: APIClient,
     environment: Environment,
+    warehouse_connection: WarehouseConnection,
+    mocker: MockerFixture,
 ) -> None:
     # Given
-    connection = WarehouseConnection.objects.create(
-        environment=environment,
-        warehouse_type=WarehouseType.SNOWFLAKE,
-        name="Snowflake",
-        config={"account_identifier": "acme"},
+    mocker.patch(
+        "experimentation.views.get_warehouse_event_names",
+        side_effect=UnsupportedWarehouseOperation(),
     )
     url = reverse(
         "api-v1:environments:experimentation:warehouse-connections-events",
-        args=[environment.api_key, connection.id],
+        args=[environment.api_key, warehouse_connection.id],
     )
 
     # When
