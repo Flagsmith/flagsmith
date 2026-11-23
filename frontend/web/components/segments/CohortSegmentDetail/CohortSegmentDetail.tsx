@@ -4,6 +4,10 @@ import moment from 'moment'
 import Constants from 'common/constants'
 import Format from 'common/utils/format'
 import Utils from 'common/utils/utils'
+import {
+  clearCohortSyncTotal,
+  getCohortSyncProgress,
+} from 'common/utils/cohortSyncTotal'
 import { Segment } from 'common/types/responses'
 import {
   useGetCohortQuery,
@@ -69,19 +73,19 @@ const CohortSegmentDetail: FC<CohortSegmentDetailType> = ({
   const isSyncing = pendingCount > 0
   const identityCount = appliedCount + (counts?.pending_add ?? 0)
 
-  // Snapshot the pending work when a synchronisation starts; applied totals
-  // shrink on removals so they cannot measure progress.
-  const [syncTotal, setSyncTotal] = useState(0)
-  const syncDone = Math.max(syncTotal - pendingCount, 0)
+  const cohortId = cohort?.id
+  const version = data?.version
+  const syncProgress =
+    isSyncing && cohortId !== undefined && version !== undefined
+      ? getCohortSyncProgress(cohortId, version, pendingCount)
+      : null
 
   useEffect(() => {
     setPollingInterval(isSyncing ? SYNC_POLL_INTERVAL_MS : 0)
-    if (isSyncing) {
-      setSyncTotal((total) => Math.max(total, pendingCount))
-    } else {
-      setSyncTotal(0)
+    if (!isSyncing && cohortId !== undefined && version !== undefined) {
+      clearCohortSyncTotal(cohortId, version)
     }
-  }, [isSyncing, pendingCount])
+  }, [isSyncing, cohortId, version])
 
   useEffect(() => {
     setName(segment.name)
@@ -212,24 +216,29 @@ const CohortSegmentDetail: FC<CohortSegmentDetailType> = ({
               <span className='fw-semibold'>…</span>
             )}
           </InfoRow>
-          {isSyncing && (
-            <div className='d-flex flex-column mx-0 gap-1'>
+          {isSyncing &&
+            (syncProgress ? (
+              <div className='d-flex flex-column mx-0 gap-1'>
+                <div className='fs-small text-secondary'>
+                  {syncProgress.done.toLocaleString()} of{' '}
+                  {syncProgress.total.toLocaleString()} applied
+                </div>
+                <div className='cohort-segment-detail__progress-track bg-surface-default'>
+                  <div
+                    className='cohort-segment-detail__progress-bar bg-surface-action'
+                    style={{
+                      width: `${Math.round(
+                        (syncProgress.done / syncProgress.total) * 100,
+                      )}%`,
+                    }}
+                  />
+                </div>
+              </div>
+            ) : (
               <div className='fs-small text-secondary'>
-                {syncDone.toLocaleString()} of {syncTotal.toLocaleString()}{' '}
-                applied
+                {pendingCount.toLocaleString()} left to apply
               </div>
-              <div className='cohort-segment-detail__progress-track bg-surface-default'>
-                <div
-                  className='cohort-segment-detail__progress-bar bg-surface-action'
-                  style={{
-                    width: `${
-                      syncTotal ? Math.round((syncDone / syncTotal) * 100) : 0
-                    }%`,
-                  }}
-                />
-              </div>
-            </div>
-          )}
+            ))}
         </div>
         {!readOnly && (
           <CohortCsvSync
