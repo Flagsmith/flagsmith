@@ -14,6 +14,7 @@ import {
 } from 'common/services/useExperiment'
 import { Experiment } from 'common/types/responses'
 import Tooltip from 'components/Tooltip'
+import CompleteExperimentModal from 'components/experiments/CompleteExperimentModal'
 import {
   ENABLE_EXPERIMENT_LIFECYCLE,
   getPrimaryMetric,
@@ -64,26 +65,43 @@ const ExperimentDetailHeader: FC<ExperimentDetailHeaderProps> = ({
   }, [pauseExperiment, params])
 
   const handleComplete = useCallback(() => {
-    openConfirm({
-      body: (
-        <span>
-          Are you sure you want to end <strong>{experiment.name}</strong>? This
-          action cannot be undone.
-        </span>
-      ),
-      noText: 'Cancel',
-      onYes: async () => {
-        try {
-          await completeExperiment(params).unwrap()
-          toast('Experiment completed')
-        } catch {
-          toast('Failed to complete experiment', 'danger')
-        }
-      },
-      title: 'End experiment?',
-      yesText: 'End Experiment',
-    })
-  }, [completeExperiment, experiment.name, params])
+    if (!Utils.getFlagsmithHasFeature('experiment_rollout_decision')) {
+      openConfirm({
+        body: (
+          <span>
+            Are you sure you want to end <strong>{experiment.name}</strong>?
+            This action cannot be undone.
+          </span>
+        ),
+        noText: 'Cancel',
+        onYes: async () => {
+          try {
+            await completeExperiment(params).unwrap()
+            toast('Experiment completed')
+          } catch {
+            toast('Failed to complete experiment', 'danger')
+          }
+        },
+        title: 'End experiment?',
+        yesText: 'End Experiment',
+      })
+      return
+    }
+    openModal(
+      'Complete experiment',
+      <CompleteExperimentModal
+        environmentId={environmentId}
+        experimentId={experiment.id}
+      />,
+      'p-0',
+    )
+  }, [
+    completeExperiment,
+    environmentId,
+    experiment.id,
+    experiment.name,
+    params,
+  ])
 
   const handleDelete = useCallback(() => {
     openConfirm({

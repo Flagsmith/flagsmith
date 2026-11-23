@@ -27,6 +27,7 @@ import {
   ChangeRequest,
   ExpectedDirection,
   ExperimentAudienceMatch,
+  ExperimentRolloutDecision,
   ExperimentStatus,
   MetricAggregation,
   MetricDirection,
@@ -192,6 +193,11 @@ export type ExperimentRolloutBody = {
     percentage_allocation: number
   }[]
   audience?: ExperimentAudienceBody
+}
+
+export type CompleteExperimentBody = {
+  rollout_decision: ExperimentRolloutDecision
+  rollout_variant?: number
 }
 
 export type UsageGroupBy = 'project' | 'environment'
@@ -1239,6 +1245,11 @@ export type Req = {
     }
   }
   experimentAction: { environmentId: string; experimentId: number }
+  completeExperiment: {
+    environmentId: string
+    experimentId: number
+    body?: CompleteExperimentBody
+  }
   updateExperiment: {
     environmentId: string
     experimentId: number
