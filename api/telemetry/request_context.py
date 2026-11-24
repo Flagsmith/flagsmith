@@ -15,6 +15,8 @@ from rest_framework.request import Request
 from rest_framework.views import APIView
 
 from api_keys.user import APIKeyUser
+from environments.models import Environment
+from projects.models import Project
 from users.models import FFAdminUser
 
 
@@ -30,11 +32,52 @@ def bind_api_request_context(request: Request, view: APIView) -> None:
         api_key_user = typing.cast(APIKeyUser, user)
         bind_request_context(organisation__id=api_key_user.key.organisation_id)
 
-    project_pk = view.kwargs.get("project_pk")
-    if isinstance(project_pk, int) or (
-        isinstance(project_pk, str) and project_pk.isdigit()
-    ):
-        bind_request_context(project__id=int(project_pk))
+    _bind_url_entities(view.kwargs)
+
+
+def _bind_url_entities(url_kwargs: dict[str, typing.Any]) -> None:
+    """
+    Bind the entities the request acts on, best effort, from its URL.
+
+    These describe what the request targets, whether or not it's allowed to.
+    Entities that don't exist, e.g. were deleted, aren't bound.
+    """
+    if (project_id := _get_id(url_kwargs, "project_pk")) is not None:
+        bind_request_context(project__id=project_id)
+        # NOTE: Most views load the project anyway, but in too many places
+        # to reuse; this is a cheap primary key lookup. It filters by `id`, as
+        # `pk` lookups include soft-deleted projects.
+        organisation_id = (
+            Project.objects.filter(id=project_id)
+            .values_list("organisation_id", flat=True)
+            .first()
+        )
+        if organisation_id is not None:
+            bind_request_context(organisation__id=organisation_id)
+
+    if (feature_id := _get_id(url_kwargs, "feature_pk")) is not None:
+        bind_request_context(feature__id=feature_id)
+
+    if environment_api_key := url_kwargs.get("environment_api_key"):
+        environment_ids = (
+            Environment.objects.filter(api_key=environment_api_key)
+            .values_list("id", "project_id", "project__organisation_id")
+            .first()
+        )
+        if environment_ids is not None:
+            environment_id, project_id, organisation_id = environment_ids
+            bind_request_context(
+                environment__id=environment_id,
+                project__id=project_id,
+                organisation__id=organisation_id,
+            )
+
+
+def _get_id(url_kwargs: dict[str, typing.Any], name: str) -> int | None:
+    value = url_kwargs.get(name)
+    if isinstance(value, int) or (isinstance(value, str) and value.isdigit()):
+        return int(value)
+    return None
 
 
 def install() -> None:

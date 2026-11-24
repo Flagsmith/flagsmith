@@ -6,6 +6,7 @@ from rest_framework.test import APIClient
 
 from environments.models import Environment
 from organisations.models import Organisation, OrganisationRole
+from projects.models import Project
 from telemetry.middleware import ClientUsageLoggerMiddleware
 from users.models import FFAdminUser
 
@@ -34,11 +35,12 @@ def test_client_usage_logger_middleware__mcp_organisation_id_in_request_context_
     # Given
     other_organisation = Organisation.objects.create(name="Other Org")
     staff_user.add_organisation(other_organisation, role=OrganisationRole.ADMIN)
+    other_project = Project.objects.create(
+        name="Other Project", organisation=other_organisation
+    )
 
     # When
-    response = staff_client.get(
-        f"/api/v1/organisations/{other_organisation.pk}/invites/"
-    )
+    response = staff_client.get(f"/api/v1/projects/{other_project.pk}/features/")
 
     # Then
     assert response.status_code == 200
@@ -47,8 +49,9 @@ def test_client_usage_logger_middleware__mcp_organisation_id_in_request_context_
             "level": "info",
             "event": "tool.called",
             "http__request__method": "GET",
-            "http__route": "/api/v1/organisations/{organisation_pk}/invites/",
+            "http__route": "/api/v1/projects/{project_pk}/features/",
             "organisation__id": other_organisation.pk,
+            "project__id": other_project.pk,
             "status": "success",
             "user__id": str(staff_user.uuid),
         }
@@ -240,10 +243,13 @@ def test_client_usage_logger_middleware__cli_organisation_id_in_request_context_
     # Given
     other_organisation = Organisation.objects.create(name="Other Org")
     staff_user.add_organisation(other_organisation, role=OrganisationRole.ADMIN)
+    other_project = Project.objects.create(
+        name="Other Project", organisation=other_organisation
+    )
 
     # When
     response = staff_client.get(
-        f"/api/v1/organisations/{other_organisation.pk}/invites/",
+        f"/api/v1/projects/{other_project.pk}/features/",
         HTTP_USER_AGENT=CLI_USER_AGENT,
     )
 
@@ -254,7 +260,8 @@ def test_client_usage_logger_middleware__cli_organisation_id_in_request_context_
             "level": "info",
             "event": "request.made",
             "http__request__method": "GET",
-            "http__route": "/api/v1/organisations/{organisation_pk}/invites/",
+            "http__route": "/api/v1/projects/{project_pk}/features/",
+            "project__id": other_project.pk,
             "cli__version": "2.0.0",
             "cli__os": "darwin",
             "cli__arch": "arm64",

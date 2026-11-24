@@ -79,8 +79,8 @@ class ClientUsageLoggerMiddleware:
         """Obtain the organisation ID from the request context."""
         from organisations.models import Organisation
 
-        # Bound by the permission layer for organisations the user belongs to,
-        # or on authentication for master API keys
+        # Bound for master API keys, and from the URL of project or environment
+        # routes
         if isinstance(organisation_id := get_request_context("organisation__id"), int):
             return organisation_id
 

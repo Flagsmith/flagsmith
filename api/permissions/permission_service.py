@@ -41,13 +41,8 @@ def get_active_membership_filter(user: "FFAdminUser", prefix: str = "") -> Q:
 def is_user_organisation_admin(
     user: "FFAdminUser", organisation: Union[Organisation, int]
 ) -> bool:
-    # NOTE: Imported here, as it imports DRF, which imports this module's
-    # importers, i.e. the authentication classes, through its settings
-    from common.core.request_context import bind_request_context
-
     user_organisation = user.get_user_organisation(organisation)
     if user_organisation is not None and user_organisation.is_active:
-        bind_request_context(organisation__id=user_organisation.organisation_id)
         return user_organisation.role == OrganisationRole.ADMIN.name
     return False
 

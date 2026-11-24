@@ -232,7 +232,7 @@ def test_list_cohorts__multiple_cohorts_without_rbac__membership_counts_in_const
         edge_cohort,
         with_environment_permissions,
         django_assert_num_queries,
-        num_queries=10,
+        num_queries=11,
     )
 
 
@@ -255,7 +255,7 @@ def test_list_cohorts__multiple_cohorts_with_rbac__membership_counts_in_constant
         edge_cohort,
         with_environment_permissions,
         django_assert_num_queries,
-        num_queries=12,
+        num_queries=13,
     )
 
 
