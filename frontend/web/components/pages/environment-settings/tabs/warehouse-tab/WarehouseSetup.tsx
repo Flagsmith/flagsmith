@@ -4,9 +4,7 @@ import Button from 'components/base/forms/Button'
 import AccountStore from 'common/stores/account-store'
 import Utils from 'common/utils/utils'
 import PlanBasedBanner from 'components/PlanBasedAccess'
-import { ConfigFormData } from './ConfigForm'
 import SelectableCard from 'components/base/SelectableCard'
-import ConfigForm from './ConfigForm'
 import ClickHouseConfigForm from './ClickHouseConfigForm'
 import WarehouseSqlSnippet from './WarehouseSqlSnippet'
 import WarehouseSetupSteps from './WarehouseSetupSteps'
@@ -18,6 +16,12 @@ import { DatabricksFormData } from './databricksConfig'
 import PostgresConfigForm from './PostgresConfigForm'
 import { getPostgresOnboardingSql } from './postgresSetupSql'
 import { PostgresFormData } from './postgresConfig'
+import SnowflakeConfigForm from './SnowflakeConfigForm'
+import {
+  getSnowflakeSetupSql,
+  SNOWFLAKE_KEY_PAIR_COMMANDS,
+} from './snowflakeSetupSql'
+import { SnowflakeFormData } from './snowflakeConfig'
 import {
   getMinimumPlans,
   getPlanAvailabilityMessage,
@@ -33,7 +37,7 @@ type WarehouseSetupProps = {
   environmentId: string
   onEnableFlagsmith: () => void
   onEnableFlagsmithDatabase: () => void
-  onCreateSnowflake: (data: ConfigFormData) => Promise<unknown>
+  onCreateSnowflake: (data: SnowflakeFormData) => Promise<unknown>
   onCreateClickHouse: (data: ClickHouseFormData) => Promise<unknown>
   onCreateDatabricks: (data: DatabricksFormData) => Promise<unknown>
   onCreatePostgres: (data: PostgresFormData) => Promise<unknown>
@@ -233,10 +237,41 @@ const WarehouseSetup: FC<WarehouseSetupProps> = ({
       )}
 
       {activeType === 'snowflake' && (
-        <ConfigForm
-          onSave={onCreateSnowflake}
-          onCancel={() => setSelectedType(undefined)}
-        />
+        <WarehouseSetupSteps
+          configure={
+            <>
+              <ol className='text-muted mb-3'>
+                <li>
+                  Generate a key pair on your machine:
+                  <WarehouseSqlSnippet
+                    code={SNOWFLAKE_KEY_PAIR_COMMANDS}
+                    language='bash'
+                  />
+                </li>
+                <li>
+                  Note your account identifier (ORGNAME-ACCOUNTNAME) from
+                  Account details in Snowflake.
+                </li>
+              </ol>
+              <p className='text-muted mb-3'>
+                In this script, replace {'<PUBLIC_KEY>'} with the contents of
+                flagsmith_key.pub, without the BEGIN and END lines. Then run it
+                in a Snowflake SQL worksheet as an account admin, using{' '}
+                <strong>Run All</strong>. Otherwise Snowflake runs only the
+                statement under the cursor, and the rest fails with &quot;does
+                not exist or not authorized&quot;. It is safe to run more than
+                once.
+              </p>
+              <WarehouseSqlSnippet code={getSnowflakeSetupSql()} />
+            </>
+          }
+          connectDescription='Enter the connection details and paste the contents of flagsmith_key.p8 from step 1.'
+        >
+          <SnowflakeConfigForm
+            environmentId={environmentId}
+            onSave={onCreateSnowflake}
+          />
+        </WarehouseSetupSteps>
       )}
 
       {activeType === 'clickhouse' && (
@@ -248,7 +283,7 @@ const WarehouseSetup: FC<WarehouseSetupProps> = ({
                 administrative user. Replace {'<USER>'} and {'<YOUR_PASSWORD>'}{' '}
                 with your own values.
               </p>
-              <WarehouseSqlSnippet sql={getClickHouseOnboardingSql()} />
+              <WarehouseSqlSnippet code={getClickHouseOnboardingSql()} />
             </>
           }
           connectDescription='Enter the connection details for the user you created in step 1.'
@@ -291,7 +326,7 @@ const WarehouseSetup: FC<WarehouseSetupProps> = ({
                 more than once. Replace {'<CATALOG>'} and {'<CLIENT_ID>'} with
                 your own values.
               </p>
-              <WarehouseSqlSnippet sql={getDatabricksSetupSql()} />
+              <WarehouseSqlSnippet code={getDatabricksSetupSql()} />
               <p className='text-muted mb-0'>
                 Service principal secrets expire. When you rotate the secret in
                 Databricks, update it here too.
@@ -318,7 +353,7 @@ const WarehouseSetup: FC<WarehouseSetupProps> = ({
                 PostgreSQL-compatible services such as Supabase, Neon, Amazon
                 RDS and Aurora, AlloyDB and Cloud SQL.
               </p>
-              <WarehouseSqlSnippet sql={getPostgresOnboardingSql()} />
+              <WarehouseSqlSnippet code={getPostgresOnboardingSql()} />
             </>
           }
           connectDescription='Enter the connection details for the user you created in step 1.'

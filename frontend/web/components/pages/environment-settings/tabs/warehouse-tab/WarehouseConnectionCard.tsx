@@ -26,6 +26,10 @@ import {
   getPostgresSetupSql,
   POSTGRES_SETUP_SQL_LABEL,
 } from './postgresSetupSql'
+import {
+  getSnowflakeSetupSql,
+  SNOWFLAKE_SETUP_SQL_LABEL,
+} from './snowflakeSetupSql'
 import WarehouseStats from './WarehouseStats'
 import {
   isFlagsmithDatabaseConnection,
@@ -215,6 +219,21 @@ const WarehouseConnectionCard: FC<WarehouseConnectionCardProps> = ({
               sql={getPostgresSetupSql(
                 (connection.config as PostgresConfig).schema,
               )}
+            />
+          </div>
+        )}
+      {connection.warehouse_type === 'snowflake' &&
+        'account_identifier' in connection.config && (
+          <div className='mt-3'>
+            <WarehouseSetupSqlHelp
+              label={SNOWFLAKE_SETUP_SQL_LABEL}
+              sql={getSnowflakeSetupSql({
+                database: connection.config.database,
+                role: connection.config.role,
+                schema: connection.config.schema,
+                user: connection.config.user,
+                warehouse: connection.config.warehouse,
+              })}
             />
           </div>
         )}

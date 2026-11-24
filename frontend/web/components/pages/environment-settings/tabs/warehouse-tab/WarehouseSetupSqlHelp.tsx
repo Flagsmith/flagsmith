@@ -26,7 +26,7 @@ const WarehouseSetupSqlHelp: FC<WarehouseSetupSqlHelpProps> = ({
         expanded={visible}
         onClick={() => setOverride(!visible)}
       />
-      {visible && <WarehouseSqlSnippet sql={sql} />}
+      {visible && <WarehouseSqlSnippet code={sql} />}
     </div>
   )
 }

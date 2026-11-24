@@ -33,13 +33,6 @@
     white-space: pre-line;
   }
 
-  &__note {
-    padding: 12px 14px;
-    background: var(--color-surface-muted);
-    border: 1px solid var(--color-border-default);
-    border-radius: var(--radius-md);
-  }
-
   &__actions {
     display: flex;
     justify-content: flex-end;

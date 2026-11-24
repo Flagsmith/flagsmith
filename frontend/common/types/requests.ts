@@ -173,6 +173,7 @@ type WarehouseConfigValue = string | number | boolean
 type WarehouseCredentials =
   | { password: string }
   | { client_id: string; client_secret: string }
+  | { private_key: string }
 
 // Omitting `audience` leaves the stored audience untouched; an empty
 // `segment_ids` clears it back to every identity in the environment.

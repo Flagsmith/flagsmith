@@ -14,6 +14,7 @@ type WarehouseConfigFieldProps = {
   disabled?: boolean
   type?: string
   autoComplete?: string
+  textarea?: boolean
 }
 
 const WarehouseConfigField: FC<WarehouseConfigFieldProps> = ({
@@ -25,6 +26,7 @@ const WarehouseConfigField: FC<WarehouseConfigFieldProps> = ({
   label,
   onChange,
   placeholder,
+  textarea,
   type,
   value,
 }) => {
@@ -41,19 +43,34 @@ const WarehouseConfigField: FC<WarehouseConfigFieldProps> = ({
       >
         {label}
       </FieldLabel>
-      <Input
-        id={id}
-        value={value}
-        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-          onChange(e.target.value)
-        }
-        placeholder={placeholder}
-        disabled={disabled}
-        type={type}
-        autoComplete={autoComplete}
-        aria-invalid={!!error}
-        aria-describedby={describedBy || undefined}
-      />
+      {textarea ? (
+        <textarea
+          id={id}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          disabled={disabled}
+          autoComplete={autoComplete}
+          spellCheck={false}
+          className='font-monospace'
+          aria-invalid={!!error}
+          aria-describedby={describedBy || undefined}
+        />
+      ) : (
+        <Input
+          id={id}
+          value={value}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+            onChange(e.target.value)
+          }
+          placeholder={placeholder}
+          disabled={disabled}
+          type={type}
+          autoComplete={autoComplete}
+          aria-invalid={!!error}
+          aria-describedby={describedBy || undefined}
+        />
+      )}
       <FieldError id={errorId} error={error} />
       {hint && (
         <span id={hintId} className='fs-captionXSmall text-tertiary'>

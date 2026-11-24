@@ -5,17 +5,21 @@ import Icon from 'components/icons/Icon'
 import Utils from 'common/utils/utils'
 
 type WarehouseSqlSnippetProps = {
-  sql: string
+  code: string
+  language?: string
 }
 
-const WarehouseSqlSnippet: FC<WarehouseSqlSnippetProps> = ({ sql }) => (
+const WarehouseSqlSnippet: FC<WarehouseSqlSnippetProps> = ({
+  code,
+  language = 'sql',
+}) => (
   <div className='hljs-container mt-2 mb-2'>
-    <Highlight forceExpanded className='sql'>
-      {sql}
+    <Highlight forceExpanded className={language}>
+      {code}
     </Highlight>
     <div className='flex-column hljs-docs'>
       <Button
-        onClick={() => Utils.copyToClipboard(sql)}
+        onClick={() => Utils.copyToClipboard(code)}
         theme='primary'
         size='xSmall'
       >
