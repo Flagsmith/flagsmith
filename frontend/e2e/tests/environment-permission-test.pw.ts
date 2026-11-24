@@ -27,10 +27,12 @@ test.describe('Environment Permission Tests', () => {
       login,
       logout,
       setUserPermission,
+      selectEnvironment,
       toggleFeature,
       waitForElementClickable,
       waitForElementNotClickable,
       waitForElementNotExist,
+      waitForEnvironmentSelect,
       waitForElementVisible,
       waitForFeatureSwitchClickable,
     } = createHelpers(page);
@@ -69,15 +71,17 @@ test.describe('Environment Permission Tests', () => {
     log('Create new environment')
     await login(E2E_USER, PASSWORD)
     await gotoProject(PROJECT_NAME)
-    await waitForElementVisible(byId('switch-environment-development'))
+    await waitForEnvironmentSelect()
     await click('#create-env-link')
     await createEnvironment('Production')
     await logout()
     log('User without permissions cannot see environment')
     await login(E2E_NON_ADMIN_USER_WITH_ENV_PERMISSIONS, PASSWORD)
     await gotoProject(PROJECT_NAME)
-    await waitForElementVisible(byId('switch-environment-development'))
-    await waitForElementNotExist(byId('switch-environment-production'))
+    await waitForEnvironmentSelect()
+    await page.getByRole('combobox', { name: 'Environment' }).click()
+    await expect(page.getByRole('option', { name: 'Production', exact: true })).toHaveCount(0)
+    await page.keyboard.press('Escape')
     await logout()
 
     log('Grant view environment permission')
@@ -87,7 +91,7 @@ test.describe('Environment Permission Tests', () => {
     log('User with permissions can see environment')
     await login(E2E_NON_ADMIN_USER_WITH_ENV_PERMISSIONS, PASSWORD)
     await gotoProject(PROJECT_NAME)
-    await waitForElementVisible(byId('switch-environment-production'))
+    await selectEnvironment('Production')
     await logout()
 
     log('User with permissions can update feature state')
@@ -121,7 +125,7 @@ test.describe('Environment Permission Tests', () => {
     await login(E2E_NON_ADMIN_USER_WITH_ENV_PERMISSIONS, PASSWORD)
     await gotoProject(PROJECT_NAME)
     await waitForFeatureSwitchClickable('test_feature', 'on', true)
-    await click(byId('switch-environment-production'))
+    await selectEnvironment('Production')
     await waitForFeatureSwitchClickable('test_feature', 'off', false)
     await gotoFeature('test_feature')
     await waitForElementNotClickable(byId('update-feature-btn'))

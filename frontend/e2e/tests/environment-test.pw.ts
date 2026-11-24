@@ -10,6 +10,7 @@ test.describe('Environment Tests', () => {
       gotoProject,
       login,
       setText,
+      waitForEnvironmentSelect,
       waitForElementVisible,
       waitForToastsToClear,
     } = createHelpers(page);
@@ -17,7 +18,7 @@ test.describe('Environment Tests', () => {
     log('Login')
     await login(E2E_USER, PASSWORD)
     await gotoProject(E2E_TEST_PROJECT)
-    await waitForElementVisible(byId('switch-environment-development'))
+    await waitForEnvironmentSelect()
     log('Create environment')
     await click('#create-env-link')
     await createEnvironment('Staging')
@@ -28,7 +29,7 @@ test.describe('Environment Tests', () => {
     await click('#env-settings-link')
     await setText("[name='env-name']", 'Internal')
     await click('#save-env-btn')
-    await waitForElementVisible(byId('switch-environment-internal-active'))
+    await waitForEnvironmentSelect()
     log('Delete environment')
     await click('#delete-env-btn')
     await setText("[name='confirm-env-name']", 'Internal')

@@ -42,6 +42,7 @@ interface SearchableSelectProps {
   options: OptionType[] | GroupedOptionType[]
   value: string | number | null
   dataTest?: string
+  'aria-label'?: string
   isSearchable?: boolean
   displayedLabel?: string
   noOptionsMessage?: string
@@ -55,6 +56,7 @@ interface SearchableSelectProps {
 }
 
 const SearchableSelect: React.FC<SearchableSelectProps> = ({
+  'aria-label': ariaLabel,
   components,
   dataTest,
   displayedLabel,
@@ -73,6 +75,7 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
   return (
     <Select
       data-test={dataTest}
+      aria-label={ariaLabel}
       placeholder={placeholder}
       value={value ? { label: displayedLabel || value, value: value } : null}
       onBlur={onBlur}

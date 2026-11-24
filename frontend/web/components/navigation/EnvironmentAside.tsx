@@ -163,11 +163,8 @@ const EnvironmentAside: FC<HomeAsideType> = ({ environmentId, projectId }) => {
                         <div className='full-width'>
                           {!!environment && (
                             <EnvironmentSelect
-                              dataTest={({ label }) =>
-                                `switch-environment-${label.toLowerCase()}`
-                              }
+                              aria-label='Environment'
                               id='environment-select'
-                              data-test={`switch-environment-${environment.name.toLowerCase()}-active`}
                               styles={{
                                 container: (base: any) => ({
                                   ...base,

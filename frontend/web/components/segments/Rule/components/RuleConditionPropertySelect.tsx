@@ -10,7 +10,6 @@ import SearchableSelect, {
 interface RuleConditionPropertySelectProps {
   ruleIndex: number
   propertyValue: string
-  dataTest: string
   setRuleProperty: (
     index: number,
     property: string,
@@ -23,7 +22,6 @@ interface RuleConditionPropertySelectProps {
 
 const RuleConditionPropertySelect = ({
   allowedContextValues,
-  dataTest,
   isValueFromContext,
   operator,
   propertyValue,
@@ -93,7 +91,7 @@ const RuleConditionPropertySelect = ({
   return (
     <>
       <SearchableSelect
-        dataTest={dataTest}
+        aria-label='Trait / Context value'
         value={propertyValue}
         isClearable={true}
         placeholder={'Trait / Context value'}

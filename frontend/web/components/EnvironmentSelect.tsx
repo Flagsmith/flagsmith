@@ -19,7 +19,7 @@ type EnvironmentSelectType = Partial<Omit<Props, 'value'>> & {
   idField?: 'id' | 'api_key'
   ignore?: string[]
   size?: 'default' | 'select-sm' | 'select-xsm'
-  dataTest?: (value: { label: string }) => string
+  'data-test'?: string
 }
 
 const EnvironmentSelect: FC<EnvironmentSelectType> = ({

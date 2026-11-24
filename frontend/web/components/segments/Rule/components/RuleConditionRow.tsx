@@ -88,7 +88,6 @@ const RuleConditionRow: React.FC<RuleConditionRowProps> = ({
         <div className='d-flex flex-1 flex-row rule align-items-center justify-content-between gap-1 col-8 col-md-10'>
           <div className='col-10 col-sm-4 col-md-4'>
             <RuleConditionPropertySelect
-              dataTest={`${dataTest}-property-${ruleIndex}`}
               ruleIndex={ruleIndex}
               setRuleProperty={setRuleProperty}
               propertyValue={rule.property}
@@ -101,7 +100,7 @@ const RuleConditionRow: React.FC<RuleConditionRowProps> = ({
             !!find(operators, { value: operator })?.label
           ) : (
             <Select
-              data-test={`${dataTest}-operator-${ruleIndex}`}
+              aria-label='Operator'
               value={operator && find(operators, { value: operator })}
               onChange={(value: { value: string }) => {
                 setRuleProperty(ruleIndex, 'operator', value)
