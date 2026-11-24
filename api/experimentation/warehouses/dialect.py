@@ -263,7 +263,7 @@ class SnowflakeDialect:
         return "count(*)"
 
     def count_if(self, cond: str) -> str:
-        return f"count_if({cond})"
+        return f"coalesce(count_if({cond}), 0)"
 
     def count_distinct(self, expr: str) -> str:
         return f"count(DISTINCT {expr})"
