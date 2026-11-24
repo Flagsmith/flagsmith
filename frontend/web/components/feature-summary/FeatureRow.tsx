@@ -27,6 +27,7 @@ import { useGetHealthEventsQuery } from 'common/services/useHealthEvents'
 import { useGetProjectQuery } from 'common/services/useProject'
 import getUserDisplayName from 'common/utils/getUserDisplayName'
 import FeatureName from './FeatureName'
+import FeatureModalTitle from './FeatureModalTitle'
 import FeatureDescription from './FeatureDescription'
 import FeatureTags from './FeatureTags'
 import { useFeatureRowState } from 'components/pages/features/hooks/useFeatureRowState'
@@ -247,24 +248,10 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
             <Icon name='arrow-left' width={20} />
           </IconButton>
         )}
-        <span className='text-truncate'>
-          {/* Phones show just the name so the copy button stays beside it */}
-          <span className='d-none d-md-inline'>
-            {permission ? 'Edit Feature' : 'Feature'}:{' '}
-          </span>
-          {projectFlag.name}
-        </span>
-        <IconButton
-          variant='ghost'
-          size='small'
-          aria-label='Copy feature name'
-          onClick={() => {
-            Utils.copyToClipboard(projectFlag.name)
-          }}
-          className='ms-2 flex-shrink-0'
-        >
-          <Icon width={16} name='copy' />
-        </IconButton>
+        <FeatureModalTitle
+          name={projectFlag.name}
+          label={permission ? 'Edit Feature' : 'Feature'}
+        />
         {ownerChips.length > 0 && (
           <div className='d-none d-md-flex align-items-center gap-1 ms-3'>
             <Icon name='people' width={16} fill='#9DA4AE' />
