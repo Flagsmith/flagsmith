@@ -450,6 +450,7 @@ export default class ManagementAPIKeys extends PureComponent {
         />
         <div className='mt-4'>
           <PageTitle
+            level={2}
             title='API keys'
             cta={
               <Button
