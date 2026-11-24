@@ -9,6 +9,13 @@ type UseOverflowVisibleCountOptions = {
   force?: boolean
 }
 
+// Items added or removed directly are the hook showing or hiding them, which
+// would otherwise measure again in a loop.
+export const isItemContentChange = <T>(
+  record: { target: T },
+  itemsContainer: T,
+) => record.target !== itemsContainer
+
 export const useOverflowVisibleCount = ({
   extraWidth,
   force,
@@ -42,6 +49,26 @@ export const useOverflowVisibleCount = ({
     const newWidths = childEls.map((el) => el.offsetWidth)
     setWidths(newWidths)
   }, [itemCount, force, widths.length, itemsContainerRef])
+
+  // Measure again when an item's content changes, e.g. a badge that loads
+  // after the first measure. Not a ResizeObserver: items stretch to fill the
+  // row, so their size changes every time the visible count does.
+  useLayoutEffect(() => {
+    const itemsCont = itemsContainerRef.current
+    if (force || !itemsCont) return
+
+    const observer = new MutationObserver((records) => {
+      if (records.some((record) => isItemContentChange(record, itemsCont))) {
+        setWidths([])
+      }
+    })
+    observer.observe(itemsCont, {
+      characterData: true,
+      childList: true,
+      subtree: true,
+    })
+    return () => observer.disconnect()
+  }, [force, itemsContainerRef])
 
   // Calculate visible count based
   useLayoutEffect(() => {
