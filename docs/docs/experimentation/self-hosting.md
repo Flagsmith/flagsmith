@@ -61,7 +61,8 @@ table.
 ## Your own warehouse
 
 Events are delivered to your own [ClickHouse](/experimentation/connect-clickhouse),
-[Databricks](/experimentation/connect-databricks) or [PostgreSQL](/experimentation/connect-postgresql).
+[Databricks](/experimentation/connect-databricks), [PostgreSQL](/experimentation/connect-postgresql) or
+[Snowflake](/experimentation/connect-snowflake).
 
 - Also run the event ingestion service, Kafka and warehouse delivery. See [Deploying](#deploying).
 - Suits higher event volumes. See

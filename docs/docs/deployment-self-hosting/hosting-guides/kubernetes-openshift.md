@@ -406,8 +406,8 @@ this, see [Self-Hosting and Open Source](/experimentation/self-hosting). The cha
 - Flagsmith API 2.285.0 or later.
 - Kafka with at least 3 brokers, for the default replication factor of 3, and a login for Flagsmith with the
   [permissions below](#kafka-topics-and-permissions).
-- A data warehouse that you host and run yourself, either ClickHouse or Databricks, reachable from both warehouse
-  delivery and the API.
+- A data warehouse that you host and run yourself, one of ClickHouse, Databricks, PostgreSQL or Snowflake, reachable
+  from both warehouse delivery and the API.
 
 Experiment events are stored in the warehouse rather than in the Flagsmith database, and results are computed by
 querying it, so it is infrastructure you provision before enabling experimentation: the managed Flagsmith warehouse is

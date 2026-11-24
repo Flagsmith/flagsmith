@@ -23,7 +23,7 @@ The managed Flagsmith warehouse is only available on Flagsmith Cloud. When self-
 
 :::note Plans
 
-On Flagsmith Cloud, connecting your own ClickHouse, Databricks or PostgreSQL requires a
+On Flagsmith Cloud, connecting your own ClickHouse, Databricks, PostgreSQL or Snowflake requires a
 [Scale-Up or Enterprise subscription](https://www.flagsmith.com/pricing). Self-hosted Flagsmith has no plan restriction.
 
 :::
@@ -61,8 +61,9 @@ The current status is shown on the warehouse card in **Environment Settings › 
 - **Connected**: events have been received; you are ready to run experiments.
 - **Errored**: the card shows the reason. See Troubleshooting for
   [ClickHouse](/experimentation/connect-clickhouse#troubleshooting),
-  [Databricks](/experimentation/connect-databricks#troubleshooting) or
-  [PostgreSQL](/experimentation/connect-postgresql#troubleshooting); otherwise [contact support](/support/).
+  [Databricks](/experimentation/connect-databricks#troubleshooting),
+  [PostgreSQL](/experimentation/connect-postgresql#troubleshooting) or
+  [Snowflake](/experimentation/connect-snowflake#troubleshooting); otherwise [contact support](/support/).
 
 ## Bring your own warehouse
 
@@ -71,7 +72,8 @@ To store experiment events in your own warehouse, and have Flagsmith compute res
 - [ClickHouse](/experimentation/connect-clickhouse)
 - [Databricks](/experimentation/connect-databricks)
 - [PostgreSQL](/experimentation/connect-postgresql), or a PostgreSQL-compatible service
+- [Snowflake](/experimentation/connect-snowflake)
 
 ## Coming soon
 
-Bring your own warehouse: connections for **Snowflake** and **BigQuery**.
+Bring your own warehouse: a connection for **BigQuery**.
