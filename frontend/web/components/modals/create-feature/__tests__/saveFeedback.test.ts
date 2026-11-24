@@ -1,4 +1,4 @@
-import { getFeatureSaveError } from 'components/modals/create-feature/featureSaveError'
+import { getSaveFeedback } from 'components/modals/create-feature/saveFeedback'
 
 const FALLBACK = 'Could not save this feature. Please try again.'
 const tooLong = {
@@ -10,7 +10,7 @@ const tooLong = {
   status: 400,
 }
 
-describe('getFeatureSaveError', () => {
+describe('getSaveFeedback', () => {
   it.each`
     error                                                                       | expected
     ${undefined}                                                                | ${''}
@@ -21,18 +21,18 @@ describe('getFeatureSaveError', () => {
     ${{ name: ['Name already exists'] }}                                        | ${'Name already exists'}
     ${{ data: '<html>502</html>' }}                                             | ${FALLBACK}
   `('returns "$expected" for $error', ({ error, expected }) => {
-    expect(getFeatureSaveError(error, false)).toEqual({
-      featureError: expected,
-      featureWarning: '',
+    expect(getSaveFeedback(error, false)).toEqual({
+      error: expected,
+      warning: '',
     })
   })
 
   it('turns "no changes" into a warning when the feature has variations', () => {
-    const result = getFeatureSaveError(
+    const result = getSaveFeedback(
       new Error('Feature contains no changes'),
       true,
     )
-    expect(result.featureError).toBe('')
-    expect(result.featureWarning).toContain('no changes')
+    expect(result.error).toBe('')
+    expect(result.warning).toContain('no changes')
   })
 })

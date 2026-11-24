@@ -7,7 +7,7 @@ import Button from 'components/base/forms/Button'
 import Icon from 'components/icons/Icon'
 import InfoMessage from 'components/InfoMessage'
 import Banner from 'components/base/Banner'
-import { getFeatureSaveError } from 'components/modals/create-feature/featureSaveError'
+import { getSaveFeedback } from 'components/modals/create-feature/saveFeedback'
 import WarningMessage from 'components/WarningMessage'
 import ModalHR from 'components/modals/ModalHR'
 import FeatureInPipelineGuard from 'components/release-pipelines/FeatureInPipelineGuard'
@@ -121,7 +121,7 @@ const SegmentOverridesTab: FC<SegmentOverridesTabProps> = ({
 
   const environmentName = environment?.name || ''
 
-  const { featureError, featureWarning } = getFeatureSaveError(
+  const { error: saveError, warning: saveWarning } = getSaveFeedback(
     error,
     !!projectFlag.multivariate_options?.length,
   )
@@ -213,12 +213,12 @@ const SegmentOverridesTab: FC<SegmentOverridesTabProps> = ({
           </div>
           {segmentOverrides ? (
             <>
-              {!!featureError && (
+              {!!saveError && (
                 <Banner type='error' className='mb-3'>
-                  {featureError}
+                  {saveError}
                 </Banner>
               )}
-              <WarningMessage warningMessage={featureWarning} />
+              <WarningMessage warningMessage={saveWarning} />
               <SegmentOverrides
                 setShowCreateSegment={setShowCreateSegment}
                 onCompareChange={setIsComparing}

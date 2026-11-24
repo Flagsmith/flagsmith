@@ -9,6 +9,7 @@ import ErrorMessage from 'components/ErrorMessage'
 import InfoMessage from 'components/InfoMessage'
 import WarningMessage from 'components/WarningMessage'
 import Banner from 'components/base/Banner'
+import { getSaveFeedback } from 'components/modals/create-feature/saveFeedback'
 import Tooltip from 'components/Tooltip'
 import Icon from 'components/icons/Icon'
 import Switch from 'components/Switch'
@@ -51,10 +52,6 @@ function isNegativeNumberString(str: any) {
 
 type FeatureValueTabProps = {
   error: any
-  // Why the last save failed, or a warning about it, shown next to the save
-  // button.
-  saveError?: string
-  saveWarning?: string
   // The flag's prerequisites in the environment, which serve it off while any
   // is off. Undefined where they don't apply, e.g. to identity overrides.
   prerequisites?: PrerequisiteRow[]
@@ -122,11 +119,13 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
   preventFlagDefaults,
   projectFlag,
   projectId,
-  saveError,
-  saveWarning,
   storedFeatureState,
 }) => {
   const isEdit = !!projectFlag?.id
+  const { error: saveError, warning: saveWarning } = getSaveFeedback(
+    error,
+    !!projectFlag?.multivariate_options?.length,
+  )
   const isDisabled = !!noPermissions || !!freeze?.isFrozen
   // Not isDisabled: variations are kept on create, only these two are not.
   const isDefaultDisabled = isDisabled || !!preventFlagDefaults

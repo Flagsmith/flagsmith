@@ -33,7 +33,7 @@ import {
   hasUnmatchedIdentityOverride,
 } from 'common/utils/multivariate'
 import { saveFeatureWithValidation } from 'components/saveFeatureWithValidation'
-import { getFeatureSaveError } from './featureSaveError'
+import { getSaveFeedback } from './saveFeedback'
 import FeatureHistory from 'components/FeatureHistory'
 import { getChangeRequests } from 'common/services/useChangeRequest'
 import FeatureHealthTabContent from 'components/feature-health/FeatureHealthTabContent'
@@ -585,7 +585,7 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
           saveVariationValues,
         }: any,
       ) => {
-        const saveError = getFeatureSaveError(
+        const saveFeedback = getSaveFeedback(
           error,
           !!props.projectFlag?.multivariate_options?.length,
         )
@@ -829,8 +829,6 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                   >
                     <FeatureValueTab
                       error={error}
-                      saveError={saveError.featureError}
-                      saveWarning={saveError.featureWarning}
                       prerequisites={prerequisites}
                       onViewDependencies={showDependencies}
                       projectId={projectId}
@@ -1103,8 +1101,8 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                   }}
                   onRemoveMultivariateOption={removeMultivariateOption}
                   onHasMetadataRequiredChange={setHasMetadataRequired}
-                  featureError={saveError.featureError}
-                  featureWarning={saveError.featureWarning}
+                  featureError={saveFeedback.error}
+                  featureWarning={saveFeedback.warning}
                 />
                 <FeatureUpdateSummary
                   projectId={projectId}

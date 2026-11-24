@@ -7,9 +7,9 @@ const FALLBACK = 'Could not save this feature. Please try again.'
 const NO_CHANGES_WARNING =
   'Your feature contains no changes to its value, enabled state or environment weights. If you have adjusted any variation values this will have been saved for all environments.'
 
-export type FeatureSaveError = {
-  featureError: string
-  featureWarning: string
+export type SaveFeedback = {
+  error: string
+  warning: string
 }
 
 // A save fails with a thrown Error (raw or serialised by RTK), an API response
@@ -31,13 +31,13 @@ const getErrorText = (error: unknown): string => {
   return getApiErrorMessages(error).join(' ') || FALLBACK
 }
 
-export const getFeatureSaveError = (
+export const getSaveFeedback = (
   error: unknown,
   hasVariations: boolean,
-): FeatureSaveError => {
+): SaveFeedback => {
   const text = getErrorText(error)
   if (hasVariations && text.includes('no changes')) {
-    return { featureError: '', featureWarning: NO_CHANGES_WARNING }
+    return { error: '', warning: NO_CHANGES_WARNING }
   }
-  return { featureError: text, featureWarning: '' }
+  return { error: text, warning: '' }
 }
