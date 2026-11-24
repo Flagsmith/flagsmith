@@ -3,7 +3,6 @@ import { FeatureState, ProjectFlag } from 'common/types/responses'
 import FeatureValueTab from './FeatureValueTab'
 import FeatureSettingsTab from './FeatureSettingsTab'
 import Banner from 'components/base/Banner'
-import WarningMessage from 'components/WarningMessage'
 import { useHasPermission } from 'common/providers/Permission'
 import { ProjectPermission } from 'common/types/permissions.types'
 import InfoMessage from 'components/InfoMessage'
@@ -72,7 +71,11 @@ const CreateFeatureTab: FC<CreateFeatureTabProps> = ({
           {featureError}
         </Banner>
       )}
-      <WarningMessage warningMessage={featureWarning} />
+      {!!featureWarning && (
+        <Banner type='warning' className='mb-3'>
+          {featureWarning}
+        </Banner>
+      )}
       {!!projectFlag && (
         <>
           {preventFlagDefaults && (

@@ -8,7 +8,6 @@ import Icon from 'components/icons/Icon'
 import InfoMessage from 'components/InfoMessage'
 import Banner from 'components/base/Banner'
 import { getSaveFeedback } from 'components/modals/create-feature/saveFeedback'
-import WarningMessage from 'components/WarningMessage'
 import ModalHR from 'components/modals/ModalHR'
 import FeatureInPipelineGuard from 'components/release-pipelines/FeatureInPipelineGuard'
 import Utils from 'common/utils/utils'
@@ -218,7 +217,11 @@ const SegmentOverridesTab: FC<SegmentOverridesTabProps> = ({
                   {saveError}
                 </Banner>
               )}
-              <WarningMessage warningMessage={saveWarning} />
+              {!!saveWarning && (
+                <Banner type='warning' className='mb-3'>
+                  {saveWarning}
+                </Banner>
+              )}
               <SegmentOverrides
                 setShowCreateSegment={setShowCreateSegment}
                 onCompareChange={setIsComparing}
