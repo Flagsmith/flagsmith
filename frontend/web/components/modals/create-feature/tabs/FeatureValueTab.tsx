@@ -51,8 +51,10 @@ function isNegativeNumberString(str: any) {
 
 type FeatureValueTabProps = {
   error: any
-  // Why the last save failed, shown next to the save button.
+  // Why the last save failed, or a warning about it, shown next to the save
+  // button.
   saveError?: string
+  saveWarning?: string
   // The flag's prerequisites in the environment, which serve it off while any
   // is off. Undefined where they don't apply, e.g. to identity overrides.
   prerequisites?: PrerequisiteRow[]
@@ -121,6 +123,7 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
   projectFlag,
   projectId,
   saveError,
+  saveWarning,
   storedFeatureState,
 }) => {
   const isEdit = !!projectFlag?.id
@@ -614,6 +617,11 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
             {!!saveError && (
               <Banner type='error' className='my-3'>
                 {saveError}
+              </Banner>
+            )}
+            {!!saveWarning && (
+              <Banner type='warning' className='my-3'>
+                {saveWarning}
               </Banner>
             )}
             <FlagValueFooter
