@@ -9,11 +9,22 @@ type UseOverflowVisibleCountOptions = {
   force?: boolean
 }
 
-export const shouldMeasureAgain = <T>(
-  changedNodes: T[],
-  itemsContainer: T,
-  isOverflowing: boolean,
-) => isOverflowing || changedNodes.some((node) => node !== itemsContainer)
+type ShouldMeasureAgain<T> = {
+  changedNodes: T[]
+  itemsContainer: T
+  isOverflowing: boolean
+  shownCount: number
+}
+
+// Overflow with no items shown is the menu button alone, so it would loop
+export const shouldMeasureAgain = <T>({
+  changedNodes,
+  isOverflowing,
+  itemsContainer,
+  shownCount,
+}: ShouldMeasureAgain<T>) =>
+  (isOverflowing && shownCount > 0) ||
+  changedNodes.some((node) => node !== itemsContainer)
 
 export const useOverflowVisibleCount = ({
   extraWidth,
@@ -59,8 +70,13 @@ export const useOverflowVisibleCount = ({
       const outerCont = outerContainerRef.current
       const isOverflowing =
         !!outerCont && outerCont.scrollWidth > outerCont.clientWidth
-      const changedNodes = records.map((record) => record.target)
-      if (shouldMeasureAgain(changedNodes, itemsCont, isOverflowing)) {
+      const remeasure = shouldMeasureAgain({
+        changedNodes: records.map((record) => record.target),
+        isOverflowing,
+        itemsContainer: itemsCont,
+        shownCount: itemsCont.childElementCount,
+      })
+      if (remeasure) {
         // Already measuring: a new empty array would not measure again
         setWidths((current) => (current.length ? [] : current))
       }
