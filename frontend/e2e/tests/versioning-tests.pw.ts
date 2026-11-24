@@ -20,6 +20,7 @@ test('Versioning tests - Create, edit, and compare feature versions @oss', async
         createRemoteConfig,
         editRemoteConfig,
         enableFeatureVersioning,
+        featureValueField,
         gotoFeature,
         gotoFeatures,
         login,
@@ -79,6 +80,21 @@ test('Versioning tests - Create, edit, and compare feature versions @oss', async
     await compareVersion('a', 0, null, true, true, 'small', 'medium')
     await compareVersion('b', 0, null, true, true, 'small', 'small')
     await compareVersion('c', 0, null, false, true, null, null)
+
+    // ===================================================================================
+    // Test: A rejected save in a versioned environment shows the API's message
+    // The versioned save used to crash on a 400 and hide the reason.
+    // ===================================================================================
+    log('Save a value over the limit (versioned env)')
+    await gotoFeatures()
+    await gotoFeature('a')
+    await featureValueField().fill('x'.repeat(20001))
+    await click(byId('update-feature-btn'))
+    await expect(page.getByRole('alert')).toContainText(
+        'Ensure this field has no more than 20000 characters.',
+    )
+    await closeModal()
+    await waitForElementNotExist('#create-feature-modal')
 
     // ===================================================================================
     // Test: Multivariate option edits in a versioned environment
