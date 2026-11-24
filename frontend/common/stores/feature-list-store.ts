@@ -86,9 +86,16 @@ const convertSegmentOverrideToFeatureState = (
     toRemove: override.toRemove,
   } as Partial<FeatureState>
 }
+// The base store only clears an error on load, so a failed save's message
+// would stay on screen after the next save succeeds.
+const startSaving = () => {
+  store.error = null
+  store.saving()
+}
+
 const controller = {
   createFlag(projectId, environmentId, flag) {
-    store.saving()
+    startSaving()
     API.trackEvent(Constants.events.CREATE_FEATURE)
     const featureType =
       flag.multivariate_options && flag.multivariate_options.length
@@ -302,7 +309,7 @@ const controller = {
     onComplete,
   ) => {
     let prom
-    store.saving()
+    startSaving()
     API.trackEvent(Constants.events.EDIT_FEATURE)
     const env = ProjectStore.getEnvironment(environmentId)
 
@@ -382,7 +389,7 @@ const controller = {
         Promise.resolve(),
       )
 
-    store.saving()
+    startSaving()
     API.trackEvent(Constants.events.EDIT_FEATURE)
     segmentOverridesProm
       .then(() => {
@@ -540,7 +547,7 @@ const controller = {
     },
     commit: boolean,
   ) => {
-    store.saving()
+    startSaving()
     try {
       API.trackEvent(Constants.events.EDIT_FEATURE)
       const env: Environment = ProjectStore.getEnvironment(environmentId) as any
@@ -735,13 +742,16 @@ const controller = {
           )
         })
 
-      Promise.all([prom]).then(([updatedChangeRequest]) => {
-        store.saved({
-          changeRequest: true,
-          isCreate: true,
-          updatedChangeRequest,
+      Promise.all([prom])
+        .then(([updatedChangeRequest]) => {
+          store.saved({
+            changeRequest: true,
+            isCreate: true,
+            updatedChangeRequest,
+          })
         })
-      })
+        // A rejected request would otherwise fail silently.
+        .catch((e) => API.ajaxHandler(store, e))
     } catch (e) {
       API.ajaxHandler(store, e)
     }
