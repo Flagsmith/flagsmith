@@ -102,7 +102,8 @@ const Popover: FC<PopoverProps> = ({
           title={ariaLabel}
           className={className}
         >
-          {typeof children === 'function' ? children(close) : children}
+          {isOpen &&
+            (typeof children === 'function' ? children(close) : children)}
         </BottomSheet>
       ) : (
         isOpen && (
