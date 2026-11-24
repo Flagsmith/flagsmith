@@ -1,14 +1,16 @@
-import { isItemContentChange } from 'common/hooks/useOverflowVisibleCount'
+import { shouldMeasureAgain } from 'common/hooks/useOverflowVisibleCount'
 
 const container = { name: 'container' }
 const item = { name: 'item' }
 
-describe('isItemContentChange', () => {
+describe('shouldMeasureAgain', () => {
   it.each`
-    target       | expected | case
-    ${item}      | ${true}  | ${'a change inside an item'}
-    ${container} | ${false} | ${'items shown or hidden by the hook'}
-  `('returns $expected for $case', ({ expected, target }) => {
-    expect(isItemContentChange({ target }, container)).toBe(expected)
+    changed              | isOverflowing | expected | case
+    ${[item]}            | ${false}      | ${true}  | ${'a change inside an item'}
+    ${[container]}       | ${false}      | ${false} | ${'items shown or hidden that fit'}
+    ${[container]}       | ${true}       | ${true}  | ${'a shown item that no longer fits'}
+    ${[container, item]} | ${false}      | ${true}  | ${'a mix including an item change'}
+  `('returns $expected for $case', ({ changed, expected, isOverflowing }) => {
+    expect(shouldMeasureAgain(changed, container, isOverflowing)).toBe(expected)
   })
 })

@@ -9,10 +9,11 @@ type UseOverflowVisibleCountOptions = {
   force?: boolean
 }
 
-export const isItemContentChange = <T>(
-  record: { target: T },
+export const shouldMeasureAgain = <T>(
+  changedNodes: T[],
   itemsContainer: T,
-) => record.target !== itemsContainer
+  isOverflowing: boolean,
+) => isOverflowing || changedNodes.some((node) => node !== itemsContainer)
 
 export const useOverflowVisibleCount = ({
   extraWidth,
@@ -48,15 +49,21 @@ export const useOverflowVisibleCount = ({
     setWidths(newWidths)
   }, [itemCount, force, widths.length, itemsContainerRef])
 
-  // Measure again when an item's content changes, like a badge that loads late.
+  // Measure again when an item's content changes, like a badge that loads late,
+  // or when a shown item no longer fits, as it changed while in the menu.
   // Not a ResizeObserver: items stretch with the row, so it would loop.
   useLayoutEffect(() => {
     const itemsCont = itemsContainerRef.current
     if (force || !itemsCont) return
 
     const observer = new MutationObserver((records) => {
-      if (records.some((record) => isItemContentChange(record, itemsCont))) {
-        setWidths([])
+      const outerCont = outerContainerRef.current
+      const isOverflowing =
+        !!outerCont && outerCont.scrollWidth > outerCont.clientWidth
+      const changedNodes = records.map((record) => record.target)
+      if (shouldMeasureAgain(changedNodes, itemsCont, isOverflowing)) {
+        // Already measuring: a new empty array would not measure again
+        setWidths((current) => (current.length ? [] : current))
       }
     })
     observer.observe(itemsCont, {
@@ -65,7 +72,7 @@ export const useOverflowVisibleCount = ({
       subtree: true,
     })
     return () => observer.disconnect()
-  }, [force, itemsContainerRef])
+  }, [force, itemsContainerRef, outerContainerRef])
 
   // Calculate visible count based
   useLayoutEffect(() => {
