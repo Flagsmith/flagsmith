@@ -5,6 +5,7 @@ const express = require('express')
 const bodyParser = require('body-parser')
 const spm = require('./middleware/single-page-middleware')
 const frameProtection = require('./middleware/frame-protection-middleware')
+const { healthCheck } = require('./health')
 const path = require('path')
 const app = express()
 
@@ -181,11 +182,7 @@ app.get('/robots.txt', (req, res) => {
   res.send('User-agent: *\r\nDisallow: /')
 })
 
-app.get('/health', (req, res) => {
-  // eslint-disable-next-line
-  console.log('Healthcheck complete')
-  res.send('OK')
-})
+app.get('/health', healthCheck)
 
 app.get('/version', (req, res) => {
   let commitSha = 'Unknown'
