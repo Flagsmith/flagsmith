@@ -194,6 +194,8 @@ def test_sentry_change_tracking__flag_state_change_in_v2_environment__sends_upda
     responses: RequestsMock,
     sentry_configuration: SentryChangeTrackingConfiguration,
     environment_v2_versioning: int,
+    organisation: int,
+    project: int,
 ) -> None:
     # Given
     responses.post(sentry_configuration.webhook_url, status=200, body="")
@@ -276,6 +278,8 @@ def test_sentry_change_tracking__flag_state_change_in_v2_environment__sends_upda
             "http__route": "/api/v1/environments/{environment_pk}/features/{feature_pk}/versions/{id}/publish/",
             "user__id": str(admin_user.uuid),
             "feature__id": feature,
+            "organisation__id": organisation,
+            "project__id": project,
             "feature_name": feature_name,
             "headers": ANY,
             "level": "debug",
@@ -289,6 +293,8 @@ def test_sentry_change_tracking__flag_state_change_in_v2_environment__sends_upda
             "http__route": "/api/v1/environments/{environment_pk}/features/{feature_pk}/versions/{id}/publish/",
             "user__id": str(admin_user.uuid),
             "feature__id": feature,
+            "organisation__id": organisation,
+            "project__id": project,
             "feature_name": feature_name,
             "level": "info",
             "sentry_action": "updated",

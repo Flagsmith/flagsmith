@@ -16,7 +16,8 @@ from environments.models import Environment
 from features.models import Feature
 from organisations.models import Organisation
 from projects.models import Project
-from telemetry.request_context import bind_api_request_context
+from telemetry.request_context import map_view_kwargs_to_resolved_ids
+from telemetry.types import ResolvedIds
 from users.models import FFAdminUser
 
 REQUEST_CONTEXT_NAMES = (
@@ -50,17 +51,6 @@ def clear_request_context() -> Generator[None, None, None]:
 @pytest.fixture()
 def api_request_factory() -> APIRequestFactory:
     return APIRequestFactory()
-
-
-def _bind(
-    api_request_factory: APIRequestFactory,
-    **url_kwargs: typing.Any,
-) -> dict[str, typing.Any]:
-    request = Request(api_request_factory.get("/"))
-    view = APIView()
-    view.kwargs = url_kwargs
-    bind_api_request_context(request, view)
-    return {name: get_request_context(name) for name in REQUEST_CONTEXT_NAMES}
 
 
 def test_api_view__ffadmin_user__binds_user(
@@ -150,78 +140,48 @@ def test_api_view__project_and_feature_route__binds_url_entities(
     }
 
 
-# Routers capture strings, path converters ints
-@pytest.mark.parametrize("to_url_kwarg", [str, int])
-def test_bind_api_request_context__project_pk__binds_project_and_organisation(
-    api_request_factory: APIRequestFactory,
-    project: Project,
-    to_url_kwarg: typing.Callable[[int], str | int],
-    django_assert_num_queries: typing.Any,
+@pytest.mark.parametrize(
+    "view_kwargs, expected_ids",
+    [
+        ({}, {}),
+        ({"pk": "7"}, {}),
+        # Routers capture strings, path converters ints
+        ({"project_pk": "42"}, {"project__id": 42}),
+        ({"project_pk": 42, "feature_pk": 3}, {"project__id": 42, "feature__id": 3}),
+        (
+            {"environment_api_key": "key", "feature_pk": "3"},
+            {"environment__api_key": "key", "feature__id": 3},
+        ),
+        ({"project_pk": "not-an-id", "feature_pk": "3"}, {"feature__id": 3}),
+        ({"project_pk": None, "feature_pk": ""}, {}),
+    ],
+)
+def test_map_view_kwargs_to_resolved_ids__view_kwargs__returns_expected_ids(
+    view_kwargs: dict[str, typing.Any],
+    expected_ids: ResolvedIds,
 ) -> None:
     # Given / When
-    with django_assert_num_queries(1):
-        bound = _bind(api_request_factory, project_pk=to_url_kwarg(project.id))
+    # NOTE: Without database access, any query would fail the test
+    ids = map_view_kwargs_to_resolved_ids(view_kwargs)
 
     # Then
-    assert bound["project__id"] == project.id
-    assert bound["organisation__id"] == project.organisation_id
+    assert ids == expected_ids
 
 
-def test_bind_api_request_context__deleted_project__binds_project_only(
-    api_request_factory: APIRequestFactory,
-    project: Project,
-) -> None:
-    # Given
-    project.delete()
-
-    # When
-    bound = _bind(api_request_factory, project_pk=str(project.id))
-
-    # Then
-    assert bound["project__id"] == project.id
-    assert bound["organisation__id"] is None
-
-
-def test_bind_api_request_context__environment_api_key__binds_environment_project_and_organisation(
+def test_api_view__environment_route__binds_ids_but_not_api_key(
     api_request_factory: APIRequestFactory,
     environment: Environment,
-    django_assert_num_queries: typing.Any,
 ) -> None:
-    # Given / When
-    with django_assert_num_queries(1):
-        bound = _bind(api_request_factory, environment_api_key=environment.api_key)
+    # Given
+    request = api_request_factory.get("/")
+    force_authenticate(request, user=None)
+
+    # When
+    RequestContextView.as_view()(request, environment_api_key=environment.api_key)
 
     # Then
-    assert bound == {
+    assert structlog.contextvars.get_contextvars() == {
         "environment__id": environment.id,
-        "feature__id": None,
         "organisation__id": environment.project.organisation_id,
         "project__id": environment.project_id,
-        "user__id": None,
     }
-
-
-def test_bind_api_request_context__unknown_environment_api_key__binds_nothing(
-    api_request_factory: APIRequestFactory,
-    db: None,
-) -> None:
-    # Given / When
-    bound = _bind(api_request_factory, environment_api_key="unknown")
-
-    # Then
-    assert bound == {name: None for name in REQUEST_CONTEXT_NAMES}
-
-
-@pytest.mark.parametrize("value", ["not-an-id", None])
-def test_bind_api_request_context__non_numeric_ids__binds_nothing(
-    api_request_factory: APIRequestFactory,
-    db: None,
-    value: str | None,
-    django_assert_num_queries: typing.Any,
-) -> None:
-    # Given / When
-    with django_assert_num_queries(0):
-        bound = _bind(api_request_factory, project_pk=value, feature_pk=value)
-
-    # Then
-    assert bound == {name: None for name in REQUEST_CONTEXT_NAMES}
