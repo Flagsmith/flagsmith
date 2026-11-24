@@ -1,5 +1,6 @@
 import { AnimationEvent, FC, ReactNode, useEffect, useId, useRef } from 'react'
 import classNames from 'classnames'
+import { HeadingText } from 'components/base/typography'
 import IconButton from 'components/base/IconButton'
 import Icon from 'components/icons/Icon'
 import {
@@ -81,12 +82,9 @@ const BottomSheet: FC<BottomSheetProps> = ({
             {...getFloatingProps()}
           >
             <div className='ds-bottom-sheet__header d-flex align-items-center justify-content-between gap-2'>
-              <h2
-                id={titleId}
-                className='mb-0 fs-6 lh-sm fw-semibold text-default'
-              >
+              <HeadingText id={titleId} level={2} size='sm'>
                 {title}
-              </h2>
+              </HeadingText>
               <IconButton
                 aria-label='Close'
                 variant='ghost'
