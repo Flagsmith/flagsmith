@@ -16,8 +16,8 @@ type EditableSwitchProps = RCSwitchProps & {
 type ReadOnlySwitchProps = {
   checked: boolean
   readOnly: true
-  // Defaults to On / Off.
-  'aria-label'?: string
+  // What the state is about, e.g. "Admin" is read as "Admin: On".
+  label?: string
   onChange?: never
   disabled?: never
 }
@@ -25,17 +25,20 @@ type ReadOnlySwitchProps = {
 export type SwitchProps = EditableSwitchProps | ReadOnlySwitchProps
 
 const ReadOnlySwitch: FC<Omit<ReadOnlySwitchProps, 'readOnly'>> = ({
-  'aria-label': ariaLabel,
   checked,
-}) => (
-  <Icon
-    name={checked ? 'toggle-on' : 'toggle-off'}
-    width={32}
-    fill={checked ? colorSurfaceAction : colorSurfaceEmphasis}
-    role='img'
-    aria-label={ariaLabel ?? (checked ? 'On' : 'Off')}
-  />
-)
+  label,
+}) => {
+  const state = checked ? 'On' : 'Off'
+  return (
+    <Icon
+      name={checked ? 'toggle-on' : 'toggle-off'}
+      width={32}
+      fill={checked ? colorSurfaceAction : colorSurfaceEmphasis}
+      role='img'
+      aria-label={label ? `${label}: ${state}` : state}
+    />
+  )
+}
 
 const EditableSwitch: FC<EditableSwitchProps> = ({
   checked,
@@ -74,7 +77,7 @@ const EditableSwitch: FC<EditableSwitchProps> = ({
 
 const Switch: FC<SwitchProps> = (props) =>
   props.readOnly ? (
-    <ReadOnlySwitch checked={props.checked} aria-label={props['aria-label']} />
+    <ReadOnlySwitch checked={props.checked} label={props.label} />
   ) : (
     <EditableSwitch {...props} />
   )

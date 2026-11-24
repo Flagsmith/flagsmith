@@ -80,7 +80,7 @@ export const ReadOnly: Story = {
     docs: {
       description: {
         story:
-          'For a state that can\'t be changed here, such as a flag\'s state in a table row. Screen readers hear "On" or "Off" unless `aria-label` says what the state means.',
+          'For a state that can\'t be changed here, such as a flag\'s state in a table row. Screen readers hear "On" or "Off", and `label` says what the state is about: `label=\'Admin\'` is read as "Admin: On".',
       },
     },
   },
@@ -88,7 +88,7 @@ export const ReadOnly: Story = {
     <div className='d-flex align-items-center gap-4'>
       <Switch checked={false} readOnly />
       <Switch checked readOnly />
-      <Switch checked readOnly aria-label='Admin key' />
+      <Switch checked readOnly label='Admin' />
     </div>
   ),
 }
