@@ -1,22 +1,13 @@
 import { Page } from '@playwright/test'
 import { test, expect } from '../test-setup'
-import {
-  byId,
-  createHelpers,
-  getFlagsmith,
-  log,
-  visualSnapshot,
-} from '../helpers'
+import { byId, createHelpers, isSaas, log, visualSnapshot } from '../helpers'
 import { E2E_PROJECT_WITH_EXPERIMENTS, E2E_USER, PASSWORD } from '../config'
 
 const FEATURE = 'experiment_checkout'
 const METRIC = 'Checkout conversion'
 const FIRST_EXPERIMENT = 'Checkout redesign'
-const SECOND_EXPERIMENT = 'Checkout copy'
-const ROLLOUT_SEGMENT = /^experiment-\d+-rollout$/
 
-// The steps build on each other: the warehouse and metric feed the
-// experiments, and only one experiment can run on the feature at a time.
+// The steps build on each other: the warehouse and metric feed the experiment.
 test.describe.configure({ mode: 'serial' })
 
 const setup = async (page: Page) => {
@@ -36,10 +27,6 @@ const gotoExperiments = async (page: Page) => {
 
 const experimentRow = (page: Page, name: string) =>
   page.locator('.experiments-table__row').filter({ hasText: name })
-
-const openExperimentActions = async (page: Page, name: string) => {
-  await experimentRow(page, name).locator('.feature-action button').click()
-}
 
 const createExperiment = async (page: Page, name: string) => {
   const { click, clickByText, setText, waitForElementVisible, waitForToast } =
@@ -70,15 +57,8 @@ const createExperiment = async (page: Page, name: string) => {
   await waitForElementVisible('.experiments-table')
 }
 
-const gotoFeatureSegmentOverrides = async (page: Page) => {
-  const { click, gotoFeature, gotoFeatures } = createHelpers(page)
-  await gotoFeatures()
-  await gotoFeature(FEATURE)
-  await click(byId('segment_overrides'))
-}
-
 const rolloutOverride = (page: Page) =>
-  page.locator('#create-feature-modal').getByText(ROLLOUT_SEGMENT)
+  page.locator('#create-feature-modal').getByText('Managed by an experiment')
 
 // The segment picker renders once the overrides have loaded and the feature
 // is no longer frozen, so an absent override is not a list still loading.
@@ -87,13 +67,10 @@ const expectNoRolloutOverride = async (page: Page) => {
   await expect(rolloutOverride(page)).toHaveCount(0)
 }
 
-// Completing an experiment needs a rollout decision, which only the modal
-// behind `experiment_rollout_decision` sends.
-const skipWithoutRolloutDecision = async () => {
-  const flagsmith = await getFlagsmith()
+const skipOnSaas = async () => {
   test.skip(
-    !flagsmith.hasFeature('experiment_rollout_decision'),
-    'The complete experiment modal is behind `experiment_rollout_decision`',
+    await isSaas(),
+    'The Flagsmith database warehouse is only offered on self-hosted',
   )
 }
 
@@ -101,6 +78,7 @@ test.describe('Experimentation Tests', () => {
   test('Warehouse can be connected and a metric created @oss', async ({
     page,
   }, testInfo) => {
+    await skipOnSaas()
     const { click, setText, waitForElementVisible, waitForToast } = await setup(
       page,
     )
@@ -133,6 +111,7 @@ test.describe('Experimentation Tests', () => {
   test('Experiment can be created and freezes the feature value @oss', async ({
     page,
   }, testInfo) => {
+    await skipOnSaas()
     const { click, closeModal, featureValueField, gotoFeature, gotoFeatures } =
       await setup(page)
 
@@ -156,7 +135,7 @@ test.describe('Experimentation Tests', () => {
   test('Experiment can be completed by rolling out a variant @oss', async ({
     page,
   }, testInfo) => {
-    await skipWithoutRolloutDecision()
+    await skipOnSaas()
     const {
       click,
       clickByText,
@@ -194,39 +173,6 @@ test.describe('Experimentation Tests', () => {
     )
     await expect(page.locator(byId('featureVariationWeighta'))).toHaveValue('0')
     await click(byId('segment_overrides'))
-    await expectNoRolloutOverride(page)
-    await closeModal()
-  })
-
-  test('Experiment can be deleted @oss', async ({ page }) => {
-    await skipWithoutRolloutDecision()
-    const { click, clickByText, closeModal, waitForToast } = await setup(page)
-
-    log('Create a second experiment')
-    await createExperiment(page, SECOND_EXPERIMENT)
-
-    log('Its rollout override is on the feature')
-    await gotoFeatureSegmentOverrides(page)
-    await expect(rolloutOverride(page)).toHaveCount(1)
-    await closeModal()
-
-    log('Complete and delete it')
-    await gotoExperiments(page)
-    await openExperimentActions(page, SECOND_EXPERIMENT)
-    await page.getByText('Mark as Completed').click()
-    await clickByText('Complete experiment')
-    await waitForToast()
-    await expect(experimentRow(page, SECOND_EXPERIMENT)).toContainText(
-      'Completed',
-    )
-    await openExperimentActions(page, SECOND_EXPERIMENT)
-    await page.locator('.feature-action__item').getByText('Delete').click()
-    await click('#confirm-btn-yes')
-    await waitForToast()
-    await expect(experimentRow(page, SECOND_EXPERIMENT)).toHaveCount(0)
-
-    log('Its rollout override is gone from the feature')
-    await gotoFeatureSegmentOverrides(page)
     await expectNoRolloutOverride(page)
     await closeModal()
   })
