@@ -25,6 +25,7 @@ import {
 } from 'common/services/useMasterAPIKeyWithMasterAPIKeyRole'
 import { setInterceptClose, setModalTitle } from './modals/base/ModalDefault'
 import SuccessMessage from './messages/SuccessMessage'
+import { colorIconSuccess } from 'common/theme/tokens'
 
 export class CreateAPIKey extends PureComponent {
   state = {
@@ -548,12 +549,7 @@ export default class ManagementAPIKeys extends PureComponent {
                         </Flex>
                       )}
                       <Flex className='table-column fs-small lh-sm'>
-                        <span
-                          aria-hidden='true'
-                          className={`rc-switch rc-switch-disabled ${
-                            v.is_admin ? 'rc-switch-checked' : ''
-                          }`}
-                        />
+                        <Switch checked={v.is_admin} readOnly label='Admin' />
                       </Flex>
                       <Flex className='table-column fs-small lh-sm'>
                         {v.has_expired ? (
@@ -566,7 +562,7 @@ export default class ManagementAPIKeys extends PureComponent {
                           <span className='ml-1'>
                             <Icon
                               name='checkmark-circle'
-                              fill='#27AB95'
+                              fill={colorIconSuccess}
                               width={28}
                             />
                           </span>
