@@ -6,6 +6,7 @@ import {
 import { useCreateAndSetFeatureVersionMutation } from 'common/services/useFeatureVersion'
 import { useGetTagsQuery } from 'common/services/useTag'
 import { Environment, Tag } from 'common/types/responses'
+import Utils from 'common/utils/utils'
 import { useFeatureRowState } from 'components/pages/features/hooks/useFeatureRowState'
 
 // Resolves the demo flag (by name, since bootstrap returns the name) and its
@@ -60,7 +61,15 @@ export const useOnboardingFlag = (
           environmentApiKey: environment.api_key,
           environmentId: environment.id,
           featureId: flag.id,
-          featureStates: [{ ...state, enabled }],
+          featureStates: [
+            {
+              ...state,
+              enabled,
+              feature_state_value: Utils.featureStateToValue(
+                state.feature_state_value,
+              ),
+            },
+          ],
           projectId,
         }).unwrap()
       } else {
