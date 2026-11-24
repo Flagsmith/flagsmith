@@ -1,0 +1,26 @@
+// The level sets the default size. Colour comes from the global h1 to h6
+// rule, so text-* utilities still apply.
+.ds-heading-text {
+  margin: 0;
+  font-size: var(--font-size-heading-sm);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-heading);
+
+  &:is(h1) {
+    font-size: var(--font-size-heading-lg);
+  }
+  &:is(h2) {
+    font-size: var(--font-size-heading-md);
+  }
+
+  // Doubled class so an explicit size beats the level's default.
+  &.ds-heading-text--lg {
+    font-size: var(--font-size-heading-lg);
+  }
+  &.ds-heading-text--md {
+    font-size: var(--font-size-heading-md);
+  }
+  &.ds-heading-text--sm {
+    font-size: var(--font-size-heading-sm);
+  }
+}

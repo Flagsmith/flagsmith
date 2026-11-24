@@ -125,6 +125,44 @@ export const fontWeight: Record<string, TokenEntry> = {
     value: 'var(--font-weight-semibold, 600)',
   },
 }
+// Font-size
+export const fontSize: Record<string, TokenEntry> = {
+  'body-md': {
+    description: 'Default body text.',
+    value: 'var(--font-size-body-md, 14px)',
+  },
+  'body-sm': {
+    description: 'Small body text. Secondary details.',
+    value: 'var(--font-size-body-sm, 13px)',
+  },
+  'body-xs': {
+    description: 'Extra small body text. Captions, labels.',
+    value: 'var(--font-size-body-xs, 12px)',
+  },
+  'heading-lg': {
+    description: 'Level 1 headings. Page titles.',
+    value: 'var(--font-size-heading-lg, 24px)',
+  },
+  'heading-md': {
+    description: 'Level 2 headings. Sections.',
+    value: 'var(--font-size-heading-md, 18px)',
+  },
+  'heading-sm': {
+    description: 'Level 3 to 6 headings. Cards, subsections.',
+    value: 'var(--font-size-heading-sm, 16px)',
+  },
+}
+// Line-height
+export const lineHeight: Record<string, TokenEntry> = {
+  'body': {
+    description: 'Body text.',
+    value: 'var(--line-height-body, 1.4)',
+  },
+  'heading': {
+    description: 'Headings.',
+    value: 'var(--line-height-heading, 1.3)',
+  },
+}
 
 // =============================================================================
 // Flat token constants — semantic tokens as CSS value strings.
@@ -306,3 +344,15 @@ export const fontWeightBold = 'var(--font-weight-bold, 700)'
 export const fontWeightMedium = 'var(--font-weight-medium, 500)'
 export const fontWeightRegular = 'var(--font-weight-regular, 400)'
 export const fontWeightSemibold = 'var(--font-weight-semibold, 600)'
+
+// Font-size
+export const fontSizeBodyMd = 'var(--font-size-body-md, 14px)'
+export const fontSizeBodySm = 'var(--font-size-body-sm, 13px)'
+export const fontSizeBodyXs = 'var(--font-size-body-xs, 12px)'
+export const fontSizeHeadingLg = 'var(--font-size-heading-lg, 24px)'
+export const fontSizeHeadingMd = 'var(--font-size-heading-md, 18px)'
+export const fontSizeHeadingSm = 'var(--font-size-heading-sm, 16px)'
+
+// Line-height
+export const lineHeightBody = 'var(--line-height-body, 1.4)'
+export const lineHeightHeading = 'var(--line-height-heading, 1.3)'
