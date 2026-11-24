@@ -1,5 +1,5 @@
 import { FC, PropsWithChildren, ReactNode } from 'react'
-import HeadingText from './base/HeadingText'
+import { HeadingText } from './base/typography'
 
 type PageTitleType = PropsWithChildren<{
   title: ReactNode
