@@ -1,0 +1,20 @@
+// Colour is inherited unless muted, so text-* utilities and parents still apply.
+.ds-body-text {
+  margin: 0;
+  font-size: var(--font-size-body-md);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-body);
+
+  &--sm {
+    font-size: var(--font-size-body-sm);
+  }
+  &--xs {
+    font-size: var(--font-size-body-xs);
+  }
+  &--semibold {
+    font-weight: var(--font-weight-semibold);
+  }
+  &--muted {
+    color: var(--color-text-secondary);
+  }
+}

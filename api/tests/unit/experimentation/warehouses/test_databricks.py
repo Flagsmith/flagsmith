@@ -50,7 +50,7 @@ EVENT_NAMES_SQL = (
     "GROUP BY event ORDER BY max(timestamp) DESC LIMIT :limit"
 )
 EVENT_STATS_SQL = (
-    "SELECT count(*) AS total, count(DISTINCT event) AS unique, "
+    "SELECT count(*) AS total, count(DISTINCT event) AS unique_events, "
     "max(timestamp) AS last_event_at "
     "FROM events WHERE environment_key = :environment_key"
 )
@@ -1120,7 +1120,7 @@ def test_describe_databricks_error__error__returns_user_facing_detail(
             _succeeded(
                 [
                     ("total", "BIGINT"),
-                    ("unique", "BIGINT"),
+                    ("unique_events", "BIGINT"),
                     ("last_event_at", "TIMESTAMP"),
                 ],
                 [["10", "2", "2026-10-12T13:23:52.625Z"]],

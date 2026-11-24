@@ -21,6 +21,17 @@
     margin: 0;
   }
 }
+.butter-bar-stack {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+
+  .butter-bar {
+    position: relative;
+    top: auto;
+    z-index: auto;
+  }
+}
 .dark .butter-bar {
   background-color: $butter-bar-bg-dark;
   color: $header-color-dark;

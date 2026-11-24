@@ -119,7 +119,6 @@ $side-width: 800px;
 
       .tabs {
         .tab-item {
-          padding-top: 24px;
           padding-bottom: 24px;
           overflow-y: auto;
           height: calc(100vh - 110px);
@@ -344,12 +343,31 @@ $side-width: 800px;
   }
 }
 
+// Lets a long drawer title truncate instead of pushing its buttons out
+.side-modal .modal-title {
+  min-width: 0;
+}
+
+.side-modal.create-feature-modal {
+  .modal-body {
+    padding-top: 0;
+  }
+  .tabs .tab-item {
+    padding-top: 24px;
+  }
+}
+
 @include media-breakpoint-down(md) {
-  .modal-dialog {
-    margin:0;
+  // Drawers fill the screen; dialogs stay cards
+  .side-modal .modal-dialog {
+    margin: 0;
+    // Bootstrap caps .modal-dialog width from 544px; drawers stay full width
+    max-width: none;
     .modal-content {
-      border-radius:0;
-      height: 100vh;
+      border-radius: 0;
+      min-height: 100vh;
+      // Fits the visible screen when the mobile browser toolbar shows
+      min-height: 100dvh;
     }
   }
 }

@@ -1,22 +1,51 @@
 import React, { FC } from 'react'
 import RCSwitch, { Props as RCSwitchProps } from 'rc-switch'
+import { colorSurfaceAction, colorSurfaceEmphasis } from 'common/theme/tokens'
 import Icon from './icons/Icon'
 
-export type SwitchProps = RCSwitchProps & {
+type EditableSwitchProps = RCSwitchProps & {
   id?: string
   checked?: boolean
-  darkMode?: boolean
   offMarkup?: React.ReactNode
   onMarkup?: React.ReactNode
   onChange?: (checked: boolean) => void
+  readOnly?: false
 }
 
-const Switch: FC<SwitchProps> = ({
+// Shows a state that can't be changed here, e.g. in a table row.
+type ReadOnlySwitchProps = {
+  checked: boolean
+  readOnly: true
+  // What the state is about, e.g. "Admin" is read as "Admin: On".
+  label?: string
+  onChange?: never
+  disabled?: never
+}
+
+export type SwitchProps = EditableSwitchProps | ReadOnlySwitchProps
+
+const ReadOnlySwitch: FC<Omit<ReadOnlySwitchProps, 'readOnly'>> = ({
   checked,
-  darkMode,
+  label,
+}) => {
+  const state = checked ? 'On' : 'Off'
+  return (
+    <Icon
+      name={checked ? 'toggle-on' : 'toggle-off'}
+      width={32}
+      fill={checked ? colorSurfaceAction : colorSurfaceEmphasis}
+      role='img'
+      aria-label={label ? `${label}: ${state}` : state}
+    />
+  )
+}
+
+const EditableSwitch: FC<EditableSwitchProps> = ({
+  checked,
   offMarkup,
   onChange,
   onMarkup,
+  readOnly: _,
   ...rest
 }) => {
   if (E2E) {
@@ -43,27 +72,15 @@ const Switch: FC<SwitchProps> = ({
     )
   }
 
-  if (darkMode) {
-    return (
-      <button
-        role='switch'
-        type='button'
-        className={`rc-switch flex-row justify-content-center gap-3 ${
-          checked ? 'rc-switch-checked' : 'rc-switch-unchecked'
-        }`}
-        {...rest}
-        onClick={() => {
-          onChange?.(!checked)
-        }}
-      >
-        <Icon name='sun' fill={checked ? '#656D7B' : '#1A2634'} />
-        <Icon name='moon' fill={checked ? '#FFFFFF' : '#9DA4AE'} />
-      </button>
-    )
-  }
-
   return <RCSwitch checked={checked} onChange={onChange} {...rest} />
 }
+
+const Switch: FC<SwitchProps> = (props) =>
+  props.readOnly ? (
+    <ReadOnlySwitch checked={props.checked} label={props.label} />
+  ) : (
+    <EditableSwitch {...props} />
+  )
 
 Switch.displayName = 'Switch'
 
