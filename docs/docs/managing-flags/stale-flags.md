@@ -24,8 +24,7 @@ and an orange colour.
 
 ![The Stale tag displayed against a feature in the Features list](/img/managing-flags/stale-flags/flag-list-stale.png)
 
-Changing a stale feature in any environment removes the `Stale` tag. You can also remove the tag yourself, but it will
-come back for as long as the feature stays unchanged. To keep a feature from ever being marked as stale, give it a
+Changing a stale feature in any environment removes the `Stale` tag. To keep a feature from being marked as stale, give it a
 permanent tag — see [Excluding flags from stale detection](#excluding-flags-from-stale-detection) below.
 
 ---
