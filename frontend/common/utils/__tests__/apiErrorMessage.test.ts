@@ -13,6 +13,7 @@ describe('getApiErrorMessage', () => {
     ${{ experiment_rollout: { audience: ['Bad audience'] } }}                                  | ${'Bad audience'}
     ${{ feature_states_to_update: [{ feature_state_value: { string_value: ['Too long'] } }] }} | ${'Too long'}
     ${HTML_BODY}                                                                               | ${FALLBACK}
+    ${{ key: ['Key invalid'], name: ['Name taken'] }}                                          | ${'Key invalid Name taken'}
     ${[]}                                                                                      | ${FALLBACK}
     ${{}}                                                                                      | ${FALLBACK}
     ${undefined}                                                                               | ${FALLBACK}

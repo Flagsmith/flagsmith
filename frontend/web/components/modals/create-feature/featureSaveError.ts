@@ -1,4 +1,7 @@
-import { getApiErrorMessage } from 'common/utils/apiErrorMessage'
+import {
+  getApiErrorMessage,
+  getApiErrorMessages,
+} from 'common/utils/apiErrorMessage'
 
 const FALLBACK = 'Could not save this feature. Please try again.'
 const NO_CHANGES_WARNING =
@@ -18,7 +21,7 @@ const getErrorText = (error: unknown): string => {
   if (typeof error === 'object' && 'data' in error) {
     return getApiErrorMessage(error, FALLBACK)
   }
-  return getApiErrorMessage({ data: error }, FALLBACK)
+  return getApiErrorMessages(error).join(' ') || FALLBACK
 }
 
 export const getFeatureSaveError = (

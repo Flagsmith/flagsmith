@@ -334,12 +334,6 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
     return value
   }
 
-  const parseError = (error: unknown) =>
-    getFeatureSaveError(
-      error,
-      !!props.projectFlag?.multivariate_options?.length,
-    )
-
   const save = (func: (...args: any[]) => void, isSaving: boolean) => {
     const hasMultivariate =
       props.environmentFlag?.multivariate_feature_state_values?.length
@@ -591,6 +585,10 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
           saveVariationValues,
         }: any,
       ) => {
+        const saveError = getFeatureSaveError(
+          error,
+          !!props.projectFlag?.multivariate_options?.length,
+        )
         // Not props.projectFlag: that carries the project default weights, so
         // comparing against it reports a weight edit that is not one.
         const variationChanges = diffVariations({
@@ -1103,8 +1101,8 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                   }}
                   onRemoveMultivariateOption={removeMultivariateOption}
                   onHasMetadataRequiredChange={setHasMetadataRequired}
-                  featureError={parseError(error).featureError}
-                  featureWarning={parseError(error).featureWarning}
+                  featureError={saveError.featureError}
+                  featureWarning={saveError.featureWarning}
                 />
                 <FeatureUpdateSummary
                   projectId={projectId}
