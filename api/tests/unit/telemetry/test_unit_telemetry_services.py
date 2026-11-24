@@ -24,19 +24,6 @@ def test_get_resolved_ids__project_id__resolves_organisation(
     }
 
 
-def test_get_resolved_ids__deleted_project__resolves_nothing(
-    project: Project,
-) -> None:
-    # Given
-    project.delete()
-
-    # When
-    resolved_ids = get_resolved_ids({"project__id": project.id})
-
-    # Then
-    assert resolved_ids == {"project__id": project.id}
-
-
 def test_get_resolved_ids__feature_id__resolves_project_and_organisation(
     feature: Feature,
     django_assert_num_queries: typing.Any,

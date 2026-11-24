@@ -8,5 +8,4 @@ class ResolvedIds(TypedDict, total=False):
     project__id: int
     feature__id: int
     environment__id: int
-    # Identifies the environment until its ID is resolved
     environment__api_key: str

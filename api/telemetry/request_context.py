@@ -15,8 +15,8 @@ from rest_framework.request import Request
 from rest_framework.views import APIView
 
 from api_keys.user import APIKeyUser
+from telemetry.mappers import map_view_kwargs_to_resolved_ids
 from telemetry.services import get_resolved_ids
-from telemetry.types import ResolvedIds
 from users.models import FFAdminUser
 
 
@@ -37,19 +37,6 @@ def bind_api_request_context(request: Request, view: APIView) -> None:
     resolved_ids.pop("environment__api_key", None)
     # Bound after identity, so the route's organisation wins over the key's
     bind_request_context(**resolved_ids)
-
-
-def map_view_kwargs_to_resolved_ids(view_kwargs: dict[str, typing.Any]) -> ResolvedIds:
-    """Map the URL kwargs of a view to the IDs of the entities it acts on."""
-    ids: ResolvedIds = {}
-    # Routers capture strings, path converters ints
-    if str(project_pk := view_kwargs.get("project_pk", "")).isdigit():
-        ids["project__id"] = int(project_pk)
-    if str(feature_pk := view_kwargs.get("feature_pk", "")).isdigit():
-        ids["feature__id"] = int(feature_pk)
-    if environment_api_key := view_kwargs.get("environment_api_key"):
-        ids["environment__api_key"] = environment_api_key
-    return ids
 
 
 def install() -> None:

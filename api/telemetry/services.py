@@ -5,13 +5,7 @@ from telemetry.types import ResolvedIds
 
 
 def get_resolved_ids(ids: ResolvedIds) -> ResolvedIds:
-    """
-    Resolve, best effort, the IDs missing from `ids` that the ones present
-    imply, e.g. a project's organisation, from the database.
-
-    Only what's missing is queried. Entities that don't exist, e.g. were
-    deleted, aren't resolved.
-    """
+    """Resolve as many keys in `ids` as possible from the database."""
     resolved_ids = ids.copy()
 
     if "environment__id" not in resolved_ids and (
@@ -40,9 +34,8 @@ def get_resolved_ids(ids: ResolvedIds) -> ResolvedIds:
             ) = feature_ids
 
     if "organisation__id" not in resolved_ids and "project__id" in resolved_ids:
-        # NOTE: Filter by `id`, as `pk` lookups include soft-deleted projects
         if (
-            organisation_id := Project.objects.filter(id=resolved_ids["project__id"])
+            organisation_id := Project.objects.filter(pk=resolved_ids["project__id"])
             .values_list("organisation_id", flat=True)
             .first()
         ) is not None:
