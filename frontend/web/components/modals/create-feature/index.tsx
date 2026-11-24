@@ -829,6 +829,7 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                   >
                     <FeatureValueTab
                       error={error}
+                      saveError={saveError.featureError}
                       prerequisites={prerequisites}
                       onViewDependencies={showDependencies}
                       projectId={projectId}
