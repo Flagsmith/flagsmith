@@ -22,7 +22,7 @@ const FeatureModalTitle: FC<FeatureModalTitleProps> = ({ label, name }) => (
       onClick={() => {
         Utils.copyToClipboard(name)
       }}
-      className='ms-2 flex-shrink-0'
+      className='ms-2'
     >
       <Icon width={16} name='copy' />
     </IconButton>
