@@ -1,7 +1,7 @@
 import { FC } from 'react'
 import { StagedDependencyChange } from 'common/types/responses'
 import cn from 'classnames'
-import StateToggle from 'components/feature-dependencies/StateToggle'
+import Switch from 'components/Switch'
 import Satisfies from 'components/feature-dependencies/Satisfies'
 import 'components/diff/DiffRow/DiffRow.scss'
 import './DependencyChangesTable.scss'
@@ -65,7 +65,7 @@ const DependencyChangesTable: FC<DependencyChangesTableProps> = ({
             {!!isEnabled && (
               <>
                 <TableCell className='diff-row__content'>
-                  <StateToggle isEnabled={isEnabled(prerequisite.id)} />
+                  <Switch checked={isEnabled(prerequisite.id)} readOnly />
                 </TableCell>
                 <TableCell className='diff-row__content'>
                   {/* Only system edges can be staged, so on means met. */}

@@ -13,7 +13,7 @@ import Table, {
 import IconButton from 'components/base/IconButton'
 import Icon from 'components/icons/Icon'
 import { PrerequisiteRow } from 'components/modals/create-feature/tabs/FeatureDependenciesTab/prerequisiteState'
-import StateToggle from 'components/feature-dependencies/StateToggle'
+import Switch from 'components/Switch'
 import Satisfies from 'components/feature-dependencies/Satisfies'
 import './PrerequisitesTable.scss'
 
@@ -105,7 +105,7 @@ const PrerequisitesTable: FC<PrerequisitesTableProps> = ({
             </div>
           </TableCell>
           <TableCell>
-            <StateToggle isEnabled={isEnabled} />
+            <Switch checked={isEnabled} readOnly />
           </TableCell>
           <TableCell>
             <Satisfies isMet={isMet} />
