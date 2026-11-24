@@ -12,13 +12,14 @@ const tooLong = {
 
 describe('getFeatureSaveError', () => {
   it.each`
-    error                                       | expected
-    ${undefined}                                | ${''}
-    ${'Something broke'}                        | ${'Something broke'}
-    ${new Error('Feature contains no changes')} | ${'Feature contains no changes'}
-    ${tooLong}                                  | ${'Too long'}
-    ${{ name: ['Name already exists'] }}        | ${'Name already exists'}
-    ${{ data: '<html>502</html>' }}             | ${FALLBACK}
+    error                                                                       | expected
+    ${undefined}                                                                | ${''}
+    ${'Something broke'}                                                        | ${'Something broke'}
+    ${new Error('Feature contains no changes')}                                 | ${'Feature contains no changes'}
+    ${{ message: 'Feature contains no changes', name: 'Error', stack: 'at x' }} | ${'Feature contains no changes'}
+    ${tooLong}                                                                  | ${'Too long'}
+    ${{ name: ['Name already exists'] }}                                        | ${'Name already exists'}
+    ${{ data: '<html>502</html>' }}                                             | ${FALLBACK}
   `('returns "$expected" for $error', ({ error, expected }) => {
     expect(getFeatureSaveError(error, false)).toEqual({
       featureError: expected,

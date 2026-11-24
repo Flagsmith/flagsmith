@@ -12,12 +12,19 @@ export type FeatureSaveError = {
   featureWarning: string
 }
 
-// A save fails with a thrown Error, an API response ({ status, data }) or a
-// bare API body from the older save path.
+// A save fails with a thrown Error (raw or serialised by RTK), an API response
+// ({ status, data }) or a bare API body from the older save path.
 const getErrorText = (error: unknown): string => {
   if (!error) return ''
   if (typeof error === 'string') return error
-  if (error instanceof Error) return error.message
+  // An Error, or one RTK serialised to { name, message, stack }.
+  if (
+    typeof error === 'object' &&
+    'message' in error &&
+    typeof error.message === 'string'
+  ) {
+    return error.message
+  }
   if (typeof error === 'object' && 'data' in error) {
     return getApiErrorMessage(error, FALLBACK)
   }
