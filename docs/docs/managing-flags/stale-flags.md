@@ -73,7 +73,7 @@ reference to it in your codebase. Combine it with:
 
 - **[Code References](/managing-flags/code-references)** — to locate every file and line where a stale flag is used, so
   you can remove it in a single PR.
-- **[Flag Lifecycle](/best-practices/flag-lifecycle)** — for guidance on when to remove short-lived flags versus keep
+- **[Feature Flags Life Spans](/best-practices/flag-life-spans)** — for guidance on when to remove short-lived flags versus keep
   long-lived ones.
 
 A typical cleanup workflow: filter the Features list by the `Stale` tag, open each feature, use its Code References to
@@ -86,4 +86,4 @@ find the call sites, remove the flag from the codebase, then delete the flag in 
 - [Tagging](/managing-flags/tagging)
 - [Code References](/managing-flags/code-references)
 - [Feature Versioning](/managing-flags/feature-versioning)
-- [Flag Lifecycle](/best-practices/flag-lifecycle)
+- [Feature Flags Life Spans](/best-practices/flag-life-spans)
