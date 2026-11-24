@@ -94,7 +94,7 @@ test('Versioning tests - Create, edit, and compare feature versions @oss', async
         'Ensure this field has no more than 20000 characters.',
     )
     // The rejected value is still unsaved, so closing asks to discard it
-    await page.keyboard.press('Escape')
+    await page.getByRole('button', { name: 'Close' }).click()
     await click('#confirm-btn-yes')
     await waitForElementNotExist('#create-feature-modal')
 
