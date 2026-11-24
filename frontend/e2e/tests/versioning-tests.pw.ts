@@ -93,7 +93,9 @@ test('Versioning tests - Create, edit, and compare feature versions @oss', async
     await expect(page.getByRole('alert')).toContainText(
         'Ensure this field has no more than 20000 characters.',
     )
-    await closeModal()
+    // The rejected value is still unsaved, so closing asks to discard it
+    await page.mouse.click(10, 10)
+    await click('#confirm-btn-yes')
     await waitForElementNotExist('#create-feature-modal')
 
     // ===================================================================================
