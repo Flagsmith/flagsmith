@@ -33,6 +33,7 @@ import {
   hasUnmatchedIdentityOverride,
 } from 'common/utils/multivariate'
 import { saveFeatureWithValidation } from 'components/saveFeatureWithValidation'
+import { getFeatureSaveError } from './featureSaveError'
 import FeatureHistory from 'components/FeatureHistory'
 import { getChangeRequests } from 'common/services/useChangeRequest'
 import FeatureHealthTabContent from 'components/feature-health/FeatureHealthTabContent'
@@ -333,25 +334,11 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
     return value
   }
 
-  const parseError = (error: any) => {
-    let featureError =
-      error?.metadata
-        ?.flatMap((m: any) => m.non_field_errors ?? [])
-        .join('\n') ||
-      error?.message ||
-      error?.name?.[0] ||
-      error
-    let featureWarning = ''
-    if (
-      featureError?.includes?.('no changes') &&
-      props.projectFlag?.multivariate_options?.length
-    ) {
-      featureWarning =
-        'Your feature contains no changes to its value, enabled state or environment weights. If you have adjusted any variation values this will have been saved for all environments.'
-      featureError = ''
-    }
-    return { featureError, featureWarning }
-  }
+  const parseError = (error: unknown) =>
+    getFeatureSaveError(
+      error,
+      !!props.projectFlag?.multivariate_options?.length,
+    )
 
   const save = (func: (...args: any[]) => void, isSaving: boolean) => {
     const hasMultivariate =

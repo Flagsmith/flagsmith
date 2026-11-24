@@ -12,7 +12,7 @@ import {
   PostgresConfig,
   SnowflakeConfig,
 } from 'common/types/responses'
-import { experimentErrorMessage } from 'components/experiments/errors'
+import { getApiErrorMessage } from 'common/utils/apiErrorMessage'
 import Project from 'common/project'
 import WarehouseConnectionCard from './WarehouseConnectionCard'
 import WarehouseSetup from './WarehouseSetup'
@@ -133,7 +133,7 @@ const WarehouseTab: FC<WarehouseTabProps> = ({ environmentId }) => {
           .catch((error) => {
             setIsEnabling(false)
             toast(
-              experimentErrorMessage(
+              getApiErrorMessage(
                 error,
                 'Failed to create warehouse connection',
               ),

@@ -2,7 +2,7 @@ import React, { FC } from 'react'
 import { FeatureState, ProjectFlag } from 'common/types/responses'
 import FeatureValueTab from './FeatureValueTab'
 import FeatureSettingsTab from './FeatureSettingsTab'
-import ErrorMessage from 'components/ErrorMessage'
+import Banner from 'components/base/Banner'
 import WarningMessage from 'components/WarningMessage'
 import { useHasPermission } from 'common/providers/Permission'
 import { ProjectPermission } from 'common/types/permissions.types'
@@ -67,7 +67,11 @@ const CreateFeatureTab: FC<CreateFeatureTabProps> = ({
 
   return (
     <>
-      <ErrorMessage error={featureError} />
+      {!!featureError && (
+        <Banner type='error' className='mb-3'>
+          {featureError}
+        </Banner>
+      )}
       <WarningMessage warningMessage={featureWarning} />
       {!!projectFlag && (
         <>
