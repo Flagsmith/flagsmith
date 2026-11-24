@@ -1,5 +1,4 @@
 import { AnimationEvent, FC, ReactNode, useEffect, useId, useRef } from 'react'
-import classNames from 'classnames'
 import { HeadingText } from 'components/base/typography'
 import IconButton from 'components/base/IconButton'
 import Icon from 'components/icons/Icon'
@@ -19,7 +18,6 @@ type BottomSheetProps = {
   onOpenChange: (open: boolean) => void
   title: string
   children: ReactNode
-  className?: string
   // Index of the focusable item to focus on open (defaults to the first)
   initialFocus?: number
 }
@@ -29,7 +27,6 @@ const FOCUSABLE =
 
 const BottomSheet: FC<BottomSheetProps> = ({
   children,
-  className,
   initialFocus = 0,
   onOpenChange,
   open,
@@ -76,7 +73,7 @@ const BottomSheet: FC<BottomSheetProps> = ({
               refs.setFloating(node)
             }}
             tabIndex={-1}
-            className={classNames('ds-bottom-sheet', className)}
+            className='ds-bottom-sheet'
             aria-labelledby={titleId}
             onAnimationEnd={onAnimationEnd}
             {...getFloatingProps()}

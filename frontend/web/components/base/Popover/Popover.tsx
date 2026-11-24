@@ -37,6 +37,7 @@ export type PopoverProps = {
   renderTrigger: (props: PopoverTriggerProps, isOpen: boolean) => ReactNode
   children: ReactNode | ((close: () => void) => ReactNode)
   placement?: PopoverPlacement
+  // Applies to the desktop panel only; the phone sheet sizes itself.
   className?: string
 }
 
@@ -96,12 +97,7 @@ const Popover: FC<PopoverProps> = ({
         isOpen,
       )}
       {asSheet ? (
-        <BottomSheet
-          open={isOpen}
-          onOpenChange={setIsOpen}
-          title={ariaLabel}
-          className={className}
-        >
+        <BottomSheet open={isOpen} onOpenChange={setIsOpen} title={ariaLabel}>
           {isOpen &&
             (typeof children === 'function' ? children(close) : children)}
         </BottomSheet>
