@@ -27,7 +27,8 @@ metric and experiment, and instruments your application.
 :::
 
 1. **[Connect a warehouse](/experimentation/connect-a-warehouse)**: enable the managed Flagsmith warehouse, or connect
-   your own ClickHouse or Databricks. Self-hosted Flagsmith uses your own. Done once per environment.
+   your own ClickHouse, Databricks, PostgreSQL or Snowflake. Self-hosted Flagsmith uses your own. Done once per
+   environment.
 2. **[Create metrics](/experimentation/create-metrics)**: define the outcomes you measure, computed from the events your
    application sends.
 3. **[Create an experiment](/experimentation/create-an-experiment)**: pick a multivariate flag, decide how much traffic

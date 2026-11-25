@@ -103,8 +103,8 @@ The host can't be changed. To use a different PostgreSQL database, disconnect an
 ## Performance and table growth
 
 Results queries scan the events table, so they slow down as it grows. If results become too slow, use
-[ClickHouse](/experimentation/connect-clickhouse) or [Databricks](/experimentation/connect-databricks), which are built
-for this kind of query.
+[ClickHouse](/experimentation/connect-clickhouse), [Databricks](/experimentation/connect-databricks) or
+[Snowflake](/experimentation/connect-snowflake), which are built for this kind of query.
 
 Flagsmith doesn't delete old events or partition the table. Monitor its size and manage retention yourself.
 
