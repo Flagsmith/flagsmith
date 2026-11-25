@@ -16,6 +16,7 @@ from environments.models import Environment
 from features.models import Feature
 from organisations.models import Organisation
 from projects.models import Project
+from telemetry.request_context import install
 from users.models import FFAdminUser
 
 REQUEST_CONTEXT_NAMES = (
@@ -156,3 +157,15 @@ def test_api_view__environment_route__binds_environment_key_and_ids(
         "organisation__id": environment.project.organisation_id,
         "project__id": environment.project_id,
     }
+
+
+def test_install__installed_already__keeps_wrapper() -> None:
+    # Given
+    # NOTE: `TelemetryConfig.ready` installed it
+    perform_authentication = APIView.perform_authentication
+
+    # When
+    install()
+
+    # Then
+    assert APIView.perform_authentication is perform_authentication

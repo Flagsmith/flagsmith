@@ -38,6 +38,9 @@ def bind_api_request_context(request: Request, view: APIView) -> None:
     bind_request_context(**resolved_ids)
 
 
+_INSTALLED = "_binds_api_request_context"
+
+
 def install() -> None:
     """
     Bind API request context to every DRF view's request on authentication.
@@ -49,12 +52,15 @@ def install() -> None:
     view runs before checking permissions.
     """
     perform_authentication = APIView.perform_authentication
+    if getattr(perform_authentication, _INSTALLED, False):
+        return  # e.g. Django set up its apps again
 
     @functools.wraps(perform_authentication)
     def _perform_authentication(self: APIView, request: Request) -> None:
         perform_authentication(self, request)
         bind_api_request_context(request, self)
 
+    setattr(_perform_authentication, _INSTALLED, True)
     setattr(
         APIView,
         "perform_authentication",
