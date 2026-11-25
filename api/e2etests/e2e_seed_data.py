@@ -1,3 +1,4 @@
+from common.core.utils import is_saas
 from common.environments.permissions import (
     UPDATE_FEATURE_STATE,
     VIEW_ENVIRONMENT,
@@ -15,6 +16,15 @@ from edge_api.identities.models import EdgeIdentity
 from environments.identities.models import Identity
 from environments.models import Environment
 from environments.permissions.models import UserEnvironmentPermission
+from experimentation.models import (
+    WarehouseConnection,
+    WarehouseConnectionStatus,
+    WarehouseType,
+)
+from features.feature_types import MULTIVARIATE
+from features.models import Feature
+from features.multivariate.models import MultivariateFeatureOption
+from features.value_types import STRING
 from organisations.models import (
     Organisation,
     OrganisationRole,
@@ -36,6 +46,7 @@ PASSWORD = "Str0ngp4ssw0rd!"
 
 PROJECT_PERMISSION_PROJECT = "My Test Project 5 Project Permission"
 ENV_PERMISSION_PROJECT = "My Test Project 6 Env Permission"
+EXPERIMENTS_PROJECT = "My Test Project 8 Experiments"
 
 
 def delete_user_and_its_organisations(user_email: str) -> None:
@@ -66,6 +77,20 @@ def teardown() -> None:
     delete_user_and_its_organisations(user_email=settings.E2E_SEPARATE_TEST_USER)
     delete_user_and_its_organisations(user_email=settings.E2E_BILLING_USER)
     delete_user_and_its_organisations(user_email=settings.E2E_ONBOARDING_RELOAD_USER)
+
+
+def seed_managed_warehouse_connection(environment: Environment) -> None:
+    # Self-hosted E2E tests connect the one-click Flagsmith database instead.
+    if not is_saas():
+        return
+    WarehouseConnection.objects.update_or_create(
+        environment=environment,
+        defaults={
+            "warehouse_type": WarehouseType.FLAGSMITH,
+            "name": "Flagsmith",
+            "status": WarehouseConnectionStatus.CONNECTED,
+        },
+    )
 
 
 def seed_data() -> None:
@@ -144,6 +169,7 @@ def seed_data() -> None:
         },
         {"name": ENV_PERMISSION_PROJECT, "environments": ["Development"]},
         {"name": "My Test Project 7 Role", "environments": ["Development"]},
+        {"name": EXPERIMENTS_PROJECT, "environments": ["Development"]},
     ]
     # Upgrade organisation seats
     Subscription.objects.filter(organisation__in=org_admin.organisations.all()).update(
@@ -210,6 +236,23 @@ def seed_data() -> None:
                     ]
                 ]
             environments.append(environment)
+
+        if project_info["name"] == EXPERIMENTS_PROJECT:
+            experiment_feature = Feature.objects.create(
+                name="experiment_checkout",
+                project=project,
+                type=MULTIVARIATE,
+                initial_value="control",
+            )
+            for variant_key, variant_value in (("variant_a", "a"), ("variant_b", "b")):
+                MultivariateFeatureOption.objects.create(
+                    feature=experiment_feature,
+                    key=variant_key,
+                    type=STRING,
+                    string_value=variant_value,
+                    default_percentage_allocation=0,
+                )
+            seed_managed_warehouse_connection(environment)
 
     # We're only creating identities for 6 of the 7 environments because
     # they are necessary for the environments created above and to keep

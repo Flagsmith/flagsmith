@@ -522,34 +522,33 @@ const CreateSegment: FC<CreateSegmentType> = ({
               : 'Add at least one AND/NOT rule to create a segment.'}
           </InfoMessage>
         )}
-        <Row className='justify-content-end'>
-          {!isReadOnly && (
-            <div
+        {!isReadOnly && (
+          <div className='d-flex flex-column flex-sm-row justify-content-sm-end gap-2'>
+            <Button
+              theme='outline'
+              data-test='add-rule'
+              type='button'
               onClick={() =>
                 addRule(topLevelRuleType === 'ANY' ? 'ALL' : 'ANY')
               }
-              className='text-center'
             >
-              <Button theme='outline' data-test='add-rule' type='button'>
-                {topLevelRuleType === 'ANY'
-                  ? 'Add OR Condition'
-                  : 'Add AND Condition'}
-              </Button>
-            </div>
-          )}
-          {!isReadOnly && topLevelRuleType !== 'ANY' && (
-            <div onClick={() => addRule('NONE')} className='text-center'>
+              {topLevelRuleType === 'ANY'
+                ? 'Add OR Condition'
+                : 'Add AND Condition'}
+            </Button>
+            {topLevelRuleType !== 'ANY' && (
               <Button
                 theme='outline'
-                className='ml-2 btn--outline-danger'
+                className='btn--outline-danger'
                 data-test='add-rule'
                 type='button'
+                onClick={() => addRule('NONE')}
               >
                 Add AND NOT Condition
               </Button>
-            </div>
-          )}
-        </Row>
+            )}
+          </div>
+        )}
       </div>
     </div>
   )

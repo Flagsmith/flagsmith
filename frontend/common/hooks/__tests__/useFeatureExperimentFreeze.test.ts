@@ -39,6 +39,8 @@ const makeExperiment = (
   id: 1,
   metrics: [],
   name: 'Test Experiment',
+  rollout_decision: null,
+  rollout_variant: null,
   started_at: null,
   status: overrides.status ?? 'running',
   updated_at: '',

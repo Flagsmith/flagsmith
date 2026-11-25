@@ -1,5 +1,5 @@
 // hooks/useVisibleCount.ts
-import { useState, useLayoutEffect, RefObject } from 'react'
+import { useState, useLayoutEffect, useRef, RefObject } from 'react'
 
 type UseOverflowVisibleCountOptions = {
   outerContainerRef: RefObject<HTMLDivElement>
@@ -7,6 +7,29 @@ type UseOverflowVisibleCountOptions = {
   itemCount: number
   extraWidth: number
   force?: boolean
+}
+
+type MeasureReason = 'content' | 'overflow'
+
+type GetMeasureReason<T> = {
+  changedNodes: T[]
+  itemsContainer: T
+  isOverflowing: boolean
+  overflowChecked: boolean
+  shownCount: number
+}
+
+// Overflow is checked once per content change: rounded widths can leave the
+// row a pixel over, and with no items shown it is the menu button alone
+export const getMeasureReason = <T>({
+  changedNodes,
+  isOverflowing,
+  itemsContainer,
+  overflowChecked,
+  shownCount,
+}: GetMeasureReason<T>): MeasureReason | undefined => {
+  if (changedNodes.some((node) => node !== itemsContainer)) return 'content'
+  if (isOverflowing && shownCount > 0 && !overflowChecked) return 'overflow'
 }
 
 export const useOverflowVisibleCount = ({
@@ -18,6 +41,7 @@ export const useOverflowVisibleCount = ({
 }: UseOverflowVisibleCountOptions) => {
   const [visibleCount, setVisibleCount] = useState(force ? 0 : itemCount)
   const [widths, setWidths] = useState<number[]>([])
+  const overflowChecked = useRef(false)
 
   // Reset state when the items change
   useLayoutEffect(() => {
@@ -42,6 +66,37 @@ export const useOverflowVisibleCount = ({
     const newWidths = childEls.map((el) => el.offsetWidth)
     setWidths(newWidths)
   }, [itemCount, force, widths.length, itemsContainerRef])
+
+  // Measure again when an item's content changes or a shown item no longer fits.
+  // Not a ResizeObserver: items stretch with the row, so it would loop.
+  useLayoutEffect(() => {
+    const itemsCont = itemsContainerRef.current
+    if (force || !itemsCont) return
+
+    const observer = new MutationObserver((records) => {
+      const outerCont = outerContainerRef.current
+      const isOverflowing =
+        !!outerCont && outerCont.scrollWidth > outerCont.clientWidth
+      const reason = getMeasureReason({
+        changedNodes: records.map((record) => record.target),
+        isOverflowing,
+        itemsContainer: itemsCont,
+        overflowChecked: overflowChecked.current,
+        shownCount: itemsCont.childElementCount,
+      })
+      if (reason) {
+        overflowChecked.current = reason === 'overflow'
+        // Already measuring: a new empty array would not measure again
+        setWidths((current) => (current.length ? [] : current))
+      }
+    })
+    observer.observe(itemsCont, {
+      characterData: true,
+      childList: true,
+      subtree: true,
+    })
+    return () => observer.disconnect()
+  }, [force, itemsContainerRef, outerContainerRef])
 
   // Calculate visible count based
   useLayoutEffect(() => {

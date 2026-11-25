@@ -67,6 +67,36 @@ export const getVariantIdentities = (
   return [control, ...treatments]
 }
 
+export type CompletedRollout = {
+  variant: VariantIdentity | null
+  message: string
+}
+
+const getRolledOutVariant = (
+  experiment: Experiment,
+): VariantIdentity | undefined => {
+  const [control, ...treatments] = getVariantIdentities(experiment.feature)
+  if (experiment.rollout_decision === 'control') return control
+  if (experiment.rollout_decision !== 'variant') return undefined
+  const index = (experiment.feature.multivariate_options ?? []).findIndex(
+    (mv) => mv.id === experiment.rollout_variant,
+  )
+  return treatments[index]
+}
+
+export const getCompletedRollout = (
+  experiment: Experiment,
+): CompletedRollout | null => {
+  if (experiment.rollout_decision === 'disable') {
+    return { message: 'Flag turned off for everyone.', variant: null }
+  }
+  const variant = getRolledOutVariant(experiment)
+  if (variant) return { message: 'rolled out to everyone.', variant }
+  return experiment.rollout_decision === 'variant'
+    ? { message: 'A variant was rolled out to everyone.', variant: null }
+    : null
+}
+
 // Exposure buckets are computed in UTC by the warehouse query
 // (toStartOfHour/Day(..., 'UTC')); render them in UTC so labels match.
 export const formatBucketLabel = (

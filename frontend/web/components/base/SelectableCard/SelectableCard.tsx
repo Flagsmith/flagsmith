@@ -11,14 +11,16 @@ type SelectableCardProps = {
   selected?: boolean
   onClick: () => void
   icon?: ReactNode
-  title: string
-  description: string
+  title: ReactNode
+  description: ReactNode
   badge?: { label: string; variant: BadgeVariant }
   tags?: string[]
   disabled?: boolean
   className?: string
   // Extra content below the description (e.g. an illustrative preview).
   children?: ReactNode
+  // Content inside the card but outside its button (e.g. a form control).
+  footer?: ReactNode
 }
 
 const SelectableCard: FC<SelectableCardProps> = ({
@@ -27,6 +29,7 @@ const SelectableCard: FC<SelectableCardProps> = ({
   className,
   description,
   disabled,
+  footer,
   icon,
   onClick,
   selected,
@@ -34,7 +37,7 @@ const SelectableCard: FC<SelectableCardProps> = ({
   title,
 }) => {
   return (
-    <BareButton
+    <div
       className={cn(
         'selectable-card',
         {
@@ -43,34 +46,43 @@ const SelectableCard: FC<SelectableCardProps> = ({
         },
         className,
       )}
-      onClick={onClick}
-      disabled={disabled}
     >
-      <div className='selectable-card__content'>
-        {icon && <div className='selectable-card__icon'>{icon}</div>}
-        <span className='selectable-card__title'>{title}</span>
-        <span className='selectable-card__description'>{description}</span>
-        {!!tags?.length && (
-          <div className='selectable-card__tags'>
-            {tags.map((tag) => (
-              <span key={tag} className='selectable-card__tag'>
-                {tag}
-              </span>
-            ))}
+      <BareButton
+        className='selectable-card__body'
+        onClick={onClick}
+        disabled={disabled}
+      >
+        <div className='selectable-card__content'>
+          {icon && <div className='selectable-card__icon'>{icon}</div>}
+          <span className='selectable-card__title'>{title}</span>
+          <span className='selectable-card__description'>{description}</span>
+          {!!tags?.length && (
+            <div className='selectable-card__tags'>
+              {tags.map((tag) => (
+                <span key={tag} className='selectable-card__tag'>
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )}
+          {children}
+        </div>
+        {badge && (
+          <div className='selectable-card__aside'>
+            <span
+              className={`selectable-card__badge selectable-card__badge--${badge.variant}`}
+            >
+              {badge.label}
+            </span>
           </div>
         )}
-        {children}
-      </div>
-      {badge && (
-        <div className='selectable-card__aside'>
-          <span
-            className={`selectable-card__badge selectable-card__badge--${badge.variant}`}
-          >
-            {badge.label}
-          </span>
+      </BareButton>
+      {footer && (
+        <div className='px-3 pb-3' inert={disabled}>
+          {footer}
         </div>
       )}
-    </BareButton>
+    </div>
   )
 }
 

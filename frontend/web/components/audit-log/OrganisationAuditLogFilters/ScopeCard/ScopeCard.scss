@@ -1,3 +1,5 @@
+@import '../../../../styles/variables';
+
 .scope-card {
   // As wide as the scope switch; the steps below wrap to it.
   width: max-content;
@@ -30,6 +32,25 @@
 
   &__project:not(:has(input:checked)):hover {
     background: var(--color-surface-hover);
+  }
+
+  // Phones open this in a bottom sheet (useBreakpoint isPhone): fill it,
+  // and let the sheet scroll instead of the list.
+  @include media-breakpoint-down(md) {
+    width: 100%;
+
+    &__projects {
+      max-height: none;
+      overflow-y: visible;
+    }
+
+    &__project {
+      min-height: $touch-target-size;
+    }
+
+    .scope-mode-switch__option {
+      min-height: $touch-target-size;
+    }
   }
 
   @media (prefers-reduced-motion: reduce) {

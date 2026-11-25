@@ -4,7 +4,7 @@ h3,
 h4,
 h5,
 h6 {
-  color: $body-color;
+  color: var(--color-text-default);
   font-family: $font-family;
   font-weight: 700;
 }
@@ -45,14 +45,6 @@ a {
 
 .dark {
   color: $body-color-dark;
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6 {
-    color: $text-icon-light;
-  }
 }
 
 .font-weight-medium {

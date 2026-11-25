@@ -39,6 +39,7 @@ from experimentation.constants import (
     EXPOSURES_REFRESH_MIN_INTERVAL,
     RESULTS_REFRESH_MIN_INTERVAL,
 )
+from experimentation.dataclasses import RolloutDecisionSpec
 from experimentation.models import (
     Experiment,
     ExperimentComputation,
@@ -63,6 +64,7 @@ from experimentation.serializers import (
     ExperimentMetricSerializer,
     ExperimentQueryParamSerializer,
     ExperimentResultsSerializer,
+    ExperimentRolloutDecisionSerializer,
     ExperimentRolloutSerializer,
     ExperimentSerializer,
     MetricSerializer,
@@ -75,6 +77,7 @@ from experimentation.services import (
     create_experiment_audit_log,
     create_metric_audit_log,
     create_warehouse_audit_log,
+    delete_experiment,
     enable_experiment_rollout,
     get_warehouse_event_names,
     mark_warehouse_pending_connection,
@@ -472,7 +475,11 @@ class ExperimentViewSet(
         )
 
     def perform_destroy(self, instance: Experiment) -> None:
-        if instance.status == ExperimentStatus.RUNNING:
+        try:
+            delete_experiment(instance, self._get_user(self.request))
+        except Experiment.DoesNotExist as exc:
+            raise NotFound from exc
+        except ValueError as exc:
             raise serializers.ValidationError(
                 {
                     "detail": (
@@ -480,11 +487,7 @@ class ExperimentViewSet(
                         "Pause or complete it first."
                     )
                 }
-            )
-        create_experiment_audit_log(
-            instance, self._get_user(self.request), action="deleted"
-        )
-        instance.delete()
+            ) from exc
 
     @action(detail=True, methods=["post"])
     def start(self, request: Request, **kwargs: object) -> Response:
@@ -500,9 +503,27 @@ class ExperimentViewSet(
     def pause(self, request: Request, **kwargs: object) -> Response:
         return self._transition_status(ExperimentStatus.PAUSED)
 
+    @extend_schema(
+        description=(
+            "Completes an experiment and decides what its feature serves "
+            "afterwards: control, one variant, or the flag disabled. The "
+            "rollout override is removed."
+        ),
+        request=ExperimentRolloutDecisionSerializer,
+        responses={200: ExperimentListSerializer},
+    )
     @action(detail=True, methods=["post"])
     def complete(self, request: Request, **kwargs: object) -> Response:
-        return self._transition_status(ExperimentStatus.COMPLETED)
+        serializer = ExperimentRolloutDecisionSerializer(
+            data=request.data, context={"experiment": self.get_object()}
+        )
+        serializer.is_valid(raise_exception=True)
+        return self._transition_status(
+            ExperimentStatus.COMPLETED,
+            rollout_decision=ExperimentRolloutDecisionSerializer.to_spec(
+                serializer.validated_data
+            ),
+        )
 
     # Deliberately not tagged for MCP: the sibling mutating actions (start,
     # pause, complete) are not agent-exposed either, and this one re-targets a
@@ -621,12 +642,21 @@ class ExperimentViewSet(
                     detail="A refresh was requested recently. Try again later.",
                 )
 
-    def _transition_status(self, target_status: str) -> Response:
+    def _transition_status(
+        self,
+        target_status: str,
+        rollout_decision: RolloutDecisionSpec | None = None,
+    ) -> Response:
         experiment: Experiment = self.get_object()
         try:
             experiment = transition_experiment_status(
-                experiment, target_status, self._get_user(self.request)
+                experiment,
+                target_status,
+                self._get_user(self.request),
+                rollout_decision=rollout_decision,
             )
+        except Experiment.DoesNotExist as exc:
+            raise NotFound from exc
         except ValueError:
             logger.warning(
                 "Invalid experiment status transition for "

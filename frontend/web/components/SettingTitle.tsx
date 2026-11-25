@@ -1,5 +1,6 @@
 import React, { FC, PropsWithChildren } from 'react'
 import classNames from 'classnames'
+import { HeadingText } from './base/typography'
 
 type SettingTitleType = PropsWithChildren<{
   danger?: boolean
@@ -8,9 +9,12 @@ type SettingTitleType = PropsWithChildren<{
 const SettingTitle: FC<SettingTitleType> = ({ children, danger }) => {
   return (
     <>
-      <h5 className={classNames('mt-5 mb-0', { 'text-danger': danger })}>
+      <HeadingText
+        level={2}
+        className={classNames('mt-5 mb-0', { 'text-danger': danger })}
+      >
         {children}
-      </h5>
+      </HeadingText>
       <hr className='py-0 my-3' />
     </>
   )

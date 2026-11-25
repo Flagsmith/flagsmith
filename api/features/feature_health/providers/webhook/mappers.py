@@ -6,10 +6,12 @@ from features.feature_health.models import (
 )
 from features.feature_health.providers.webhook.types import (
     WebhookEvent,
+    WebhookEventReason,
     WebhookEventStatus,
 )
 from features.feature_health.types import (
     FeatureHealthEventData,
+    FeatureHealthEventReason,
     FeatureHealthProviderResponse,
 )
 
@@ -26,10 +28,20 @@ def map_sample_event_status_to_feature_health_event_type(
     )
 
 
+def map_webhook_event_reason_to_feature_health_event_reason(
+    reason: WebhookEventReason,
+) -> FeatureHealthEventReason:
+    return {
+        "text_blocks": reason.get("text_blocks", []),
+        "url_blocks": reason.get("url_blocks", []),
+    }
+
+
 def map_payload_to_provider_response(
     payload: str,
 ) -> FeatureHealthProviderResponse:
     event_data: WebhookEvent = _sample_event_type_adapter.validate_json(payload)
+    reason = event_data.get("reason")
 
     return FeatureHealthProviderResponse(
         events=[
@@ -39,7 +51,11 @@ def map_payload_to_provider_response(
                 type=map_sample_event_status_to_feature_health_event_type(
                     event_data["status"]
                 ),
-                reason=event_data.get("reason"),
+                reason=(
+                    map_webhook_event_reason_to_feature_health_event_reason(reason)
+                    if reason is not None
+                    else None
+                ),
                 provider_name=FeatureHealthProviderName.WEBHOOK.value,
             ),
         ],
