@@ -8,6 +8,13 @@ import {
 } from 'common/theme/tokens'
 
 export type IconName =
+  | 'grid'
+  | 'git-branch'
+  | 'menu'
+  | 'dots-horizontal'
+  | 'tag'
+  | 'download'
+  | 'play-circle'
   | 'arrow-left'
   | 'arrow-right'
   | 'award'
@@ -928,6 +935,243 @@ const Icon: FC<IconType> = ({
           />
           <path
             d='M8 9L9.73726 7.26274C10.5293 6.47071 10.9253 6.07469 11.382 5.92631C11.7837 5.7958 12.2163 5.7958 12.618 5.92631C13.0747 6.07469 13.4707 6.47071 14.2627 7.26274L16 9'
+            stroke={fill || 'currentColor'}
+            strokeWidth='1.5'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+          />
+        </svg>
+      )
+    }
+    case 'grid': {
+      return (
+        <svg
+          width={width || '24'}
+          height={height || width || '24'}
+          viewBox='0 0 24 24'
+          fill='none'
+          xmlns='http://www.w3.org/2000/svg'
+          {...rest}
+        >
+          <path
+            d='M4.75 3H8.25C10 3 10 3 10 4.75V8.25C10 10 10 10 8.25 10H4.75C3 10 3 10 3 8.25V4.75C3 3 3 3 4.75 3Z'
+            stroke={fill || 'currentColor'}
+            strokeWidth='1.5'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+          />
+          <path
+            d='M15.75 3H19.25C21 3 21 3 21 4.75V8.25C21 10 21 10 19.25 10H15.75C14 10 14 10 14 8.25V4.75C14 3 14 3 15.75 3Z'
+            stroke={fill || 'currentColor'}
+            strokeWidth='1.5'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+          />
+          <path
+            d='M4.75 14H8.25C10 14 10 14 10 15.75V19.25C10 21 10 21 8.25 21H4.75C3 21 3 21 3 19.25V15.75C3 14 3 14 4.75 14Z'
+            stroke={fill || 'currentColor'}
+            strokeWidth='1.5'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+          />
+          <path
+            d='M15.75 14H19.25C21 14 21 14 21 15.75V19.25C21 21 21 21 19.25 21H15.75C14 21 14 21 14 19.25V15.75C14 14 14 14 15.75 14Z'
+            stroke={fill || 'currentColor'}
+            strokeWidth='1.5'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+          />
+        </svg>
+      )
+    }
+    case 'git-branch': {
+      return (
+        <svg
+          width={width || '24'}
+          height={height || width || '24'}
+          viewBox='0 0 24 24'
+          fill='none'
+          xmlns='http://www.w3.org/2000/svg'
+          {...rest}
+        >
+          <circle
+            cx='6.49713'
+            cy='5.49762'
+            r='2.50104'
+            stroke={fill || 'currentColor'}
+            strokeWidth='1.5'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+          />
+          <circle
+            cx='6.49713'
+            cy='18.503'
+            r='2.50104'
+            stroke={fill || 'currentColor'}
+            strokeWidth='1.5'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+          />
+          <circle
+            cx='17.501'
+            cy='5.49762'
+            r='2.50104'
+            stroke={fill || 'currentColor'}
+            strokeWidth='1.5'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+          />
+          <path
+            d='M6.49707 7.99854V16.0019'
+            stroke={fill || 'currentColor'}
+            strokeWidth='1.5'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+          />
+          <path
+            d='M17.5008 7.99854C17.5008 10.7611 15.2613 13.0006 12.4988 13.0006H8.99779C7.61649 13.0006 6.49707 14.1204 6.49707 15.5016'
+            stroke={fill || 'currentColor'}
+            strokeWidth='1.5'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+          />
+        </svg>
+      )
+    }
+    case 'menu': {
+      return (
+        <svg
+          width={width || '24'}
+          height={height || width || '24'}
+          viewBox='0 0 24 24'
+          fill='none'
+          xmlns='http://www.w3.org/2000/svg'
+          {...rest}
+        >
+          <path
+            d='M3 6H21'
+            stroke={fill || 'currentColor'}
+            strokeWidth='1.5'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+          />
+          <path
+            d='M3 12H21'
+            stroke={fill || 'currentColor'}
+            strokeWidth='1.5'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+          />
+          <path
+            d='M3 18H21'
+            stroke={fill || 'currentColor'}
+            strokeWidth='1.5'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+          />
+        </svg>
+      )
+    }
+    case 'dots-horizontal': {
+      return (
+        <svg
+          width={width || '24'}
+          height={height || width || '24'}
+          viewBox='0 0 24 24'
+          fill='none'
+          xmlns='http://www.w3.org/2000/svg'
+          {...rest}
+        >
+          <circle cx='5' cy='12' r='2' fill={fill || 'currentColor'} />
+          <circle cx='12' cy='12' r='2' fill={fill || 'currentColor'} />
+          <circle cx='19' cy='12' r='2' fill={fill || 'currentColor'} />
+        </svg>
+      )
+    }
+    case 'tag': {
+      return (
+        <svg
+          width={width || '24'}
+          height={height || width || '24'}
+          viewBox='0 0 24 24'
+          fill='none'
+          xmlns='http://www.w3.org/2000/svg'
+          {...rest}
+        >
+          <path
+            d='M3 12.5V5C3 3.9 3.9 3 5 3H12.5C13 3 13.5 3.2 13.9 3.6L20.4 10.1C21.2 10.9 21.2 12.1 20.4 12.9L12.9 20.4C12.1 21.2 10.9 21.2 10.1 20.4L3.6 13.9C3.2 13.5 3 13 3 12.5Z'
+            stroke={fill || 'currentColor'}
+            strokeWidth='1.5'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+          />
+          <circle
+            cx='8'
+            cy='8'
+            r='1.5'
+            stroke={fill || 'currentColor'}
+            strokeWidth='1.5'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+          />
+        </svg>
+      )
+    }
+    case 'download': {
+      return (
+        <svg
+          width={width || '24'}
+          height={height || width || '24'}
+          viewBox='0 0 24 24'
+          fill='none'
+          xmlns='http://www.w3.org/2000/svg'
+          {...rest}
+        >
+          <path
+            d='M12 3V15'
+            stroke={fill || 'currentColor'}
+            strokeWidth='1.5'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+          />
+          <path
+            d='M7 10L12 15L17 10'
+            stroke={fill || 'currentColor'}
+            strokeWidth='1.5'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+          />
+          <path
+            d='M3 15V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V15'
+            stroke={fill || 'currentColor'}
+            strokeWidth='1.5'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+          />
+        </svg>
+      )
+    }
+    case 'play-circle': {
+      return (
+        <svg
+          width={width || '24'}
+          height={height || width || '24'}
+          viewBox='0 0 24 24'
+          fill='none'
+          xmlns='http://www.w3.org/2000/svg'
+          {...rest}
+        >
+          <circle
+            cx='12'
+            cy='12'
+            r='9'
+            stroke={fill || 'currentColor'}
+            strokeWidth='1.5'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+          />
+          <path
+            d='M9.75 8.39992V15.5999C9.75 16.2999 10.5 16.6999 11.1 16.2999L16 12.9999C16.6 12.5999 16.6 11.3999 16 10.9999L11.1 7.69992C10.5 7.29992 9.75 7.69992 9.75 8.39992Z'
             stroke={fill || 'currentColor'}
             strokeWidth='1.5'
             strokeLinecap='round'

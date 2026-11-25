@@ -1,4 +1,5 @@
 import React, { FC, useEffect, useState } from 'react'
+import Icon from 'components/icons/Icon'
 import FieldLabel from 'components/base/forms/FieldLabel'
 import BareButton from 'components/base/forms/BareButton'
 import InputGroup from 'components/base/forms/InputGroup'
@@ -17,8 +18,6 @@ import { Req } from 'common/types/requests'
 import ErrorMessage from 'components/ErrorMessage'
 import { getStore } from 'common/store'
 import XMLUpload from 'components/XMLUpload'
-import { IonIcon } from '@ionic/react'
-import { cloudDownloadOutline } from 'ionicons/icons'
 import Tabs from 'components/navigation/TabMenu/Tabs'
 import TabItem from 'components/navigation/TabMenu/TabItem'
 import { AttributeName } from 'common/types/responses'
@@ -178,10 +177,10 @@ const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
                         className='d-inline-flex align-items-center'
                         onClick={downloadIDPMetadata}
                       >
-                        <IonIcon
+                        <Icon
+                          name='download'
+                          width={18}
                           className='icon-action'
-                          icon={cloudDownloadOutline}
-                          style={{ fontSize: '18px' }}
                         />
                       </BareButton>
                     }

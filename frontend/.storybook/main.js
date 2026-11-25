@@ -50,7 +50,10 @@ const config = {
       // code-help contains SDK snippets using module.exports — not needed for component rendering.
       'common/code-help': path.resolve(__dirname, 'mocks/code-help.js'),
       // Stub CommonJS data layer that breaks ESM bundler
-      [path.resolve(__dirname, '../common/data/base/_data.js')]: path.resolve(__dirname, 'mocks/_data.js'),
+      [path.resolve(__dirname, '../common/data/base/_data.js')]: path.resolve(
+        __dirname,
+        'mocks/_data.js',
+      ),
       // Mock dompurify (CJS/ESM export mismatch)
       'dompurify': path.resolve(__dirname, 'mocks/dompurify.js'),
     }
@@ -75,20 +78,13 @@ const config = {
 
     // Stub modules that cause circular dependency crashes in Storybook.
     // common/utils/utils → account-store → constants creates a webpack
-    // initialisation error. Ionic/stencil also triggers the same chain.
+    // initialisation error.
     config.resolve.alias = {
       ...config.resolve.alias,
       [path.resolve(__dirname, '../common/utils/utils')]: path.resolve(
         __dirname,
         'stubs/utils.js',
       ),
-      '@stencil/core/internal/client': false,
-      '@stencil/core': false,
-      // Mock IonIcon so components that still use it (ClearFilters,
-      // NavSubLink, BreadcrumbSeparator, etc.) can render in stories
-      // without forcing each one to migrate to our Icon component.
-      '@ionic/react': path.resolve(__dirname, 'mocks/ionic-react.js'),
-      'ionicons/icons': path.resolve(__dirname, 'mocks/ionicons-icons.js'),
     }
 
     config.plugins = config.plugins || []

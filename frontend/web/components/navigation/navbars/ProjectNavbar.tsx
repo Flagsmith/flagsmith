@@ -1,6 +1,5 @@
 import React, { FC } from 'react'
 import NavSubLink from 'components/navigation/NavSubLink'
-import { gitBranch } from 'ionicons/icons'
 import SegmentsIcon from 'components/icons/SegmentsIcon'
 import Permission, { useHasPermission } from 'common/providers/Permission'
 import AuditLogIcon from 'components/icons/AuditLogIcon'
@@ -33,7 +32,7 @@ const ProjectNavbar: FC<ProjectNavType> = ({ environmentId, projectId }) => {
       className='py-0 d-flex'
     >
       <NavSubLink
-        icon={gitBranch}
+        icon={<Icon name='git-branch' />}
         id={`features-link`}
         isActive={(_, location) =>
           location.pathname.startsWith(

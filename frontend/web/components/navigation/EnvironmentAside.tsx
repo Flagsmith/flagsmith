@@ -6,7 +6,6 @@ import { Environment } from 'common/types/responses'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Permission from 'common/providers/Permission'
 import { Link, useHistory, withRouter } from 'react-router-dom'
-import { menu } from 'ionicons/icons'
 import ProjectProvider from 'common/providers/ProjectProvider'
 import OrganisationProvider from 'common/providers/OrganisationProvider'
 // @ts-ignore
@@ -246,7 +245,7 @@ const EnvironmentAside: FC<HomeAsideType> = ({ environmentId, projectId }) => {
                           {E2E && createEnvironmentButton}
                         </div>
                         <OverflowNav
-                          icon={menu}
+                          icon='menu'
                           force
                           containerClassName='d-block d-md-none'
                         >

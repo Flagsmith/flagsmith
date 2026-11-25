@@ -1,6 +1,5 @@
 import { FC } from 'react'
-import { IonIcon } from '@ionic/react'
-import { pricetag } from 'ionicons/icons'
+import Icon from './icons/Icon'
 import {
   defaultVersionTag,
   useGetBuildVersionQuery,
@@ -19,7 +18,7 @@ const BuildVersion: FC<BuildVersionType> = ({}) => {
             title={
               <span>
                 <span className='icon'>
-                  <IonIcon icon={pricetag} />
+                  <Icon name='tag' width={14} />
                 </span>{' '}
                 {version?.tag}
               </span>

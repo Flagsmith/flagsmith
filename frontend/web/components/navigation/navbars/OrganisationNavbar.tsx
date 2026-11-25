@@ -1,6 +1,5 @@
 import React, { FC } from 'react'
 import NavSubLink from 'components/navigation/NavSubLink'
-import { apps } from 'ionicons/icons'
 import Utils from 'common/utils/utils'
 import UsersIcon from 'components/icons/UsersIcon'
 import AccountStore from 'common/stores/account-store'
@@ -20,7 +19,7 @@ const OrganisationNavbar: FC<OrganisationNavType> = ({}) => {
       className='py-0 d-flex'
     >
       <NavSubLink
-        icon={apps}
+        icon={<Icon name='grid' />}
         id='projects-link'
         to={Utils.getOrganisationHomePage()}
       >

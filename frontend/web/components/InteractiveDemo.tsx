@@ -1,7 +1,6 @@
 import React, { FC, useEffect } from 'react'
 import { AppFeature } from 'common/utils/utils'
-import { IonIcon } from '@ionic/react'
-import { playCircle } from 'ionicons/icons'
+import Icon from './icons/Icon'
 import Button from './base/forms/Button'
 const DEMO_URLS: Partial<Record<AppFeature, string>> = {
   FEATURE_HEALTH:
@@ -63,7 +62,7 @@ const InteractiveDemo: FC<InteractiveDemoProps> = ({ feature }) => {
   return (
     <Button theme='text' onClick={handleViewDemo}>
       <div className='d-flex align-items-center'>
-        <IonIcon icon={playCircle} />
+        <Icon name='play-circle' width={14} />
         View Demo
       </div>
     </Button>

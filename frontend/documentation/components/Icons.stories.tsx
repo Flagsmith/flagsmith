@@ -28,7 +28,9 @@ const CATEGORIES: IconCategory[] = [
       'chevron-up',
       'chevrons-vertical',
       'expand',
+      'grid',
       'link',
+      'menu',
       'open-external-link',
     ],
     label: 'Navigation',
@@ -39,6 +41,8 @@ const CATEGORIES: IconCategory[] = [
       'close-circle',
       'copy',
       'copy-outlined',
+      'dots-horizontal',
+      'download',
       'edit',
       'minus-circle',
       'more-vertical',
@@ -67,6 +71,7 @@ const CATEGORIES: IconCategory[] = [
   },
   {
     icons: [
+      'git-branch',
       'github',
       'issue-closed',
       'issue-linked',
@@ -96,7 +101,15 @@ const CATEGORIES: IconCategory[] = [
     label: 'People',
   },
   {
-    icons: ['code', 'file-text', 'height', 'radio', 'request'],
+    icons: [
+      'code',
+      'file-text',
+      'height',
+      'play-circle',
+      'radio',
+      'request',
+      'tag',
+    ],
     label: 'Content',
   },
   {
