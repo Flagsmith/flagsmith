@@ -146,9 +146,10 @@ async function main() {
       await runTeardown();
     }
 
-    // On retry, use --last-failed only if there were actual test failures
-    // If global setup failed before tests ran, run all tests instead
-    const playwrightArgs = attempt > 0 ? ['--last-failed', ...extraArgs] : extraArgs;
+    // Rerun the complete requested suite after teardown. `--last-failed` is
+    // unsafe for serial suites because a failed test may depend on state set up
+    // by earlier tests that Playwright would skip on a last-failed retry.
+    const playwrightArgs = extraArgs;
 
     // Add --quiet flag if QUIET is set
     if (quietMode && !playwrightArgs.includes('--quiet')) {

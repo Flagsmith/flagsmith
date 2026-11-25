@@ -40,7 +40,7 @@ const createExperiment = async (page: Page, name: string) => {
     'textarea[placeholder^="e.g. Redesigning the checkout button"]',
     'A clearer checkout increases conversion',
   )
-  await page.getByRole('combobox', { name: 'Feature' }).click()
+  await page.getByRole('combobox', { name: 'Feature Flag' }).click()
   await page.getByRole('option', { name: FEATURE, exact: true }).click()
   await click('#experiment-wizard-setup-continue')
 
