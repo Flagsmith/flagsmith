@@ -1,4 +1,4 @@
-import { AnimationEvent, FC, ReactNode, useEffect, useId, useRef } from 'react'
+import { AnimationEvent, FC, ReactNode, useId, useRef } from 'react'
 import { HeadingText } from 'components/base/typography'
 import IconButton from 'components/base/IconButton'
 import Icon from 'components/icons/Icon'
@@ -52,21 +52,20 @@ const BottomSheet: FC<BottomSheetProps> = ({
     if (e.target === e.currentTarget) focusInitialItem()
   }
 
-  // No animation runs with reduced motion, so focus straight away.
-  useEffect(() => {
-    if (!open) return
-    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
-      focusInitialItem()
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open])
-
   if (!open) return null
+
+  // No animation runs with reduced motion, so the focus manager focuses on open
+  const prefersReducedMotion = !!window.matchMedia?.(
+    '(prefers-reduced-motion: reduce)',
+  ).matches
 
   return (
     <FloatingPortal>
       <FloatingOverlay className='ds-bottom-sheet__overlay' lockScroll>
-        <FloatingFocusManager context={context} initialFocus={-1}>
+        <FloatingFocusManager
+          context={context}
+          initialFocus={prefersReducedMotion ? initialFocus : -1}
+        >
           <div
             ref={(node) => {
               sheetRef.current = node
