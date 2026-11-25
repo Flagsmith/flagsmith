@@ -286,27 +286,15 @@ const BreadcrumbSeparator: FC<BreadcrumbSeparatorType> = ({
       {!hideDropdown && (
         <span
           onClick={toggle}
-          className='breadcrumb-link user-select-none cursor-pointer d-flex flex-column mx-0 fs-captionSmall'
+          className='breadcrumb-link breadcrumb-link__chevrons user-select-none cursor-pointer d-flex flex-column mx-0 fs-captionSmall'
         >
-          <Icon
-            name='chevron-up'
-            width={12}
-            style={{ marginBottom: -2 }}
-            className='text-muted'
-          />
-          <Icon
-            name='chevron-down'
-            width={12}
-            style={{ marginTop: -2 }}
-            className='text-muted'
-          />
+          <Icon name='chevron-up' width={12} className='text-muted' />
+          <Icon name='chevron-down' width={12} className='text-muted' />
         </span>
       )}
       {!hideSlash && (
         <svg
-          style={{ opacity: 0.5 }}
-          className='with-icon_icon__MHUeb'
-          data-testid='geist-icon'
+          className='opacity-50'
           fill='none'
           height='16'
           width='16'
