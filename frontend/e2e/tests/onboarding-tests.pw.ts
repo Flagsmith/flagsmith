@@ -6,7 +6,7 @@ import { E2E_ONBOARDING_RELOAD_USER, PASSWORD } from '../config';
 // /getting-started. Pins the variant instead of reading the real flag, so this
 // runs whatever the experiment is set to.
 test.describe('Onboarding', () => {
-  test('New user connects via the single-page onboarding flow @oss', async ({
+  test('New user connects via the single-page onboarding flow, after a reload before the organisation exists @oss', async ({
     page,
   }, testInfo) => {
     const { addErrorLogging, click, setText, waitForElementVisible } =
