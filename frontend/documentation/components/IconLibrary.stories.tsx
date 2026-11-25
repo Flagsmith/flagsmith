@@ -1,7 +1,7 @@
 import React from 'react'
 import type { Meta, StoryObj } from 'storybook'
-import * as icons from 'components/icons/svg'
-import type { IconComponent } from 'components/icons/svg'
+import * as icons from 'components/icons'
+import type { IconComponent } from 'components/icons'
 
 // eslint-disable-next-line @dword-design/import-alias/prefer-alias
 import '../docs.scss'
@@ -13,7 +13,8 @@ const meta: Meta = {
 export default meta
 
 const ICONS = Object.entries(icons).filter(
-  (entry): entry is [string, IconComponent] => typeof entry[1] === 'function',
+  (entry): entry is [string, IconComponent] =>
+    entry[0] !== 'Icon' && typeof entry[1] === 'function',
 )
 
 const SIZES = [14, 16, 20, 24]

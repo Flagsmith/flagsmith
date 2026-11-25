@@ -4,7 +4,8 @@ import * as icons from './..'
 import type { IconComponent } from './..'
 
 const ICONS = Object.entries(icons).filter(
-  (entry): entry is [string, IconComponent] => typeof entry[1] === 'function',
+  (entry): entry is [string, IconComponent] =>
+    entry[0] !== 'Icon' && typeof entry[1] === 'function',
 )
 
 const render = (Svg: IconComponent) =>
