@@ -65,6 +65,13 @@ describe('JSONUpload', () => {
     })) as unknown as typeof FileReader
   }
 
+  const getCapturedOnDrop = (): DropHandler => {
+    if (!capturedOnDrop) {
+      throw new Error('Expected useDropzone to receive an onDrop handler')
+    }
+    return capturedOnDrop
+  }
+
   it('invokes the latest onChange callback after rerender instead of a stale closure', () => {
     const firstOnChange = jest.fn()
     const secondOnChange = jest.fn()
@@ -74,7 +81,7 @@ describe('JSONUpload', () => {
     JSONUpload({ onChange: secondOnChange, value: null })
 
     mockFileReaderWith('{"flags":[1,2]}')
-    capturedOnDrop?.([file])
+    getCapturedOnDrop()([file])
 
     expect(firstOnChange).not.toHaveBeenCalled()
     expect(secondOnChange).toHaveBeenCalledTimes(1)
@@ -88,7 +95,7 @@ describe('JSONUpload', () => {
     JSONUpload({ onChange, value: null })
 
     mockFileReaderWith('{not-valid-json')
-    capturedOnDrop?.([file])
+    getCapturedOnDrop()([file])
 
     expect(onChange).not.toHaveBeenCalled()
   })
