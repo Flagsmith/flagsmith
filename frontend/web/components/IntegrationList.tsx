@@ -15,6 +15,7 @@ import {
 import map from 'lodash/map'
 import Button from './base/forms/Button'
 import DropdownMenu, { DropdownMenuItem } from './base/DropdownMenu'
+import { configuredActionsLabel } from './integrations/configuredActionsLabel'
 import Icon from './icons/Icon'
 import { IonIcon } from '@ionic/react'
 import { close as closeIcon } from 'ionicons/icons'
@@ -340,7 +341,7 @@ const Integration: FC<IntegrationProps> = (props) => {
       )}
 
       {activeIntegrations &&
-        activeIntegrations.map((integration) => (
+        activeIntegrations.map((integration, index) => (
           <div
             key={integration.id}
             className='list-integrations clickable p-3 mt-3'
@@ -358,9 +359,11 @@ const Integration: FC<IntegrationProps> = (props) => {
               </Flex>
               <div onClick={(e) => e.stopPropagation()}>
                 <DropdownMenu
-                  aria-label={`Actions for ${
-                    props.integration.title ?? 'integration'
-                  }`}
+                  aria-label={configuredActionsLabel(
+                    props.integration.title,
+                    index,
+                    activeIntegrations.length,
+                  )}
                 >
                   <DropdownMenuItem onSelect={() => edit(integration)}>
                     Edit
