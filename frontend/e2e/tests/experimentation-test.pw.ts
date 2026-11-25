@@ -67,32 +67,29 @@ const expectNoRolloutOverride = async (page: Page) => {
   await expect(rolloutOverride(page)).toHaveCount(0)
 }
 
-const skipOnSaas = async () => {
-  test.skip(
-    await isSaas(),
-    'The Flagsmith database warehouse is only offered on self-hosted',
-  )
-}
-
 test.describe('Experimentation Tests', () => {
   test('Warehouse can be connected and a metric created @oss', async ({
     page,
   }, testInfo) => {
-    await skipOnSaas()
     const { click, setText, waitForElementVisible, waitForToast } = await setup(
       page,
     )
 
-    log('Connect the Flagsmith database warehouse')
     await click('#env-settings-link')
     await page.goto(`${page.url().split('?')[0]}?tab=warehouse`)
-    await click('#warehouse-enable-flagsmith-database')
-    await click('#confirm-btn-yes')
-    await waitForToast()
-    await waitForElementVisible(byId('warehouse-connection-status-connected'))
-    await expect(
-      page.getByText('Flagsmith database (PostgreSQL)'),
-    ).toBeVisible()
+    if (await isSaas()) {
+      log('The seeded managed warehouse is connected')
+      await waitForElementVisible(byId('warehouse-connection-status-connected'))
+    } else {
+      log('Connect the Flagsmith database warehouse')
+      await click('#warehouse-enable-flagsmith-database')
+      await click('#confirm-btn-yes')
+      await waitForToast()
+      await waitForElementVisible(byId('warehouse-connection-status-connected'))
+      await expect(
+        page.getByText('Flagsmith database (PostgreSQL)'),
+      ).toBeVisible()
+    }
     await visualSnapshot(page, 'experimentation-warehouse-connected', testInfo)
 
     log('Create a metric')
@@ -111,7 +108,6 @@ test.describe('Experimentation Tests', () => {
   test('Experiment can be created and freezes the feature value @oss', async ({
     page,
   }, testInfo) => {
-    await skipOnSaas()
     const { click, closeModal, featureValueField, gotoFeature, gotoFeatures } =
       await setup(page)
 
@@ -135,7 +131,6 @@ test.describe('Experimentation Tests', () => {
   test('Experiment can be completed by rolling out a variant @oss', async ({
     page,
   }, testInfo) => {
-    await skipOnSaas()
     const {
       click,
       clickByText,
