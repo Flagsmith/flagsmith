@@ -64,7 +64,7 @@ const rolloutOverride = (page: Page) =>
 // The segment picker renders once the overrides have loaded and the feature
 // is no longer frozen, so an absent override is not a list still loading.
 const expectNoRolloutOverride = async (page: Page) => {
-  await createHelpers(page).waitForElementVisible(byId('select-segment'))
+  await expect(page.getByRole('combobox', { name: 'Segment' })).toBeVisible()
   await expect(rolloutOverride(page)).toHaveCount(0)
 }
 
