@@ -7,7 +7,8 @@ import React, {
   useState,
 } from 'react'
 import { IonIcon } from '@ionic/react'
-import { checkmarkCircle, chevronDown, chevronUp } from 'ionicons/icons'
+import { checkmarkCircle } from 'ionicons/icons'
+import { ChevronsVerticalIcon } from './icons'
 import InlineModal from './InlineModal'
 import Input from './base/forms/Input'
 import {
@@ -283,18 +284,9 @@ const BreadcrumbSeparator: FC<BreadcrumbSeparatorType> = ({
       {!hideDropdown && (
         <span
           onClick={toggle}
-          className='breadcrumb-link user-select-none cursor-pointer d-flex flex-column mx-0 fs-captionSmall'
+          className='breadcrumb-link user-select-none cursor-pointer d-flex mx-0'
         >
-          <IonIcon
-            style={{ marginBottom: -2 }}
-            icon={chevronUp}
-            className='text-muted'
-          />
-          <IonIcon
-            style={{ marginTop: -2 }}
-            icon={chevronDown}
-            className='text-muted'
-          />
+          <ChevronsVerticalIcon className='text-muted' width={16} />
         </span>
       )}
       {!hideSlash && (
