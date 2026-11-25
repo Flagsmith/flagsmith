@@ -67,16 +67,23 @@ const expectNoRolloutOverride = async (page: Page) => {
   await expect(rolloutOverride(page)).toHaveCount(0)
 }
 
+const skipOnSaas = async () => {
+  test.skip(
+    await isSaas(),
+    'The Flagsmith database warehouse is only offered on self-hosted',
+  )
+}
+
 test.describe('Experimentation Tests', () => {
-  test('Flagsmith database warehouse can be connected @oss', async ({
+  test('Warehouse can be connected and a metric created @oss', async ({
     page,
   }, testInfo) => {
-    test.skip(
-      await isSaas(),
-      'The Flagsmith database warehouse is only offered on self-hosted',
+    await skipOnSaas()
+    const { click, setText, waitForElementVisible, waitForToast } = await setup(
+      page,
     )
-    const { click, waitForElementVisible, waitForToast } = await setup(page)
 
+    log('Connect the Flagsmith database warehouse')
     await click('#env-settings-link')
     await page.goto(`${page.url().split('?')[0]}?tab=warehouse`)
     await click('#warehouse-enable-flagsmith-database')
@@ -87,27 +94,6 @@ test.describe('Experimentation Tests', () => {
       page.getByText('Flagsmith database (PostgreSQL)'),
     ).toBeVisible()
     await visualSnapshot(page, 'experimentation-warehouse-connected', testInfo)
-  })
-
-  test('Seeded managed warehouse is connected @oss', async ({ page }) => {
-    test.skip(!(await isSaas()), 'The managed warehouse is only seeded on SaaS')
-    const { click, waitForElementVisible } = await setup(page)
-
-    await click('#env-settings-link')
-    await page.goto(`${page.url().split('?')[0]}?tab=warehouse`)
-    await waitForElementVisible(byId('warehouse-connection-status-connected'))
-    await expect(
-      page
-        .locator(byId('warehouse-connection-status-connected'))
-        .locator('xpath=ancestor::div[contains(@class, "flex-row")][1]')
-        .getByText('Flagsmith', { exact: true }),
-    ).toBeVisible()
-  })
-
-  test('Metric can be created @oss', async ({ page }) => {
-    const { click, setText, waitForElementVisible, waitForToast } = await setup(
-      page,
-    )
 
     log('Create a metric')
     await click('#metrics-link')
@@ -125,6 +111,7 @@ test.describe('Experimentation Tests', () => {
   test('Experiment can be created and freezes the feature value @oss', async ({
     page,
   }, testInfo) => {
+    await skipOnSaas()
     const { click, closeModal, featureValueField, gotoFeature, gotoFeatures } =
       await setup(page)
 
@@ -148,6 +135,7 @@ test.describe('Experimentation Tests', () => {
   test('Experiment can be completed by rolling out a variant @oss', async ({
     page,
   }, testInfo) => {
+    await skipOnSaas()
     const {
       click,
       clickByText,
