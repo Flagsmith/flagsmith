@@ -14,6 +14,8 @@ import {
   useInteractions,
   useRole,
 } from '@floating-ui/react'
+import { useBreakpoint } from 'common/hooks/useBreakpoint'
+import BottomSheet from './BottomSheet'
 import './Popover.scss'
 
 export type PopoverTriggerProps = Record<string, unknown> & {
@@ -35,6 +37,7 @@ export type PopoverProps = {
   renderTrigger: (props: PopoverTriggerProps, isOpen: boolean) => ReactNode
   children: ReactNode | ((close: () => void) => ReactNode)
   placement?: PopoverPlacement
+  // Applies to the desktop panel only; the phone sheet sizes itself.
   className?: string
 }
 
@@ -47,8 +50,9 @@ const Popover: FC<PopoverProps> = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false)
   const close = () => setIsOpen(false)
+  const asSheet = useBreakpoint('isPhone')
 
-  const { context, floatingStyles, refs } = useFloating({
+  const { context, refs, x, y } = useFloating({
     middleware: [
       offset(TRIGGER_GAP),
       flip(),
@@ -73,32 +77,51 @@ const Popover: FC<PopoverProps> = ({
   })
   const { getFloatingProps, getReferenceProps } = useInteractions([
     useClick(context),
-    useDismiss(context),
-    useRole(context),
+    // The sheet handles its own dismiss and role
+    useDismiss(context, { enabled: !asSheet }),
+    useRole(context, { enabled: !asSheet }),
   ])
 
   return (
     <>
       {renderTrigger(
-        { ref: refs.setReference, ...getReferenceProps() },
+        {
+          ref: refs.setReference,
+          ...getReferenceProps(),
+          // useRole is off for the sheet, so state the popup here
+          ...(asSheet && {
+            'aria-expanded': isOpen,
+            'aria-haspopup': 'dialog',
+          }),
+        },
         isOpen,
       )}
-      {isOpen && (
-        <FloatingPortal>
-          <FloatingFocusManager context={context} modal={false}>
-            <div
-              ref={refs.setFloating}
-              // Runtime position from Floating UI.
-              style={floatingStyles}
-              className={classNames('ds-popover', className)}
-              data-placement={context.placement}
-              aria-label={ariaLabel}
-              {...getFloatingProps()}
-            >
-              {typeof children === 'function' ? children(close) : children}
-            </div>
-          </FloatingFocusManager>
-        </FloatingPortal>
+      {asSheet ? (
+        <BottomSheet open={isOpen} onOpenChange={setIsOpen} title={ariaLabel}>
+          {isOpen &&
+            (typeof children === 'function' ? children(close) : children)}
+        </BottomSheet>
+      ) : (
+        isOpen && (
+          <FloatingPortal>
+            <FloatingFocusManager context={context} modal={false}>
+              <div
+                ref={refs.setFloating}
+                // Runtime position from Floating UI.
+                style={{
+                  '--ds-popover-x': `${x}px`,
+                  '--ds-popover-y': `${y}px`,
+                }}
+                className={classNames('ds-popover', className)}
+                data-placement={context.placement}
+                aria-label={ariaLabel}
+                {...getFloatingProps()}
+              >
+                {typeof children === 'function' ? children(close) : children}
+              </div>
+            </FloatingFocusManager>
+          </FloatingPortal>
+        )
       )}
     </>
   )

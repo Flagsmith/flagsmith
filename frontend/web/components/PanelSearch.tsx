@@ -275,7 +275,6 @@ const PanelSearch = <T,>(props: PanelSearchProps<T>): ReactElement => {
               <Row className='mr-3 position-relative'>
                 <Popover
                   aria-label='Sort'
-                  className='inline-modal--sm'
                   renderTrigger={(triggerProps, isActive) => (
                     <BareButton
                       {...triggerProps}
