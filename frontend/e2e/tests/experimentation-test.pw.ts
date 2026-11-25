@@ -156,8 +156,11 @@ test.describe('Experimentation Tests', () => {
       .last()
     await modal.getByText('Roll out a variant').click()
     const variantSelect = modal.getByRole('combobox', { name: 'Variant' })
-    await variantSelect.scrollIntoViewIfNeeded()
-    await variantSelect.click()
+    const variantControl = modal
+      .locator('.react-select__control')
+      .filter({ has: variantSelect })
+    await variantControl.scrollIntoViewIfNeeded()
+    await variantControl.click()
     await modal
       .getByRole('option')
       .filter({ hasText: 'variant_b' })
