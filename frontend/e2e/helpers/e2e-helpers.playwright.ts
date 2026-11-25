@@ -79,7 +79,7 @@ export class E2EHelpers {
       await element.waitFor({ state: 'visible', timeout: SHORT_TIMEOUT });
       return;
     } catch {
-      const overflowButton = this.page.locator(byId('overflow-nav-button')).first();
+      const overflowButton = this.page.getByRole('button', { name: /^More (project|organisation|environment) pages$/ }).filter({ visible: true }).first();
       if (await overflowButton.isVisible()) {
         await overflowButton.click();
       }

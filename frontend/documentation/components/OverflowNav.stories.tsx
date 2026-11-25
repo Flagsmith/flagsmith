@@ -48,6 +48,7 @@ const NAV_ITEMS = (
 export const ProjectNavbar: Story = {
   render: () => (
     <OverflowNav
+      label='More pages'
       gap={3}
       containerClassName='px-2 pb-1 bg-faint'
       className='py-0 d-flex'
@@ -68,6 +69,7 @@ export const WithOverflow: Story = {
   },
   render: () => (
     <OverflowNav
+      label='More pages'
       force
       gap={3}
       containerClassName='px-2 pb-1 bg-faint'
@@ -97,6 +99,7 @@ export const OverflowOpen: Story = {
   },
   render: () => (
     <OverflowNav
+      label='More pages'
       force
       gap={3}
       containerClassName='px-2 pb-1 bg-faint'
