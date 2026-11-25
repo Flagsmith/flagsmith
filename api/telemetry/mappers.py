@@ -6,7 +6,6 @@ from telemetry.types import ResolvedIds
 def map_view_kwargs_to_resolved_ids(view_kwargs: dict[str, typing.Any]) -> ResolvedIds:
     """Map the URL kwargs of a view to the IDs of the entities it acts on."""
     ids: ResolvedIds = {}
-    # Routers capture strings, path converters ints
     if str(project_pk := view_kwargs.get("project_pk", "")).isdecimal():
         ids["project__id"] = int(project_pk)
     if str(feature_pk := view_kwargs.get("feature_pk", "")).isdecimal():

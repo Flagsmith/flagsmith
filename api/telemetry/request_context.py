@@ -33,9 +33,7 @@ def bind_api_request_context(request: Request, view: APIView) -> None:
         bind_request_context(organisation__id=api_key_user.key.organisation_id)
 
     resolved_ids = get_resolved_ids(map_view_kwargs_to_resolved_ids(view.kwargs))
-    # Not an ID, and a credential, if a client-side one
     resolved_ids.pop("environment__api_key", None)
-    # Bound after identity, so the route's organisation wins over the key's
     bind_request_context(**resolved_ids)
 
 
