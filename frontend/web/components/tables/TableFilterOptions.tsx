@@ -55,14 +55,7 @@ const TableFilter: FC<TableFilterType> = ({
         className={classNames('cursor-pointer user-select-none', className)}
       >
         <span>{title} </span>
-        <Icon
-          name='chevron-down'
-          width={11}
-          style={{
-            marginLeft: 2,
-            marginTop: 4,
-          }}
-        />
+        <Icon name='chevron-down' width={11} className='ms-1' />
       </Row>
       {open && (
         <InlineModal

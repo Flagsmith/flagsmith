@@ -351,12 +351,7 @@ const CreateGroup: FC<CreateGroupType> = ({ group, orgId, roles }) => {
                             <Tooltip
                               title={
                                 <Row>
-                                  Admin{' '}
-                                  <Icon
-                                    name='info'
-                                    width={14}
-                                    fill='currentColor'
-                                  />
+                                  Admin <Icon name='info-outlined' width={14} />
                                 </Row>
                               }
                             >

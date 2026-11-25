@@ -63,12 +63,7 @@ const CustomOption = ({ hasWarning, ...rest }: CustomOptionProps) => {
             <Tooltip
               title={
                 <div className='flex ml-1'>
-                  <Icon
-                    name='warning'
-                    width={14}
-                    fill='currentColor'
-                    className='text-warning'
-                  />
+                  <Icon name='warning' width={14} />
                 </div>
               }
             >
@@ -100,12 +95,7 @@ const CustomSingleValue = ({ hasWarning, ...rest }: CustomSingleValueProps) => {
         <div>
           {showWarning && (
             <div className='flex ml-1'>
-              <Icon
-                name='warning'
-                width={14}
-                fill='currentColor'
-                className='text-warning'
-              />
+              <Icon name='warning' width={14} />
             </div>
           )}
         </div>

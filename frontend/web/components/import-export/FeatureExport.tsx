@@ -121,7 +121,7 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
           title={
             <>
               <strong>Filter Exported Features</strong>{' '}
-              <Icon name='info' width={14} fill='currentColor' />
+              <Icon name='info-outlined' width={14} />
             </>
           }
         >

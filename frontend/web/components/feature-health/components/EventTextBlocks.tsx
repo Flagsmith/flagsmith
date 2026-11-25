@@ -62,8 +62,7 @@ const EventTextBlocks: React.FC<EventTextBlocksProps> = ({ textBlocks }) => {
                   }
                   width={14}
                   fill={color}
-                  style={{ marginBottom: -2 }}
-                  className='ms-1'
+                  className='ms-1 align-middle'
                   onClick={() => handleCollapse(index)}
                 />
               )}

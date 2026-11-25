@@ -278,7 +278,7 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
           title={
             <>
               <strong>Environment</strong>
-              <Icon name='info' width={14} fill='currentColor' />
+              <Icon name='info-outlined' width={14} />
             </>
           }
         >

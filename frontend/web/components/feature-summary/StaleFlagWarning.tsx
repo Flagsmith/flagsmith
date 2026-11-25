@@ -46,12 +46,7 @@ const StaleFlagWarning: FC<StaleFlagWarningType> = ({ projectFlag }) => {
           style={{ color: Constants.tagColors[2] }}
         >
           Created {daysAgo} days ago
-          <Icon
-            name='warning'
-            width={13}
-            fill='currentColor'
-            className='ms-1'
-          />{' '}
+          <Icon name='warning' width={13} className='ms-1' />{' '}
         </span>
       }
     >

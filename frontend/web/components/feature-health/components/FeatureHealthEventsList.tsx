@@ -69,7 +69,6 @@ const FeatureHealthEventsList: React.FC<FeatureHealthEventsListProps> = ({
                   name='warning'
                   width={14}
                   fill={Constants.featureHealth.unhealthyColor}
-                  style={{ marginBottom: -2 }}
                   className='ms-1 mr-1'
                 />
                 <div>

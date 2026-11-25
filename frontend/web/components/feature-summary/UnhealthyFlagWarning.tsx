@@ -26,13 +26,7 @@ const UnhealthyFlagWarning: FC<UnhealthyFlagWarningType> = ({
             This feature has {featureUnhealthyEvents?.length} active alert
             {featureUnhealthyEvents?.length > 1 ? 's' : ''}. Check them in the
             'Feature Health' tab.
-            <Icon
-              name='warning'
-              width={14}
-              fill='currentColor'
-              style={{ marginBottom: -2 }}
-              className='ms-1'
-            />
+            <Icon name='warning' width={14} className='ms-1 align-middle' />
           </div>
         </div>
       }

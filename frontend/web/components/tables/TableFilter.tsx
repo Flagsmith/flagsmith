@@ -42,14 +42,7 @@ const TableFilter: FC<TableFilterType> = ({
         )}
       >
         <span>{title} </span>
-        <Icon
-          name='chevron-down'
-          width={11}
-          style={{
-            marginLeft: 2,
-            marginTop: 4,
-          }}
-        />
+        <Icon name='chevron-down' width={11} className='ms-1' />
       </Row>
       {open && (
         <InlineModal
