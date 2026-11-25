@@ -13,6 +13,7 @@ from telemetry.types import ResolvedTelemetryAttributes
         ({"pk": "7"}, {}),
         # Routers capture strings, path converters ints
         ({"project_pk": "42"}, {"project__id": 42}),
+        ({"organisation_pk": "7"}, {"organisation__id": 7}),
         ({"project_pk": 42, "feature_pk": 3}, {"project__id": 42, "feature__id": 3}),
         (
             {"environment_api_key": "key", "feature_pk": "3"},
@@ -20,7 +21,7 @@ from telemetry.types import ResolvedTelemetryAttributes
         ),
         ({"project_pk": "not-an-id", "feature_pk": "3"}, {"feature__id": 3}),
         # Digits that `int` can't parse, e.g. captured by routers
-        ({"project_pk": "²", "feature_pk": "²"}, {}),
+        ({"organisation_pk": "²", "project_pk": "²", "feature_pk": "²"}, {}),
         ({"project_pk": None, "feature_pk": ""}, {}),
     ],
 )

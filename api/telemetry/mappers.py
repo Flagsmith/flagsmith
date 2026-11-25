@@ -8,6 +8,8 @@ def map_view_kwargs_to_telemetry_attributes(
 ) -> ResolvedTelemetryAttributes:
     """Map the URL kwargs of a view to the IDs of the entities it acts on."""
     ids: ResolvedTelemetryAttributes = {}
+    if str(organisation_pk := view_kwargs.get("organisation_pk", "")).isdecimal():
+        ids["organisation__id"] = int(organisation_pk)
     if str(project_pk := view_kwargs.get("project_pk", "")).isdecimal():
         ids["project__id"] = int(project_pk)
     if str(feature_pk := view_kwargs.get("feature_pk", "")).isdecimal():
