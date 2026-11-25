@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from 'storybook'
 
-import BodyText from 'components/base/BodyText'
+import { BodyText } from 'components/base/typography'
 
 const meta: Meta<typeof BodyText> = {
   args: {

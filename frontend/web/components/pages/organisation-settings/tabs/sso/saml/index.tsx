@@ -35,6 +35,7 @@ const SamlSection: FC<SamlSectionProps> = ({ organisationId }) => {
   return (
     <div className='mt-4 mb-4'>
       <PageTitle
+        level={2}
         title={'SAML Configurations'}
         cta={
           <Button

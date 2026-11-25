@@ -102,7 +102,7 @@ const ScimSection: FC<ScimSectionProps> = ({ organisationId }) => {
     // when the data arrives. Reuses the project's shimmer skeleton primitives.
     return (
       <div className='mt-4 mb-4'>
-        <PageTitle title='SCIM Configuration' />
+        <PageTitle level={2} title='SCIM Configuration' />
         <Row className='gap-4 mb-3'>
           <div>
             <Skeleton variant='text' width={70} className='mb-1' />
@@ -144,7 +144,7 @@ const ScimSection: FC<ScimSectionProps> = ({ organisationId }) => {
   if (isNotFound) {
     return (
       <div className='mt-4 mb-4'>
-        <PageTitle title='SCIM Configuration' />
+        <PageTitle level={2} title='SCIM Configuration' />
         <EmptyState
           icon='people'
           title='No SCIM configuration'
@@ -169,7 +169,7 @@ const ScimSection: FC<ScimSectionProps> = ({ organisationId }) => {
 
   return (
     <div className='mt-4 mb-4'>
-      <PageTitle title='SCIM Configuration' />
+      <PageTitle level={2} title='SCIM Configuration' />
       <Row className='gap-4 mb-3'>
         <div>
           <div className='text-muted text-uppercase'>Created</div>
