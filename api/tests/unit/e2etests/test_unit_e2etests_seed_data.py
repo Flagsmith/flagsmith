@@ -2,6 +2,7 @@ import pytest
 from django.conf import settings
 
 from e2etests.e2e_seed_data import seed_data
+from experimentation.models import WarehouseConnection
 from features.feature_types import MULTIVARIATE
 from features.models import Feature
 from organisations.models import OrganisationSubscriptionInformationCache
@@ -54,3 +55,32 @@ def test_seed_data__default__creates_experiments_project_with_multivariate_featu
     assert {
         option.key: option.value for option in feature.multivariate_options.all()
     } == {"variant_a": "a", "variant_b": "b"}
+
+
+@pytest.mark.parametrize(
+    "expected_connections",
+    [
+        pytest.param(
+            [("Development", "flagsmith", "connected")],
+            marks=pytest.mark.saas_mode,
+            id="saas",
+        ),
+        pytest.param([], id="self-hosted"),
+    ],
+)
+@pytest.mark.django_db
+def test_seed_data__deployment__seeds_expected_experiments_warehouse_connections(
+    expected_connections: list[tuple[str, str, str]],
+) -> None:
+    # Given / When
+    seed_data()
+
+    # Then
+    assert (
+        list(
+            WarehouseConnection.objects.filter(
+                environment__project__name="My Test Project 8 Experiments"
+            ).values_list("environment__name", "warehouse_type", "status")
+        )
+        == expected_connections
+    )

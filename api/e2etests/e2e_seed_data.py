@@ -1,3 +1,4 @@
+from common.core.utils import is_saas
 from common.environments.permissions import (
     UPDATE_FEATURE_STATE,
     VIEW_ENVIRONMENT,
@@ -15,6 +16,11 @@ from edge_api.identities.models import EdgeIdentity
 from environments.identities.models import Identity
 from environments.models import Environment
 from environments.permissions.models import UserEnvironmentPermission
+from experimentation.models import (
+    WarehouseConnection,
+    WarehouseConnectionStatus,
+    WarehouseType,
+)
 from features.feature_types import MULTIVARIATE
 from features.models import Feature
 from features.multivariate.models import MultivariateFeatureOption
@@ -71,6 +77,20 @@ def teardown() -> None:
     delete_user_and_its_organisations(user_email=settings.E2E_SEPARATE_TEST_USER)
     delete_user_and_its_organisations(user_email=settings.E2E_BILLING_USER)
     delete_user_and_its_organisations(user_email=settings.E2E_ONBOARDING_RELOAD_USER)
+
+
+def seed_managed_warehouse_connection(environment: Environment) -> None:
+    # Self-hosted E2E tests connect the one-click Flagsmith database instead.
+    if not is_saas():
+        return
+    WarehouseConnection.objects.update_or_create(
+        environment=environment,
+        defaults={
+            "warehouse_type": WarehouseType.FLAGSMITH,
+            "name": "Flagsmith",
+            "status": WarehouseConnectionStatus.CONNECTED,
+        },
+    )
 
 
 def seed_data() -> None:
@@ -232,6 +252,7 @@ def seed_data() -> None:
                     string_value=variant_value,
                     default_percentage_allocation=0,
                 )
+            seed_managed_warehouse_connection(environment)
 
     # We're only creating identities for 6 of the 7 environments because
     # they are necessary for the environments created above and to keep
