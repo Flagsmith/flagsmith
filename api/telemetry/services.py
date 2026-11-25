@@ -1,10 +1,12 @@
 from environments.models import Environment
 from features.models import Feature
 from projects.models import Project
-from telemetry.types import ResolvedIds
+from telemetry.types import ResolvedTelemetryAttributes
 
 
-def get_resolved_ids(ids: ResolvedIds) -> ResolvedIds:
+def get_resolved_telemetry_attributes(
+    ids: ResolvedTelemetryAttributes,
+) -> ResolvedTelemetryAttributes:
     """
     Resolve as many keys in `ids` as possible from the database.
 

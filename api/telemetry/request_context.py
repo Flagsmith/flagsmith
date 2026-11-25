@@ -15,8 +15,8 @@ from rest_framework.request import Request
 from rest_framework.views import APIView
 
 from api_keys.user import APIKeyUser
-from telemetry.mappers import map_view_kwargs_to_resolved_ids
-from telemetry.services import get_resolved_ids
+from telemetry.mappers import map_view_kwargs_to_telemetry_attributes
+from telemetry.services import get_resolved_telemetry_attributes
 from users.models import FFAdminUser
 
 
@@ -32,7 +32,9 @@ def bind_api_request_context(request: Request, view: APIView) -> None:
         api_key_user = typing.cast(APIKeyUser, user)
         bind_request_context(organisation__id=api_key_user.key.organisation_id)
 
-    resolved_ids = get_resolved_ids(map_view_kwargs_to_resolved_ids(view.kwargs))
+    resolved_ids = get_resolved_telemetry_attributes(
+        map_view_kwargs_to_telemetry_attributes(view.kwargs)
+    )
     resolved_ids.pop("environment__api_key", None)
     bind_request_context(**resolved_ids)
 

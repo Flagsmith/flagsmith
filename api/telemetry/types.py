@@ -1,8 +1,8 @@
 from typing import TypedDict
 
 
-class ResolvedIds(TypedDict, total=False):
-    """IDs of the entities an API request acts on, as known so far"""
+class ResolvedTelemetryAttributes(TypedDict, total=False):
+    """Telemetry-relevant attributes from objects an API request acts on"""
 
     organisation__id: int
     project__id: int

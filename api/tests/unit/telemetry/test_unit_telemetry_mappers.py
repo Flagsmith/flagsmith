@@ -2,8 +2,8 @@ import typing
 
 import pytest
 
-from telemetry.mappers import map_view_kwargs_to_resolved_ids
-from telemetry.types import ResolvedIds
+from telemetry.mappers import map_view_kwargs_to_telemetry_attributes
+from telemetry.types import ResolvedTelemetryAttributes
 
 
 @pytest.mark.parametrize(
@@ -24,13 +24,13 @@ from telemetry.types import ResolvedIds
         ({"project_pk": None, "feature_pk": ""}, {}),
     ],
 )
-def test_map_view_kwargs_to_resolved_ids__view_kwargs__returns_expected_ids(
+def test_map_view_kwargs_to_telemetry_attributes__view_kwargs__returns_expected_ids(
     view_kwargs: dict[str, typing.Any],
-    expected_ids: ResolvedIds,
+    expected_ids: ResolvedTelemetryAttributes,
 ) -> None:
     # Given / When
     # NOTE: Without database access, any query would fail the test
-    ids = map_view_kwargs_to_resolved_ids(view_kwargs)
+    ids = map_view_kwargs_to_telemetry_attributes(view_kwargs)
 
     # Then
     assert ids == expected_ids

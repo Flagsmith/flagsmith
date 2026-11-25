@@ -5,17 +5,17 @@ import pytest
 from environments.models import Environment
 from features.models import Feature
 from projects.models import Project
-from telemetry.services import get_resolved_ids
-from telemetry.types import ResolvedIds
+from telemetry.services import get_resolved_telemetry_attributes
+from telemetry.types import ResolvedTelemetryAttributes
 
 
-def test_get_resolved_ids__project_id__resolves_organisation(
+def test_get_resolved_telemetry_attributes__project_id__resolves_organisation(
     project: Project,
     django_assert_num_queries: typing.Any,
 ) -> None:
     # Given / When
     with django_assert_num_queries(1):
-        resolved_ids = get_resolved_ids({"project__id": project.id})
+        resolved_ids = get_resolved_telemetry_attributes({"project__id": project.id})
 
     # Then
     assert resolved_ids == {
@@ -24,13 +24,13 @@ def test_get_resolved_ids__project_id__resolves_organisation(
     }
 
 
-def test_get_resolved_ids__feature_id__resolves_project_and_organisation(
+def test_get_resolved_telemetry_attributes__feature_id__resolves_project_and_organisation(
     feature: Feature,
     django_assert_num_queries: typing.Any,
 ) -> None:
     # Given / When
     with django_assert_num_queries(1):
-        resolved_ids = get_resolved_ids({"feature__id": feature.id})
+        resolved_ids = get_resolved_telemetry_attributes({"feature__id": feature.id})
 
     # Then
     assert resolved_ids == {
@@ -40,13 +40,13 @@ def test_get_resolved_ids__feature_id__resolves_project_and_organisation(
     }
 
 
-def test_get_resolved_ids__feature_and_project_ids__resolves_organisation_only(
+def test_get_resolved_telemetry_attributes__feature_and_project_ids__resolves_organisation_only(
     feature: Feature,
     django_assert_num_queries: typing.Any,
 ) -> None:
     # Given / When
     with django_assert_num_queries(1):
-        resolved_ids = get_resolved_ids(
+        resolved_ids = get_resolved_telemetry_attributes(
             {"feature__id": feature.id, "project__id": feature.project_id}
         )
 
@@ -58,14 +58,14 @@ def test_get_resolved_ids__feature_and_project_ids__resolves_organisation_only(
     }
 
 
-def test_get_resolved_ids__environment_api_key__resolves_environment_project_and_organisation(
+def test_get_resolved_telemetry_attributes__environment_api_key__resolves_environment_project_and_organisation(
     environment: Environment,
     feature: Feature,
     django_assert_num_queries: typing.Any,
 ) -> None:
     # Given / When
     with django_assert_num_queries(1):
-        resolved_ids = get_resolved_ids(
+        resolved_ids = get_resolved_telemetry_attributes(
             {"environment__api_key": environment.api_key, "feature__id": feature.id}
         )
 
@@ -87,20 +87,20 @@ def test_get_resolved_ids__environment_api_key__resolves_environment_project_and
         {"project__id": 404},
     ],
 )
-def test_get_resolved_ids__unknown_entities__resolves_nothing(
+def test_get_resolved_telemetry_attributes__unknown_entities__resolves_nothing(
     db: None,
-    ids: ResolvedIds,
+    ids: ResolvedTelemetryAttributes,
 ) -> None:
     # Given / When
-    resolved_ids = get_resolved_ids(ids)
+    resolved_ids = get_resolved_telemetry_attributes(ids)
 
     # Then
     assert resolved_ids == ids
 
 
-def test_get_resolved_ids__complete_ids__queries_nothing() -> None:
+def test_get_resolved_telemetry_attributes__complete_ids__queries_nothing() -> None:
     # Given
-    ids: ResolvedIds = {
+    ids: ResolvedTelemetryAttributes = {
         "environment__api_key": "key",
         "environment__id": 1,
         "feature__id": 2,
@@ -110,23 +110,26 @@ def test_get_resolved_ids__complete_ids__queries_nothing() -> None:
 
     # When
     # NOTE: Without database access, any query would fail the test
-    resolved_ids = get_resolved_ids(ids)
+    resolved_ids = get_resolved_telemetry_attributes(ids)
 
     # Then
     assert resolved_ids == ids
     assert resolved_ids is not ids
 
 
-def test_get_resolved_ids__unknown_environment_api_key__skips_other_lookups(
+def test_get_resolved_telemetry_attributes__unknown_environment_api_key__skips_other_lookups(
     feature: Feature,
     django_assert_num_queries: typing.Any,
 ) -> None:
     # Given
-    ids: ResolvedIds = {"environment__api_key": "unknown", "feature__id": feature.id}
+    ids: ResolvedTelemetryAttributes = {
+        "environment__api_key": "unknown",
+        "feature__id": feature.id,
+    }
 
     # When
     with django_assert_num_queries(1):
-        resolved_ids = get_resolved_ids(ids)
+        resolved_ids = get_resolved_telemetry_attributes(ids)
 
     # Then
     assert resolved_ids == ids
