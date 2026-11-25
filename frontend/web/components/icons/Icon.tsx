@@ -1,4 +1,5 @@
-import { FC } from 'react'
+import { cloneElement, FC } from 'react'
+import classNames from 'classnames'
 import {
   colorIconAction,
   colorIconDanger,
@@ -86,14 +87,14 @@ type IconType = React.DetailedHTMLProps<
   className?: string
 }
 
-const Icon: FC<IconType> = ({
+const renderSvg = ({
   fill,
   fill2: _fill2,
   height,
   name,
   width,
   ...rest
-}) => {
+}: IconType) => {
   switch (name) {
     case 'cloud-upload': {
       return (
@@ -1368,6 +1369,26 @@ const Icon: FC<IconType> = ({
     default:
       return null
   }
+}
+
+// Not every case spreads the rest props, so apply them here for all icons
+const Icon: FC<IconType> = (props) => {
+  const {
+    fill: _fill,
+    fill2: _fill2,
+    height: _height,
+    name: _name,
+    width: _width,
+    ...rest
+  } = props
+  const svg = renderSvg(props)
+  return (
+    svg &&
+    cloneElement(svg, {
+      ...rest,
+      className: classNames(svg.props.className, rest.className),
+    })
+  )
 }
 
 export default Icon
