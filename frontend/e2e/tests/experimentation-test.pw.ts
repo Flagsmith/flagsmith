@@ -155,7 +155,9 @@ test.describe('Experimentation Tests', () => {
       .filter({ hasText: `after ${FIRST_EXPERIMENT} ends` })
       .last()
     await modal.getByText('Roll out a variant').click()
-    await modal.getByRole('combobox', { name: 'Variant' }).click()
+    const variantSelect = modal.getByRole('combobox', { name: 'Variant' })
+    await variantSelect.scrollIntoViewIfNeeded()
+    await variantSelect.click()
     await modal
       .getByRole('option')
       .filter({ hasText: 'variant_b' })

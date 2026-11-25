@@ -140,7 +140,7 @@ async function main() {
     if (attempt > 0) {
       if (!quietMode) {
         console.log('\n==========================================');
-        console.log(`Test attempt ${attempt} failed, running teardown and retrying failed tests only...`);
+        console.log(`Test attempt ${attempt} failed, running teardown and retrying the full requested suite...`);
         console.log('==========================================\n');
       }
       await runTeardown();
@@ -169,7 +169,7 @@ async function main() {
       if (!quietMode) console.log('Skipping bundle build (SKIP_BUNDLE=1)');
     }
 
-    if (!quietMode) console.log(attempt > 0 ? 'Running failed tests...' : 'Running all tests...');
+    if (!quietMode) console.log('Running all tests...');
     const success = runPlaywright(playwrightArgs, quietMode, attempt > 0, attempt);
 
     // Save results from this attempt if retries are enabled
@@ -183,7 +183,7 @@ async function main() {
       if (!quietMode) {
         console.log('\n==========================================');
         console.log(attempt > 0
-            ? `Tests passed on attempt ${attempt} (after retrying failed tests)`
+            ? `Tests passed on attempt ${attempt} (after rerunning the full requested suite)`
             : `Tests passed on attempt ${attempt}`);
         console.log('==========================================\n');
       }
