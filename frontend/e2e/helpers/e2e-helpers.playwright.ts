@@ -575,8 +575,9 @@ export class E2EHelpers {
       .locator('.rule__row')
       .nth(orIndex);
     const propertySelect = ruleRow.getByRole('combobox', { name: 'Trait / Context value' });
+    await propertySelect.click();
     await propertySelect.fill(name);
-    await propertySelect.press('Tab');
+    await this.page.getByRole('option', { name, exact: true }).click();
     if (operator) {
       await ruleRow.getByRole('combobox', { name: 'Operator' }).click();
       await this.page
