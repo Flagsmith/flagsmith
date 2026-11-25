@@ -1,0 +1,42 @@
+import { FC } from 'react'
+import { IconProps } from './types'
+
+const StaleIcon: FC<IconProps> = ({
+  fill = 'currentColor',
+  height,
+  width = 24,
+  ...rest
+}) => (
+  <svg
+    width={width}
+    height={height ?? width}
+    viewBox='0 0 24 24'
+    fill='none'
+    xmlns='http://www.w3.org/2000/svg'
+    {...rest}
+  >
+    <path
+      d='M11.7178 7.98511V12.6361L15.3738 14.8651'
+      strokeWidth='1.5'
+      strokeLinecap='round'
+      strokeLinejoin='round'
+      stroke={fill}
+    />
+    <path
+      d='M13.9999 3.23505C12.2419 2.83205 10.3489 2.94505 8.55691 3.68805C3.96591 5.59005 1.78591 10.853 3.68691 15.444C5.58791 20.035 10.8519 22.215 15.4429 20.314C19.5589 18.609 21.7269 14.203 20.7629 10.001'
+      strokeWidth='1.5'
+      strokeLinecap='round'
+      strokeLinejoin='round'
+      stroke={fill}
+    />
+    <path
+      d='M18 2H21L18 6H21'
+      strokeWidth='1.5'
+      strokeLinecap='round'
+      strokeLinejoin='round'
+      stroke={fill}
+    />
+  </svg>
+)
+
+export default StaleIcon

@@ -1,0 +1,44 @@
+import { FC } from 'react'
+import { IconProps } from './types'
+
+const PrDequeuedIcon: FC<IconProps> = ({
+  fill = 'currentColor',
+  height,
+  width = 24,
+  ...rest
+}) => (
+  <svg
+    width={width}
+    height={height ?? width}
+    viewBox='0 0 24 24'
+    fill='none'
+    xmlns='http://www.w3.org/2000/svg'
+    {...rest}
+  >
+    <path
+      d='M13.5 15L10.5 12L13.5 9'
+      strokeWidth='1.5'
+      strokeLinecap='round'
+      strokeLinejoin='round'
+      stroke={fill}
+    />
+    <circle
+      cx='18.75'
+      cy='5.25'
+      r='2'
+      strokeWidth='1.5'
+      strokeLinecap='round'
+      strokeLinejoin='round'
+      stroke={fill}
+    />
+    <path
+      d='M20.7692 9.99978C21.6739 13.924 19.87 17.973 16.3475 19.9248C12.8249 21.8767 8.43553 21.2595 5.58788 18.4118C2.74022 15.5642 2.12298 11.1748 4.07485 7.65221C6.02672 4.12964 10.0756 2.32581 13.9999 3.23049'
+      strokeWidth='1.5'
+      strokeLinecap='round'
+      strokeLinejoin='round'
+      stroke={fill}
+    />
+  </svg>
+)
+
+export default PrDequeuedIcon
