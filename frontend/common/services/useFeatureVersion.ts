@@ -202,6 +202,7 @@ export const featureVersionService = service
               publish_immediately: !query.skipPublish,
               segment_ids_to_delete_overrides,
             })
+          if ('error' in versionRes) return { error: versionRes.error }
 
           const currentFeatureStates: { data: FeatureState[] } =
             await getVersionFeatureState(getStore(), {
