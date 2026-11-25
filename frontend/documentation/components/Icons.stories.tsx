@@ -26,6 +26,7 @@ const CATEGORIES: IconCategory[] = [
       'chevron-left',
       'chevron-right',
       'chevron-up',
+      'chevrons-vertical',
       'expand',
       'link',
       'open-external-link',

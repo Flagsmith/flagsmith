@@ -57,10 +57,6 @@ nav a {
     border-bottom: 2px solid $primary;
   }
 }
-// The up and down chevrons sit closer than their 12px boxes
-.breadcrumb-link__chevrons > svg + svg {
-  margin-top: -4px;
-}
 .breadcrumb-link {
   padding: 4px 8px 4px 8px;
   border-radius: $border-radius;

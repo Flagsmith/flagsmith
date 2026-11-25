@@ -286,10 +286,9 @@ const BreadcrumbSeparator: FC<BreadcrumbSeparatorType> = ({
       {!hideDropdown && (
         <span
           onClick={toggle}
-          className='breadcrumb-link breadcrumb-link__chevrons user-select-none cursor-pointer d-flex flex-column mx-0 fs-captionSmall'
+          className='breadcrumb-link user-select-none cursor-pointer d-flex mx-0'
         >
-          <Icon name='chevron-up' width={12} className='text-muted' />
-          <Icon name='chevron-down' width={12} className='text-muted' />
+          <Icon name='chevrons-vertical' width={20} className='text-muted' />
         </span>
       )}
       {!hideSlash && (
