@@ -1,15 +1,15 @@
 import React, { FC } from 'react'
 import NavSubLink from 'components/navigation/NavSubLink'
 import Utils from 'common/utils/utils'
-import UsersIcon from 'components/icons/UsersIcon'
 import AccountStore from 'common/stores/account-store'
 import Project from 'common/project'
 import OverflowNav from 'components/navigation/OverflowNav'
-import AuditLogIcon from 'components/icons/AuditLogIcon'
 import {
   BarChartIcon,
   GridIcon,
   LayersIcon,
+  ListIcon,
+  PeopleIcon,
   SettingsIcon,
 } from 'components/icons'
 
@@ -32,7 +32,7 @@ const OrganisationNavbar: FC<OrganisationNavType> = ({}) => {
       </NavSubLink>
       <NavSubLink
         data-test='users-and-permissions'
-        icon={<UsersIcon fill='currentColor' />}
+        icon={<PeopleIcon />}
         id='permissions-link'
         to={`/organisation/${AccountStore.getOrganisation().id}/permissions`}
       >
@@ -50,7 +50,7 @@ const OrganisationNavbar: FC<OrganisationNavType> = ({}) => {
       {AccountStore.isAdmin() &&
         Utils.getFlagsmithHasFeature('organisation_audit_log') && (
           <NavSubLink
-            icon={<AuditLogIcon fill='currentColor' />}
+            icon={<ListIcon />}
             id='organisation-audit-log-link'
             to={`/organisation/${AccountStore.getOrganisation().id}/audit-log`}
           >

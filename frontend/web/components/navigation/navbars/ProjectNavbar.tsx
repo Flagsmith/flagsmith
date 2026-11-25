@@ -1,8 +1,6 @@
 import React, { FC } from 'react'
 import NavSubLink from 'components/navigation/NavSubLink'
-import SegmentsIcon from 'components/icons/SegmentsIcon'
 import Permission, { useHasPermission } from 'common/providers/Permission'
-import AuditLogIcon from 'components/icons/AuditLogIcon'
 import Utils from 'common/utils/utils'
 import OverflowNav from 'components/navigation/OverflowNav'
 import ProjectChangeRequestsLink from 'components/ProjectChangeRequestsLink'
@@ -13,6 +11,8 @@ import {
   FlashIcon,
   GitBranchIcon,
   LayersIcon,
+  ListIcon,
+  PieChartIcon,
   RefreshIcon,
   SettingsIcon,
 } from 'components/icons'
@@ -52,7 +52,7 @@ const ProjectNavbar: FC<ProjectNavType> = ({ environmentId, projectId }) => {
         Environments
       </NavSubLink>
       <NavSubLink
-        icon={<SegmentsIcon fill='currentColor' />}
+        icon={<PieChartIcon />}
         id={`segments-link`}
         to={`/project/${projectId}/segments`}
       >
@@ -76,7 +76,7 @@ const ProjectNavbar: FC<ProjectNavType> = ({ environmentId, projectId }) => {
         {({ permission }) =>
           permission && (
             <NavSubLink
-              icon={<AuditLogIcon fill='currentColor' />}
+              icon={<ListIcon />}
               id='audit-log-link'
               to={`/project/${projectId}/audit-log`}
               data-test='audit-log-link'
