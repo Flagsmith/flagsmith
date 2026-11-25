@@ -11,7 +11,7 @@ from organisations.models import Organisation
 from telemetry.control_plane.client import post_usage_snapshot
 from telemetry.dataclasses import ApiCallBreakdown, ProjectUsage, UsageSnapshot
 
-logger = structlog.get_logger(__name__)
+logger = structlog.get_logger("usage_reporting")
 
 MAX_PROJECT_USAGE_ROWS = 5_000
 

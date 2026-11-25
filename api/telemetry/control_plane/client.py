@@ -8,7 +8,7 @@ from django.core.serializers.json import DjangoJSONEncoder
 
 from telemetry.dataclasses import UsageSnapshot
 
-logger = structlog.get_logger(__name__)
+logger = structlog.get_logger("usage_reporting")
 
 USAGE_ENDPOINT_PATH = "/v1/public/usage"
 REQUEST_TIMEOUT_SECONDS = 30
