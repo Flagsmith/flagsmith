@@ -14,7 +14,7 @@ import {
 } from 'common/types/responses'
 import map from 'lodash/map'
 import Button from './base/forms/Button'
-import DropdownMenu from './base/DropdownMenu'
+import DropdownMenu, { DropdownMenuItem } from './base/DropdownMenu'
 import Icon from './icons/Icon'
 import { IonIcon } from '@ionic/react'
 import { close as closeIcon } from 'ionicons/icons'
@@ -270,7 +270,22 @@ const Integration: FC<IntegrationProps> = (props) => {
       }
       return button
     }
-    return <DropdownMenu items={actions} />
+    return (
+      <DropdownMenu
+        aria-label={`Actions for ${props.integration.title ?? 'integration'}`}
+      >
+        {actions.map((action) => (
+          <DropdownMenuItem
+            key={action.label}
+            disabled={action.disabled}
+            disabledReason={action.tooltip}
+            onSelect={action.onClick}
+          >
+            {action.label}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenu>
+    )
   }
 
   return (
@@ -343,19 +358,20 @@ const Integration: FC<IntegrationProps> = (props) => {
               </Flex>
               <div onClick={(e) => e.stopPropagation()}>
                 <DropdownMenu
-                  items={[
-                    {
-                      dataTest: 'edit-integration',
-                      label: 'Edit',
-                      onClick: () => edit(integration),
-                    },
-                    {
-                      dataTest: 'delete-integration',
-                      label: 'Delete',
-                      onClick: () => remove(integration),
-                    },
-                  ]}
-                />
+                  aria-label={`Actions for ${
+                    props.integration.title ?? 'integration'
+                  }`}
+                >
+                  <DropdownMenuItem onSelect={() => edit(integration)}>
+                    Edit
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    destructive
+                    onSelect={() => remove(integration)}
+                  >
+                    Delete
+                  </DropdownMenuItem>
+                </DropdownMenu>
               </div>
             </Row>
           </div>

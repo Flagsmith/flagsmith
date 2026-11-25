@@ -1,0 +1,132 @@
+.ds-dropdown-menu {
+  --ds-dropdown-menu-icon: 16px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 4px;
+  min-width: 200px;
+
+  &__item,
+  &__row {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    border-radius: var(--radius-md);
+  }
+
+  &__item {
+    gap: 12px;
+    width: 100%;
+    padding: 10px 12px;
+    color: var(--color-text-default);
+    text-align: left;
+
+    // Touch screens keep :hover after a tap, so only devices that can hover
+    // get it
+    @media (hover: hover) {
+      &:hover {
+        background: var(--color-surface-hover);
+      }
+    }
+
+    // Inset, so the ring stays inside the row and keeps its corners
+    &:focus-visible {
+      background: var(--color-surface-hover);
+      border-radius: var(--radius-md);
+      outline-offset: -2px;
+    }
+
+    &[aria-current='true'] {
+      font-weight: var(--font-weight-semibold);
+      color: var(--color-text-action);
+      background: var(--color-surface-action-subtle);
+
+      .ds-dropdown-menu__icon {
+        color: var(--color-icon-action);
+      }
+    }
+
+    &--destructive {
+      color: var(--color-text-danger);
+
+      .ds-dropdown-menu__icon {
+        color: var(--color-icon-danger);
+      }
+    }
+
+    &[aria-disabled='true'] {
+      color: var(--color-text-disabled);
+      cursor: not-allowed;
+
+      .ds-dropdown-menu__icon {
+        color: var(--color-icon-disabled);
+      }
+
+      &:hover,
+      &:focus-visible {
+        background: none;
+      }
+    }
+  }
+
+  // The content brings its own padding, hover and active styles
+  &__row {
+    > * {
+      flex: 1;
+    }
+
+    // A row whose content renders nothing, such as a permission check
+    &:empty {
+      display: none;
+    }
+  }
+
+  &__label {
+    display: flex;
+    flex: 1;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0 8px;
+    min-width: 0;
+  }
+
+  // Why a disabled item can't be used; its description for screen readers
+  &__reason {
+    flex-basis: 100%;
+    font-size: var(--font-size-body-xs);
+    color: var(--color-text-secondary);
+  }
+
+  // Icons draw with currentColor
+  &__icon {
+    display: flex;
+    flex-shrink: 0;
+    color: var(--color-icon-secondary);
+
+    svg {
+      width: var(--ds-dropdown-menu-icon);
+      height: var(--ds-dropdown-menu-icon);
+    }
+  }
+
+  // In a bottom sheet rows are larger, like native action sheets. There is no
+  // 16px body token, so the size is set here
+  &--sheet {
+    --ds-dropdown-menu-icon: 20px;
+
+    .ds-dropdown-menu__item,
+    .ds-dropdown-menu__row {
+      min-height: 48px;
+    }
+
+    .ds-dropdown-menu__item {
+      padding: 12px;
+      font-size: 16px;
+    }
+
+    .ds-dropdown-menu__reason {
+      font-size: var(--font-size-body-sm);
+    }
+  }
+}
