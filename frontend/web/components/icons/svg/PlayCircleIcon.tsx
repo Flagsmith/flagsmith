@@ -1,0 +1,37 @@
+import { FC } from 'react'
+import { IconProps } from './types'
+
+const PlayCircleIcon: FC<IconProps> = ({
+  fill = 'currentColor',
+  height,
+  width = 24,
+  ...rest
+}) => (
+  <svg
+    width={width}
+    height={height ?? width}
+    viewBox='0 0 24 24'
+    fill='none'
+    xmlns='http://www.w3.org/2000/svg'
+    {...rest}
+  >
+    <circle
+      cx='12'
+      cy='12'
+      r='9'
+      strokeWidth='1.5'
+      strokeLinecap='round'
+      strokeLinejoin='round'
+      stroke={fill}
+    />
+    <path
+      d='M9.75 8.39992V15.5999C9.75 16.2999 10.5 16.6999 11.1 16.2999L16 12.9999C16.6 12.5999 16.6 11.3999 16 10.9999L11.1 7.69992C10.5 7.29992 9.75 7.69992 9.75 8.39992Z'
+      strokeWidth='1.5'
+      strokeLinecap='round'
+      strokeLinejoin='round'
+      stroke={fill}
+    />
+  </svg>
+)
+
+export default PlayCircleIcon

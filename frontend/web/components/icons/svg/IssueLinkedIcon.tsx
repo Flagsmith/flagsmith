@@ -1,0 +1,26 @@
+import { FC } from 'react'
+import { IconProps } from './types'
+
+const IssueLinkedIcon: FC<IconProps> = ({
+  fill = 'currentColor',
+  height,
+  width = 24,
+  ...rest
+}) => (
+  <svg
+    width={width}
+    height={height ?? width}
+    viewBox='0 0 24 24'
+    fill='none'
+    xmlns='http://www.w3.org/2000/svg'
+    {...rest}
+  >
+    <path
+      d='M12 1.24951C17.9367 1.24978 22.7498 6.06278 22.75 11.9995C22.75 17.9364 17.9368 22.7492 12 22.7495C6.06294 22.7495 1.25 17.9366 1.25 11.9995C1.2502 6.06262 6.06306 1.24951 12 1.24951ZM12 2.74951C6.89149 2.74951 2.7502 6.89105 2.75 11.9995C2.75 17.1081 6.89137 21.2495 12 21.2495C17.1084 21.2492 21.25 17.108 21.25 11.9995C21.2498 6.89121 17.1083 2.74978 12 2.74951Z'
+      fill={fill}
+    />
+    <circle cx='12' cy='12' r='2' fill={fill} />
+  </svg>
+)
+
+export default IssueLinkedIcon

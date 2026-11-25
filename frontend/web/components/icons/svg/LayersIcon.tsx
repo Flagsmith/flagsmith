@@ -1,0 +1,28 @@
+import { FC } from 'react'
+import { IconProps } from './types'
+
+const LayersIcon: FC<IconProps> = ({
+  fill = 'currentColor',
+  height,
+  width = 24,
+  ...rest
+}) => (
+  <svg
+    width={width}
+    height={height ?? width}
+    viewBox='0 0 24 24'
+    fill='none'
+    xmlns='http://www.w3.org/2000/svg'
+    {...rest}
+  >
+    <path
+      d='M17.4 10L21 12L17.4 14L12 17L6.6 14M6.6 14L3 12L6.6 10M6.6 14L3 16L12 21L21 16L17.4 14M6.6 10L12 13L17.4 10L21 8L12 3L3 8L6.6 10Z'
+      strokeWidth='1.5'
+      strokeLinecap='round'
+      strokeLinejoin='round'
+      stroke={fill}
+    />
+  </svg>
+)
+
+export default LayersIcon

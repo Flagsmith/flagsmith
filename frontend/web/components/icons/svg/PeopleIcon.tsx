@@ -1,0 +1,42 @@
+import { FC } from 'react'
+import { IconProps } from './types'
+
+const PeopleIcon: FC<IconProps> = ({
+  fill = 'currentColor',
+  height,
+  width = 24,
+  ...rest
+}) => (
+  <svg
+    width={width}
+    height={height ?? width}
+    viewBox='0 0 24 24'
+    fill='none'
+    xmlns='http://www.w3.org/2000/svg'
+    {...rest}
+  >
+    <path
+      d='M8.90033 5.8001C10.0003 6.9001 10.0003 8.6001 8.90033 9.7001C7.80033 10.8001 6.10034 10.8001 5.00034 9.7001C3.90034 8.6001 4.00033 6.9001 5.10034 5.8001C6.20034 4.7001 7.90033 4.7001 8.90033 5.8001'
+      strokeWidth='1.5'
+      strokeLinecap='round'
+      strokeLinejoin='round'
+      stroke={fill}
+    />
+    <path
+      d='M18.8998 5.8001C19.9998 6.9001 19.9998 8.6001 18.8998 9.7001C17.7998 10.8001 16.0998 10.8001 14.9998 9.7001C13.8998 8.6001 13.8998 6.9001 14.9998 5.8001C16.0998 4.7001 17.8998 4.7001 18.8998 5.8001'
+      strokeWidth='1.5'
+      strokeLinecap='round'
+      strokeLinejoin='round'
+      stroke={fill}
+    />
+    <path
+      d='M22 19C22 16.2 19.8 14 17 14C14.2 14 12 16.2 12 19C12 16.2 9.8 14 7 14C4.2 14 2 16.2 2 19'
+      strokeWidth='1.5'
+      strokeLinecap='round'
+      strokeLinejoin='round'
+      stroke={fill}
+    />
+  </svg>
+)
+
+export default PeopleIcon

@@ -1,0 +1,63 @@
+import { FC } from 'react'
+import { IconProps } from './types'
+
+const FlaskIcon: FC<IconProps> = ({
+  fill = 'currentColor',
+  height,
+  width = 24,
+  ...rest
+}) => (
+  <svg
+    width={width}
+    height={height ?? width}
+    viewBox='0 0 24 24'
+    fill='none'
+    xmlns='http://www.w3.org/2000/svg'
+    {...rest}
+  >
+    <path
+      d='M19.0028 7.99842V4.99717C19.0028 3.89214 18.107 2.99634 17.0019 2.99634H4.99693C3.8919 2.99634 2.99609 3.89214 2.99609 4.99717V18.0026'
+      strokeWidth='1.5'
+      strokeLinecap='round'
+      strokeLinejoin='round'
+      stroke={fill}
+    />
+    <path
+      d='M6.99826 2.99634V16.0018'
+      strokeWidth='1.5'
+      strokeLinecap='round'
+      strokeLinejoin='round'
+      stroke={fill}
+    />
+    <path
+      d='M10.9994 16.0017H4.99693C3.8919 16.0017 2.99609 16.8975 2.99609 18.0025V18.0025C2.99609 19.1076 3.8919 20.0034 4.99693 20.0034H9.99901'
+      strokeWidth='1.5'
+      strokeLinecap='round'
+      strokeLinejoin='round'
+      stroke={fill}
+    />
+    <path
+      d='M19.8544 10.9997H15.3525'
+      strokeWidth='1.5'
+      strokeLinecap='round'
+      strokeLinejoin='round'
+      stroke={fill}
+    />
+    <path
+      d='M19.1033 10.9998V14.7833L21.6974 18.9451C22.0816 19.5613 22.1017 20.3373 21.7499 20.9726C21.3982 21.6079 20.7299 22.0028 20.0037 22.0043H15.2067C14.4793 22.0053 13.8086 21.6115 13.4552 20.9757C13.1017 20.3399 13.1212 19.5624 13.506 18.9451L16.1001 14.7833V10.9998'
+      strokeWidth='1.5'
+      strokeLinecap='round'
+      strokeLinejoin='round'
+      stroke={fill}
+    />
+    <path
+      d='M19.2402 15.0014H15.9668'
+      strokeWidth='1.5'
+      strokeLinecap='round'
+      strokeLinejoin='round'
+      stroke={fill}
+    />
+  </svg>
+)
+
+export default FlaskIcon

@@ -1,0 +1,35 @@
+import { FC } from 'react'
+import { IconProps } from './types'
+
+const BellIcon: FC<IconProps> = ({
+  fill = 'currentColor',
+  height,
+  width = 24,
+  ...rest
+}) => (
+  <svg
+    width={width}
+    height={height ?? width}
+    viewBox='0 0 24 24'
+    fill='none'
+    xmlns='http://www.w3.org/2000/svg'
+    {...rest}
+  >
+    <path
+      d='M4.68705 14.5696C5.33814 14.0121 5.71161 13.2067 5.71161 12.36V8.15385C5.71161 4.75517 8.52702 2 12 2C15.473 2 18.2884 4.75517 18.2884 8.15385V12.36C18.2884 13.2067 18.6619 14.0121 19.3129 14.5696C20.7028 15.7598 19.8427 18 17.9959 18H6.00415C4.15729 18 3.29715 15.7598 4.68705 14.5696Z'
+      strokeWidth='1.5'
+      strokeLinecap='round'
+      strokeLinejoin='round'
+      stroke={fill}
+    />
+    <path
+      d='M11 21L13 21'
+      strokeWidth='1.5'
+      strokeLinecap='round'
+      strokeLinejoin='round'
+      stroke={fill}
+    />
+  </svg>
+)
+
+export default BellIcon

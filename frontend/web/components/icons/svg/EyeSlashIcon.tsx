@@ -1,0 +1,42 @@
+import { FC } from 'react'
+import { IconProps } from './types'
+
+const EyeSlashIcon: FC<IconProps> = ({
+  fill = 'currentColor',
+  height,
+  width = 24,
+  ...rest
+}) => (
+  <svg
+    width={width}
+    height={height ?? width}
+    viewBox='0 0 24 24'
+    fill='none'
+    xmlns='http://www.w3.org/2000/svg'
+    {...rest}
+  >
+    <path
+      d='M2.08984 13.0899C7.56284 6.04294 16.4358 6.04294 21.9088 13.0899'
+      strokeWidth='1.5'
+      strokeLinecap='round'
+      strokeLinejoin='round'
+      stroke={fill}
+    />
+    <path
+      d='M15.431 9.31802C17.1884 11.0754 17.1884 13.9246 15.431 15.682C13.6736 17.4393 10.8244 17.4393 9.06704 15.682C7.30968 13.9246 7.30968 11.0754 9.06704 9.31802C10.8244 7.56066 13.6736 7.56066 15.431 9.31802'
+      strokeWidth='1.5'
+      strokeLinecap='round'
+      strokeLinejoin='round'
+      stroke={fill}
+    />
+    <path
+      d='M3 3L21 21'
+      strokeWidth='1.5'
+      strokeLinecap='round'
+      strokeLinejoin='round'
+      stroke={fill}
+    />
+  </svg>
+)
+
+export default EyeSlashIcon
