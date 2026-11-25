@@ -233,8 +233,6 @@ const CohortSegmentDetail: FC<CohortSegmentDetailType> = ({
                   className='cohort-segment-detail__progress'
                   percent={percentApplied}
                   colour={colorSurfaceAction}
-                  ariaLabel='Synchronisation progress'
-                  ariaValueNow={percentApplied}
                 />
               </div>
             ) : (
