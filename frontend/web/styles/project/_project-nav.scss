@@ -85,7 +85,7 @@ nav a {
 }
 @include media-breakpoint-up(md) {
   .border-md-right {
-    border-right: 1px solid $hr-border-color;
+    border-right:  1px solid $hr-border-color;
   }
 }
 @include media-breakpoint-down(md) {
@@ -103,3 +103,4 @@ nav a {
     width: calc(100vw);
   }
 }
+
