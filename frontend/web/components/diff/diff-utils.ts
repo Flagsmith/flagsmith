@@ -271,3 +271,23 @@ function getConditionsDiff(
 
   return str
 }
+
+export const DIFF_SEGMENT_MODES = {
+  'Diff': 0,
+  'New Value': 1,
+  'Old Value': 2,
+} as const
+
+export function getSegmentDiffPair(
+  mode: number,
+  oldSegment: Segment,
+  newSegment: Segment,
+): [Segment, Segment] {
+  if (mode === DIFF_SEGMENT_MODES.Diff) {
+    return [oldSegment, newSegment]
+  }
+  if (mode === DIFF_SEGMENT_MODES['New Value']) {
+    return [newSegment, newSegment]
+  }
+  return [oldSegment, oldSegment]
+}
