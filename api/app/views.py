@@ -19,7 +19,10 @@ def index(request: Request) -> HttpResponse:
         return HttpResponse(status=405, content_type="application/json")
 
     template = loader.get_template("webpack/index.html")
-    return HttpResponse(template.render(request=request))
+    return HttpResponse(
+        template.render(request=request),
+        headers={"Content-Security-Policy": "frame-ancestors 'none'"},
+    )
 
 
 def project_overrides(request: Request) -> HttpResponse:
