@@ -32,4 +32,14 @@ describe('icon library', () => {
     const colours = render(Svg).match(/(?:stroke|fill)="([^"]+)"/g) ?? []
     expect(colours.filter((c) => !/="(red|none)"$/.test(c))).toEqual([])
   })
+
+  it.each(ICONS)(
+    '%s is hidden from screen readers unless labelled',
+    (_, Svg) => {
+      expect(renderToStaticMarkup(createElement(Svg))).toMatch(
+        /^<svg[^>]*aria-hidden="true"/,
+      )
+      expect(render(Svg)).not.toMatch(/aria-hidden/)
+    },
+  )
 })
