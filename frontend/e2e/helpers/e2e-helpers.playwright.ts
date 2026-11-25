@@ -791,6 +791,12 @@ export class E2EHelpers {
     await this.environmentSelect().waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
   }
 
+  async waitForSelectedEnvironment(name: string) {
+    await expect(this.environmentSelect().locator('xpath=../..')).toContainText(name, {
+      timeout: LONG_TIMEOUT,
+    });
+  }
+
   async selectEnvironment(name: string) {
     await this.environmentSelect().click();
     await this.page.getByRole('option', { name, exact: true }).click();

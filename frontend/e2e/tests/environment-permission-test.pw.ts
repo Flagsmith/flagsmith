@@ -80,6 +80,7 @@ test.describe('Environment Permission Tests', () => {
     await gotoProject(PROJECT_NAME)
     await waitForEnvironmentSelect()
     await page.getByRole('combobox', { name: 'Environment' }).click()
+    await expect(page.getByRole('option', { name: 'Development', exact: true })).toBeVisible()
     await expect(page.getByRole('option', { name: 'Production', exact: true })).toHaveCount(0)
     await page.keyboard.press('Escape')
     await logout()

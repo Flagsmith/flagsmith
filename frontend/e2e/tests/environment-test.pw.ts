@@ -10,6 +10,7 @@ test.describe('Environment Tests', () => {
       gotoProject,
       login,
       setText,
+      waitForSelectedEnvironment,
       waitForEnvironmentSelect,
       waitForElementVisible,
       waitForToastsToClear,
@@ -29,7 +30,7 @@ test.describe('Environment Tests', () => {
     await click('#env-settings-link')
     await setText("[name='env-name']", 'Internal')
     await click('#save-env-btn')
-    await waitForEnvironmentSelect()
+    await waitForSelectedEnvironment('Internal')
     log('Delete environment')
     await click('#delete-env-btn')
     await setText("[name='confirm-env-name']", 'Internal')
