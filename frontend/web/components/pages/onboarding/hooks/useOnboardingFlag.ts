@@ -3,8 +3,10 @@ import {
   useGetFeatureStatesQuery,
   useUpdateFeatureStateMutation,
 } from 'common/services/useFeatureState'
+import { useCreateAndSetFeatureVersionMutation } from 'common/services/useFeatureVersion'
 import { useGetTagsQuery } from 'common/services/useTag'
 import { Environment, Tag } from 'common/types/responses'
+import Utils from 'common/utils/utils'
 import { useFeatureRowState } from 'components/pages/features/hooks/useFeatureRowState'
 
 // Resolves the demo flag (by name, since bootstrap returns the name) and its
@@ -35,6 +37,8 @@ export const useOnboardingFlag = (
   const state = states?.results?.[0]
 
   const [updateFeatureState] = useUpdateFeatureStateMutation()
+  const [createAndSetFeatureVersion, versionState] =
+    useCreateAndSetFeatureVersionMutation()
 
   // Optimistic (like the product row): displayEnabled flips instantly and
   // reverts on failure, instead of waiting on the update + refetch.
@@ -42,15 +46,39 @@ export const useOnboardingFlag = (
     useFeatureRowState(state?.enabled)
 
   const toggle = async (enabled: boolean): Promise<boolean> => {
-    if (!environment || !state || !startToggle(enabled)) {
+    if (
+      !environment ||
+      !flag ||
+      !projectId ||
+      !state ||
+      !startToggle(enabled)
+    ) {
       return false
     }
     try {
-      await updateFeatureState({
-        body: { enabled },
-        environmentFlagId: state.id,
-        environmentId: environment.api_key,
-      }).unwrap()
+      if (environment.use_v2_feature_versioning) {
+        await createAndSetFeatureVersion({
+          environmentApiKey: environment.api_key,
+          environmentId: environment.id,
+          featureId: flag.id,
+          featureStates: [
+            {
+              ...state,
+              enabled,
+              feature_state_value: Utils.featureStateToValue(
+                state.feature_state_value,
+              ),
+            },
+          ],
+          projectId,
+        }).unwrap()
+      } else {
+        await updateFeatureState({
+          body: { enabled },
+          environmentFlagId: state.id,
+          environmentId: environment.api_key,
+        }).unwrap()
+      }
       return true
     } catch {
       revertToggle()
@@ -63,7 +91,7 @@ export const useOnboardingFlag = (
     enabled: !!displayEnabled,
     // The flag's id, so the next-step cards can deep-link to its config.
     flagId: flag?.id ?? null,
-    isToggling: isLoading,
+    isToggling: isLoading || versionState.isLoading,
     ready: !!state,
     tags,
     toggle,
