@@ -502,21 +502,26 @@ const Constants = {
     githubPR: 'Github PR',
   },
   integrationCategoryDescriptions: {
+    'AI': 'Connect your AI workflows and tools with Flagsmith feature flags.',
     'All': 'Send data on what flags served to each identity.',
     'Analytics': 'Send data on what flags served to each identity.',
     'Authentication':
       'Use the Flagsmith Dashboard with your authentication provider.',
     'CI/CD': 'View your Flagsmith Flags inside your Issues and Pull Request.',
     'Developer tools': 'Interact with feature flags from your developer tools.',
+    'Enterprise tools':
+      'Integrate Flagsmith with your enterprise platforms and governance workflows.',
     'Infrastructure':
       'Manage and evaluate your features within your infrastructure tooling.',
     'Messaging':
       'Send messages when features are created, updated and removed. Logs are tagged with the environment they came from e.g. production.',
     'Monitoring':
       'Send events when features are created, updated and removed. Logs are tagged with the environment they came from e.g. production.',
+    'Project Management':
+      'Link and track Flagsmith feature flags within your project management tools.',
     'Webhooks':
       'Receive webhooks when your features change or when audit logs occur.',
-  } as Record<(typeof integrationCategories)[number], string>,
+  } as Record<(typeof integrationCategories)[number] | 'All', string>,
   integrationSummaries: [
     {
       categories: ['Analytics'],
