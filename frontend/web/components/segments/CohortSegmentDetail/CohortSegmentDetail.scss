@@ -29,16 +29,9 @@
     background: currentcolor;
   }
 
-  &__progress-track {
-    height: 6px;
-    border-radius: 3px;
-    overflow: hidden;
-  }
-
-  &__progress-bar {
-    height: 100%;
-    border-radius: 3px;
-    transition: width var(--duration-normal, 200ms) ease;
+  // ValueBar's muted track would vanish on the muted info panel.
+  &__progress.value-bar {
+    background-color: var(--color-surface-default);
   }
 
   &__select {

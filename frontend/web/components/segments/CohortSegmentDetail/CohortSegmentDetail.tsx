@@ -9,6 +9,7 @@ import {
   getCohortSyncProgress,
 } from 'common/utils/cohortSyncTotal'
 import { Segment } from 'common/types/responses'
+import { colorSurfaceAction } from 'common/theme/tokens'
 import {
   useGetCohortQuery,
   useUpdateCohortMutation,
@@ -17,6 +18,7 @@ import Button from 'components/base/forms/Button'
 import Chip from 'components/base/Chip'
 import ErrorMessage from 'components/ErrorMessage'
 import InputGroup from 'components/base/forms/InputGroup'
+import ValueBar from 'components/shared/ValueBar'
 import CohortCsvSync from './CohortCsvSync'
 import './CohortSegmentDetail.scss'
 
@@ -80,6 +82,9 @@ const CohortSegmentDetail: FC<CohortSegmentDetailType> = ({
     isSyncing && cohortId !== undefined && version !== undefined
       ? getCohortSyncProgress(cohortId, version, pendingCount)
       : null
+  const percentApplied = syncProgress
+    ? Math.round((syncProgress.done / syncProgress.total) * 100)
+    : 0
 
   useEffect(() => {
     setPollingInterval(isSyncing ? SYNC_POLL_INTERVAL_MS : 0)
@@ -224,16 +229,13 @@ const CohortSegmentDetail: FC<CohortSegmentDetailType> = ({
                   {syncProgress.done.toLocaleString()} of{' '}
                   {syncProgress.total.toLocaleString()} applied
                 </div>
-                <div className='cohort-segment-detail__progress-track bg-surface-default'>
-                  <div
-                    className='cohort-segment-detail__progress-bar bg-surface-action'
-                    style={{
-                      width: `${Math.round(
-                        (syncProgress.done / syncProgress.total) * 100,
-                      )}%`,
-                    }}
-                  />
-                </div>
+                <ValueBar
+                  className='cohort-segment-detail__progress'
+                  percent={percentApplied}
+                  colour={colorSurfaceAction}
+                  ariaLabel='Synchronisation progress'
+                  ariaValueNow={percentApplied}
+                />
               </div>
             ) : (
               <div className='fs-small text-secondary'>
