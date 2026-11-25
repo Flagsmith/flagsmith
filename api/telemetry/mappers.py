@@ -13,5 +13,5 @@ def map_view_kwargs_to_telemetry_attributes(
     if str(feature_pk := view_kwargs.get("feature_pk", "")).isdecimal():
         ids["feature__id"] = int(feature_pk)
     if environment_api_key := view_kwargs.get("environment_api_key"):
-        ids["environment__api_key"] = environment_api_key
+        ids["environment__key"] = environment_api_key
     return ids

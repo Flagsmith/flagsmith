@@ -35,7 +35,6 @@ def bind_api_request_context(request: Request, view: APIView) -> None:
     resolved_ids = get_resolved_telemetry_attributes(
         map_view_kwargs_to_telemetry_attributes(view.kwargs)
     )
-    resolved_ids.pop("environment__api_key", None)
     bind_request_context(**resolved_ids)
 
 

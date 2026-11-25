@@ -16,7 +16,7 @@ from telemetry.types import ResolvedTelemetryAttributes
         ({"project_pk": 42, "feature_pk": 3}, {"project__id": 42, "feature__id": 3}),
         (
             {"environment_api_key": "key", "feature_pk": "3"},
-            {"environment__api_key": "key", "feature__id": 3},
+            {"environment__key": "key", "feature__id": 3},
         ),
         ({"project_pk": "not-an-id", "feature_pk": "3"}, {"feature__id": 3}),
         # Digits that `int` can't parse, e.g. captured by routers

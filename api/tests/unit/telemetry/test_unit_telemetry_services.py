@@ -58,7 +58,7 @@ def test_get_resolved_telemetry_attributes__feature_and_project_ids__resolves_or
     }
 
 
-def test_get_resolved_telemetry_attributes__environment_api_key__resolves_environment_project_and_organisation(
+def test_get_resolved_telemetry_attributes__environment_key__resolves_environment_project_and_organisation(
     environment: Environment,
     feature: Feature,
     django_assert_num_queries: typing.Any,
@@ -66,12 +66,12 @@ def test_get_resolved_telemetry_attributes__environment_api_key__resolves_enviro
     # Given / When
     with django_assert_num_queries(1):
         resolved_ids = get_resolved_telemetry_attributes(
-            {"environment__api_key": environment.api_key, "feature__id": feature.id}
+            {"environment__key": environment.api_key, "feature__id": feature.id}
         )
 
     # Then
     assert resolved_ids == {
-        "environment__api_key": environment.api_key,
+        "environment__key": environment.api_key,
         "environment__id": environment.id,
         "feature__id": feature.id,
         "organisation__id": environment.project.organisation_id,
@@ -82,7 +82,7 @@ def test_get_resolved_telemetry_attributes__environment_api_key__resolves_enviro
 @pytest.mark.parametrize(
     "ids",
     [
-        {"environment__api_key": "unknown"},
+        {"environment__key": "unknown"},
         {"feature__id": 404},
         {"project__id": 404},
     ],
@@ -101,7 +101,7 @@ def test_get_resolved_telemetry_attributes__unknown_entities__resolves_nothing(
 def test_get_resolved_telemetry_attributes__complete_ids__queries_nothing() -> None:
     # Given
     ids: ResolvedTelemetryAttributes = {
-        "environment__api_key": "key",
+        "environment__key": "key",
         "environment__id": 1,
         "feature__id": 2,
         "organisation__id": 3,
@@ -117,13 +117,13 @@ def test_get_resolved_telemetry_attributes__complete_ids__queries_nothing() -> N
     assert resolved_ids is not ids
 
 
-def test_get_resolved_telemetry_attributes__unknown_environment_api_key__skips_other_lookups(
+def test_get_resolved_telemetry_attributes__unknown_environment_key__skips_other_lookups(
     feature: Feature,
     django_assert_num_queries: typing.Any,
 ) -> None:
     # Given
     ids: ResolvedTelemetryAttributes = {
-        "environment__api_key": "unknown",
+        "environment__key": "unknown",
         "feature__id": feature.id,
     }
 

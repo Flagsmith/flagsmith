@@ -15,7 +15,7 @@ def get_resolved_telemetry_attributes(
     resolved_ids = ids.copy()
 
     if "environment__id" not in resolved_ids and (
-        environment_api_key := resolved_ids.get("environment__api_key")
+        environment_api_key := resolved_ids.get("environment__key")
     ):
         if environment_ids := (
             Environment.objects.filter(api_key=environment_api_key)

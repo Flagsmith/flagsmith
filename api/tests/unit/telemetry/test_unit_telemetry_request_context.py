@@ -138,7 +138,7 @@ def test_api_view__project_and_feature_route__binds_url_entities(
     }
 
 
-def test_api_view__environment_route__binds_ids_but_not_api_key(
+def test_api_view__environment_route__binds_environment_key_and_ids(
     api_request_factory: APIRequestFactory,
     environment: Environment,
 ) -> None:
@@ -152,6 +152,7 @@ def test_api_view__environment_route__binds_ids_but_not_api_key(
     # Then
     assert structlog.contextvars.get_contextvars() == {
         "environment__id": environment.id,
+        "environment__key": environment.api_key,
         "organisation__id": environment.project.organisation_id,
         "project__id": environment.project_id,
     }

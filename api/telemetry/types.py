@@ -8,4 +8,4 @@ class ResolvedTelemetryAttributes(TypedDict, total=False):
     project__id: int
     feature__id: int
     environment__id: int
-    environment__api_key: str
+    environment__key: str
