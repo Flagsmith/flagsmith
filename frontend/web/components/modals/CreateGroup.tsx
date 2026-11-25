@@ -12,8 +12,6 @@ import { components } from 'react-select'
 import { setInterceptClose } from './base/ModalDefault'
 import Icon from 'components/icons/Icon'
 import Tooltip from 'components/Tooltip'
-import { IonIcon } from '@ionic/react'
-import { informationCircle } from 'ionicons/icons'
 import { GroupUser, Role, User, UserGroupSummary } from 'common/types/responses'
 import { differenceBy, find, intersectionBy, sortBy } from 'lodash'
 import filter from 'lodash/filter'
@@ -353,7 +351,12 @@ const CreateGroup: FC<CreateGroupType> = ({ group, orgId, roles }) => {
                             <Tooltip
                               title={
                                 <Row>
-                                  Admin <IonIcon icon={informationCircle} />
+                                  Admin{' '}
+                                  <Icon
+                                    name='info'
+                                    width={14}
+                                    fill='currentColor'
+                                  />
                                 </Row>
                               }
                             >

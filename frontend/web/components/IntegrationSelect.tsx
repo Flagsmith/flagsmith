@@ -1,4 +1,5 @@
 import React, { FC, useMemo, useState } from 'react'
+import Icon from './icons/Icon'
 import PageTitle from './PageTitle'
 import {
   integrationCategories,
@@ -11,8 +12,6 @@ import ConfigProvider from 'common/providers/ConfigProvider'
 import Button from './base/forms/Button'
 import classNames from 'classnames'
 import ModalDefault from './modals/base/ModalDefault'
-import { IonIcon } from '@ionic/react'
-import { close } from 'ionicons/icons'
 import { useUpdateOnboardingMutation } from 'common/services/useOnboarding'
 import SidebarLink from './navigation/SidebarLink'
 import Constants from 'common/constants'
@@ -150,7 +149,7 @@ const IntegrationSelect: FC<IntegrationSelectType> = ({ onComplete }) => {
                 >
                   {label}
                   <span className='chip-icon ion'>
-                    <IonIcon className='fs-small' icon={close} />
+                    <Icon name='close' width={14} />
                   </span>
                 </div>
               ))}

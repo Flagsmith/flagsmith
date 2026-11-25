@@ -1,7 +1,5 @@
 import React, { FC, useEffect, useState } from 'react'
 import cn from 'classnames'
-import { close } from 'ionicons/icons'
-import { IonIcon } from '@ionic/react'
 
 import Utils from 'common/utils/utils'
 import { colorIconWarning } from 'common/theme/tokens'
@@ -119,7 +117,7 @@ const Message: FC<MessageProps> = ({
         </div>
         <a style={{ paddingTop: 2 }} onClick={remove}>
           <span className='icon'>
-            <IonIcon icon={close} style={{ fontSize: '16px' }} />
+            <Icon name='close' width={16} />
           </span>
         </a>
       </div>

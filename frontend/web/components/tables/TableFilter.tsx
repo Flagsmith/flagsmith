@@ -1,7 +1,6 @@
 import React, { FC, ReactNode, useState } from 'react'
+import Icon from 'components/icons/Icon'
 import InlineModal from 'components/InlineModal'
-import { IonIcon } from '@ionic/react'
-import { caretDown } from 'ionicons/icons'
 import classNames from 'classnames'
 
 type TableFilterType = {
@@ -43,13 +42,13 @@ const TableFilter: FC<TableFilterType> = ({
         )}
       >
         <span>{title} </span>
-        <IonIcon
+        <Icon
+          name='chevron-down'
+          width={11}
           style={{
-            fontSize: 11,
             marginLeft: 2,
             marginTop: 4,
           }}
-          icon={caretDown}
         />
       </Row>
       {open && (

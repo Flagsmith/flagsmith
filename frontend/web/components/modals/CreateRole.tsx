@@ -7,6 +7,7 @@ import React, {
   useRef,
   useState,
 } from 'react'
+import Icon from 'components/icons/Icon'
 import InputGroup from 'components/base/forms/InputGroup'
 import Tabs from 'components/navigation/TabMenu/Tabs'
 import TabItem from 'components/navigation/TabMenu/TabItem'
@@ -31,8 +32,6 @@ import {
   useDeleteRolePermissionGroupMutation,
   useGetRolePermissionGroupQuery,
 } from 'common/services/useRolePermissionGroup'
-import { close as closeIcon } from 'ionicons/icons'
-import { IonIcon } from '@ionic/react'
 import Utils from 'common/utils/utils'
 import Button from 'components/base/forms/Button'
 import SettingsButton from 'components/SettingsButton'
@@ -473,7 +472,7 @@ const CreateRole: FC<CreateRoleType> = ({
                     {getUserDisplayName(u)}
                   </span>
                   <span className='chip-icon ion'>
-                    <IonIcon icon={closeIcon} style={{ fontSize: '13px' }} />
+                    <Icon name='close' width={13} />
                   </span>
                 </Row>
               ))}
@@ -503,7 +502,7 @@ const CreateRole: FC<CreateRoleType> = ({
                   >
                     <span className='font-weight-bold'>{g.name}</span>
                     <span className='chip-icon ion'>
-                      <IonIcon icon={closeIcon} style={{ fontSize: '13px' }} />
+                      <Icon name='close' width={13} />
                     </span>
                   </Row>
                 ))}

@@ -1,7 +1,5 @@
 import React from 'react'
 import Icon from 'components/icons/Icon'
-import { close as closeIcon } from 'ionicons/icons'
-import { IonIcon } from '@ionic/react'
 import Button from 'components/base/forms/Button'
 
 interface SuccessMessageProps {
@@ -52,7 +50,7 @@ const SuccessMessage: React.FC<SuccessMessageProps> = ({
       {isClosable && (
         <a onClick={close} className='mt-n2 mr-n2 pl-2'>
           <span className={`icon ${infoMessageClass} close-btn`}>
-            <IonIcon icon={closeIcon} />
+            <Icon name='close' width={13} />
           </span>
         </a>
       )}

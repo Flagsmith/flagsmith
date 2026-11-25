@@ -1,8 +1,7 @@
 import React, { FC } from 'react'
+import Icon from './icons/Icon'
 import GroupSelect, { GroupSelectType } from './GroupSelect'
 import { useGetGroupSummariesQuery } from 'common/services/useGroupSummary'
-import { IonIcon } from '@ionic/react'
-import { close } from 'ionicons/icons'
 
 type ConnectedGroupSelectType = GroupSelectType & {
   orgId: string
@@ -30,7 +29,7 @@ const ConnectedGroupSelect: FC<ConnectedGroupSelectType> = ({
               >
                 <span className='font-weight-bold'>{group.name}</span>
                 <span className='chip-icon ion'>
-                  <IonIcon icon={close} />
+                  <Icon name='close' width={18} />
                 </span>
               </Row>
             )

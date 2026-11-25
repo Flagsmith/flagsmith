@@ -1,8 +1,7 @@
 import React, { FC, useMemo, useState } from 'react'
+import Icon from 'components/icons/Icon'
 import EnvironmentSelect from 'components/EnvironmentSelect'
 import Tooltip from 'components/Tooltip'
-import { IonIcon } from '@ionic/react'
-import { informationCircle } from 'ionicons/icons'
 import ProjectStore from 'common/stores/project-store'
 import Radio from 'components/base/forms/Radio'
 import { ImportStrategy } from 'common/types/responses'
@@ -279,7 +278,7 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
           title={
             <>
               <strong>Environment</strong>
-              <IonIcon icon={informationCircle} />
+              <Icon name='info' width={14} fill='currentColor' />
             </>
           }
         >

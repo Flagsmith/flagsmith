@@ -6,8 +6,7 @@ import React, {
   useRef,
   useState,
 } from 'react'
-import { IonIcon } from '@ionic/react'
-import { checkmarkCircle, chevronDown, chevronUp } from 'ionicons/icons'
+import Icon from './icons/Icon'
 import InlineModal from './InlineModal'
 import Input from './base/forms/Input'
 import {
@@ -132,7 +131,11 @@ const ItemList: FC<ItemListType> = ({
               </span>
             </div>
             {isActive && (
-              <IonIcon className='icon-action' icon={checkmarkCircle} />
+              <Icon
+                name='checkmark-circle'
+                width={14}
+                className='icon-action'
+              />
             )}
           </a>
         )
@@ -285,14 +288,16 @@ const BreadcrumbSeparator: FC<BreadcrumbSeparatorType> = ({
           onClick={toggle}
           className='breadcrumb-link user-select-none cursor-pointer d-flex flex-column mx-0 fs-captionSmall'
         >
-          <IonIcon
+          <Icon
+            name='chevron-up'
+            width={12}
             style={{ marginBottom: -2 }}
-            icon={chevronUp}
             className='text-muted'
           />
-          <IonIcon
+          <Icon
+            name='chevron-down'
+            width={12}
             style={{ marginTop: -2 }}
-            icon={chevronDown}
             className='text-muted'
           />
         </span>

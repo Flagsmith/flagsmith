@@ -4,8 +4,6 @@ import Constants from 'common/constants'
 import { useDismissHealthEventMutation } from 'common/services/useHealthEvents'
 import Button from 'components/base/forms/Button'
 import moment from 'moment'
-import { IonIcon } from '@ionic/react'
-import { warning } from 'ionicons/icons'
 import { HealthEvent } from 'common/types/responses'
 import AppActions from 'common/dispatcher/app-actions'
 import EventTextBlocks from './EventTextBlocks'
@@ -67,13 +65,12 @@ const FeatureHealthEventsList: React.FC<FeatureHealthEventsListProps> = ({
           >
             <div className='d-flex justify-content-between align-items-center mb-4'>
               <div className='d-flex align-items-center'>
-                <IonIcon
-                  style={{
-                    color: Constants.featureHealth.unhealthyColor,
-                    marginBottom: -2,
-                  }}
+                <Icon
+                  name='warning'
+                  width={14}
+                  fill={Constants.featureHealth.unhealthyColor}
+                  style={{ marginBottom: -2 }}
                   className='ms-1 mr-1'
-                  icon={warning}
                 />
                 <div>
                   <Row>

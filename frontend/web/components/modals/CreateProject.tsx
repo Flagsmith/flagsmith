@@ -7,8 +7,7 @@ import React, {
   useRef,
   useState,
 } from 'react'
-import { IonIcon } from '@ionic/react'
-import { close as closeIcon } from 'ionicons/icons'
+import Icon from 'components/icons/Icon'
 import { RouteComponentProps } from 'react-router-dom'
 import ErrorMessage from 'components/ErrorMessage'
 import Button from 'components/base/forms/Button'
@@ -245,7 +244,7 @@ const CreateProject: FC<CreateProjectProps> = ({ history, onSave }) => {
                               >
                                 <span>{getUserDisplayName(u)}</span>
                                 <span className='chip-icon ion'>
-                                  <IonIcon icon={closeIcon} />
+                                  <Icon name='close' width={18} />
                                 </span>
                               </Row>
                             ))}
@@ -295,7 +294,7 @@ const CreateProject: FC<CreateProjectProps> = ({ history, onSave }) => {
                               >
                                 <span>{r.name}</span>
                                 <span className='chip-icon ion'>
-                                  <IonIcon icon={closeIcon} />
+                                  <Icon name='close' width={18} />
                                 </span>
                               </Row>
                             ))}

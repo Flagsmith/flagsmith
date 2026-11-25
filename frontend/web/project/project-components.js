@@ -1,4 +1,5 @@
 import { PureComponent } from 'react'
+import Icon from 'components/icons/Icon'
 import Select, { components } from 'react-select'
 import Button from 'components/base/forms/Button'
 import Paging from 'components/Paging'
@@ -13,8 +14,6 @@ import ProjectProvider from 'common/providers/ProjectProvider'
 import AccountProvider from 'common/providers/AccountProvider'
 import OrganisationProvider from 'common/providers/OrganisationProvider'
 import Panel from 'components/base/grid/Panel'
-import { checkmarkCircle } from 'ionicons/icons'
-import { IonIcon } from '@ionic/react'
 import FormGroup from 'components/base/grid/FormGroup'
 import Row from 'components/base/grid/Row'
 import AppActions from 'common/dispatcher/app-actions'
@@ -110,7 +109,7 @@ const Option = (props) => {
       >
         <div>{labelContent}</div>
         {props.isSelected && (
-          <IonIcon icon={checkmarkCircle} className='icon-action' />
+          <Icon name='checkmark-circle' width={14} className='icon-action' />
         )}
       </div>
     </components.Option>

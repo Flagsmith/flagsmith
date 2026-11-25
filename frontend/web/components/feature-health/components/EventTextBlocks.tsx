@@ -1,7 +1,6 @@
 import React, { useState } from 'react'
+import Icon from 'components/icons/Icon'
 import Constants from 'common/constants'
-import { IonIcon } from '@ionic/react'
-import { chevronDown, chevronUp } from 'ionicons/icons'
 import { FeatureHealthEventReasonTextBlock } from 'common/types/responses'
 import useCollapsibleHeight from 'common/hooks/useCollapsibleHeight'
 
@@ -55,14 +54,16 @@ const EventTextBlocks: React.FC<EventTextBlocksProps> = ({ textBlocks }) => {
             <div className='mb-2 text-default'>
               <strong style={{ color }}>{textBlock.title ?? 'Event'}</strong>
               {!!textBlock.text && (
-                <IonIcon
-                  style={{ color, marginBottom: -2 }}
-                  className='ms-1'
-                  icon={
+                <Icon
+                  name={
                     collapsibleItems?.[index]?.collapsed
-                      ? chevronDown
-                      : chevronUp
+                      ? 'chevron-down'
+                      : 'chevron-up'
                   }
+                  width={14}
+                  fill={color}
+                  style={{ marginBottom: -2 }}
+                  className='ms-1'
                   onClick={() => handleCollapse(index)}
                 />
               )}

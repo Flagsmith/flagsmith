@@ -1,12 +1,12 @@
 import React, { ComponentProps, FC } from 'react'
+import Icon from 'components/icons/Icon'
 import ProjectStore from 'common/stores/project-store'
 import Utils from 'common/utils/utils'
 import { Environment } from 'common/types/responses'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Permission from 'common/providers/Permission'
 import { Link, useHistory, withRouter } from 'react-router-dom'
-import { IonIcon } from '@ionic/react'
-import { checkmarkCircle, createOutline, menu, warning } from 'ionicons/icons'
+import { menu } from 'ionicons/icons'
 import ProjectProvider from 'common/providers/ProjectProvider'
 import OrganisationProvider from 'common/providers/OrganisationProvider'
 // @ts-ignore
@@ -63,7 +63,12 @@ const CustomOption = ({ hasWarning, ...rest }: CustomOptionProps) => {
             <Tooltip
               title={
                 <div className='flex ml-1'>
-                  <IonIcon className='text-warning' icon={warning} />
+                  <Icon
+                    name='warning'
+                    width={14}
+                    fill='currentColor'
+                    className='text-warning'
+                  />
                 </div>
               }
             >
@@ -72,7 +77,11 @@ const CustomOption = ({ hasWarning, ...rest }: CustomOptionProps) => {
           )}
           <div className='flex ml-auto'>
             {rest.isSelected && (
-              <IonIcon icon={checkmarkCircle} className='icon-action' />
+              <Icon
+                name='checkmark-circle'
+                width={14}
+                className='icon-action'
+              />
             )}
           </div>
         </div>
@@ -91,7 +100,12 @@ const CustomSingleValue = ({ hasWarning, ...rest }: CustomSingleValueProps) => {
         <div>
           {showWarning && (
             <div className='flex ml-1'>
-              <IonIcon className='text-warning' icon={warning} />
+              <Icon
+                name='warning'
+                width={14}
+                fill='currentColor'
+                className='text-warning'
+              />
             </div>
           )}
         </div>
@@ -148,7 +162,7 @@ const EnvironmentAside: FC<HomeAsideType> = ({ environmentId, projectId }) => {
                         className='btn mt-1 mb-2 ml-2 mr-2 d-flex justify-content-center btn-xsm d-flex gap-1 align-items-center btn--outline'
                         to={`/project/${projectId}/environment/create`}
                       >
-                        <IonIcon className='fs-small' icon={createOutline} />
+                        <Icon name='edit' width={14} />
                         Create Environment
                       </Link>
                     )

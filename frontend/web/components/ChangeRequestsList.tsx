@@ -7,8 +7,6 @@ import {
 import { Link } from 'react-router-dom'
 import Icon from './icons/Icon'
 import moment from 'moment'
-import { IonIcon } from '@ionic/react'
-import { timeOutline } from 'ionicons/icons'
 import JSONReference from './JSONReference'
 import PanelSearch from './PanelSearch'
 
@@ -67,7 +65,7 @@ const ChangeRequestList: FC<ChangeRequestListProps> = ({
                 {title}
                 {isScheduled && (
                   <span className='ml-1 mr-4 ion'>
-                    <IonIcon icon={timeOutline} />
+                    <Icon name='clock' width={14} />
                   </span>
                 )}
               </div>

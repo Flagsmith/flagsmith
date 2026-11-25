@@ -1,15 +1,12 @@
 import React, { FC } from 'react'
 import { Tag as TTag } from 'common/types/responses'
 import Format from 'common/utils/format'
-import { IonIcon } from '@ionic/react'
-import { alarmOutline, lockClosed, warning } from 'ionicons/icons'
 import Tooltip from 'components/Tooltip'
 import { getTagColor } from './Tag'
 import OrganisationStore from 'common/stores/organisation-store'
 import Utils from 'common/utils/utils'
 import classNames from 'classnames'
 import Icon from 'components/icons/Icon'
-import Color from 'color'
 type TagContent = {
   tag: Partial<TTag>
 }
@@ -29,9 +26,9 @@ const renderIcon = (
   const darkened = tagColor.darken(0.1).string()
   switch (tagType) {
     case 'STALE':
-      return <IonIcon className='ms-1' icon={alarmOutline} color={darkened} />
+      return <Icon name='timer' width={12} fill={darkened} className='ms-1' />
     case 'UNHEALTHY':
-      return <IonIcon className='ms-1' icon={warning} color={darkened} />
+      return <Icon name='warning' width={12} fill={darkened} className='ms-1' />
     case 'GITHUB':
       switch (tagLabel) {
         case 'PR Open':
@@ -51,7 +48,7 @@ const renderIcon = (
       }
     default:
       return isPermanent ? (
-        <IonIcon className='ms-1' icon={lockClosed} color={darkened} />
+        <Icon name='lock' width={12} fill={darkened} className='ms-1' />
       ) : null
   }
 }

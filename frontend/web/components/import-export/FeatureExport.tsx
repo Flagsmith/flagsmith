@@ -1,9 +1,8 @@
 import React, { FC, useEffect, useRef, useState } from 'react'
+import Icon from 'components/icons/Icon'
 import EnvironmentSelect from 'components/EnvironmentSelect'
 import FieldLabel from 'components/base/forms/FieldLabel'
 import Tooltip from 'components/Tooltip'
-import { IonIcon } from '@ionic/react'
-import { informationCircle } from 'ionicons/icons'
 import TagFilter from 'components/tags/TagFilter'
 import PanelSearch from 'components/PanelSearch'
 import FeatureRow from 'components/feature-summary/FeatureRow'
@@ -122,7 +121,7 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
           title={
             <>
               <strong>Filter Exported Features</strong>{' '}
-              <IonIcon icon={informationCircle} />
+              <Icon name='info' width={14} fill='currentColor' />
             </>
           }
         >

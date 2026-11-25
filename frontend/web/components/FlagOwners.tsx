@@ -1,7 +1,6 @@
 import React, { FC, useState } from 'react'
+import Icon from './icons/Icon'
 import UserSelect from './UserSelect'
-import { IonIcon } from '@ionic/react'
-import { close } from 'ionicons/icons'
 import SettingsButton from './SettingsButton'
 import { useGetUsersQuery } from 'common/services/useUser'
 import AccountStore from 'common/stores/account-store'
@@ -41,7 +40,7 @@ const FlagOwners: FC<FlagOwnersProps> = ({ onAdd, onRemove, selectedIds }) => {
                   {getUserDisplayName(u)}
                 </span>
                 <span className='chip-icon ion'>
-                  <IonIcon icon={close} />
+                  <Icon name='close' width={18} />
                 </span>
               </Row>
             ))}

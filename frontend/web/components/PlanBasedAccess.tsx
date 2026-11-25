@@ -1,11 +1,10 @@
 import React, { FC, ReactNode } from 'react'
+import Icon from './icons/Icon'
 import Utils, { PaidFeature } from 'common/utils/utils'
 import { isPlanAtLeast, PlanFamily } from 'common/utils/plans'
 import AccountStore from 'common/stores/account-store'
 import Button from './base/forms/Button'
 import Constants from 'common/constants'
-import { IonIcon } from '@ionic/react'
-import { documents, lockClosed } from 'ionicons/icons'
 import classNames from 'classnames'
 import API from 'project/api'
 
@@ -155,7 +154,7 @@ const PlanBasedBanner: FC<PlanBasedBannerType> = ({ children, ...props }) => {
             target={'_blank'}
             rel='noreferrer'
           >
-            <IonIcon icon={documents} />
+            <Icon name='file-text' width={14} />
             View Docs
           </a>
         ))}
@@ -192,7 +191,7 @@ const PlanBasedBanner: FC<PlanBasedBannerType> = ({ children, ...props }) => {
       'chip chip--xs d-flex align-items-center font-weight-medium text-white bg-primary900'
     const badgeContent = (
       <>
-        <IonIcon className='me-1' icon={lockClosed} />
+        <Icon name='lock' width={12} className='me-1' />
         {force
           ? Utils.getNextPlan()
           : Utils.getPlanName(requiredPlan ?? Utils.getRequiredPlan(feature))}

@@ -4,7 +4,6 @@ import Button from 'components/base/forms/Button'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
 import Icon from 'components/icons/Icon'
-import { IonIcon } from '@ionic/react'
 import { getPlanBasedOption } from 'components/PlanBasedAccess'
 import InputGroup from 'components/base/forms/InputGroup'
 import OrganisationProvider from 'common/providers/OrganisationProvider'
@@ -13,7 +12,6 @@ import every from 'lodash/every'
 import map from 'lodash/map'
 import ErrorMessage from 'components/ErrorMessage'
 import AccountStore from 'common/stores/account-store'
-import { close as closeIcon } from 'ionicons/icons'
 import { MultiValueProps } from 'react-select'
 import { useGetGroupsQuery } from 'common/services/useGroup'
 import { useCreateUserInviteMutation } from 'common/services/useInvites'
@@ -42,8 +40,9 @@ const CustomMultiValue = (props: MultiValueProps<GroupOption>) => {
       <span className='font-weight-bold'>{data.label}</span>
       {
         <span className='chip-icon ion'>
-          <IonIcon
-            icon={closeIcon}
+          <Icon
+            name='close'
+            width={18}
             onClick={() => removeProps?.onClick?.(data)}
           />
         </span>

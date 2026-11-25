@@ -1,6 +1,6 @@
 import React, { FC } from 'react'
 import NavSubLink from 'components/navigation/NavSubLink'
-import { apps, statsChart } from 'ionicons/icons'
+import { apps } from 'ionicons/icons'
 import Utils from 'common/utils/utils'
 import UsersIcon from 'components/icons/UsersIcon'
 import AccountStore from 'common/stores/account-store'
@@ -36,7 +36,7 @@ const OrganisationNavbar: FC<OrganisationNavType> = ({}) => {
       </NavSubLink>
       {!Project.disableAnalytics && AccountStore.isAdmin() && (
         <NavSubLink
-          icon={statsChart}
+          icon={<Icon name='bar-chart' />}
           id='permissions-link'
           to={`/organisation/${AccountStore.getOrganisation().id}/usage`}
         >
