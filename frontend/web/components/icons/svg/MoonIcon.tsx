@@ -1,0 +1,56 @@
+import { FC } from 'react'
+import { IconProps } from './types'
+
+const MoonIcon: FC<IconProps> = ({
+  fill = 'currentColor',
+  height,
+  width = 24,
+  ...rest
+}) => (
+  <svg
+    width={width}
+    height={height ?? width}
+    viewBox='0 0 24 24'
+    fill='none'
+    xmlns='http://www.w3.org/2000/svg'
+    {...rest}
+  >
+    <path
+      d='M14 6V4'
+      strokeWidth='1.5'
+      strokeLinecap='round'
+      strokeLinejoin='round'
+      stroke={fill}
+    />
+    <path
+      d='M13 5H15'
+      strokeWidth='1.5'
+      strokeLinecap='round'
+      strokeLinejoin='round'
+      stroke={fill}
+    />
+    <path
+      d='M19 7V11'
+      strokeWidth='1.5'
+      strokeLinecap='round'
+      strokeLinejoin='round'
+      stroke={fill}
+    />
+    <path
+      d='M21 9H17'
+      strokeWidth='1.5'
+      strokeLinecap='round'
+      strokeLinejoin='round'
+      stroke={fill}
+    />
+    <path
+      d='M17.4 16C14.9 16.8 12 16.3 10 14.3C7.5 11.8 7.3 7.8 9.3 5C5.2 5.4 2 8.8 2 13C2 17.4 5.6 21 10 21C13.3 21 16.2 18.9 17.4 16Z'
+      strokeWidth='1.5'
+      strokeLinecap='round'
+      strokeLinejoin='round'
+      stroke={fill}
+    />
+  </svg>
+)
+
+export default MoonIcon

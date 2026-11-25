@@ -1,0 +1,81 @@
+import { FC } from 'react'
+import { IconProps } from './types'
+
+const CompareIcon: FC<IconProps> = ({
+  fill = 'currentColor',
+  height,
+  width = 24,
+  ...rest
+}) => (
+  <svg
+    width={width}
+    height={height ?? width}
+    viewBox='0 0 24 24'
+    fill='none'
+    xmlns='http://www.w3.org/2000/svg'
+    {...rest}
+  >
+    <circle
+      cx='19.003'
+      cy='18.5028'
+      r='2.50104'
+      strokeWidth='1.5'
+      strokeLinecap='round'
+      strokeLinejoin='round'
+      stroke={fill}
+    />
+    <path
+      d='M10.8848 5.49731H16.5023C17.8836 5.49731 19.0033 6.61707 19.0033 7.99836V16.0017'
+      strokeWidth='1.5'
+      strokeLinecap='round'
+      strokeLinejoin='round'
+      stroke={fill}
+    />
+    <path
+      d='M12.8856 7.49815L10.8848 5.49731'
+      strokeWidth='1.5'
+      strokeLinecap='round'
+      strokeLinejoin='round'
+      stroke={fill}
+    />
+    <path
+      d='M12.8856 3.49658L10.8848 5.49742'
+      strokeWidth='1.5'
+      strokeLinecap='round'
+      strokeLinejoin='round'
+      stroke={fill}
+    />
+    <circle
+      cx='4.99714'
+      cy='5.49738'
+      r='2.50104'
+      strokeWidth='1.5'
+      strokeLinecap='round'
+      strokeLinejoin='round'
+      stroke={fill}
+    />
+    <path
+      d='M13.1156 18.5029H7.49811C6.11682 18.5029 4.99707 17.3832 4.99707 16.0019V7.99854'
+      strokeWidth='1.5'
+      strokeLinecap='round'
+      strokeLinejoin='round'
+      stroke={fill}
+    />
+    <path
+      d='M11.1152 16.502L13.1161 18.5028'
+      strokeWidth='1.5'
+      strokeLinecap='round'
+      strokeLinejoin='round'
+      stroke={fill}
+    />
+    <path
+      d='M11.1152 20.5038L13.1161 18.5029'
+      strokeWidth='1.5'
+      strokeLinecap='round'
+      strokeLinejoin='round'
+      stroke={fill}
+    />
+  </svg>
+)
+
+export default CompareIcon

@@ -1,0 +1,28 @@
+import { FC } from 'react'
+import { IconProps } from './types'
+
+const ChevronDownIcon: FC<IconProps> = ({
+  fill = 'currentColor',
+  height,
+  width = 24,
+  ...rest
+}) => (
+  <svg
+    width={width}
+    height={height ?? width}
+    viewBox='0 0 24 24'
+    fill='none'
+    xmlns='http://www.w3.org/2000/svg'
+    {...rest}
+  >
+    <path
+      d='M16 10.5L14.2627 12.2373C13.4707 13.0293 13.0747 13.4253 12.618 13.5737C12.2163 13.7042 11.7837 13.7042 11.382 13.5737C10.9253 13.4253 10.5293 13.0293 9.73726 12.2373L8 10.5'
+      strokeWidth='1.5'
+      strokeLinecap='round'
+      strokeLinejoin='round'
+      stroke={fill}
+    />
+  </svg>
+)
+
+export default ChevronDownIcon

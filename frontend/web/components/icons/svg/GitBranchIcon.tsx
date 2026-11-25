@@ -1,0 +1,62 @@
+import { FC } from 'react'
+import { IconProps } from './types'
+
+const GitBranchIcon: FC<IconProps> = ({
+  fill = 'currentColor',
+  height,
+  width = 24,
+  ...rest
+}) => (
+  <svg
+    width={width}
+    height={height ?? width}
+    viewBox='0 0 24 24'
+    fill='none'
+    xmlns='http://www.w3.org/2000/svg'
+    {...rest}
+  >
+    <circle
+      cx='6.49713'
+      cy='5.49762'
+      r='2.50104'
+      strokeWidth='1.5'
+      strokeLinecap='round'
+      strokeLinejoin='round'
+      stroke={fill}
+    />
+    <circle
+      cx='6.49713'
+      cy='18.503'
+      r='2.50104'
+      strokeWidth='1.5'
+      strokeLinecap='round'
+      strokeLinejoin='round'
+      stroke={fill}
+    />
+    <circle
+      cx='17.501'
+      cy='5.49762'
+      r='2.50104'
+      strokeWidth='1.5'
+      strokeLinecap='round'
+      strokeLinejoin='round'
+      stroke={fill}
+    />
+    <path
+      d='M6.49707 7.99854V16.0019'
+      strokeWidth='1.5'
+      strokeLinecap='round'
+      strokeLinejoin='round'
+      stroke={fill}
+    />
+    <path
+      d='M17.5008 7.99854C17.5008 10.7611 15.2613 13.0006 12.4988 13.0006H8.99779C7.61649 13.0006 6.49707 14.1204 6.49707 15.5016'
+      strokeWidth='1.5'
+      strokeLinecap='round'
+      strokeLinejoin='round'
+      stroke={fill}
+    />
+  </svg>
+)
+
+export default GitBranchIcon
