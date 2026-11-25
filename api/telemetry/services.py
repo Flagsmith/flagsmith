@@ -5,7 +5,11 @@ from telemetry.types import ResolvedIds
 
 
 def get_resolved_ids(ids: ResolvedIds) -> ResolvedIds:
-    """Resolve as many keys in `ids` as possible from the database."""
+    """
+    Resolve as many keys in `ids` as possible from the database.
+
+    Makes at most one query, from the most specific key present.
+    """
     resolved_ids = ids.copy()
 
     if "environment__id" not in resolved_ids and (
@@ -21,6 +25,7 @@ def get_resolved_ids(ids: ResolvedIds) -> ResolvedIds:
                 resolved_ids["project__id"],
                 resolved_ids["organisation__id"],
             ) = environment_ids
+        return resolved_ids
 
     if "project__id" not in resolved_ids and "feature__id" in resolved_ids:
         if feature_ids := (
@@ -32,6 +37,7 @@ def get_resolved_ids(ids: ResolvedIds) -> ResolvedIds:
                 resolved_ids["project__id"],
                 resolved_ids["organisation__id"],
             ) = feature_ids
+        return resolved_ids
 
     if "organisation__id" not in resolved_ids and "project__id" in resolved_ids:
         if (

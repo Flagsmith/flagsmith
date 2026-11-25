@@ -115,3 +115,18 @@ def test_get_resolved_ids__complete_ids__queries_nothing() -> None:
     # Then
     assert resolved_ids == ids
     assert resolved_ids is not ids
+
+
+def test_get_resolved_ids__unknown_environment_api_key__skips_other_lookups(
+    feature: Feature,
+    django_assert_num_queries: typing.Any,
+) -> None:
+    # Given
+    ids: ResolvedIds = {"environment__api_key": "unknown", "feature__id": feature.id}
+
+    # When
+    with django_assert_num_queries(1):
+        resolved_ids = get_resolved_ids(ids)
+
+    # Then
+    assert resolved_ids == ids
