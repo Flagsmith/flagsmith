@@ -120,7 +120,7 @@ const SnowflakeConfigForm: FC<SnowflakeConfigFormProps> = ({
           hint={
             isEdit
               ? "Account identifier can't be changed. To use a different Snowflake account, disconnect and create a new connection."
-              : 'From Account details in Snowflake. Pasting the account URL is fine.'
+              : 'From Account details in Snowflake. Pasting the account URL (….snowflakecomputing.com) is fine.'
           }
         />
 

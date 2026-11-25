@@ -49,8 +49,10 @@ export const normaliseIdentifier = (value: string): string =>
 export const isValidAccountIdentifier = (accountIdentifier: string): boolean =>
   ACCOUNT_IDENTIFIER.test(normaliseAccountIdentifier(accountIdentifier))
 
-export const isAccountLocator = (accountIdentifier: string): boolean =>
-  normaliseAccountIdentifier(accountIdentifier).includes('.')
+export const isAccountLocator = (accountIdentifier: string): boolean => {
+  const normalised = normaliseAccountIdentifier(accountIdentifier)
+  return normalised.includes('.') && !normalised.endsWith('.COM')
+}
 
 export const isValidIdentifier = (value: string): boolean =>
   IDENTIFIER.test(value.trim())

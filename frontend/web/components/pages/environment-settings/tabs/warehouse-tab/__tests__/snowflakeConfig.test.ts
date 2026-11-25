@@ -73,6 +73,7 @@ describe('isAccountLocator', () => {
     ['xy12345.eu-west-1', true],
     ['https://xy12345.eu-west-1.aws.snowflakecomputing.com', true],
     ['https://myorg-myaccount.snowflakecomputing.com', false],
+    ['https://app.snowflake.com/myorg/myaccount/#/homepage', false],
   ])('%p returns %p', (value, expected) => {
     expect(isAccountLocator(value)).toBe(expected)
   })
