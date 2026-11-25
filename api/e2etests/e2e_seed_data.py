@@ -15,6 +15,10 @@ from edge_api.identities.models import EdgeIdentity
 from environments.identities.models import Identity
 from environments.models import Environment
 from environments.permissions.models import UserEnvironmentPermission
+from features.feature_types import MULTIVARIATE
+from features.models import Feature
+from features.multivariate.models import MultivariateFeatureOption
+from features.value_types import STRING
 from organisations.models import (
     Organisation,
     OrganisationRole,
@@ -36,6 +40,7 @@ PASSWORD = "Str0ngp4ssw0rd!"
 
 PROJECT_PERMISSION_PROJECT = "My Test Project 5 Project Permission"
 ENV_PERMISSION_PROJECT = "My Test Project 6 Env Permission"
+EXPERIMENTS_PROJECT = "My Test Project 8 Experiments"
 
 
 def delete_user_and_its_organisations(user_email: str) -> None:
@@ -144,6 +149,7 @@ def seed_data() -> None:
         },
         {"name": ENV_PERMISSION_PROJECT, "environments": ["Development"]},
         {"name": "My Test Project 7 Role", "environments": ["Development"]},
+        {"name": EXPERIMENTS_PROJECT, "environments": ["Development"]},
     ]
     # Upgrade organisation seats
     Subscription.objects.filter(organisation__in=org_admin.organisations.all()).update(
@@ -210,6 +216,22 @@ def seed_data() -> None:
                     ]
                 ]
             environments.append(environment)
+
+        if project_info["name"] == EXPERIMENTS_PROJECT:
+            experiment_feature = Feature.objects.create(
+                name="experiment_checkout",
+                project=project,
+                type=MULTIVARIATE,
+                initial_value="control",
+            )
+            for variant_key, variant_value in (("variant_a", "a"), ("variant_b", "b")):
+                MultivariateFeatureOption.objects.create(
+                    feature=experiment_feature,
+                    key=variant_key,
+                    type=STRING,
+                    string_value=variant_value,
+                    default_percentage_allocation=0,
+                )
 
     # We're only creating identities for 6 of the 7 environments because
     # they are necessary for the environments created above and to keep

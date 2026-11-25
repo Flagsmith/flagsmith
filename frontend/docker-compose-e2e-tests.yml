@@ -26,6 +26,7 @@ services:
       DISABLE_ANALYTICS_FEATURES: 'true'
       EMAIL_BACKEND: django.core.mail.backends.smtp.EmailBackend
       ACCESS_LOG_LOCATION: /dev/shm/log.txt
+      EXPERIMENTATION_ENABLED: 'true'
     ports:
       - 8000:8000
     depends_on:

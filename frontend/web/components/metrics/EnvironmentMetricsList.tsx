@@ -25,9 +25,6 @@ const EnvironmentMetricsList: FC<EnvironmentMetricsListProps> = ({
     },
   )
 
-  const MAX_COLUMNS = 6
-  const columns = Math.min(data?.metrics?.length || 0, MAX_COLUMNS) || 1
-
   const extraMetricsData = getExtraMetricsData(projectId, environmentId)
 
   useEffect(() => {
@@ -48,12 +45,7 @@ const EnvironmentMetricsList: FC<EnvironmentMetricsListProps> = ({
       }
     >
       <div className='flex gap-2'>
-        <div
-          className='metrics-grid'
-          style={{
-            gridTemplateColumns: `repeat(${columns}, 1fr)`,
-          }}
-        >
+        <div className='metrics-grid'>
           {data?.metrics.map((metric) => (
             <EnvironmentMetric
               key={metric.name}

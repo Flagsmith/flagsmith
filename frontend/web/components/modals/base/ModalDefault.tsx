@@ -17,8 +17,8 @@ export const setInterceptClose = (promise: (() => Promise<any>) | null) => {
   interceptClose = promise
 }
 
-let cb
-export const setModalTitle = (title: string) => {
+let cb: ((title: ReactNode) => void) | undefined
+export const setModalTitle = (title: ReactNode) => {
   cb?.(title)
 }
 const ModalDefault: FC<ModalDefault> = ({

@@ -16,4 +16,12 @@
   display: grid;
   justify-content: center;
   row-gap: 12px;
+  grid-template-columns: repeat(2, 1fr);
+
+  // Wider screens: every metric on one row
+  @include media-breakpoint-up(md) {
+    grid-auto-columns: 1fr;
+    grid-auto-flow: column;
+    grid-template-columns: none;
+  }
 }

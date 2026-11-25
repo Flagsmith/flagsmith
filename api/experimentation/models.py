@@ -140,6 +140,12 @@ class ExperimentStatus(models.TextChoices):
     COMPLETED = "completed", "Completed"
 
 
+class RolloutDecision(models.TextChoices):
+    CONTROL = "control", "Control"
+    VARIANT = "variant", "Variant"
+    DISABLE = "disable", "Disable"
+
+
 class AudienceMatch(models.TextChoices):
     ANY = "any", "Any"
     ALL = "all", "All"
@@ -175,6 +181,19 @@ class Experiment(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ignor
     updated_at = models.DateTimeField(auto_now=True)
     started_at = models.DateTimeField(null=True, blank=True)
     ended_at = models.DateTimeField(null=True, blank=True)
+    rollout_decision = models.CharField(
+        max_length=50,
+        choices=RolloutDecision.choices,
+        null=True,
+        blank=True,
+    )
+    rollout_variant = models.ForeignKey(
+        "multivariate.MultivariateFeatureOption",
+        on_delete=models.SET_NULL,
+        related_name="+",
+        null=True,
+        blank=True,
+    )
     rollout_segment = models.OneToOneField(
         "segments.Segment",
         on_delete=models.SET_NULL,
