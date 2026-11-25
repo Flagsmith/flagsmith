@@ -1,6 +1,6 @@
 import React, { FC } from 'react'
 import TableFilter from './TableFilter'
-import Icon from 'components/icons/Icon'
+import { ChevronDownIcon, ChevronUpIcon } from 'components/icons'
 import classNames from 'classnames'
 import { SortOrder } from 'common/types/requests'
 
@@ -36,6 +36,8 @@ const TableSortFilter: FC<TableFilterType> = ({
       <TableFilter hideTitle title={'Sort'}>
         {options.map((sortOption, i) => {
           const isActive = sortOption?.value === value?.sortBy
+          const SortIcon =
+            value?.sortOrder === SortOrder.ASC ? ChevronUpIcon : ChevronDownIcon
           return (
             <a
               key={i}
@@ -58,15 +60,10 @@ const TableSortFilter: FC<TableFilterType> = ({
               <Row space className='px-3 py-2'>
                 <div>{sortOption.label}</div>
                 <div>
-                  <Icon
+                  <SortIcon
                     className={classNames('text-default', {
                       'opacity-0': !isActive,
                     })}
-                    name={
-                      value?.sortOrder === SortOrder.ASC
-                        ? 'chevron-up'
-                        : 'chevron-down'
-                    }
                   />
                 </div>
               </Row>

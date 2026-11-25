@@ -4,7 +4,6 @@ import useOutsideClick from 'common/useOutsideClick'
 import Utils from 'common/utils/utils'
 import Constants from 'common/constants'
 import Permission from 'common/providers/Permission'
-import Icon from 'components/icons/Icon'
 import { colorIconSecondary } from 'common/theme/tokens'
 import { Tag } from 'common/types/responses'
 import color from 'color'
@@ -13,6 +12,7 @@ import ActionButton from 'components/ActionButton'
 import ActionItem from 'components/shared/ActionItem'
 import { calculateListPosition } from 'common/utils/calculateListPosition'
 import { ProjectPermission } from 'common/types/permissions.types'
+import { ClockIcon, CopyIcon, ListIcon, TrashIcon } from 'components/icons'
 
 export interface FeatureActionProps {
   featureName: string
@@ -105,7 +105,7 @@ const FeatureAction: FC<FeatureActionProps> = ({
         <div ref={listRef} className='feature-action__list'>
           <ActionItem
             disableE2E={disableE2E}
-            icon={<Icon name='copy' width={18} fill={colorIconSecondary} />}
+            icon={<CopyIcon width={18} fill={colorIconSecondary} />}
             label='Copy Feature Name'
             handleActionClick={() => {
               handleActionClick('copy')
@@ -117,7 +117,7 @@ const FeatureAction: FC<FeatureActionProps> = ({
           {!hideAudit && (
             <ActionItem
               disableE2E={disableE2E}
-              icon={<Icon name='list' width={18} fill={colorIconSecondary} />}
+              icon={<ListIcon width={18} fill={colorIconSecondary} />}
               label='Show Audit Logs'
               handleActionClick={() => {
                 handleActionClick('audit')
@@ -130,7 +130,7 @@ const FeatureAction: FC<FeatureActionProps> = ({
           {!hideHistory && (
             <ActionItem
               disableE2E={disableE2E}
-              icon={<Icon name='clock' width={18} fill={colorIconSecondary} />}
+              icon={<ClockIcon width={18} fill={colorIconSecondary} />}
               label='Show History'
               handleActionClick={() => {
                 handleActionClick('history')
@@ -158,11 +158,7 @@ const FeatureAction: FC<FeatureActionProps> = ({
                       <ActionItem
                         disableE2E={disableE2E}
                         icon={
-                          <Icon
-                            name='trash-2'
-                            width={18}
-                            fill={colorIconSecondary}
-                          />
+                          <TrashIcon width={18} fill={colorIconSecondary} />
                         }
                         label='Remove feature'
                         handleActionClick={() => {

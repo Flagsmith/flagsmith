@@ -1,4 +1,4 @@
-import { IconName } from 'components/icons/Icon'
+import { BarChartIcon, SearchIcon } from 'components/icons'
 import SidebarLink from 'components/navigation/SidebarLink'
 import { useHistory } from 'react-router-dom'
 import React from 'react'
@@ -15,13 +15,13 @@ const OrganisationUsageSideBar = ({
   const history = useHistory()
   const sideBarItems = [
     {
-      icon: 'bar-chart',
+      icon: BarChartIcon,
       id: 'global',
       label: 'By Endpoint',
       to: `/organisation/${organisationId}/usage`,
     },
     {
-      icon: 'search',
+      icon: SearchIcon,
       id: 'user-agents',
       label: 'By SDK',
       to: `/organisation/${organisationId}/usage?p=user-agents`,
@@ -34,7 +34,7 @@ const OrganisationUsageSideBar = ({
         <SidebarLink
           key={item.id}
           id={item.id}
-          icon={item.icon as IconName}
+          icon={item.icon}
           onClick={() => {
             history.push(item.to)
           }}

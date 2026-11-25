@@ -1,7 +1,7 @@
 import { FC } from 'react'
 import IconButton from 'components/base/IconButton'
-import Icon from 'components/icons/Icon'
 import Utils from 'common/utils/utils'
+import { CopyIcon } from 'components/icons'
 
 type FeatureNameType = {
   name: string
@@ -28,7 +28,7 @@ const FeatureName: FC<FeatureNameType> = ({ name }) => {
         onClick={copyFeature}
         className='ms-2 me-2'
       >
-        <Icon width={16} name='copy' />
+        <CopyIcon width={16} />
       </IconButton>
     </Row>
   )

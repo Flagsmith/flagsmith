@@ -1,6 +1,6 @@
 import React from 'react'
-import Icon from './icons/Icon'
 import Tooltip from './Tooltip'
+import { BellIcon } from './icons'
 
 let prom
 class _Headway extends React.Component {
@@ -41,7 +41,7 @@ class _Headway extends React.Component {
                 Headway.show()
               }}
             >
-              <Icon name='bell' width={20} fill='#9DA4AE' />
+              <BellIcon width={20} fill='#9DA4AE' />
             </span>
             <span id='headway'>
               <span />

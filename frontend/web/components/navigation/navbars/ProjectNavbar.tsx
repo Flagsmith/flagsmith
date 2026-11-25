@@ -1,14 +1,21 @@
 import React, { FC } from 'react'
 import NavSubLink from 'components/navigation/NavSubLink'
-import { barChart, gitBranch, gitCompare } from 'ionicons/icons'
 import SegmentsIcon from 'components/icons/SegmentsIcon'
 import Permission, { useHasPermission } from 'common/providers/Permission'
 import AuditLogIcon from 'components/icons/AuditLogIcon'
-import Icon from 'components/icons/Icon'
 import Utils from 'common/utils/utils'
 import OverflowNav from 'components/navigation/OverflowNav'
 import ProjectChangeRequestsLink from 'components/ProjectChangeRequestsLink'
 import { ProjectPermission } from 'common/types/permissions.types'
+import {
+  BarChartIcon,
+  CompareIcon,
+  FlashIcon,
+  GitBranchIcon,
+  LayersIcon,
+  RefreshIcon,
+  SettingsIcon,
+} from 'components/icons'
 
 type ProjectNavType = {
   environmentId?: string
@@ -33,7 +40,7 @@ const ProjectNavbar: FC<ProjectNavType> = ({ environmentId, projectId }) => {
       className='py-0 d-flex'
     >
       <NavSubLink
-        icon={gitBranch}
+        icon={<GitBranchIcon />}
         id={`features-link`}
         isActive={(_, location) =>
           location.pathname.startsWith(
@@ -45,14 +52,14 @@ const ProjectNavbar: FC<ProjectNavType> = ({ environmentId, projectId }) => {
         Environments
       </NavSubLink>
       <NavSubLink
-        icon={<SegmentsIcon />}
+        icon={<SegmentsIcon fill='currentColor' />}
         id={`segments-link`}
         to={`/project/${projectId}/segments`}
       >
         Segments
       </NavSubLink>
       <NavSubLink
-        icon={<Icon name='refresh' />}
+        icon={<RefreshIcon />}
         id='lifecycle-link'
         to={`/project/${projectId}/lifecycle`}
         isActive={(_, location) =>
@@ -69,7 +76,7 @@ const ProjectNavbar: FC<ProjectNavType> = ({ environmentId, projectId }) => {
         {({ permission }) =>
           permission && (
             <NavSubLink
-              icon={<AuditLogIcon />}
+              icon={<AuditLogIcon fill='currentColor' />}
               id='audit-log-link'
               to={`/project/${projectId}/audit-log`}
               data-test='audit-log-link'
@@ -84,7 +91,7 @@ const ProjectNavbar: FC<ProjectNavType> = ({ environmentId, projectId }) => {
       )}
       {!!integrations.length && (
         <NavSubLink
-          icon={<Icon name='layers' />}
+          icon={<LayersIcon />}
           id='integrations-link'
           to={`/project/${projectId}/integrations`}
         >
@@ -93,7 +100,7 @@ const ProjectNavbar: FC<ProjectNavType> = ({ environmentId, projectId }) => {
       )}
       {projectMetricsTooltipEnabled && (
         <NavSubLink
-          icon={barChart}
+          icon={<BarChartIcon />}
           to={`/project/${projectId}/reporting`}
           id='reporting-link'
           disabled
@@ -106,7 +113,7 @@ const ProjectNavbar: FC<ProjectNavType> = ({ environmentId, projectId }) => {
         </NavSubLink>
       )}
       <NavSubLink
-        icon={gitCompare}
+        icon={<CompareIcon />}
         id='compare-link'
         to={`/project/${projectId}/compare`}
       >
@@ -114,7 +121,7 @@ const ProjectNavbar: FC<ProjectNavType> = ({ environmentId, projectId }) => {
       </NavSubLink>
       {projectAdmin && Utils.getFlagsmithHasFeature('release_pipelines') && (
         <NavSubLink
-          icon={<Icon name='flash' />}
+          icon={<FlashIcon />}
           id='release-pipelines-link'
           to={`/project/${projectId}/release-pipelines`}
         >
@@ -123,7 +130,7 @@ const ProjectNavbar: FC<ProjectNavType> = ({ environmentId, projectId }) => {
       )}
       {projectAdmin && (
         <NavSubLink
-          icon={<Icon name='setting' width={24} />}
+          icon={<SettingsIcon />}
           id='project-settings-link'
           to={`/project/${projectId}/settings`}
         >

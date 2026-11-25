@@ -1,13 +1,17 @@
 import React, { FC } from 'react'
 import NavSubLink from 'components/navigation/NavSubLink'
-import { apps, statsChart } from 'ionicons/icons'
 import Utils from 'common/utils/utils'
 import UsersIcon from 'components/icons/UsersIcon'
 import AccountStore from 'common/stores/account-store'
 import Project from 'common/project'
-import Icon from 'components/icons/Icon'
 import OverflowNav from 'components/navigation/OverflowNav'
 import AuditLogIcon from 'components/icons/AuditLogIcon'
+import {
+  BarChartIcon,
+  GridIcon,
+  LayersIcon,
+  SettingsIcon,
+} from 'components/icons'
 
 type OrganisationNavType = {}
 
@@ -20,7 +24,7 @@ const OrganisationNavbar: FC<OrganisationNavType> = ({}) => {
       className='py-0 d-flex'
     >
       <NavSubLink
-        icon={apps}
+        icon={<GridIcon />}
         id='projects-link'
         to={Utils.getOrganisationHomePage()}
       >
@@ -28,7 +32,7 @@ const OrganisationNavbar: FC<OrganisationNavType> = ({}) => {
       </NavSubLink>
       <NavSubLink
         data-test='users-and-permissions'
-        icon={<UsersIcon />}
+        icon={<UsersIcon fill='currentColor' />}
         id='permissions-link'
         to={`/organisation/${AccountStore.getOrganisation().id}/permissions`}
       >
@@ -36,7 +40,7 @@ const OrganisationNavbar: FC<OrganisationNavType> = ({}) => {
       </NavSubLink>
       {!Project.disableAnalytics && AccountStore.isAdmin() && (
         <NavSubLink
-          icon={statsChart}
+          icon={<BarChartIcon />}
           id='permissions-link'
           to={`/organisation/${AccountStore.getOrganisation().id}/usage`}
         >
@@ -46,7 +50,7 @@ const OrganisationNavbar: FC<OrganisationNavType> = ({}) => {
       {AccountStore.isAdmin() &&
         Utils.getFlagsmithHasFeature('organisation_audit_log') && (
           <NavSubLink
-            icon={<AuditLogIcon />}
+            icon={<AuditLogIcon fill='currentColor' />}
             id='organisation-audit-log-link'
             to={`/organisation/${AccountStore.getOrganisation().id}/audit-log`}
           >
@@ -56,7 +60,7 @@ const OrganisationNavbar: FC<OrganisationNavType> = ({}) => {
       {AccountStore.isAdmin() &&
         Utils.getFlagsmithHasFeature('organisation_integrations') && (
           <NavSubLink
-            icon={<Icon name='layers' />}
+            icon={<LayersIcon />}
             id='integrations-link'
             to={`/organisation/${
               AccountStore.getOrganisation().id
@@ -67,7 +71,7 @@ const OrganisationNavbar: FC<OrganisationNavType> = ({}) => {
         )}
       {AccountStore.isAdmin() && (
         <NavSubLink
-          icon={<Icon name='setting' width={24} />}
+          icon={<SettingsIcon />}
           id='org-settings-link'
           data-test='org-settings-link'
           to={`/organisation/${AccountStore.getOrganisation().id}/settings`}

@@ -3,11 +3,11 @@ import SelectOrgAndProject from 'components/navigation/SelectOrgAndProject'
 import GithubStar from 'components/GithubStar'
 import Utils from 'common/utils/utils'
 import { NavLink } from 'react-router-dom'
-import Icon from 'components/icons/Icon'
 import Headway from 'components/Headway'
 import { Project } from 'common/types/responses'
 import AccountDropdown from 'components/navigation/AccountDropdown'
 import ThemeToggle from 'components/ThemeToggle'
+import { FileTextIcon, PersonIcon, RocketIcon } from 'components/icons'
 
 type TopNavType = {
   activeProject: Project | undefined
@@ -37,7 +37,7 @@ const TopNavbar: FC<TopNavType> = ({ activeProject, projectId }) => {
             className='d-flex gap-1 d-none d-md-flex text-end lh-1 align-items-center'
           >
             <span>
-              <Icon name='rocket' width={20} fill='#9DA4AE' />
+              <RocketIcon width={20} fill='#9DA4AE' />
             </span>
             <span className='d-none d-md-block'>Getting Started</span>
           </NavLink>
@@ -46,7 +46,7 @@ const TopNavbar: FC<TopNavType> = ({ activeProject, projectId }) => {
             href={'https://docs.flagsmith.com'}
           >
             <span>
-              <Icon name='file-text' width={20} fill='#9DA4AE' />
+              <FileTextIcon width={20} fill='#9DA4AE' />
             </span>
             <span className='d-none d-md-block'>Docs</span>
           </a>
@@ -63,7 +63,7 @@ const TopNavbar: FC<TopNavType> = ({ activeProject, projectId }) => {
               to={'/account'}
             >
               <span className='mr-1'>
-                <Icon name='person' width={20} fill='#9DA4AE' />
+                <PersonIcon width={20} fill='#9DA4AE' />
               </span>
               <span className='d-none d-md-block'>Account</span>
             </NavLink>

@@ -1,11 +1,10 @@
 import React, { FC, ReactNode, useMemo, useState } from 'react'
 import InlineModal from 'components/InlineModal'
-import { IonIcon } from '@ionic/react'
-import { caretDown } from 'ionicons/icons'
 import classNames from 'classnames'
 import TableFilterItem from './TableFilterItem'
 import Input from 'components/base/forms/Input'
 import Utils from 'common/utils/utils'
+import { ChevronDownIcon } from 'components/icons'
 
 type TableFilterType = {
   title: ReactNode
@@ -56,14 +55,7 @@ const TableFilter: FC<TableFilterType> = ({
         className={classNames('cursor-pointer user-select-none', className)}
       >
         <span>{title} </span>
-        <IonIcon
-          style={{
-            fontSize: 11,
-            marginLeft: 2,
-            marginTop: 4,
-          }}
-          icon={caretDown}
-        />
+        <ChevronDownIcon className='ms-1' width={12} />
       </Row>
       {open && (
         <InlineModal

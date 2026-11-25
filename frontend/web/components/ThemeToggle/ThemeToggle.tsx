@@ -1,7 +1,7 @@
 import React from 'react'
 import IconButton from 'components/base/IconButton'
-import Icon from 'components/icons/Icon'
 import { useTheme } from 'project/darkMode'
+import { MoonIcon, SunIcon } from 'components/icons'
 
 // One-click light/dark flip (the icon shows what you switch to). With no
 // stored choice the theme follows the OS; the first click pins an explicit
@@ -17,7 +17,7 @@ const ThemeToggle = () => {
       onClick={() => setDarkMode(!isDark)}
       aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
     >
-      <Icon width={16} name={isDark ? 'sun' : 'moon'} />
+      {isDark ? <SunIcon width={16} /> : <MoonIcon width={16} />}
     </IconButton>
   )
 }

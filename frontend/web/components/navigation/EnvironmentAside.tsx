@@ -5,8 +5,6 @@ import { Environment } from 'common/types/responses'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Permission from 'common/providers/Permission'
 import { Link, useHistory, withRouter } from 'react-router-dom'
-import { IonIcon } from '@ionic/react'
-import { checkmarkCircle, createOutline, menu, warning } from 'ionicons/icons'
 import ProjectProvider from 'common/providers/ProjectProvider'
 import OrganisationProvider from 'common/providers/OrganisationProvider'
 // @ts-ignore
@@ -21,6 +19,12 @@ import Constants from 'common/constants'
 import EnvironmentNavbar from './navbars/EnvironmentNavbar'
 import OverflowNav from './OverflowNav'
 import { ProjectPermission } from 'common/types/permissions.types'
+import {
+  AlertTriangleIcon,
+  CheckCircleFilledIcon,
+  EditIcon,
+  MenuIcon,
+} from 'components/icons'
 
 type HomeAsideType = {
   environmentId: string
@@ -63,7 +67,7 @@ const CustomOption = ({ hasWarning, ...rest }: CustomOptionProps) => {
             <Tooltip
               title={
                 <div className='flex ml-1'>
-                  <IonIcon className='text-warning' icon={warning} />
+                  <AlertTriangleIcon className='text-warning' width={16} />
                 </div>
               }
             >
@@ -72,7 +76,7 @@ const CustomOption = ({ hasWarning, ...rest }: CustomOptionProps) => {
           )}
           <div className='flex ml-auto'>
             {rest.isSelected && (
-              <IonIcon icon={checkmarkCircle} className='icon-action' />
+              <CheckCircleFilledIcon className='icon-action' width={16} />
             )}
           </div>
         </div>
@@ -91,7 +95,7 @@ const CustomSingleValue = ({ hasWarning, ...rest }: CustomSingleValueProps) => {
         <div>
           {showWarning && (
             <div className='flex ml-1'>
-              <IonIcon className='text-warning' icon={warning} />
+              <AlertTriangleIcon className='text-warning' width={16} />
             </div>
           )}
         </div>
@@ -148,7 +152,7 @@ const EnvironmentAside: FC<HomeAsideType> = ({ environmentId, projectId }) => {
                         className='btn mt-1 mb-2 ml-2 mr-2 d-flex justify-content-center btn-xsm d-flex gap-1 align-items-center btn--outline'
                         to={`/project/${projectId}/environment/create`}
                       >
-                        <IonIcon className='fs-small' icon={createOutline} />
+                        <EditIcon width={16} />
                         Create Environment
                       </Link>
                     )
@@ -242,7 +246,7 @@ const EnvironmentAside: FC<HomeAsideType> = ({ environmentId, projectId }) => {
                           {E2E && createEnvironmentButton}
                         </div>
                         <OverflowNav
-                          icon={menu}
+                          icon={<MenuIcon width={16} />}
                           force
                           containerClassName='d-block d-md-none'
                         >

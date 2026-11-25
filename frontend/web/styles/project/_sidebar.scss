@@ -2,17 +2,17 @@
   color: $body-color;
   transition: background-color 0.15s ease, color 0.15s ease;
 
-  svg path {
-    fill: $text-icon-grey;
-    transition: fill 0.15s ease;
+  svg {
+    color: $text-icon-grey;
+    transition: color 0.15s ease;
   }
 
   &:hover,
   &--active {
     color: $primary;
 
-    svg path {
-      fill: $primary;
+    svg {
+      color: $primary;
     }
   }
 
@@ -29,16 +29,16 @@
 .dark .sidebar-link {
   color: $body-color-dark;
 
-  svg path {
-    fill: $text-icon-light-grey;
+  svg {
+    color: $text-icon-light-grey;
   }
 
   &:hover,
   &--active {
     color: $primary400;
 
-    svg path {
-      fill: $primary400;
+    svg {
+      color: $primary400;
     }
   }
 

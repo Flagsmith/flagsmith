@@ -3,8 +3,8 @@ import flagsmith from '@flagsmith/flagsmith'
 import Highlight from './Highlight'
 import Constants from 'common/constants'
 import Utils from 'common/utils/utils'
-import Icon from './icons/Icon'
 import CalloutBar from './CalloutBar'
+import { CopyIcon, FileTextIcon, GithubFilledIcon } from './icons'
 
 type Snippets = Record<string, string>
 
@@ -155,7 +155,7 @@ const SnippetItem: FC<SnippetItemProps> = ({
 
       <div className='flex-column hljs-docs'>
         <Button onClick={() => onCopy(code)} theme='primary' size='xSmall'>
-          <Icon name='copy' width={16} fill='white' />
+          <CopyIcon width={16} fill='white' />
           Copy Code
         </Button>
         {docs && (
@@ -166,7 +166,7 @@ const SnippetItem: FC<SnippetItemProps> = ({
             theme='primary'
             size='xSmall'
           >
-            <Icon name='file-text' width={16} fill='white' />
+            <FileTextIcon width={16} fill='white' />
             {languageKey} Docs
           </Button>
         )}
@@ -178,7 +178,7 @@ const SnippetItem: FC<SnippetItemProps> = ({
             theme='primary'
             size='xSmall'
           >
-            <Icon name='github' width={16} fill='white' />
+            <GithubFilledIcon width={16} fill='white' />
             {languageKey} GitHub
           </Button>
         )}

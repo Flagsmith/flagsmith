@@ -7,9 +7,9 @@ import React, {
   useState,
 } from 'react'
 import cn from 'classnames'
-import Icon from 'components/icons/Icon'
 import Utils from 'common/utils/utils'
 import { colorIconDanger, colorIconDefault } from 'common/theme/tokens'
+import { EyeIcon, EyeSlashIcon, SearchIcon } from 'components/icons'
 
 export type InputSize = 'default' | 'large' | 'small' | 'xSmall'
 
@@ -123,6 +123,7 @@ const Input: React.FC<InputProps> = ({
     sizeClassName,
   )
   const iconWidth = iconWidthBySize[size ?? 'default']
+  const PasswordIcon = type === 'password' ? EyeIcon : EyeSlashIcon
 
   return (
     <div className={containerClassName}>
@@ -151,8 +152,7 @@ const Input: React.FC<InputProps> = ({
           )}
           onClick={() => setIsPasswordVisible(!isPasswordVisible)}
         >
-          <Icon
-            name={type === 'password' ? 'eye' : 'eye-off'}
+          <PasswordIcon
             fill={invalid ? colorIconDanger : colorIconDefault}
             width={iconWidth}
           />
@@ -160,7 +160,7 @@ const Input: React.FC<InputProps> = ({
       )}
       {search && (
         <span className={cn({ 'input-icon-right': true }, sizeClassName)}>
-          <Icon name='search' width={iconWidth} />
+          <SearchIcon width={iconWidth} />
         </span>
       )}
     </div>

@@ -1,9 +1,8 @@
 import React, { FC } from 'react'
-import { IonIcon } from '@ionic/react'
-import { rocket } from 'ionicons/icons'
 import Button from 'components/base/forms/Button'
 import Panel from 'components/base/grid/Panel'
 import { Link } from 'react-router-dom'
+import { RocketIcon } from 'components/icons'
 
 type FeaturesEmptyStateProps = {
   environmentId: string
@@ -91,14 +90,7 @@ export const FeaturesEmptyState: FC<FeaturesEmptyStateProps> = ({
           onClick={onCreateFeature}
         >
           <div className='flex-row justify-content-center'>
-            <IonIcon
-              className='me-1'
-              icon={rocket}
-              style={{
-                contain: 'none',
-                height: '25px',
-              }}
-            />
+            <RocketIcon className='me-1' width={20} />
             <span>Create your first Feature</span>
           </div>
         </Button>

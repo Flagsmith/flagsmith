@@ -1,4 +1,12 @@
-import type { IconName } from 'components/icons/Icon'
+import {
+  CheckCircleIcon,
+  ClockIcon,
+  IconComponent,
+  LockIcon,
+  RocketIcon,
+  ShieldIcon,
+  TrashIcon,
+} from 'components/icons'
 import type { FilterState } from 'common/types/featureFilters'
 import type { Section } from './types'
 import { SortOrder } from 'common/types/requests'
@@ -50,34 +58,34 @@ export const MONITOR_TOOLTIP = `
 
 export const SECTIONS: {
   key: Section
-  icon: IconName
+  icon: IconComponent
   label: string
   subtitle: string
   staleTooltip?: boolean
   monitorTooltip?: boolean
 }[] = [
   {
-    icon: 'rocket',
+    icon: RocketIcon,
     key: 'new',
     label: 'New',
     subtitle: 'Features with no code references and not yet marked as stale.',
   },
   {
-    icon: 'checkmark-circle',
+    icon: CheckCircleIcon,
     key: 'live',
     label: 'Live',
     subtitle:
       'Features with code references that have not been marked as stale.',
   },
   {
-    icon: 'lock',
+    icon: LockIcon,
     key: 'permanent',
     label: 'Permanent',
     subtitle:
       'Features marked as permanent. These are not monitored for staleness and have deletion protection.',
   },
   {
-    icon: 'clock',
+    icon: ClockIcon,
     key: 'stale',
     label: 'Stale',
     staleTooltip: true,
@@ -85,7 +93,7 @@ export const SECTIONS: {
       'Features with code references that have been marked as stale. Candidates for code clean up.',
   },
   {
-    icon: 'shield',
+    icon: ShieldIcon,
     key: 'monitor',
     label: 'To Monitor',
     monitorTooltip: true,
@@ -93,7 +101,7 @@ export const SECTIONS: {
       'Stale features with no code references but still receiving evaluations.',
   },
   {
-    icon: 'trash-2',
+    icon: TrashIcon,
     key: 'remove',
     label: 'To Remove',
     staleTooltip: true,

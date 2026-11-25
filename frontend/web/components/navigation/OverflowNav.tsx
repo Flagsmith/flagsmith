@@ -1,18 +1,17 @@
 import React, { FC, ReactNode, useEffect, useRef, useState } from 'react'
 import InlineModal from 'components/InlineModal'
-import { IonIcon } from '@ionic/react'
-import { ellipsisHorizontal } from 'ionicons/icons'
 import Button from 'components/base/forms/Button'
 import classNames from 'classnames'
 import { useHistory } from 'react-router-dom'
 import { useOverflowVisibleCount } from 'common/hooks/useOverflowVisibleCount'
+import { DotsHorizontalIcon } from 'components/icons'
 
 type OverflowNavProps = {
   children: ReactNode
   containerClassName?: string
   className?: string
   gap?: number
-  icon?: string
+  icon?: ReactNode
   force?: boolean
 }
 const buttonWidth = 34
@@ -22,7 +21,7 @@ const OverflowNav: FC<OverflowNavProps> = ({
   containerClassName,
   force,
   gap = 2,
-  icon = ellipsisHorizontal,
+  icon = <DotsHorizontalIcon width={16} />,
 }) => {
   const items = React.Children.toArray(
     (_children as React.ReactElement)?.props?.children || _children,
@@ -91,7 +90,7 @@ const OverflowNav: FC<OverflowNavProps> = ({
             data-test='overflow-nav-button'
             className='d-flex align-items-center justify-content-center m-0 p-0'
           >
-            <IonIcon className='fs-small' icon={icon} />
+            {icon}
           </Button>
           <InlineModal
             relativeToParent

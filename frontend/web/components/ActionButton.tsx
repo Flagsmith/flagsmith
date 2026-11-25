@@ -1,6 +1,6 @@
 import { FC } from 'react'
-import Icon from './icons/Icon'
 import IconButton, { IconButtonProps } from './base/IconButton'
+import { DotsIcon } from './icons'
 
 type ActionButtonType = {
   onClick: () => void
@@ -26,7 +26,7 @@ const ActionButton: FC<ActionButtonType> = ({
         onClick()
       }}
     >
-      <Icon name='more-vertical' width={16} />
+      <DotsIcon width={16} />
     </IconButton>
   )
 }
