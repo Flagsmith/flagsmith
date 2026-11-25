@@ -1,4 +1,4 @@
-import { cloneElement, FC } from 'react'
+import { FC } from 'react'
 import classNames from 'classnames'
 import {
   colorIconAction,
@@ -87,14 +87,14 @@ type IconType = React.DetailedHTMLProps<
   className?: string
 }
 
-const renderSvg = ({
+const Icon: FC<IconType> = ({
   fill,
   fill2: _fill2,
   height,
   name,
   width,
   ...rest
-}: IconType) => {
+}) => {
   switch (name) {
     case 'cloud-upload': {
       return (
@@ -153,6 +153,7 @@ const renderSvg = ({
           viewBox='0 0 24 24'
           fill='none'
           xmlns='http://www.w3.org/2000/svg'
+          {...rest}
         >
           <g id='Outlined/external-link'>
             <path
@@ -191,6 +192,7 @@ const renderSvg = ({
           viewBox='0 0 24 24'
           fill='none'
           xmlns='http://www.w3.org/2000/svg'
+          {...rest}
         >
           <g id='Outlined/shield'>
             <path
@@ -231,6 +233,7 @@ const renderSvg = ({
           viewBox='0 0 24 24'
           fill='none'
           xmlns='http://www.w3.org/2000/svg'
+          {...rest}
         >
           <path
             id='Icon'
@@ -250,6 +253,7 @@ const renderSvg = ({
           viewBox='0 0 24 24'
           fill='none'
           xmlns='http://www.w3.org/2000/svg'
+          {...rest}
         >
           <path
             id='Icon'
@@ -339,6 +343,7 @@ const renderSvg = ({
           viewBox='0 0 24 24'
           fill='none'
           xmlns='http://www.w3.org/2000/svg'
+          {...rest}
         >
           <path
             id='Icon'
@@ -358,6 +363,7 @@ const renderSvg = ({
           viewBox='0 0 24 24'
           fill='none'
           xmlns='http://www.w3.org/2000/svg'
+          {...rest}
         >
           <path
             id='Icon'
@@ -377,6 +383,7 @@ const renderSvg = ({
           viewBox='0 0 24 24'
           fill='none'
           xmlns='http://www.w3.org/2000/svg'
+          {...rest}
         >
           <path
             id='Icon'
@@ -396,6 +403,7 @@ const renderSvg = ({
           viewBox='3 3 18 18'
           fill='none'
           xmlns='http://www.w3.org/2000/svg'
+          {...rest}
         >
           <path
             id='Icon'
@@ -435,6 +443,7 @@ const renderSvg = ({
           viewBox='0 0 24 24'
           fill='none'
           xmlns='http://www.w3.org/2000/svg'
+          {...rest}
         >
           <path
             id='Icon'
@@ -454,6 +463,7 @@ const renderSvg = ({
           viewBox='0 0 24 24'
           fill='none'
           xmlns='http://www.w3.org/2000/svg'
+          {...rest}
         >
           <path
             id='Icon'
@@ -473,6 +483,7 @@ const renderSvg = ({
           viewBox='0 0 24 24'
           fill='none'
           xmlns='http://www.w3.org/2000/svg'
+          {...rest}
         >
           <path
             fillRule='evenodd'
@@ -491,6 +502,7 @@ const renderSvg = ({
           viewBox='0 0 24 24'
           fill='none'
           xmlns='http://www.w3.org/2000/svg'
+          {...rest}
         >
           <path
             id='Icon'
@@ -530,6 +542,7 @@ const renderSvg = ({
           viewBox='0 0 24 24'
           fill='none'
           xmlns='http://www.w3.org/2000/svg'
+          {...rest}
         >
           <path
             id='Icon'
@@ -549,6 +562,7 @@ const renderSvg = ({
           viewBox='0 0 24 24'
           fill='none'
           xmlns='http://www.w3.org/2000/svg'
+          {...rest}
         >
           <path
             id='Icon'
@@ -568,6 +582,7 @@ const renderSvg = ({
           viewBox='0 0 24 24'
           fill='none'
           xmlns='http://www.w3.org/2000/svg'
+          {...rest}
         >
           <path
             id='Icon'
@@ -607,6 +622,7 @@ const renderSvg = ({
           viewBox='0 0 24 24'
           fill='none'
           xmlns='http://www.w3.org/2000/svg'
+          {...rest}
         >
           <path
             id='Icon'
@@ -630,6 +646,7 @@ const renderSvg = ({
           strokeLinecap='round'
           strokeLinejoin='round'
           xmlns='http://www.w3.org/2000/svg'
+          {...rest}
         >
           <circle cx='18' cy='18' r='3' />
           <circle cx='6' cy='6' r='3' />
@@ -646,6 +663,7 @@ const renderSvg = ({
           viewBox='0 0 24 24'
           fill='none'
           xmlns='http://www.w3.org/2000/svg'
+          {...rest}
         >
           <path
             id='Icon'
@@ -694,6 +712,7 @@ const renderSvg = ({
           viewBox='0 0 24 24'
           fill='none'
           xmlns='http://www.w3.org/2000/svg'
+          {...rest}
         >
           <path
             id='Icon'
@@ -713,6 +732,7 @@ const renderSvg = ({
           viewBox='0 0 24 24'
           fill='none'
           xmlns='http://www.w3.org/2000/svg'
+          {...rest}
         >
           <path
             id='Icon'
@@ -732,6 +752,7 @@ const renderSvg = ({
           viewBox='0 0 24 24'
           fill='none'
           xmlns='http://www.w3.org/2000/svg'
+          {...rest}
         >
           <path
             id='Icon'
@@ -751,6 +772,7 @@ const renderSvg = ({
           viewBox='0 0 24 24'
           fill='none'
           xmlns='http://www.w3.org/2000/svg'
+          {...rest}
         >
           <g id='Filled/edit'>
             <path
@@ -772,6 +794,7 @@ const renderSvg = ({
           viewBox='0 0 24 24'
           fill='none'
           xmlns='http://www.w3.org/2000/svg'
+          {...rest}
         >
           <path
             id='Icon'
@@ -791,6 +814,7 @@ const renderSvg = ({
           viewBox='0 0 24 24'
           fill='none'
           xmlns='http://www.w3.org/2000/svg'
+          {...rest}
         >
           <path
             id='Icon'
@@ -810,6 +834,7 @@ const renderSvg = ({
           viewBox='0 0 24 24'
           fill='none'
           xmlns='http://www.w3.org/2000/svg'
+          {...rest}
         >
           <path
             id='Icon'
@@ -829,6 +854,7 @@ const renderSvg = ({
           viewBox='0 0 26 23'
           fill='none'
           xmlns='http://www.w3.org/2000/svg'
+          {...rest}
         >
           <path
             id='Icon'
@@ -848,6 +874,7 @@ const renderSvg = ({
           viewBox='0 0 24 24'
           fill='none'
           xmlns='http://www.w3.org/2000/svg'
+          {...rest}
         >
           <g id='Filled/bell'>
             <path
@@ -869,6 +896,7 @@ const renderSvg = ({
           viewBox='0 0 24 24'
           fill='none'
           xmlns='http://www.w3.org/2000/svg'
+          {...rest}
         >
           <path
             id='Combined Shape'
@@ -908,6 +936,7 @@ const renderSvg = ({
           viewBox='0 0 24 24'
           fill='none'
           xmlns='http://www.w3.org/2000/svg'
+          {...rest}
         >
           <path
             id='Icon'
@@ -947,6 +976,7 @@ const renderSvg = ({
           viewBox='0 0 24 24'
           fill='none'
           xmlns='http://www.w3.org/2000/svg'
+          {...rest}
         >
           <path
             id='Icon'
@@ -966,6 +996,7 @@ const renderSvg = ({
           viewBox='0 0 24 24'
           fill='none'
           xmlns='http://www.w3.org/2000/svg'
+          {...rest}
         >
           <path
             id='Icon'
@@ -1005,6 +1036,7 @@ const renderSvg = ({
           viewBox='0 0 24 24'
           fill='none'
           xmlns='http://www.w3.org/2000/svg'
+          {...rest}
         >
           <path
             id='Icon'
@@ -1024,6 +1056,7 @@ const renderSvg = ({
           viewBox='0 0 24 24'
           fill='none'
           xmlns='http://www.w3.org/2000/svg'
+          {...rest}
         >
           <path
             id='Icon'
@@ -1043,6 +1076,7 @@ const renderSvg = ({
           viewBox='0 0 24 24'
           fill='none'
           xmlns='http://www.w3.org/2000/svg'
+          {...rest}
         >
           <path
             id='Icon'
@@ -1062,6 +1096,7 @@ const renderSvg = ({
           viewBox='0 0 24 24'
           fill='none'
           xmlns='http://www.w3.org/2000/svg'
+          {...rest}
         >
           <g>
             <path
@@ -1083,6 +1118,7 @@ const renderSvg = ({
           viewBox='0 0 24 24'
           fill='none'
           xmlns='http://www.w3.org/2000/svg'
+          {...rest}
         >
           <path
             id='Icon'
@@ -1102,6 +1138,7 @@ const renderSvg = ({
           viewBox='0 0 24 24'
           fill='none'
           xmlns='http://www.w3.org/2000/svg'
+          {...rest}
         >
           <path
             id='Icon'
@@ -1121,6 +1158,7 @@ const renderSvg = ({
           viewBox='0 0 24 24'
           fill='none'
           xmlns='http://www.w3.org/2000/svg'
+          {...rest}
         >
           <path
             id='Vector'
@@ -1134,7 +1172,12 @@ const renderSvg = ({
     }
     case 'flask': {
       return (
-        <svg width={width || '24'} height={width || '24'} viewBox='0 0 512 512'>
+        <svg
+          width={width || '24'}
+          height={width || '24'}
+          viewBox='0 0 512 512'
+          {...rest}
+        >
           <path
             fill={fill || 'currentColor'}
             d='M452.32,365,327.4,167.12A48.07,48.07,0,0,1,320,141.48V64h15.56c8.61,0,16-6.62,16.43-15.23A16,16,0,0,0,336,32H176.45c-8.61,0-16,6.62-16.43,15.23A16,16,0,0,0,176,64h16v77.48a47.92,47.92,0,0,1-7.41,25.63L59.68,365a74,74,0,0,0-2.5,75.84C70.44,465.19,96.36,480,124.13,480H387.87c27.77,0,53.69-14.81,66.95-39.21A74,74,0,0,0,452.32,365ZM211.66,184.2A79.94,79.94,0,0,0,224,141.48V68a4,4,0,0,1,4-4h56a4,4,0,0,1,4,4v73.48a79.94,79.94,0,0,0,12.35,42.72l57.8,91.53A8,8,0,0,1,351.37,288H160.63a8,8,0,0,1-6.77-12.27Z'
@@ -1150,6 +1193,7 @@ const renderSvg = ({
           viewBox='0 0 24 24'
           fill='none'
           xmlns='http://www.w3.org/2000/svg'
+          {...rest}
         >
           <g id='Filled/toggle-right'>
             <path
@@ -1171,6 +1215,7 @@ const renderSvg = ({
           viewBox='0 0 24 24'
           fill='none'
           xmlns='http://www.w3.org/2000/svg'
+          {...rest}
         >
           <path
             id='Icon'
@@ -1190,6 +1235,7 @@ const renderSvg = ({
           viewBox='0 0 24 24'
           fill='none'
           xmlns='http://www.w3.org/2000/svg'
+          {...rest}
         >
           <path
             id='Vector'
@@ -1207,6 +1253,7 @@ const renderSvg = ({
           viewBox='0 0 24 24'
           fill='none'
           xmlns='http://www.w3.org/2000/svg'
+          {...rest}
         >
           <g id='Filled/people'>
             <path
@@ -1228,6 +1275,7 @@ const renderSvg = ({
           viewBox='0 0 24 24'
           fill='none'
           xmlns='http://www.w3.org/2000/svg'
+          {...rest}
         >
           <path
             id='Filled/more-vertical'
@@ -1246,7 +1294,8 @@ const renderSvg = ({
           width={width || '16'}
           height={height || '16'}
           fill='#8957e5'
-          className='ml-1'
+          {...rest}
+          className={classNames('ml-1', rest.className)}
           xmlns='http://www.w3.org/2000/svg'
         >
           <path d='M5.45 5.154A4.25 4.25 0 0 0 9.25 7.5h1.378a2.251 2.251 0 1 1 0 1.5H9.25A5.734 5.734 0 0 1 5 7.123v3.505a2.25 2.25 0 1 1-1.5 0V5.372a2.25 2.25 0 1 1 1.95-.218ZM4.25 13.5a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Zm8.5-4.5a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5ZM5 3.25a.75.75 0 1 0 0 .005V3.25Z'></path>
@@ -1260,7 +1309,8 @@ const renderSvg = ({
           width={width || '16'}
           height={height || '16'}
           fill='#8957e5'
-          className='ml-1'
+          {...rest}
+          className={classNames('ml-1', rest.className)}
           xmlns='http://www.w3.org/2000/svg'
         >
           <path d='M11.28 6.78a.75.75 0 0 0-1.06-1.06L7.25 8.69 5.78 7.22a.75.75 0 0 0-1.06 1.06l2 2a.75.75 0 0 0 1.06 0l3.5-3.5Z'></path>
@@ -1275,7 +1325,8 @@ const renderSvg = ({
           height={height || '16'}
           xmlns='http://www.w3.org/2000/svg'
           fill='#238636'
-          className='ml-1'
+          {...rest}
+          className={classNames('ml-1', rest.className)}
         >
           <path d='M8 9.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z'></path>
           <path d='M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0ZM1.5 8a6.5 6.5 0 1 0 13 0 6.5 6.5 0 0 0-13 0Z'></path>
@@ -1289,7 +1340,8 @@ const renderSvg = ({
           height={height || '16'}
           width={width || '16'}
           fill='#238636'
-          className='ml-1'
+          {...rest}
+          className={classNames('ml-1', rest.className)}
           xmlns='http://www.w3.org/2000/svg'
         >
           <path d='M1.5 3.25a2.25 2.25 0 1 1 3 2.122v5.256a2.251 2.251 0 1 1-1.5 0V5.372A2.25 2.25 0 0 1 1.5 3.25Zm5.677-.177L9.573.677A.25.25 0 0 1 10 .854V2.5h1A2.5 2.5 0 0 1 13.5 5v5.628a2.251 2.251 0 1 1-1.5 0V5a1 1 0 0 0-1-1h-1v1.646a.25.25 0 0 1-.427.177L7.177 3.427a.25.25 0 0 1 0-.354ZM3.75 2.5a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5Zm0 9.5a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5Zm8.25.75a.75.75 0 1 0 1.5 0 .75.75 0 0 0-1.5 0Z'></path>
@@ -1303,7 +1355,8 @@ const renderSvg = ({
           width={width || '16'}
           height={height || '16'}
           fill='#da3633'
-          className='ml-1'
+          {...rest}
+          className={classNames('ml-1', rest.className)}
           xmlns='http://www.w3.org/2000/svg'
         >
           <path d='M3.25 1A2.25 2.25 0 0 1 4 5.372v5.256a2.251 2.251 0 1 1-1.5 0V5.372A2.251 2.251 0 0 1 3.25 1Zm9.5 5.5a.75.75 0 0 1 .75.75v3.378a2.251 2.251 0 1 1-1.5 0V7.25a.75.75 0 0 1 .75-.75Zm-2.03-5.273a.75.75 0 0 1 1.06 0l.97.97.97-.97a.748.748 0 0 1 1.265.332.75.75 0 0 1-.205.729l-.97.97.97.97a.751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018l-.97-.97-.97.97a.749.749 0 0 1-1.275-.326.749.749 0 0 1 .215-.734l.97-.97-.97-.97a.75.75 0 0 1 0-1.06ZM2.5 3.25a.75.75 0 1 0 1.5 0 .75.75 0 0 0-1.5 0ZM3.25 12a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5Zm9.5 0a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5Z'></path>
@@ -1317,7 +1370,8 @@ const renderSvg = ({
           version='1.1'
           width={width || '16'}
           fill={fill || 'currentColor'}
-          className='ml-1'
+          {...rest}
+          className={classNames('ml-1', rest.className)}
           xmlns='http://www.w3.org/2000/svg'
         >
           <path d='M1.5 3.25a2.25 2.25 0 1 1 3 2.122v5.256a2.251 2.251 0 1 1-1.5 0V5.372A2.25 2.25 0 0 1 1.5 3.25Zm5.677-.177L9.573.677A.25.25 0 0 1 10 .854V2.5h1A2.5 2.5 0 0 1 13.5 5v5.628a2.251 2.251 0 1 1-1.5 0V5a1 1 0 0 0-1-1h-1v1.646a.25.25 0 0 1-.427.177L7.177 3.427a.25.25 0 0 1 0-.354ZM3.75 2.5a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5Zm0 9.5a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5Zm8.25.75a.75.75 0 1 0 1.5 0 .75.75 0 0 0-1.5 0Z'></path>
@@ -1332,6 +1386,7 @@ const renderSvg = ({
           width={width ?? '24'}
           fill={fill ?? 'currentColor'}
           xmlns='http://www.w3.org/2000/svg'
+          {...rest}
         >
           <g id='Outlined/expand'>
             <path
@@ -1353,6 +1408,7 @@ const renderSvg = ({
           width={width ?? '24'}
           fill={fill ?? 'currentColor'}
           xmlns='http://www.w3.org/2000/svg'
+          {...rest}
         >
           <g id='Outlined/circle'>
             <path
@@ -1369,26 +1425,6 @@ const renderSvg = ({
     default:
       return null
   }
-}
-
-// Not every case spreads the rest props, so apply them here for all icons
-const Icon: FC<IconType> = (props) => {
-  const {
-    fill: _fill,
-    fill2: _fill2,
-    height: _height,
-    name: _name,
-    width: _width,
-    ...rest
-  } = props
-  const svg = renderSvg(props)
-  return (
-    svg &&
-    cloneElement(svg, {
-      ...rest,
-      className: classNames(svg.props.className, rest.className),
-    })
-  )
 }
 
 export default Icon
