@@ -40,7 +40,8 @@ const createExperiment = async (page: Page, name: string) => {
     'textarea[placeholder^="e.g. Redesigning the checkout button"]',
     'A clearer checkout increases conversion',
   )
-  await page.locator('a').getByText(FEATURE, { exact: true }).click()
+  await page.getByRole('combobox', { name: 'Feature' }).click()
+  await page.getByRole('option', { name: FEATURE, exact: true }).click()
   await click('#experiment-wizard-setup-continue')
 
   log('Rollout step: all users, even split')
@@ -154,7 +155,11 @@ test.describe('Experimentation Tests', () => {
       .filter({ hasText: `after ${FIRST_EXPERIMENT} ends` })
       .last()
     await modal.getByText('Roll out a variant').click()
-    await modal.locator('a').getByText('variant_b', { exact: true }).click()
+    await modal.getByRole('combobox', { name: 'Variant' }).click()
+    await modal
+      .getByRole('option')
+      .filter({ hasText: 'variant_b' })
+      .click()
     await expect(modal).toContainText('100% of users get variant_b')
     await clickByText('Complete experiment')
     await waitForToast()

@@ -66,6 +66,7 @@ const RolloutDecisionPicker: FC<RolloutDecisionPickerProps> = ({
             selection.decision === 'variant' &&
             !hasSingleChoice && (
               <Select
+                aria-label='Variant'
                 isSearchable={false}
                 options={variantOptions}
                 value={variantOptions.find(
