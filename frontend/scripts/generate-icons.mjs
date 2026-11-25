@@ -14,7 +14,7 @@
 import { readFileSync, readdirSync, writeFileSync } from 'node:fs'
 import { resolve, dirname, basename } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { execSync } from 'node:child_process'
+import { execFileSync } from 'node:child_process'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = resolve(__dirname, '..')
@@ -114,10 +114,9 @@ writeFileSync(
     .join('\n')}\nexport type { IconComponent, IconProps } from './types'\n`,
 )
 
-execSync(
-  `npx prettier --write ${[...written, 'web/components/icons/index.ts'].join(
-    ' ',
-  )}`,
+execFileSync(
+  'npx',
+  ['prettier', '--write', ...written, 'web/components/icons/index.ts'],
   { cwd: ROOT, stdio: 'inherit' },
 )
 console.log(`Generated ${written.length} icons`)
