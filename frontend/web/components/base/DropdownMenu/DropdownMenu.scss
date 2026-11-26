@@ -73,11 +73,10 @@
     }
   }
 
-  // The content brings its own padding, hover and active styles
+  // The content brings its own padding, hover and active styles. A grid
+  // stretches it across the row, so all of the row is clickable
   &__row {
-    > * {
-      flex: 1;
-    }
+    display: grid;
 
     // A row whose content renders nothing, such as a permission check
     &:empty {
