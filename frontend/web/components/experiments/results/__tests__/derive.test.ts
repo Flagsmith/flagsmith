@@ -480,7 +480,7 @@ describe('deriveSummary', () => {
         c: { chance_to_win: 0.01, ci_high: 0.1, ci_low: -0.3, lift: -0.1 },
       },
     ],
-  ])('treats %s as conclusive: %s', (_, isConclusive, inference) => {
+  ])('reports whether %s is conclusive', (_, isConclusive, inference) => {
     // Given
     const result: BayesianMetricResult = { ...metricResult, inference }
 

@@ -39,8 +39,9 @@ const ExperimentRecommendation: FC<ExperimentRecommendationProps> = ({
             <>
               <VariantName name='Control' colour={summary.controlColour} /> is
               ahead with {summary.chanceToBest} probability of being the best
-              arm, but no variant has fallen below a{' '}
-              {formatChancePct(LOSING_CHANCE_THRESHOLD)} chance of beating it.
+              arm, but at least one variant still has a{' '}
+              {formatChancePct(LOSING_CHANCE_THRESHOLD)} or higher chance of
+              beating it.
             </>
           ) : (
             <>
@@ -48,12 +49,11 @@ const ExperimentRecommendation: FC<ExperimentRecommendationProps> = ({
                 name={summary.winnerName}
                 colour={summary.winnerColour}
               />{' '}
-              is ahead of{' '}
-              <VariantName name='Control' colour={summary.controlColour} /> by{' '}
-              {summary.liftValue} with {summary.chanceToBest} probability of
-              being the best variant, below the{' '}
-              {formatChancePct(WINNING_CHANCE_THRESHOLD)} needed to call a
-              winner.
+              leads with a lift of {summary.liftValue} over{' '}
+              <VariantName name='Control' colour={summary.controlColour} /> and{' '}
+              {summary.chanceToBest} probability of being the best variant,
+              below the {formatChancePct(WINNING_CHANCE_THRESHOLD)} needed to
+              call a winner.
             </>
           )}
         </div>
