@@ -14,8 +14,12 @@ function signupRequest({
     body = JSON.stringify(VALID_SIGNUP),
     cookie = `${VISITOR_ID_COOKIE}=${VISITOR_ID}`,
     contentType = 'application/json',
-}: { body?: string; cookie?: string | null; contentType?: string } = {}) {
+    contentLength,
+}: { body?: string; cookie?: string | null; contentType?: string; contentLength?: string } = {}) {
     const headers: Record<string, string> = { 'content-type': contentType };
+    if (contentLength) {
+        headers['content-length'] = contentLength;
+    }
     if (cookie) {
         headers.cookie = cookie;
     }
@@ -59,6 +63,16 @@ describe('POST /api/signup', () => {
         expect(recordConversion).not.toHaveBeenCalled();
     });
 
+    it.each([
+        ['an oversized body', { body: JSON.stringify({ ...VALID_SIGNUP, padding: 'x'.repeat(4096) }) }],
+        ['a declared oversized body', { body: JSON.stringify(VALID_SIGNUP), contentLength: '999999' }],
+    ])('rejects %s without reading it into a signup', async (_case, request) => {
+        const response = await POST(signupRequest(request));
+
+        expect(response.status).toBe(413);
+        expect(recordConversion).not.toHaveBeenCalled();
+    });
+
     it('returns field errors for invalid input without recording a conversion', async () => {
         const response = await POST(signupRequest({ body: JSON.stringify({ name: '', email: 'nope' }) }));
 
@@ -86,5 +100,15 @@ describe('POST /api/signup', () => {
 
         expect(response.status).toBe(502);
         expect(await response.json()).toMatchObject({ error: expect.any(String) });
+    });
+
+    it('returns a generic error, without logging personal data, when recording throws', async () => {
+        recordConversion.mockRejectedValue(new Error('events API unreachable'));
+
+        const response = await POST(signupRequest());
+
+        expect(response.status).toBe(502);
+        expect(await response.json()).toEqual({ error: 'We could not complete your sign-up. Please try again.' });
+        expect(JSON.stringify(vi.mocked(console.error).mock.calls)).not.toMatch(/Asha|asha@example\.com/);
     });
 });

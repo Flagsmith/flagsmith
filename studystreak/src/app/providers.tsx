@@ -5,16 +5,24 @@ import { FlagsmithProvider } from '@flagsmith/flagsmith/react';
 import type { IFlagsmith } from '@flagsmith/flagsmith/types';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 
-// The SDK's 10 s default loses events from short visits and it does not flush on page hide (see the
-// README). A shorter interval narrows that window.
+// The SDK's 10 s default loses events from short visits, and it does not flush on page hide.
+// A shorter interval narrows that window.
 const EVENT_FLUSH_INTERVAL_MS = 1000;
 const EVENTS_API_URL = 'https://events.api.flagsmith.com/';
 
-// The browser build sends requests with XMLHttpRequest, which the browser cancels when the page
-// unloads. keepalive lets a flush started on pagehide finish after the page has gone.
+// Browsers cap the bodies of in-flight keepalive requests at 64 KiB in total.
+const KEEPALIVE_BODY_LIMIT_BYTES = 60 * 1024;
+
+// Replaces the browser build's XMLHttpRequest transport. The Fetch standard lets only keepalive
+// requests outlive their page, so a flush started on pagehide may finish after it has gone. Larger
+// batches go without keepalive, because the browser would reject them outright.
 export function withKeepaliveForEvents(fetchImpl: typeof fetch): typeof fetch {
-    return (input, init) =>
-        fetchImpl(input, String(input).startsWith(EVENTS_API_URL) ? { ...init, keepalive: true } : init);
+    return (input, init) => {
+        const isEventsRequest = String(input).startsWith(EVENTS_API_URL);
+        const fitsKeepalive =
+            typeof init?.body === 'string' && new Blob([init.body]).size <= KEEPALIVE_BODY_LIMIT_BYTES;
+        return fetchImpl(input, isEventsRequest && fitsKeepalive ? { ...init, keepalive: true } : init);
+    };
 }
 
 type ProvidersProps = {

@@ -140,21 +140,44 @@ describe('flushEventsWhenPageIsHidden', () => {
         expect(flushEvents).not.toHaveBeenCalled();
 
         stop();
+        setVisibility('hidden');
+        document.dispatchEvent(new Event('visibilitychange'));
         window.dispatchEvent(new Event('pagehide'));
         expect(flushEvents).not.toHaveBeenCalled();
     });
 });
 
 describe('withKeepaliveForEvents', () => {
-    it('marks only events API requests as keepalive', async () => {
+    const fetchImpl = vi.fn<typeof fetch>(async () => new Response(null, { status: 202 }));
+    const keepaliveFetch = withKeepaliveForEvents(fetchImpl);
+    const eventsRequest = {
+        method: 'POST',
+        body: JSON.stringify({ events: [{ event: 'signup_clicked' }] }),
+        headers: { 'Content-Type': 'application/json; charset=utf-8', 'X-Environment-Key': TEST_ENVIRONMENT_KEY },
+    };
+
+    beforeEach(async () => {
         rendered = await render(null);
-        const fetchImpl = vi.fn<typeof fetch>(async () => new Response(null, { status: 202 }));
-        const keepaliveFetch = withKeepaliveForEvents(fetchImpl);
+        fetchImpl.mockClear();
+    });
 
-        await keepaliveFetch(EVENTS_URL, { method: 'POST', body: '[]' });
-        await keepaliveFetch('https://edge.api.flagsmith.com/api/v1/identities/?identifier=x', { method: 'GET' });
+    it('adds keepalive to events requests and leaves their URL, headers and body untouched', async () => {
+        await keepaliveFetch(EVENTS_URL, eventsRequest);
 
-        expect(fetchImpl.mock.calls[0]?.[1]).toEqual({ method: 'POST', body: '[]', keepalive: true });
-        expect(fetchImpl.mock.calls[1]?.[1]).toEqual({ method: 'GET' });
+        expect(fetchImpl).toHaveBeenCalledExactlyOnceWith(EVENTS_URL, { ...eventsRequest, keepalive: true });
+    });
+
+    it('leaves flag requests unchanged', async () => {
+        const identityRequest = { method: 'GET', cache: 'no-cache' as const, headers: { 'X-Environment-Key': 'key' } };
+        await keepaliveFetch('https://edge.api.flagsmith.com/api/v1/identities/?identifier=x', identityRequest);
+
+        expect(fetchImpl.mock.calls[0]?.[1]).toBe(identityRequest);
+    });
+
+    it('sends batches too large for keepalive without it', async () => {
+        const largeRequest = { ...eventsRequest, body: 'x'.repeat(61 * 1024) };
+        await keepaliveFetch(EVENTS_URL, largeRequest);
+
+        expect(fetchImpl.mock.calls[0]?.[1]).toBe(largeRequest);
     });
 });
