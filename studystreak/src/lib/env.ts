@@ -18,3 +18,19 @@ export function readFlagsmithClientConfig(
     }
     return { ok: true, environmentKey };
 }
+
+export type FlagsmithServerConfig = { ok: true; serverKey: string } | { ok: false; reason: string };
+
+// Production only. The simulator reads its own key, so simulated traffic can never use this one.
+export function readFlagsmithServerConfig(
+    env: Readonly<Record<string, string | undefined>> = process.env,
+): FlagsmithServerConfig {
+    const serverKey = env.FLAGSMITH_SERVER_KEY?.trim();
+    if (!serverKey) {
+        return { ok: false, reason: 'FLAGSMITH_SERVER_KEY is not set.' };
+    }
+    if (!serverKey.startsWith(SERVER_SIDE_KEY_PREFIX)) {
+        return { ok: false, reason: 'FLAGSMITH_SERVER_KEY must be a server-side key (starting with "ser.").' };
+    }
+    return { ok: true, serverKey };
+}

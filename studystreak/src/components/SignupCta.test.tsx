@@ -18,11 +18,11 @@ const STATES = {
 let rendered: Rendered;
 
 const query = (selector: string) => rendered.container.querySelector<HTMLElement>(selector);
-const button = () => rendered.container.querySelector('button');
+const button = () => rendered.container.querySelector<HTMLButtonElement>('[data-testid="signup-cta"] button');
 const slot = () => query('[data-testid="social-proof-slot"]');
 
 async function renderView(experiment: SocialProofExperimentState) {
-    rendered = await render(<SignupCtaView experiment={experiment} />);
+    rendered = await render(<SignupCtaView experiment={experiment} onSignUp={() => {}} />);
     return rendered;
 }
 

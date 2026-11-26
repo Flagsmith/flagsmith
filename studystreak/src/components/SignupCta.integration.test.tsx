@@ -24,7 +24,7 @@ vi.mock('@flagsmith/flagsmith', async (importOriginal) => {
 
 let rendered: Rendered;
 
-const button = () => rendered.container.querySelector('button');
+const button = () => rendered.container.querySelector<HTMLButtonElement>('[data-testid="signup-cta"] button');
 const socialProofText = () => rendered.container.querySelector('[data-testid="social-proof-slot"]')?.textContent;
 const exposures = () => sentEvents(fetchMock).filter((event) => event.event === '$flag_exposure');
 

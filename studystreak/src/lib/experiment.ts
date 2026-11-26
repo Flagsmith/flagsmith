@@ -2,6 +2,8 @@ import type { IFlagsmithFeature, LoadingState } from '@flagsmith/flagsmith/types
 
 export const SOCIAL_PROOF_FLAG = 'study_streak_social_proof';
 export const SOCIAL_PROOF_VARIANT = 'social_proof';
+export const SIGNUP_CLICKED_EVENT = 'signup_clicked';
+export const SIGNED_UP_EVENT = 'signed_up';
 // Static demonstration copy, not a verified live count.
 export const SOCIAL_PROOF_MESSAGE = '🔥 1,240 students joined this week';
 
