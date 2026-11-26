@@ -3968,6 +3968,29 @@ def test_update_segment_override__using_simple_feature_state_viewset__allows_man
     ).exists()
 
 
+def test_partial_update_segment_override__without_environment__updates_feature_state(
+    staff_client: APIClient,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+    segment_featurestate: FeatureState,
+) -> None:
+    # Given
+    with_environment_permissions([MANAGE_SEGMENT_OVERRIDES])  # type: ignore[call-arg]
+    url = reverse(
+        "api-v1:features:featurestates-detail", args=[segment_featurestate.id]
+    )
+    enabled = not segment_featurestate.enabled
+
+    # When
+    response = staff_client.patch(
+        url, data=json.dumps({"enabled": enabled}), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    segment_featurestate.refresh_from_db()
+    assert segment_featurestate.enabled is enabled
+
+
 def test_update_segment_override__using_simple_feature_state_viewset__denies_update_feature_state(
     staff_client: APIClient,
     with_environment_permissions: WithEnvironmentPermissionsCallable,
