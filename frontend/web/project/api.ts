@@ -299,6 +299,13 @@ const API = {
     extra?: Record<string, any>
   }): void {
     try {
+      // First-time events also notify the team in Slack, via /api/event.
+      if (data.category === 'First') {
+        API.postEvent(
+          `${data.event}${data.extra ? ` ${JSON.stringify(data.extra)}` : ''}`,
+          'first_events',
+        )
+      }
       if (Project.amplitude) {
         amplitude.track(data.event, {
           category: data.category,
@@ -310,19 +317,9 @@ const API = {
     }
   },
 
-  // `path` overrides the reported location, e.g. for removing
-  // tokens in URLs
-  trackPage(title: string, path?: string): void {
-    if (Project.ga)
-      ga('send', {
-        hitType: 'pageview',
-        location: path
-          ? `${document.location.origin}${path}`
-          : document.location.href,
-        page: path ?? document.location.pathname,
-        title,
-      })
-  },
+  // Page views were only sent to Universal Analytics. Removed with its callers
+  // in a follow-up.
+  trackPage(): void {},
 
   trackTraits(traits: Record<string, any>): void {
     try {

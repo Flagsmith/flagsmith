@@ -10,21 +10,8 @@ export type OpenConfirm = {
   noText?: string
 }
 import { TooltipProps } from './web/components/Tooltip'
-declare namespace UniversalAnalytics {
-  interface PageviewFieldsObject {
-    hitType: 'pageview' | 'event'
-    location?: string
-    page?: string
-    title?: string
-    [key: string]: any
-  }
-}
 export declare const openModal: (name?: string) => Promise<void>
 declare global {
-  function ga(
-    command: 'send',
-    fields: UniversalAnalytics.PageviewFieldsObject,
-  ): void
   const openModal: (
     title: ReactNode,
     body?: ReactNode,
