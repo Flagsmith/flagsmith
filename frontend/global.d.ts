@@ -84,11 +84,6 @@ declare global {
 
   interface Window {
     E2E: boolean
-    engagement: {
-      init(apiKey: string, options?: InitOptions): void
-      plugin(): unknown
-      boot(options: BootOptions): Promise<void>
-    }
   }
 }
 

@@ -3,7 +3,6 @@ import get from 'lodash/get'
 import find from 'lodash/find'
 import { matchPath, withRouter } from 'react-router-dom'
 import * as amplitude from '@amplitude/analytics-browser'
-import { plugin as engagementPlugin } from '@amplitude/engagement-browser'
 import { sessionReplayPlugin } from '@amplitude/plugin-session-replay-browser'
 import TwoFactorPrompt from './SimpleTwoFactor/prompt'
 import Maintenance from './Maintenance'
@@ -88,7 +87,6 @@ const App = class extends Component {
         defaultTracking: true,
         serverZone: 'EU',
       })
-      amplitude.add(engagementPlugin())
       const sessionReplayTracking = sessionReplayPlugin({
         sampleRate: 0.5,
         serverZone: 'EU',

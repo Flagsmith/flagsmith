@@ -120,17 +120,6 @@ const API = {
       const amplitudeUserId = user.uuid || id
       amplitude.setUserId(amplitudeUserId)
       API.trackTraits({ email: id })
-      if (window.engagement) {
-        window.engagement.boot({
-          integrations: [
-            {
-              track: (event: any) =>
-                amplitude.track(event.event_type, event.event_properties),
-            },
-          ],
-          user: { user_id: amplitudeUserId, user_properties: {} },
-        })
-      }
     }
   },
 
