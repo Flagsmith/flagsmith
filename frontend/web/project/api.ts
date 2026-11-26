@@ -304,7 +304,7 @@ const API = {
         API.postEvent(
           `${data.event}${data.extra ? ` ${JSON.stringify(data.extra)}` : ''}`,
           'first_events',
-        )
+        )?.catch(() => {})
       }
       if (Project.amplitude) {
         amplitude.track(data.event, {
