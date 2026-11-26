@@ -5,7 +5,6 @@ import Button from 'components/base/forms/Button'
 import InputGroup from 'components/base/forms/InputGroup'
 import API from 'project/api'
 import { FC, useState } from 'react'
-import Project from 'common/project'
 import { organisationService } from 'common/services/useOrganisation'
 import { getStore } from 'common/store'
 
@@ -34,12 +33,6 @@ const CreateOrganisationModal: FC = () => {
           <form
             onSubmit={(e) => {
               e.preventDefault()
-              if (Project.capterraKey) {
-                const parts = Project.capterraKey.split(',')
-                Utils.appendImage(
-                  `https://ct.capterra.com/capterra_tracker.gif?vid=${parts[0]}&vkey=${parts[1]}`,
-                )
-              }
               createOrganisation(name)
             }}
           >
