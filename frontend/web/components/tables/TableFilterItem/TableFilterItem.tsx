@@ -4,6 +4,7 @@ import BareButton from 'components/base/forms/BareButton'
 import classNames from 'classnames'
 import { SortOrder } from 'common/types/requests'
 import './TableFilterItem.scss'
+import { BodyText } from 'components/base/typography'
 
 type TableFilterItemType = {
   isActive?: boolean
@@ -39,7 +40,9 @@ const TableFilterItem: FC<TableFilterItemType> = ({
         <span className='overflow-ellipsis'>
           {title}
           {subtitle && (
-            <span className='d-block text-muted fw-normal'>{subtitle}</span>
+            <BodyText inline size='sm' muted className='d-block'>
+              {subtitle}
+            </BodyText>
           )}
         </span>
         <Icon

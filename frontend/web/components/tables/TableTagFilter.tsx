@@ -8,6 +8,7 @@ import TableFilterItem from './TableFilterItem'
 import Constants from 'common/constants'
 import { TagStrategy } from 'common/types/responses'
 import TagContent from 'components/tags/TagContent'
+import { BodyText } from 'components/base/typography'
 
 type TableFilterType = {
   projectId: number
@@ -116,7 +117,9 @@ const TableTagFilter: FC<TableFilterType> = ({
             />
           </div>
           {filteredTags?.length === 0 && (
-            <div className='text-center'>No tags</div>
+            <BodyText muted className='text-center'>
+              No tags
+            </BodyText>
           )}
           <div className='table-filter-list'>
             <TableFilterItem

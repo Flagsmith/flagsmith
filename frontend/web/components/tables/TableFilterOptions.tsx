@@ -4,6 +4,7 @@ import TableFilter from './TableFilter'
 import TableFilterItem from './TableFilterItem'
 import Input from 'components/base/forms/Input'
 import Utils from 'common/utils/utils'
+import { BodyText } from 'components/base/typography'
 
 type TableFilterOptionsType = {
   title: ReactNode
@@ -65,7 +66,9 @@ const TableFilterOptions: FC<TableFilterOptionsType> = ({
                   search
                 />
                 {!filteredOptions?.length && (
-                  <div className='text-center py-2'>No results</div>
+                  <BodyText muted className='text-center py-2'>
+                    No results
+                  </BodyText>
                 )}
               </div>
             )}
