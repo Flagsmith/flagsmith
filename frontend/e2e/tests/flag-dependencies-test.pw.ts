@@ -79,7 +79,11 @@ test.describe('Flag Dependencies', () => {
     await expect(
       page.getByRole('button', { name: /0 of 1 prerequisites met/ }),
     ).toBeVisible()
-    await page.getByRole('button', { exact: true, name: 'Value' }).click()
+    // The features list behind the drawer has a Value filter too
+    await page
+      .locator('#create-feature-modal')
+      .getByRole('button', { exact: true, name: 'Value' })
+      .click()
     await expect(servingOff).toBeVisible()
     await visualSnapshot(page, 'dependencies-blocked-value', testInfo)
     await page
