@@ -1,19 +1,28 @@
 import React, { FC, ReactNode } from 'react'
 import Icon from 'components/icons/Icon'
 import classNames from 'classnames'
+import { SortOrder } from 'common/types/requests'
 import './TableFilterItem.scss'
 
 type TableFilterItemType = {
   isActive?: boolean
+  // For sort options: the active one shows its direction instead of a tick
+  sortOrder?: SortOrder
   subtitle?: string
   title: string | ReactNode
   onClick: () => void
   'data-test'?: string
 }
 
+const markerIcon = (sortOrder?: SortOrder) => {
+  if (!sortOrder) return 'checkmark'
+  return sortOrder === SortOrder.ASC ? 'chevron-up' : 'chevron-down'
+}
+
 const TableFilterItem: FC<TableFilterItemType> = ({
   isActive,
   onClick,
+  sortOrder,
   subtitle,
   title,
   ...rest
@@ -36,7 +45,7 @@ const TableFilterItem: FC<TableFilterItemType> = ({
         <div>
           <Icon
             className={classNames('text-default', { 'opacity-0': !isActive })}
-            name={'checkmark'}
+            name={markerIcon(sortOrder)}
           />
         </div>
       </Row>
