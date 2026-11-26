@@ -17,7 +17,6 @@ import {
 } from '@floating-ui/react'
 import { useBreakpoint } from 'common/hooks/useBreakpoint'
 import BottomSheet from './BottomSheet'
-import { stopPropagation } from './stopPropagation'
 import './Popover.scss'
 
 export type PopoverTriggerProps = Record<string, unknown> & {
@@ -93,9 +92,11 @@ const Popover: FC<PopoverProps> = ({
       {renderTrigger(
         {
           ref: refs.setReference,
+          // The trigger and panel can sit in a clickable row, and React
+          // bubbles portal events through it, so stop them here
           ...getReferenceProps({
-            onClick: stopPropagation,
-            onKeyDown: stopPropagation,
+            onClick: (e) => e.stopPropagation(),
+            onKeyDown: (e) => e.stopPropagation(),
           }),
           // useRole is off for the sheet, so state the popup here
           ...(asSheet && {
@@ -125,7 +126,7 @@ const Popover: FC<PopoverProps> = ({
                 data-placement={context.placement}
                 aria-label={ariaLabel}
                 // Keys pass through, so Escape still closes it
-                {...getFloatingProps({ onClick: stopPropagation })}
+                {...getFloatingProps({ onClick: (e) => e.stopPropagation() })}
               >
                 {typeof children === 'function' ? children(close) : children}
               </div>
