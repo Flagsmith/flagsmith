@@ -91,8 +91,15 @@ per variant:
 
 :::note Why Bayesian?
 
-"97% chance to beat control" means what it sounds like — unlike a p-value, which is routinely misread. It's also safe to
-check whenever you like: peeking doesn't inflate your error rate the way repeated p-value checks do.
+"97% chance to beat control" means what it sounds like — unlike a p-value, which is routinely misread. Each time you
+look, it's a fair summary of the evidence so far.
+
+Checking often does change one thing: if you stop and roll out the first time a variant goes over 95%, you'll pick more
+false winners than the 95% suggests. In 10,000 simulated experiments where the variants were identical (10% baseline
+conversion, 3,000 identities per variant, results checked 30 times along the way), reading once at the end called a
+false winner 3.9% of the time. Stopping at the first check that read over 95% or under 5% called one 13.4% of the time.
+To keep that rate low, decide the sample size before you start and read the result once you reach it, or use a
+sequential testing method designed for repeated checks.
 
 :::
 
