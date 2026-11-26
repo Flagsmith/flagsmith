@@ -9,6 +9,7 @@ import {
   formatBucketLabel,
   formatChancePct,
   getCompletedRollout,
+  getConclusiveWinner,
   getControlChanceToWin,
   getHeadlineTotal,
   getVariantIdentities,
@@ -327,6 +328,32 @@ describe('getWinningVariant', () => {
   })
 })
 
+describe('getConclusiveWinner', () => {
+  it.each<[string, number, number, string | null]>([
+    ['a variant over 95% wins', 0.98, 0.01, 'b'],
+    ['a variant at exactly 95% has not won yet', 0.95, 0.01, null],
+    ['a variant at 64% has not won yet', 0.64, 0.01, null],
+    ['control ahead at 62% has not won yet', 0.38, 0, null],
+    ['a variant at exactly 5% keeps control from winning', 0.05, 0.01, null],
+    ['control wins once every variant is under 5%', 0.03, 0.01, 'control'],
+  ])('%s', (_, chanceB, chanceC, expectedKey) => {
+    // Given
+    const result: BayesianMetricResult = {
+      ...metricResult,
+      inference: {
+        b: { chance_to_win: chanceB, ci_high: 0.3, ci_low: -0.1, lift: 0.1 },
+        c: { chance_to_win: chanceC, ci_high: 0.1, ci_low: -0.3, lift: -0.1 },
+      },
+    }
+
+    // When
+    const winner = getConclusiveWinner(result, identities)
+
+    // Then
+    expect(winner?.key ?? null).toBe(expectedKey)
+  })
+})
+
 describe('getControlChanceToWin', () => {
   it('infers the control chance from the treatment chances', () => {
     expect(getControlChanceToWin(losingMetricResult, identities)).toBeCloseTo(
@@ -384,11 +411,12 @@ describe('deriveSummary', () => {
     srm_p_value: null,
   })
 
-  it('summarises the winning treatment with its lift vs control', () => {
+  it('summarises the leading treatment with its lift vs control', () => {
     expect(deriveSummary(experiment, results(metricResult))).toMatchObject({
       chanceToBest: '75%',
       chanceToBestHigh: false,
       controlWins: false,
+      isConclusive: false,
       liftLabel: 'Lift vs control',
       liftTone: 'success',
       liftValue: '+8.0%',
@@ -396,12 +424,13 @@ describe('deriveSummary', () => {
     })
   })
 
-  it('summarises a winning control with the best treatment lift negated', () => {
+  it('summarises a leading control with the best treatment lift negated', () => {
     expect(
       deriveSummary(experiment, results(losingMetricResult)),
     ).toMatchObject({
       chanceToBest: '85%',
       controlWins: true,
+      isConclusive: false,
       liftLabel: 'Control vs best variant',
       liftTone: 'success',
       liftValue: '+9.0%',
@@ -424,6 +453,42 @@ describe('deriveSummary', () => {
       liftTone: 'success',
       liftValue: '+100.0%',
     })
+  })
+
+  it.each<[string, boolean, BayesianMetricResult['inference']]>([
+    [
+      'a variant over 95%',
+      true,
+      {
+        b: { chance_to_win: 0.98, ci_high: 4.005, ci_low: 0.142, lift: 1.5 },
+        c: { chance_to_win: 0.01, ci_high: 0.1, ci_low: -0.3, lift: -0.1 },
+      },
+    ],
+    [
+      'every variant under 5%',
+      true,
+      {
+        b: { chance_to_win: 0.04, ci_high: -0.01, ci_low: -0.3, lift: -0.15 },
+        c: { chance_to_win: 0.01, ci_high: -0.05, ci_low: -0.4, lift: -0.2 },
+      },
+    ],
+    [
+      'a variant at 64%',
+      false,
+      {
+        b: { chance_to_win: 0.64, ci_high: 1.302, ci_low: -0.896, lift: 0.203 },
+        c: { chance_to_win: 0.01, ci_high: 0.1, ci_low: -0.3, lift: -0.1 },
+      },
+    ],
+  ])('treats %s as conclusive: %s', (_, isConclusive, inference) => {
+    // Given
+    const result: BayesianMetricResult = { ...metricResult, inference }
+
+    // When
+    const summary = deriveSummary(experiment, results(result))
+
+    // Then
+    expect(summary?.isConclusive).toBe(isConclusive)
   })
 
   it.each<[OptionalMetricDirection, LiftTone]>([

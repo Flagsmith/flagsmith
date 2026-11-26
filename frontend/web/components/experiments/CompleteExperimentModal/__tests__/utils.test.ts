@@ -54,16 +54,34 @@ describe('getDefaultSelection and getControlSelectedMessage', () => {
     [string, BayesianResultsSummary | undefined, RolloutSelection, string]
   >([
     [
-      'leading treatment',
-      results({ b: 0.2, c: 0.7 }),
+      'a variant over 95% is pre-selected',
+      results({ b: 0.01, c: 0.98 }),
       { decision: 'variant', variantId: 11 },
       NO_LEAD,
     ],
     [
-      'control leads',
-      results({ b: 0.05, c: 0.05 }),
+      'a variant at exactly 95% is not pre-selected',
+      results({ b: 0.01, c: 0.95 }),
+      { decision: 'control', variantId: 11 },
+      NO_LEAD,
+    ],
+    [
+      'a variant ahead at 70% is not pre-selected',
+      results({ b: 0.2, c: 0.7 }),
+      { decision: 'control', variantId: 11 },
+      NO_LEAD,
+    ],
+    [
+      'control wins once every variant is under 5%',
+      results({ b: 0.03, c: 0.02 }),
       { decision: 'control', variantId: 10 },
       'Control is ahead, so it is selected.',
+    ],
+    [
+      'control ahead with a variant at exactly 5% has not won yet',
+      results({ b: 0.05, c: 0.02 }),
+      { decision: 'control', variantId: 10 },
+      NO_LEAD,
     ],
     ['no results', undefined, { decision: 'control', variantId: 10 }, NO_LEAD],
   ])('%s', (_, res, selection, message) => {

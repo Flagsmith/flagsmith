@@ -1,8 +1,14 @@
 import { FC, useMemo } from 'react'
+import Banner from 'components/base/Banner'
 import Icon from 'components/icons/Icon'
 import { colorIconSuccess, colorIconWarning } from 'common/theme/tokens'
 import { BayesianResultsSummary, Experiment } from 'common/types/responses'
-import { deriveSummary } from './derive'
+import {
+  LOSING_CHANCE_THRESHOLD,
+  WINNING_CHANCE_THRESHOLD,
+  deriveSummary,
+  formatChancePct,
+} from './derive'
 import VariantName from './VariantName'
 
 type ExperimentRecommendationProps = {
@@ -20,6 +26,45 @@ const ExperimentRecommendation: FC<ExperimentRecommendationProps> = ({
   )
 
   if (!summary) return null
+
+  if (!summary.isConclusive) {
+    return (
+      <Banner
+        type='info'
+        title='Not enough evidence yet'
+        className='experiment-recommendation mb-3'
+      >
+        <div>
+          {summary.controlWins ? (
+            <>
+              <VariantName name='Control' colour={summary.controlColour} /> is
+              ahead with {summary.chanceToBest} probability of being the best
+              arm, but no variant has fallen below a{' '}
+              {formatChancePct(LOSING_CHANCE_THRESHOLD)} chance of beating it.
+            </>
+          ) : (
+            <>
+              <VariantName
+                name={summary.winnerName}
+                colour={summary.winnerColour}
+              />{' '}
+              is ahead of{' '}
+              <VariantName name='Control' colour={summary.controlColour} /> by{' '}
+              {summary.liftValue} with {summary.chanceToBest} probability of
+              being the best variant, below the{' '}
+              {formatChancePct(WINNING_CHANCE_THRESHOLD)} needed to call a
+              winner.
+            </>
+          )}
+        </div>
+        {experiment.status !== 'completed' && (
+          <div className='mt-2'>
+            Keep the experiment running to collect more data.
+          </div>
+        )}
+      </Banner>
+    )
+  }
 
   if (summary.controlWins) {
     return (

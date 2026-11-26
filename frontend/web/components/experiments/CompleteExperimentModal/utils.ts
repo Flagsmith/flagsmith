@@ -7,9 +7,9 @@ import { CompleteExperimentBody } from 'common/types/requests'
 import { getPrimaryMetric } from 'components/experiments/constants'
 import {
   VariantIdentity,
+  getConclusiveWinner,
   getMetricResult,
   getVariantIdentities,
-  getWinningVariant,
 } from 'components/experiments/results/derive'
 
 export type VariantChoice = VariantIdentity & {
@@ -54,7 +54,10 @@ const getWinner = (
 ) => {
   const metricResult = getPrimaryMetricResult(experiment, results)
   return metricResult
-    ? getWinningVariant(metricResult, getVariantIdentities(experiment.feature))
+    ? getConclusiveWinner(
+        metricResult,
+        getVariantIdentities(experiment.feature),
+      )
     : null
 }
 

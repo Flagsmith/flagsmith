@@ -272,6 +272,23 @@ export const getWinningVariant = (
   return best
 }
 
+// Decision rule from docs.flagsmith.com/experimentation/statistics: over 95% wins, under 5% loses, in between is inconclusive.
+export const WINNING_CHANCE_THRESHOLD = 0.95
+export const LOSING_CHANCE_THRESHOLD = 0.05
+
+export const getConclusiveWinner = (
+  metricResult: BayesianMetricResult,
+  identities: VariantIdentity[],
+  best: WinningVariant | null = getBestTreatment(metricResult, identities),
+): WinningVariant | null => {
+  const winner = getWinningVariant(metricResult, identities, best)
+  if (!winner || !best) return null
+  const isConclusive = winner.isControl
+    ? best.chanceToWin < LOSING_CHANCE_THRESHOLD
+    : winner.chanceToWin > WINNING_CHANCE_THRESHOLD
+  return isConclusive ? winner : null
+}
+
 export type LiftTone = 'success' | 'danger' | 'neutral'
 
 export type SummaryStats = {
@@ -279,6 +296,7 @@ export type SummaryStats = {
   winnerColour: string
   controlColour: string
   controlWins: boolean
+  isConclusive: boolean
   chanceToBest: string
   chanceToBestHigh: boolean
   liftLabel: string
@@ -299,6 +317,11 @@ export const deriveSummary = (
   const bestTreatment = getBestTreatment(metricResult, identities)
   const winner = getWinningVariant(metricResult, identities, bestTreatment)
   if (!winner) return null
+  const conclusiveWinner = getConclusiveWinner(
+    metricResult,
+    identities,
+    bestTreatment,
+  )
 
   const winnerIdentity = identities.find((v) => v.key === winner.key)
   const controlIdentity = identities.find((v) => v.isControl)
@@ -321,6 +344,7 @@ export const deriveSummary = (
     chanceToBestHigh: winner.chanceToWin > 0.9,
     controlColour: controlIdentity?.colour ?? '',
     controlWins: winner.isControl,
+    isConclusive: !!conclusiveWinner,
     liftLabel: winner.isControl ? 'Control vs best variant' : 'Lift vs control',
     liftTone,
     liftValue: lift !== null ? formatLiftPct(lift) : 'Baseline',
