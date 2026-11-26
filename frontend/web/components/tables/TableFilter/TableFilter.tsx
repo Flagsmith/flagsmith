@@ -5,6 +5,7 @@ import classNames from 'classnames'
 import Popover from 'components/base/Popover'
 import BareButton from 'components/base/forms/BareButton'
 import { useBreakpoint } from 'common/hooks/useBreakpoint'
+import './TableFilter.scss'
 
 type TableFilterType = {
   title: string | ReactNode
@@ -62,8 +63,8 @@ const TableFilter: FC<TableFilterType> = ({
     >
       {(close) => (
         <div
-          className={classNames('table-filter', {
-            'table-filter--sheet': asSheet,
+          className={classNames('table-filter__content', {
+            'table-filter__content--sheet': asSheet,
           })}
         >
           {!hideTitle && (

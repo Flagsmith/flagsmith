@@ -25,6 +25,8 @@ import Panel from './base/grid/Panel'
 import Utils from 'common/utils/utils'
 import { colorIconAction, colorIconSecondary } from 'common/theme/tokens'
 import { SortOrder } from 'common/types/requests'
+// Its sort rows reuse the filter row look until they move to DropdownMenu
+import './tables/TableFilterItem/TableFilterItem.scss'
 
 export type SortOption = {
   value: string

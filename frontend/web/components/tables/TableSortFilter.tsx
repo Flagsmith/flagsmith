@@ -3,6 +3,8 @@ import TableFilter from './TableFilter'
 import Icon from 'components/icons/Icon'
 import classNames from 'classnames'
 import { SortOrder } from 'common/types/requests'
+// Its sort rows reuse the filter row look until they move to DropdownMenu
+import './TableFilterItem/TableFilterItem.scss'
 
 type SortType = {
   value: string
