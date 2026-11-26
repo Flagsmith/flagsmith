@@ -1,5 +1,6 @@
 import React, { FC, useCallback } from 'react'
 import DropdownMenu, { DropdownMenuItem } from 'components/base/DropdownMenu'
+import Icon from 'components/icons/Icon'
 import SectionShell from './SectionShell'
 import { useClientPagination } from 'components/pages/feature-lifecycle/hooks/useClientPagination'
 import { useCreateCleanupIssueMutation } from 'common/services/useGithubIntegration'
@@ -133,16 +134,12 @@ const StaleSection: FC<StaleSectionProps> = ({
       goToPage={goToPage}
       renderActions={(flag) => (
         <DropdownMenu aria-label={`Actions for ${flag.name}`}>
-          <DropdownMenuItem
-            icon='github'
-            onSelect={() => handleCreateCleanupIssue(flag)}
-          >
+          <DropdownMenuItem onSelect={() => handleCreateCleanupIssue(flag)}>
+            <Icon name='github' />
             Create Cleanup Issue
           </DropdownMenuItem>
-          <DropdownMenuItem
-            icon='copy'
-            onSelect={() => handleCopyCleanupPrompt(flag)}
-          >
+          <DropdownMenuItem onSelect={() => handleCopyCleanupPrompt(flag)}>
+            <Icon name='copy' />
             Copy Cleanup AI Prompt
           </DropdownMenuItem>
         </DropdownMenu>

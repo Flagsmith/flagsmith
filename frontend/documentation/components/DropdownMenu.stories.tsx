@@ -4,6 +4,7 @@ import { screen, userEvent, within } from 'storybook/test'
 
 import DropdownMenu, { DropdownMenuItem } from 'components/base/DropdownMenu'
 import Button from 'components/base/forms/Button'
+import Icon from 'components/icons/Icon'
 
 const meta: Meta<typeof DropdownMenu> = {
   component: DropdownMenu,
@@ -21,21 +22,24 @@ const noop = () => undefined
 
 const ActionsMenu = () => (
   <DropdownMenu aria-label='Feature actions'>
-    <DropdownMenuItem icon='copy' onSelect={noop}>
+    <DropdownMenuItem onSelect={noop}>
+      <Icon name='copy' />
       Copy feature name
     </DropdownMenuItem>
-    <DropdownMenuItem icon='list' onSelect={noop}>
+    <DropdownMenuItem onSelect={noop}>
+      <Icon name='list' />
       Show audit logs
     </DropdownMenuItem>
     <DropdownMenuItem
-      icon='clock'
       disabled
       disabledReason='History needs feature versioning'
       onSelect={noop}
     >
+      <Icon name='clock' />
       Show history
     </DropdownMenuItem>
-    <DropdownMenuItem icon='trash-2' destructive onSelect={noop}>
+    <DropdownMenuItem destructive onSelect={noop}>
+      <Icon name='trash-2' />
       Remove feature
     </DropdownMenuItem>
   </DropdownMenu>

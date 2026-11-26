@@ -42,7 +42,8 @@
       color: var(--color-text-action);
       background: var(--color-surface-action-subtle);
 
-      .ds-dropdown-menu__icon {
+      .ds-dropdown-menu__icon,
+      .ds-dropdown-menu__label > svg {
         color: var(--color-icon-action);
       }
     }
@@ -50,7 +51,8 @@
     &--destructive {
       color: var(--color-text-danger);
 
-      .ds-dropdown-menu__icon {
+      .ds-dropdown-menu__icon,
+      .ds-dropdown-menu__label > svg {
         color: var(--color-icon-danger);
       }
     }
@@ -59,7 +61,8 @@
       color: var(--color-text-disabled);
       cursor: not-allowed;
 
-      .ds-dropdown-menu__icon {
+      .ds-dropdown-menu__icon,
+      .ds-dropdown-menu__label > svg {
         color: var(--color-icon-disabled);
       }
 
@@ -82,20 +85,36 @@
     }
   }
 
-  &__label {
+  &__content {
     display: flex;
     flex: 1;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0 8px;
+    flex-direction: column;
     min-width: 0;
+  }
+
+  // The label and an optional icon before it
+  &__label {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    > svg {
+      flex-shrink: 0;
+      width: var(--ds-dropdown-menu-icon);
+      height: var(--ds-dropdown-menu-icon);
+      color: var(--color-icon-secondary);
+    }
   }
 
   // Why a disabled item can't be used; its description for screen readers
   &__reason {
-    flex-basis: 100%;
     font-size: var(--font-size-body-xs);
     color: var(--color-text-secondary);
+  }
+
+  // Lines up with the text, not the icon
+  &__label:has(> svg) + &__reason {
+    padding-left: calc(var(--ds-dropdown-menu-icon) + 12px);
   }
 
   // Icons draw with currentColor

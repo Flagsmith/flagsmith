@@ -1,18 +1,18 @@
 import { FC, MouseEvent, ReactNode, useId } from 'react'
 import classNames from 'classnames'
 import BareButton from 'components/base/forms/BareButton'
-import Icon, { IconName } from 'components/icons/Icon'
+import Icon from 'components/icons/Icon'
 import { useCloseDropdownMenu } from './DropdownMenuContext'
 
 export type DropdownMenuItemProps = {
+  // The label, with an optional icon first: <Icon name='copy' /> Copy
   children: ReactNode
   onSelect: (e: MouseEvent<HTMLButtonElement>) => void
-  icon?: IconName
   // The selected option, as in a section switcher: ticked and announced
   current?: boolean
   destructive?: boolean
   disabled?: boolean
-  // Shown on hover while disabled
+  // Shown under the label while disabled
   disabledReason?: string
 }
 
@@ -22,7 +22,6 @@ const DropdownMenuItem: FC<DropdownMenuItemProps> = ({
   destructive = false,
   disabled = false,
   disabledReason,
-  icon,
   onSelect,
 }) => {
   const close = useCloseDropdownMenu()
@@ -47,13 +46,10 @@ const DropdownMenuItem: FC<DropdownMenuItemProps> = ({
         close()
       }}
     >
-      {icon && (
-        <span className='ds-dropdown-menu__icon' aria-hidden>
-          <Icon name={icon} width={16} />
+      <span className='ds-dropdown-menu__content'>
+        <span id={`${id}-label`} className='ds-dropdown-menu__label'>
+          {children}
         </span>
-      )}
-      <span className='ds-dropdown-menu__label'>
-        <span id={`${id}-label`}>{children}</span>
         {reason && (
           <span id={reasonId} className='ds-dropdown-menu__reason'>
             {reason}

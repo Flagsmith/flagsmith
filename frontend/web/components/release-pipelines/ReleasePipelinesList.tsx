@@ -177,7 +177,6 @@ const ReleasePipelinesList = ({
               <DropdownMenu aria-label={`Actions for ${name}`}>
                 <DropdownMenuItem
                   disabledReason='Cannot edit a published release pipeline'
-                  icon='edit'
                   disabled={isPublished}
                   onSelect={() =>
                     history.push(
@@ -185,11 +184,11 @@ const ReleasePipelinesList = ({
                     )
                   }
                 >
+                  <Icon name='edit' />
                   Edit
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   disabledReason='Cannot unpublish a release pipeline with in-flight features'
-                  icon={isPublished ? 'minus-circle' : 'checkmark-circle'}
                   disabled={isPublished && !canUnpublish}
                   onSelect={() =>
                     openChangeReleasePipelineStatusModal(
@@ -199,10 +198,12 @@ const ReleasePipelinesList = ({
                     )
                   }
                 >
+                  <Icon
+                    name={isPublished ? 'minus-circle' : 'checkmark-circle'}
+                  />
                   {isPublished ? 'Unpublish' : 'Publish'}
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  icon='copy'
                   onSelect={() =>
                     openModal2(
                       'Clone Release Pipeline',
@@ -213,11 +214,11 @@ const ReleasePipelinesList = ({
                     )
                   }
                 >
+                  <Icon name='copy' />
                   Clone
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   disabledReason='Cannot remove a release pipeline with in-flight features'
-                  icon='trash-2'
                   destructive
                   disabled={!canDelete}
                   onSelect={() =>
@@ -230,6 +231,7 @@ const ReleasePipelinesList = ({
                     )
                   }
                 >
+                  <Icon name='trash-2' />
                   Remove
                 </DropdownMenuItem>
               </DropdownMenu>
