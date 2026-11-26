@@ -1,3 +1,4 @@
+import json
 import uuid
 
 import pytest
@@ -105,3 +106,78 @@ def test_list_mv_options__feature_in_other_project__returns_404(
 
     # Then
     assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
+def test_create_mv_option__no_percentage_allocation__defaults_to_model_default(
+    admin_client: APIClient,
+    project: Project,
+    feature: Feature,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:projects:feature-mv-options-list", args=[project.id, feature.id]
+    )
+    data = {"type": "unicode", "feature": feature.id, "string_value": "bigger"}
+
+    # When
+    response = admin_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.json()["default_percentage_allocation"] == 100
+
+
+def test_create_mv_option__no_percentage_allocation_with_siblings__returns_bad_request(
+    admin_client: APIClient,
+    project: Project,
+    multivariate_feature: Feature,
+) -> None:
+    # Given - the existing options already use 100%, so the default of 100 overflows
+    url = reverse(
+        "api-v1:projects:feature-mv-options-list",
+        args=[project.id, multivariate_feature.id],
+    )
+    data = {
+        "type": "unicode",
+        "feature": multivariate_feature.id,
+        "string_value": "bigger",
+    }
+
+    # When
+    response = admin_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "default_percentage_allocation" in response.json()
+
+
+def test_partial_update_mv_option__no_feature_or_percentage_allocation__keeps_them(
+    admin_client: APIClient,
+    project: Project,
+    multivariate_feature: Feature,
+) -> None:
+    # Given
+    option = multivariate_feature.multivariate_options.first()
+    assert option is not None
+    original_allocation = option.default_percentage_allocation
+    url = reverse(
+        "api-v1:projects:feature-mv-options-detail",
+        args=[project.id, multivariate_feature.id, option.id],
+    )
+
+    # When
+    response = admin_client.patch(
+        url,
+        data=json.dumps({"string_value": "updated"}),
+        content_type="application/json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    option.refresh_from_db()
+    assert option.string_value == "updated"
+    assert option.default_percentage_allocation == original_allocation
