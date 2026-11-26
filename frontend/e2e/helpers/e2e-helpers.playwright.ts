@@ -612,7 +612,7 @@ export class E2EHelpers {
     const dropdownSelector = byId(`select-segment-option-${selectionIndex}`);
     const isDropdownVisible = await this.page.locator(dropdownSelector).isVisible().catch(() => false);
     if (!isDropdownVisible) {
-      await this.click(byId('segment_overrides'));
+      await this.openFeatureTab('Segment Overrides');
     }
     await this.click(dropdownSelector);
     await this.waitForElementVisible(this.segmentOverrideValueField(index));
@@ -638,7 +638,7 @@ export class E2EHelpers {
   // Add a remote config override for a segment picked by name, so other
   // segments in a shared project can't shift the selection
   async addSegmentOverrideConfigForSegment(segmentName: string, value: string) {
-    await this.click(byId('segment_overrides'));
+    await this.openFeatureTab('Segment Overrides');
     // E2E builds render the select's options as plain links
     await this.page
       .locator('[data-test^="select-segment-option-"]')
@@ -659,7 +659,7 @@ export class E2EHelpers {
 
   // Set segment override index (for reordering)
   async setSegmentOverrideIndex(index: number, newIndex: number) {
-    await this.click(byId('segment_overrides'));
+    await this.openFeatureTab('Segment Overrides');
     await this.setText(byId(`sort-${index}`), `${newIndex}`);
   }
 
@@ -807,6 +807,17 @@ export class E2EHelpers {
       await this.page.waitForTimeout(1000);
     }
     throw new Error(`Try-it failed after ${maxRetries} attempts: ${key}.${field} never became ${expected}`);
+  }
+
+  // Open a feature drawer tab, from "More tabs" when it has overflowed
+  async openFeatureTab(name: string) {
+    const tab = this.page
+      .getByRole('button', { name: new RegExp(`^${name}`) })
+      .filter({ visible: true });
+    if (!(await tab.count())) {
+      await this.page.getByRole('button', { exact: true, name: 'More tabs' }).click();
+    }
+    await tab.first().click();
   }
 
   // Go to feature versions

@@ -112,8 +112,14 @@ test.describe('Experimentation Tests', () => {
     page,
   }, testInfo) => {
     await skipOnSaas()
-    const { click, closeModal, featureValueField, gotoFeature, gotoFeatures } =
-      await setup(page)
+    const {
+      click,
+      closeModal,
+      featureValueField,
+      gotoFeature,
+      gotoFeatures,
+      openFeatureTab,
+    } = await setup(page)
 
     log('Create an experiment')
     await createExperiment(page, FIRST_EXPERIMENT)
@@ -127,7 +133,7 @@ test.describe('Experimentation Tests', () => {
       `This flag is part of the experiment ${FIRST_EXPERIMENT}`,
     )
     await expect(featureValueField()).not.toBeEditable()
-    await click(byId('segment_overrides'))
+    await openFeatureTab('Segment Overrides')
     await expect(rolloutOverride(page)).toHaveCount(1)
     await closeModal()
   })
@@ -142,6 +148,7 @@ test.describe('Experimentation Tests', () => {
       closeModal,
       gotoFeature,
       gotoFeatures,
+      openFeatureTab,
       waitForToast,
     } = await setup(page)
 
@@ -172,7 +179,7 @@ test.describe('Experimentation Tests', () => {
       '100',
     )
     await expect(page.locator(byId('featureVariationWeighta'))).toHaveValue('0')
-    await click(byId('segment_overrides'))
+    await openFeatureTab('Segment Overrides')
     await expectNoRolloutOverride(page)
     await closeModal()
   })

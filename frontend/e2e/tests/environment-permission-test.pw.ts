@@ -26,6 +26,7 @@ test.describe('Environment Permission Tests', () => {
       gotoTraits,
       login,
       logout,
+      openFeatureTab,
       setUserPermission,
       toggleFeature,
       waitForElementClickable,
@@ -100,7 +101,7 @@ test.describe('Environment Permission Tests', () => {
     await login(E2E_NON_ADMIN_USER_WITH_ENV_PERMISSIONS, PASSWORD)
     await gotoProject(PROJECT_NAME)
     await gotoFeature('my_feature')
-    await click(byId('segment_overrides'))
+    await openFeatureTab('Segment Overrides')
     await waitForElementNotClickable('#update-feature-segments-btn')
     await closeModal()
     await logout()
@@ -112,7 +113,7 @@ test.describe('Environment Permission Tests', () => {
     await login(E2E_NON_ADMIN_USER_WITH_ENV_PERMISSIONS, PASSWORD)
     await gotoProject(PROJECT_NAME)
     await gotoFeature('my_feature')
-    await click(byId('segment_overrides'))
+    await openFeatureTab('Segment Overrides')
     await waitForElementClickable('#update-feature-segments-btn')
     await closeModal()
     await logout()
