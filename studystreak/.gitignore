@@ -2,3 +2,4 @@
 /.next
 /next-env.d.ts
 *.tsbuildinfo
+!.env.example
