@@ -319,8 +319,23 @@ $side-width: 800px;
   text-overflow: ellipsis;
   overflow-x: hidden;
 }
+// The sheet sets these; the rows read them
+.table-filter {
+  --table-filter-row: 0;
+  --table-filter-font: var(--font-size-body-md);
+
+  // In a bottom sheet rows are larger, like native action sheets. There is no
+  // 16px body token, so the size is set here
+  &--sheet {
+    --table-filter-row: 48px;
+    --table-filter-font: 16px;
+  }
+}
 .table-filter-item {
-  display: block;
+  display: grid;
+  align-items: center;
+  min-height: var(--table-filter-row);
+  font-size: var(--table-filter-font);
   border-bottom: 1px solid $input-border-color;
   &:last-of-type {
     border-bottom: none;

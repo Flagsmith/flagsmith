@@ -4,6 +4,7 @@ import { caretDown } from 'ionicons/icons'
 import classNames from 'classnames'
 import Popover from 'components/base/Popover'
 import BareButton from 'components/base/forms/BareButton'
+import { useBreakpoint } from 'common/hooks/useBreakpoint'
 
 type TableFilterType = {
   title: string | ReactNode
@@ -24,49 +25,57 @@ const TableFilter: FC<TableFilterType> = ({
   hideTitle,
   label,
   title,
-}) => (
-  <Popover
-    aria-label={label ?? (typeof title === 'string' ? title : 'Filter')}
-    placement='bottom-end'
-    // Width for the anchored panel; the phone sheet is full width
-    className='inline-modal--sm'
-    renderTrigger={(props) => (
-      <BareButton
-        {...props}
-        data-test={
-          dataTest ||
-          (typeof title === 'string'
-            ? `table-filter-${title.toLowerCase()}`
-            : undefined)
-        }
-        className={classNames(
-          'd-flex align-items-center py-2 py-lg-0 user-select-none',
-          className,
-        )}
-      >
-        <span>{title} </span>
-        <IonIcon
-          style={{
-            fontSize: 11,
-            marginLeft: 2,
-            marginTop: 4,
-          }}
-          icon={caretDown}
-        />
-      </BareButton>
-    )}
-  >
-    {(close) => (
-      <>
-        {!hideTitle && (
-          <div className='inline-modal__title px-3 py-2'>
-            {dropdownTitle || title}
-          </div>
-        )}
-        {typeof children === 'function' ? children(close) : children}
-      </>
-    )}
-  </Popover>
-)
+}) => {
+  // Popover opens as a sheet on the same breakpoint, where rows get larger
+  const asSheet = useBreakpoint('isPhone')
+  return (
+    <Popover
+      aria-label={label ?? (typeof title === 'string' ? title : 'Filter')}
+      placement='bottom-end'
+      // Width for the anchored panel; the phone sheet is full width
+      className='inline-modal--sm'
+      renderTrigger={(props) => (
+        <BareButton
+          {...props}
+          data-test={
+            dataTest ||
+            (typeof title === 'string'
+              ? `table-filter-${title.toLowerCase()}`
+              : undefined)
+          }
+          className={classNames(
+            'd-flex align-items-center py-2 py-lg-0 user-select-none',
+            className,
+          )}
+        >
+          <span>{title} </span>
+          <IonIcon
+            style={{
+              fontSize: 11,
+              marginLeft: 2,
+              marginTop: 4,
+            }}
+            icon={caretDown}
+          />
+        </BareButton>
+      )}
+    >
+      {(close) => (
+        <div
+          className={classNames('table-filter', {
+            'table-filter--sheet': asSheet,
+          })}
+        >
+          {!hideTitle && (
+            <div className='inline-modal__title px-3 py-2'>
+              {dropdownTitle || title}
+            </div>
+          )}
+          {typeof children === 'function' ? children(close) : children}
+        </div>
+      )}
+    </Popover>
+  )
+}
 
 export default TableFilter
