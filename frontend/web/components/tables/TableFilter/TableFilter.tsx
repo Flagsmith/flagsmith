@@ -1,9 +1,8 @@
 import React, { FC, ReactNode } from 'react'
-import { IonIcon } from '@ionic/react'
-import { caretDown } from 'ionicons/icons'
 import classNames from 'classnames'
 import Popover from 'components/base/Popover'
 import BareButton from 'components/base/forms/BareButton'
+import Icon from 'components/icons/Icon'
 import { useBreakpoint } from 'common/hooks/useBreakpoint'
 import './TableFilter.scss'
 
@@ -50,14 +49,7 @@ const TableFilter: FC<TableFilterType> = ({
           )}
         >
           <span>{title} </span>
-          <IonIcon
-            style={{
-              fontSize: 11,
-              marginLeft: 2,
-              marginTop: 4,
-            }}
-            icon={caretDown}
-          />
+          <Icon name='chevron-down' width={16} />
         </BareButton>
       )}
     >
