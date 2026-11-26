@@ -6,7 +6,4 @@ export const isTagMatchingFilter = (tagLabel: string, filter: string) => {
 export const isSpecialFilterItemVisible = (
   itemName: 'archived' | 'untagged',
   filter: string,
-) => {
-  const search = filter.trim().toLowerCase()
-  return !search || itemName.includes(search)
-}
+) => isTagMatchingFilter(itemName, filter)
