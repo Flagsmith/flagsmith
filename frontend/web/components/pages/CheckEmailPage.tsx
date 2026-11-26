@@ -4,11 +4,9 @@ import { Link, useHistory, useLocation } from 'react-router-dom'
 import AccountStore from 'common/stores/account-store'
 import Button from 'components/base/forms/Button'
 import Card from 'components/Card'
-import Constants from 'common/constants'
 import ErrorMessage from 'components/ErrorMessage'
 import InfoMessage from 'components/InfoMessage'
 import NavIconSmall from 'components/icons/NavIconSmall'
-import API from 'project/api'
 import { useResendActivationEmailMutation } from 'common/services/useEmailActivation'
 
 type LocationState = { email?: string } | undefined
@@ -26,10 +24,6 @@ const CheckEmailPage: FC = () => {
 
   const [resendActivationEmail, { isError, isLoading, isSuccess }] =
     useResendActivationEmailMutation()
-
-  useEffect(() => {
-    API.trackPage(Constants.pages.CHECK_EMAIL)
-  }, [])
 
   useEffect(() => {
     if (!email) {

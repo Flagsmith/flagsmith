@@ -12,13 +12,11 @@ import { FetchBaseQueryError } from '@reduxjs/toolkit/query'
 import AccountStore from 'common/stores/account-store'
 import Button from 'components/base/forms/Button'
 import Card from 'components/Card'
-import Constants from 'common/constants'
 import ErrorMessage from 'components/ErrorMessage'
 import InfoMessage from 'components/InfoMessage'
 import InputGroup from 'components/base/forms/InputGroup'
 import NavIconSmall from 'components/icons/NavIconSmall'
 import Utils from 'common/utils/utils'
-import API from 'project/api'
 import {
   useActivateAccountMutation,
   useResendActivationEmailMutation,
@@ -59,10 +57,6 @@ const EmailActivationPage: FC = () => {
   // Only the endpoint rejecting the token means the link is actually spent.
   const status = (activationError as FetchBaseQueryError | undefined)?.status
   const isLinkSpent = status === 400 || status === 403
-
-  useEffect(() => {
-    API.trackPage(Constants.pages.EMAIL_ACTIVATION, '/activate')
-  }, [])
 
   const activate = useCallback(() => {
     activateAccount({ token, uid })

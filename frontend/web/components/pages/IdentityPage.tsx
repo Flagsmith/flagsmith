@@ -99,7 +99,6 @@ const IdentityPage: FC = () => {
     AppActions.getIdentity(environmentId, id)
     getTags(getStore(), { projectId: `${projectId}` })
     getActualFlags()
-    API.trackPage(Constants.pages.USER)
     // eslint-disable-next-line
   }, [])
 

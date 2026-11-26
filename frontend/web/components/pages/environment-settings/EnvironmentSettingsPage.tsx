@@ -164,7 +164,6 @@ const EnvironmentSettingsPage: React.FC = () => {
   }, [match.params.environmentId, getEnvironment])
 
   useEffect(() => {
-    API.trackPage(Constants.pages.ENVIRONMENT_SETTINGS)
     getEnvironment()
   }, [getEnvironment])
 

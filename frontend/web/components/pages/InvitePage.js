@@ -1,5 +1,4 @@
 import React, { Component } from 'react'
-import Constants from 'common/constants'
 import { withRouter } from 'react-router-dom'
 import AccountProvider from 'common/providers/AccountProvider'
 const InvitePage = class extends Component {
@@ -9,10 +8,6 @@ const InvitePage = class extends Component {
     super(props, context)
     this.state = {}
     AppActions.acceptInvite(this.props.match.params.id)
-  }
-
-  componentDidMount = () => {
-    API.trackPage(Constants.pages.INVITE)
   }
 
   onSave = (id) => {

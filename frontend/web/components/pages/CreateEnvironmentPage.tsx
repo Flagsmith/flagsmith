@@ -15,7 +15,6 @@ import ProjectProvider, {
 import AccountStore from 'common/stores/account-store'
 import Utils from 'common/utils/utils'
 import { useHistory } from 'react-router-dom'
-import API from 'project/api'
 import FieldLabel from 'components/base/forms/FieldLabel'
 import InputGroup from 'components/base/forms/InputGroup'
 import { Environment, Role, User } from 'common/types/responses'
@@ -136,8 +135,6 @@ const CreateEnvironmentPage: React.FC = () => {
   }
 
   useEffect(() => {
-    API.trackPage(Constants.pages.CREATE_ENVIRONMENT)
-
     if (Utils.getPlansPermission('METADATA')) {
       getSupportedContentType(getStore(), {
         organisation_id: AccountStore.getOrganisation().id,

@@ -1,5 +1,4 @@
 import React, { Component } from 'react'
-import Constants from 'common/constants'
 import ErrorMessage from 'components/ErrorMessage'
 import { withRouter } from 'react-router-dom'
 const PasswordResetPage = class extends Component {
@@ -8,10 +7,6 @@ const PasswordResetPage = class extends Component {
   constructor(props, context) {
     super(props, context)
     this.state = {}
-  }
-
-  componentDidMount = () => {
-    API.trackPage(Constants.pages.RESET_PASSWORD)
   }
 
   onSave = () => {

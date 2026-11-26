@@ -1,11 +1,6 @@
-import React, { FC, useEffect } from 'react'
-import Constants from 'common/constants'
+import React, { FC } from 'react'
 
 const NotFoundErrorPage: FC = () => {
-  useEffect(() => {
-    API.trackPage(Constants.pages.COMING_SOON)
-  }, [])
-
   return (
     <div className='app-container container'>
       <h3 className='pt-5'>Oops!</h3>

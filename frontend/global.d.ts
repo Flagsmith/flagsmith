@@ -46,7 +46,6 @@ declare global {
   const toast: (message: string) => void
   const Tooltip: FC<TooltipProps>
   const API: {
-    trackPage: (title: string, path?: string) => void
     trackEvent: (data: {
       category: string
       event: string

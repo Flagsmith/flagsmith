@@ -317,10 +317,6 @@ const API = {
     }
   },
 
-  // Page views were only sent to Universal Analytics. Removed with its callers
-  // in a follow-up.
-  trackPage(): void {},
-
   trackTraits(traits: Record<string, any>): void {
     try {
       if (Project.amplitude && traits) {

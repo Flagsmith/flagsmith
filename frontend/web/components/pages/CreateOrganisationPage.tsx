@@ -3,7 +3,6 @@ import FieldLabel from 'components/base/forms/FieldLabel'
 import Link from 'components/base/link/Link'
 import { useHistory } from 'react-router-dom'
 import ConfigProvider from 'common/providers/ConfigProvider'
-import Constants from 'common/constants'
 import PageTitle from 'components/PageTitle'
 import CondensedRow from 'components/CondensedRow'
 import InputGroup from 'components/base/forms/InputGroup'
@@ -79,7 +78,6 @@ const CreateOrganisationPage: React.FC = () => {
   }, [hosting, history, showHostingPreferences, updateTools])
 
   useEffect(() => {
-    API.trackPage(Constants.pages.CREATE_ORGANISATION)
     focusTimeout.current = setTimeout(() => {
       inputRef.current?.focus?.()
       focusTimeout.current = null

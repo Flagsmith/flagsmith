@@ -6,7 +6,6 @@ import Utils from 'common/utils/utils'
 import PageTitle from 'components/PageTitle'
 import Tabs from 'components/navigation/TabMenu/Tabs'
 import TabItem from 'components/navigation/TabMenu/TabItem'
-import Constants from 'common/constants'
 import { GeneralTab } from './tabs/general-tab'
 import { BillingTab } from './tabs/BillingTab'
 import { LicensingTab } from './tabs/LicensingTab'
@@ -35,10 +34,6 @@ const OrganisationSettingsPage: FC = () => {
     { id: organisationId || 0 },
     { skip: !organisationId },
   )
-
-  useEffect(() => {
-    API.trackPage(Constants.pages.ORGANISATION_SETTINGS)
-  }, [])
 
   // Back-compat: renamed tabs redirect so existing bookmarks and links land
   // in the right place (SAML became SSO; the API Keys tab became API Access

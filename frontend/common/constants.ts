@@ -636,36 +636,8 @@ const Constants = {
   ],
   isCustomFlagsmithUrl: () =>
     Constants.getFlagsmithSDKUrl() !== 'https://edge.api.flagsmith.com/api/v1/',
-  modals: {
-    'PAYMENT': 'Payment Modal',
-  },
   organisationPermissions: (perm: OrganisationPermission) => {
     return `To manage this feature you need the <i>${OrganisationPermissionDescriptions[perm]}</i> permission for this organisation.<br/>Please contact a member of this organisation who has administrator privileges.`
-  },
-  pages: {
-    'ACCOUNT': 'Account Page',
-    'AUDIT_LOG': 'Audit Log Page',
-    'CHECK_EMAIL': 'Check Email Page',
-    'COMING_SOON': 'Coming Soon Page',
-    'CREATE_ENVIRONMENT': 'Create Environment Page',
-    'CREATE_ORGANISATION': 'Create Organisation Page',
-    'DOCUMENTATION': 'Documentation Page',
-    'EMAIL_ACTIVATION': 'Email Activation Page',
-    'ENVIRONMENT_SETTINGS': 'Environment Settings Page',
-    'FEATURES': 'Features Page',
-    'HOME': 'Home Page',
-    'INTEGRATIONS': 'Integrations Page',
-    'INVITE': 'User Invited Page',
-    'NOT_FOUND': '404 Page',
-    'ORGANISATION_SETTINGS': 'Organisation Settings Page',
-    'POLICIES': 'Terms & Policies Page',
-    'PRICING': 'Pricing Page',
-    'PROJECT_SELECT': 'Project Select Page',
-    'PROJECT_SETTINGS': 'Project Settings Page',
-    'RESET_PASSWORD': 'Reset Password Page',
-    'USER': 'User Page',
-    'USERS': 'Users Page',
-    'WHAT_ARE_FEATURE_FLAGS': 'What are feature flags Page',
   },
   projectPermissions: (perm: ProjectPermission) => {
     return `To use this feature you need the <i>${ProjectPermissionDescriptions[perm]}</i> permission for this project.<br/>Please contact a member of this project who has administrator privileges.`

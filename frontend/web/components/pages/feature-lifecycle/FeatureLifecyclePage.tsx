@@ -1,7 +1,6 @@
 import React, { FC, useCallback, useMemo, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useRouteContext } from 'components/providers/RouteContext'
-import { usePageTracking } from 'common/hooks/usePageTracking'
 import { hasActiveFilters } from 'common/utils/featureFilterParams'
 import PageTitle from 'components/PageTitle'
 import Icon from 'components/icons/Icon'
@@ -95,15 +94,6 @@ const FeatureLifecyclePage: FC = () => {
     filters,
     projectId: projectIdNum,
     section,
-  })
-
-  usePageTracking({
-    context: {
-      organisationId: routeContext.organisationId,
-      projectId: projectIdNum,
-    },
-    pageName: 'CLEANUP',
-    saveToStorage: false,
   })
 
   if (!environmentId) {

@@ -2,13 +2,12 @@ import React, { FC, useCallback, useEffect, useMemo } from 'react'
 import cloneDeep from 'lodash/cloneDeep'
 import { useHistory } from 'react-router-dom'
 import CreateFlagModal from 'components/modals/create-feature'
-import Constants from 'common/constants'
 import Utils from 'common/utils/utils'
 import AppActions from 'common/dispatcher/app-actions'
 import FeatureListStore from 'common/stores/feature-list-store'
 import { FEATURES_PAGE_SIZE } from 'common/services/useProjectFlag'
 import { useRouteContext } from 'components/providers/RouteContext'
-import { usePageTracking } from 'common/hooks/usePageTracking'
+import { useSaveLastEnvironment } from 'common/hooks/useSaveLastEnvironment'
 import FeatureRow from 'components/feature-summary/FeatureRow'
 import FeatureRowSkeleton from 'components/feature-summary/FeatureRowSkeleton'
 import JSONReference from 'components/JSONReference'
@@ -185,14 +184,10 @@ const FeaturesPage: FC<FeaturesPageProps> = ({ forcedTagIds, pageTitle }) => {
     projectId,
   })
 
-  usePageTracking({
-    context: {
-      environmentId,
-      organisationId: routeContext.organisationId,
-      projectId,
-    },
-    pageName: Constants.pages.FEATURES,
-    saveToStorage: true,
+  useSaveLastEnvironment({
+    environmentId,
+    organisationId: routeContext.organisationId,
+    projectId,
   })
 
   const openNewFlagModal = () => {

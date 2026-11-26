@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React from 'react'
 import IntegrationList from 'components/IntegrationList'
 import Constants from 'common/constants'
 import PageTitle from 'components/PageTitle'
@@ -6,13 +6,8 @@ import Utils from 'common/utils/utils'
 import AccountStore from 'common/stores/account-store'
 import { OrganisationPermission } from 'common/types/permissions.types'
 import { useHasPermission } from 'common/providers/Permission'
-import API from 'project/api'
 
 const OrganisationIntegrationsPage = ({ match }) => {
-  useEffect(() => {
-    API.trackPage(Constants.pages.INTEGRATIONS)
-  }, [])
-
   const integrationData = Utils.getIntegrationData()
   const allIntegrations = Object.keys(integrationData).sort((a, b) =>
     (integrationData[a]?.title || a).localeCompare(

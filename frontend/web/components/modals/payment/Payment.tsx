@@ -1,5 +1,4 @@
 import React, { FC, useEffect } from 'react'
-import Constants from 'common/constants'
 import InfoMessage from 'components/InfoMessage'
 import BlockedOrgInfo from 'components/BlockedOrgInfo'
 import { Organisation } from 'common/types/responses'
@@ -35,10 +34,6 @@ export const Payment: FC<PaymentProps> = ({
   const { error, ready } = useScript(CHARGEBEE_SCRIPT_URL)
   const { hasActiveSubscription, isAWS, plan, setYearly, yearly } =
     usePaymentState({ organisation })
-
-  useEffect(() => {
-    API.trackPage(Constants.modals.PAYMENT)
-  }, [])
 
   useEffect(() => {
     if (ready && !error) {

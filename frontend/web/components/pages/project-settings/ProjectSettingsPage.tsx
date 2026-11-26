@@ -1,11 +1,10 @@
-import React, { ReactNode, useEffect } from 'react'
+import React, { ReactNode } from 'react'
 import PageTitle from 'components/PageTitle'
 import Tabs from 'components/navigation/TabMenu/Tabs'
 import TabItem from 'components/navigation/TabMenu/TabItem'
 import BetaFlag from 'components/BetaFlag'
 import { useGetProjectQuery } from 'common/services/useProject'
 import { useRouteContext } from 'components/providers/RouteContext'
-import Constants from 'common/constants'
 import Utils from 'common/utils/utils'
 import ProjectUsageTab from './ProjectUsageTab'
 import EditHealthProvider from './tabs/EditHealthProvider'
@@ -37,10 +36,6 @@ const ProjectSettingsPage = () => {
     { projectId: projectId ?? '' },
     { skip: !projectId },
   )
-
-  useEffect(() => {
-    API.trackPage(Constants.pages.PROJECT_SETTINGS)
-  }, [])
 
   const isInitialLoading = isUninitialized || (isLoading && !project)
 

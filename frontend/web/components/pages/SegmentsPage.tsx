@@ -10,7 +10,6 @@ import {
   useGetSegmentsQuery,
 } from 'common/services/useSegment'
 import { useHasPermission } from 'common/providers/Permission'
-import API from 'project/api'
 import Button from 'components/base/forms/Button'
 import Chip from 'components/base/Chip'
 import CreateSegmentModal from 'components/modals/CreateSegment'
@@ -75,9 +74,6 @@ const SegmentsPage: FC = () => {
     ProjectStore.getMaxSegmentsAllowed(),
   )
 
-  useEffect(() => {
-    API.trackPage(Constants.pages.FEATURES)
-  }, [])
   useEffect(() => {
     if (error) {
       // Kick user back out to projects

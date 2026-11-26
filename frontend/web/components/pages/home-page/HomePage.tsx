@@ -12,7 +12,7 @@ import ForgotPasswordModal from 'components/modals/ForgotPasswordModal'
 import Card from 'components/Card'
 import NavIconSmall from 'components/icons/NavIconSmall'
 import ConfigProvider from 'common/providers/ConfigProvider'
-import Constants, { PASSWORD_CHANGED_SESSION_KEY } from 'common/constants'
+import { PASSWORD_CHANGED_SESSION_KEY } from 'common/constants'
 import ErrorMessage from 'components/ErrorMessage'
 import Button from 'components/base/forms/Button'
 import PasswordRequirements from 'components/PasswordRequirements'
@@ -190,8 +190,6 @@ const HomePage: React.FC = () => {
         history.replace('/')
       }
     }
-
-    API.trackPage(Constants.pages.HOME)
 
     if (document.location.href.indexOf('invite') !== -1) {
       const invite = params.redirect

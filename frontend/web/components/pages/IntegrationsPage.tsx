@@ -1,10 +1,9 @@
-import React, { FC, useEffect } from 'react'
+import React, { FC } from 'react'
 import IntegrationList from 'components/IntegrationList'
 import { useHasPermission } from 'common/providers/Permission'
 import Constants from 'common/constants'
 import PageTitle from 'components/PageTitle'
 import Utils from 'common/utils/utils'
-import API from 'project/api'
 import { useGetProjectQuery } from 'common/services/useProject'
 import { useRouteContext } from 'components/providers/RouteContext'
 import {
@@ -33,10 +32,6 @@ export type IntegrationSummary = {
 
 const IntegrationsPage: FC = () => {
   const { organisationId, projectId } = useRouteContext()
-  useEffect(() => {
-    API.trackPage(Constants.pages.INTEGRATIONS)
-  }, [])
-
   const integrationData = Utils.getIntegrationData()
   const integrations = Object.keys(integrationData).sort((a, b) =>
     (integrationData[a]?.title || a).localeCompare(
