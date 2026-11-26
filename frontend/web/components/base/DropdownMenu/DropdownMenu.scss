@@ -23,23 +23,28 @@
     --ds-dropdown-menu-icon: 20px;
   }
 
-  &__item,
-  &__row {
-    min-height: var(--ds-dropdown-menu-row);
-    border-radius: var(--radius-md);
-  }
-
   &__item {
+    --ds-dropdown-menu-text: var(--color-text-default);
     --ds-dropdown-menu-icon-color: var(--color-icon-secondary);
 
     display: flex;
+    min-height: var(--ds-dropdown-menu-row);
+    border-radius: var(--radius-md);
     align-items: center;
     gap: var(--ds-dropdown-menu-gap);
     width: 100%;
     padding: var(--ds-dropdown-menu-padding);
     font-size: var(--ds-dropdown-menu-font);
-    color: var(--color-text-default);
     text-align: left;
+    text-decoration: none;
+
+    // Scoped to outrank the global link colours (body.dark a), as rows can be
+    // links
+    .ds-dropdown-menu &,
+    .ds-dropdown-menu &:hover,
+    .ds-dropdown-menu &:focus {
+      color: var(--ds-dropdown-menu-text);
+    }
 
     // Touch screens keep :hover after a tap, so only devices that can hover
     // get it
@@ -50,47 +55,38 @@
     }
 
     // Inset, so the ring stays inside the row and keeps its corners
+    // Set here too, as link rows don't get BareButton's ring
     &:focus-visible {
       background: var(--color-surface-hover);
+      outline: 2px solid var(--color-border-action);
       outline-offset: -2px;
     }
 
-    &[aria-current='true'] {
+    // true for a selected option, page for the current page's link
+    &[aria-current='true'],
+    &[aria-current='page'] {
+      --ds-dropdown-menu-text: var(--color-text-action);
       --ds-dropdown-menu-icon-color: var(--color-icon-action);
 
       font-weight: var(--font-weight-semibold);
-      color: var(--color-text-action);
       background: var(--color-surface-action-subtle);
     }
 
     &--destructive {
+      --ds-dropdown-menu-text: var(--color-text-danger);
       --ds-dropdown-menu-icon-color: var(--color-icon-danger);
-
-      color: var(--color-text-danger);
     }
 
     &[aria-disabled='true'] {
+      --ds-dropdown-menu-text: var(--color-text-disabled);
       --ds-dropdown-menu-icon-color: var(--color-icon-disabled);
 
-      color: var(--color-text-disabled);
       cursor: not-allowed;
 
       &:hover,
       &:focus-visible {
         background: none;
       }
-    }
-  }
-
-  // The content brings its own padding, hover and active styles. A grid
-  // stretches it across the row, so all of the row is clickable
-  &__row {
-    display: grid;
-    align-items: center;
-
-    // A row whose content renders nothing, such as a permission check
-    &:empty {
-      display: none;
     }
   }
 
@@ -109,6 +105,7 @@
   }
 
   &__label > svg,
+  &__label > ion-icon,
   &__check svg {
     flex-shrink: 0;
     width: var(--ds-dropdown-menu-icon);

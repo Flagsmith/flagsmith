@@ -2,7 +2,7 @@ import React, { FC, ReactNode, useRef } from 'react'
 import { IonIcon } from '@ionic/react'
 import { ellipsisHorizontal } from 'ionicons/icons'
 import IconButton from 'components/base/IconButton'
-import DropdownMenu, { DropdownMenuRow } from 'components/base/DropdownMenu'
+import DropdownMenu from 'components/base/DropdownMenu'
 import classNames from 'classnames'
 import { useOverflowVisibleCount } from 'common/hooks/useOverflowVisibleCount'
 
@@ -92,9 +92,8 @@ const OverflowNav: FC<OverflowNavProps> = ({
             </IconButton>
           }
         >
-          {overflow.map((child, idx) => (
-            <DropdownMenuRow key={idx}>{child}</DropdownMenuRow>
-          ))}
+          {/* Nav links render as menu rows inside the menu */}
+          {overflow}
         </DropdownMenu>
       )}
     </div>

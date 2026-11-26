@@ -1,5 +1,6 @@
 export { default } from './DropdownMenu'
 export { default as DropdownMenuItem } from './DropdownMenuItem'
-export { default as DropdownMenuRow } from './DropdownMenuRow'
+export { default as DropdownMenuLink } from './DropdownMenuLink'
 export type { DropdownMenuProps } from './DropdownMenu'
 export type { DropdownMenuItemProps } from './DropdownMenuItem'
+export { useIsInDropdownMenu } from './DropdownMenuContext'

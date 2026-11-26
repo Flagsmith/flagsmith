@@ -2,6 +2,10 @@ import React, { FC, ReactNode } from 'react'
 import { NavLink, NavLinkProps } from 'react-router-dom'
 import classNames from 'classnames'
 import Icon, { IconName } from 'components/icons/Icon'
+import {
+  DropdownMenuLink,
+  useIsInDropdownMenu,
+} from 'components/base/DropdownMenu'
 
 type SidebarLinkType = Partial<NavLinkProps> & {
   icon?: IconName
@@ -18,6 +22,15 @@ const SidebarLink: FC<SidebarLinkType> = ({
   to,
   ...rest
 }) => {
+  const inMenu = useIsInDropdownMenu()
+  if (inMenu && to) {
+    return (
+      <DropdownMenuLink to={to} exact>
+        {!!icon && <Icon name={icon} />}
+        {children}
+      </DropdownMenuLink>
+    )
+  }
   const Tag = (to ? NavLink : 'div') as any
 
   return (
