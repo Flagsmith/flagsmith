@@ -1,4 +1,4 @@
-blank_issues_enabled: true
+blank_issues_enabled: false
 contact_links:
   - name: Flagsmith Community
     url: https://discord.gg/hFhxNtXzgm
