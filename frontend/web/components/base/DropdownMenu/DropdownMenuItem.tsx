@@ -57,9 +57,11 @@ const DropdownMenuItem: FC<DropdownMenuItemProps> = ({
         )}
       </span>
       {current && (
-        <span className='ds-dropdown-menu__check' aria-hidden>
-          <Icon name='checkmark' width={16} />
-        </span>
+        <Icon
+          name='checkmark'
+          className='ds-dropdown-menu__check'
+          aria-hidden
+        />
       )}
     </BareButton>
   )

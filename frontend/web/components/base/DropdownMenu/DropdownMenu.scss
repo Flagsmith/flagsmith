@@ -1,9 +1,7 @@
 .ds-dropdown-menu {
   // States and the sheet set these; the elements below only read them
   --ds-dropdown-menu-row: 44px;
-  --ds-dropdown-menu-padding: 10px 12px;
   --ds-dropdown-menu-font: var(--font-size-body-md);
-  --ds-dropdown-menu-reason-font: var(--font-size-body-xs);
   --ds-dropdown-menu-icon: 16px;
   --ds-dropdown-menu-gap: 12px;
 
@@ -17,9 +15,7 @@
   // 16px body token, so the size is set here
   &--sheet {
     --ds-dropdown-menu-row: 48px;
-    --ds-dropdown-menu-padding: 12px;
     --ds-dropdown-menu-font: 16px;
-    --ds-dropdown-menu-reason-font: var(--font-size-body-sm);
     --ds-dropdown-menu-icon: 20px;
   }
 
@@ -33,7 +29,7 @@
     align-items: center;
     gap: var(--ds-dropdown-menu-gap);
     width: 100%;
-    padding: var(--ds-dropdown-menu-padding);
+    padding: 0 12px;
     font-size: var(--ds-dropdown-menu-font);
     text-align: left;
     text-decoration: none;
@@ -49,15 +45,14 @@
     // Touch screens keep :hover after a tap, so only devices that can hover
     // get it
     @media (hover: hover) {
-      &:hover {
+      &:not([aria-disabled='true']):hover {
         background: var(--color-surface-hover);
       }
     }
 
-    // Inset, so the ring stays inside the row and keeps its corners
-    // Set here too, as link rows don't get BareButton's ring
+    // Inset, so the ring stays inside the row and keeps its corners. Set here
+    // too, as link rows don't get BareButton's ring
     &:focus-visible {
-      background: var(--color-surface-hover);
       outline: 2px solid var(--color-border-action);
       outline-offset: -2px;
     }
@@ -82,11 +77,6 @@
       --ds-dropdown-menu-icon-color: var(--color-icon-disabled);
 
       cursor: not-allowed;
-
-      &:hover,
-      &:focus-visible {
-        background: none;
-      }
     }
   }
 
@@ -105,7 +95,7 @@
   }
 
   &__label > svg,
-  &__check svg {
+  &__check {
     flex-shrink: 0;
     width: var(--ds-dropdown-menu-icon);
     height: var(--ds-dropdown-menu-icon);
@@ -114,7 +104,7 @@
 
   // Why a disabled item can't be used; its description for screen readers
   &__reason {
-    font-size: var(--ds-dropdown-menu-reason-font);
+    font-size: var(--font-size-body-sm);
     color: var(--color-text-secondary);
   }
 
@@ -123,10 +113,5 @@
     padding-left: calc(
       var(--ds-dropdown-menu-icon) + var(--ds-dropdown-menu-gap)
     );
-  }
-
-  // The tick on the selected item
-  &__check {
-    display: flex;
   }
 }
