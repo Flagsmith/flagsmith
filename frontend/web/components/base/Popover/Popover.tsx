@@ -1,4 +1,5 @@
-import { FC, ReactNode, useState } from 'react'
+import { FC, ReactNode, useEffect, useState } from 'react'
+import { useHistory } from 'react-router-dom'
 import classNames from 'classnames'
 import {
   autoUpdate,
@@ -16,6 +17,7 @@ import {
 } from '@floating-ui/react'
 import { useBreakpoint } from 'common/hooks/useBreakpoint'
 import BottomSheet from './BottomSheet'
+import { stopPropagation } from './stopPropagation'
 import './Popover.scss'
 
 export type PopoverTriggerProps = Record<string, unknown> & {
@@ -51,6 +53,10 @@ const Popover: FC<PopoverProps> = ({
   const [isOpen, setIsOpen] = useState(false)
   const close = () => setIsOpen(false)
   const asSheet = useBreakpoint('isPhone')
+  // Back or forward leaves the page, so an open popover goes with it. There
+  // is no router in stories
+  const history = useHistory()
+  useEffect(() => history?.listen(() => setIsOpen(false)), [history])
 
   const { context, refs, x, y } = useFloating({
     middleware: [
@@ -87,7 +93,10 @@ const Popover: FC<PopoverProps> = ({
       {renderTrigger(
         {
           ref: refs.setReference,
-          ...getReferenceProps(),
+          ...getReferenceProps({
+            onClick: stopPropagation,
+            onKeyDown: stopPropagation,
+          }),
           // useRole is off for the sheet, so state the popup here
           ...(asSheet && {
             'aria-expanded': isOpen,
@@ -115,7 +124,8 @@ const Popover: FC<PopoverProps> = ({
                 className={classNames('ds-popover', className)}
                 data-placement={context.placement}
                 aria-label={ariaLabel}
-                {...getFloatingProps()}
+                // Keys pass through, so Escape still closes it
+                {...getFloatingProps({ onClick: stopPropagation })}
               >
                 {typeof children === 'function' ? children(close) : children}
               </div>

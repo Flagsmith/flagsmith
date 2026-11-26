@@ -11,6 +11,7 @@ import {
   useInteractions,
   useRole,
 } from '@floating-ui/react'
+import { stopPropagation } from 'components/base/Popover/stopPropagation'
 import './BottomSheet.scss'
 
 type BottomSheetProps = {
@@ -61,7 +62,12 @@ const BottomSheet: FC<BottomSheetProps> = ({
 
   return (
     <FloatingPortal>
-      <FloatingOverlay className='ds-bottom-sheet__overlay' lockScroll>
+      <FloatingOverlay
+        className='ds-bottom-sheet__overlay'
+        lockScroll
+        // The sheet portals out of a row that may be clickable
+        onClick={stopPropagation}
+      >
         <FloatingFocusManager
           context={context}
           initialFocus={prefersReducedMotion ? initialFocus : -1}

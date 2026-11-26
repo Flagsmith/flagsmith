@@ -357,25 +357,23 @@ const Integration: FC<IntegrationProps> = (props) => {
                   integration={props.integration}
                 />
               </Flex>
-              <div onClick={(e) => e.stopPropagation()}>
-                <DropdownMenu
-                  aria-label={configuredActionsLabel(
-                    props.integration.title,
-                    index,
-                    activeIntegrations.length,
-                  )}
+              <DropdownMenu
+                aria-label={configuredActionsLabel(
+                  props.integration.title,
+                  index,
+                  activeIntegrations.length,
+                )}
+              >
+                <DropdownMenuItem onSelect={() => edit(integration)}>
+                  Edit
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  destructive
+                  onSelect={() => remove(integration)}
                 >
-                  <DropdownMenuItem onSelect={() => edit(integration)}>
-                    Edit
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    destructive
-                    onSelect={() => remove(integration)}
-                  >
-                    Delete
-                  </DropdownMenuItem>
-                </DropdownMenu>
-              </div>
+                  Delete
+                </DropdownMenuItem>
+              </DropdownMenu>
             </Row>
           </div>
         ))}
