@@ -10,7 +10,7 @@ import { AccountModel, User } from 'common/types/responses'
 import AccountStore from 'common/stores/account-store'
 import flagsmith from '@flagsmith/flagsmith'
 import Utils from 'common/utils/utils'
-import loadChat, { identifyChatUser } from 'common/loadChat'
+import { identifyChatUser } from 'common/loadChat'
 
 // Days, or an absolute date. This is js-cookie's own attribute type, spelled
 // out because the package ships no types.
@@ -80,10 +80,8 @@ const API = {
 
     await API.flagsmithIdentify()
 
-    // Load and setup chat widget based on feature flag
     const isWidget = document.location.href.includes('/widget')
     if (!E2E && !isWidget) {
-      await loadChat()
       identifyChatUser()
     }
 

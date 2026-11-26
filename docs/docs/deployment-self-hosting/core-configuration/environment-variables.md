@@ -86,7 +86,6 @@ relevant section below for more details.
   `/api/v1/` through to `PROXY_API_URL`. If you are using this, any setting to `FLAGSMITH_API_URL` will be ignored and
   the browser will use the frontend node server to send API requests. Do not prepend `api/v1/` - it will be added
   automatically.
-- `PYLON_APP_ID`: Pylon in-app chat widget App ID.
 - `FIRST_PROMOTER_ID`: First Promoter ID for checkout affiliates.
 - `ALLOW_SIGNUPS`: **DEPRECATED** in favour of `PREVENT_SIGNUP` in the API. Determines whether to prevent manual signups
   without invites. Set it to any value to allow signups.

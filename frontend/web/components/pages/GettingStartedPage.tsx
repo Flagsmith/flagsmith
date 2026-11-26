@@ -1,7 +1,7 @@
 import React, { FC, useEffect, useState } from 'react'
 import PageTitle from 'components/PageTitle'
 import Button from 'components/base/forms/Button'
-import loadChat, { openChat } from 'common/loadChat'
+import { openChat } from 'common/loadChat'
 import Utils from 'common/utils/utils'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Icon from 'components/icons/Icon'
@@ -27,8 +27,7 @@ const GettingStartedPage: FC = () => {
       document.body.classList.remove('full-screen')
     }
   }, [])
-  async function onChatClick() {
-    await loadChat(true)
+  function onChatClick() {
     openChat()
   }
 

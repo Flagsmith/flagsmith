@@ -68,7 +68,6 @@ app.get('/config/project-overrides', (req, res) => {
     { name: 'flagsmith', value: process.env.FLAGSMITH_ON_FLAGSMITH_API_KEY },
     { name: 'headway', value: process.env.HEADWAY_API_KEY },
     { name: 'sha', value: sha },
-    { name: 'pylonAppId', value: process.env.PYLON_APP_ID },
     { name: 'fpr', value: process.env.FIRST_PROMOTER_ID },
     { name: 'sentry', value: process.env.SENTRY_API_KEY },
     {
