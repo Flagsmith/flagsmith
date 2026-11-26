@@ -331,24 +331,6 @@ const API = {
     extra?: Record<string, any>
   }): void {
     try {
-      if (Project.ga) {
-        if (Project.logAnalytics) console.log('ANALYTICS EVENT', data)
-        if (!data || !data.category || !data.event)
-          return console.error('Invalid event provided', data)
-        if (data.category === 'First')
-          API.postEvent(
-            `${data.event}${
-              data.extra ? ` ${JSON.stringify(data.extra)}` : ''
-            }`,
-            'first_events',
-          )
-        ga('send', {
-          eventAction: data.event,
-          eventCategory: data.category,
-          eventLabel: data.label,
-          hitType: 'event',
-        })
-      }
       if (Project.amplitude) {
         amplitude.track(data.event, {
           category: data.category,

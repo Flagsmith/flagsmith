@@ -67,7 +67,6 @@ app.get('/config/project-overrides', (req, res) => {
     },
     { name: 'flagsmith', value: process.env.FLAGSMITH_ON_FLAGSMITH_API_KEY },
     { name: 'headway', value: process.env.HEADWAY_API_KEY },
-    { name: 'ga', value: process.env.GOOGLE_ANALYTICS_API_KEY },
     { name: 'sha', value: sha },
     { name: 'pylonAppId', value: process.env.PYLON_APP_ID },
     { name: 'fpr', value: process.env.FIRST_PROMOTER_ID },
@@ -107,11 +106,6 @@ app.get('/config/project-overrides', (req, res) => {
       name: 'hideInviteLinks',
       value: envToBool('DISABLE_INVITE_LINKS', false),
     },
-    {
-      name: 'linkedinPartnerTracking',
-      value: envToBool('LINKEDIN_PARTNER_TRACKING', false),
-    },
-    { name: 'albacross', value: process.env.ALBACROSS_CLIENT_ID },
     { name: 'useSecureCookies', value: envToBool('USE_SECURE_COOKIES', true) },
     { name: 'cookieSameSite', value: process.env.USE_SECURE_COOKIES },
     { name: 'cookieAuthEnabled', value: process.env.COOKIE_AUTH_ENABLED },
@@ -295,10 +289,8 @@ app.post('/api/webflow/webhook', (req, res) => {
 
 // Catch all to render index template
 app.get('/', (req, res) => {
-  const linkedin = process.env.LINKEDIN || ''
   return res.render('index', {
     isDev,
-    linkedin,
   })
 })
 

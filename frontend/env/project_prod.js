@@ -44,7 +44,6 @@ const Project = {
     region: 'eu1',
   },
 
-  linkedinConversionId: 16798338,
   // This is used for Sentry tracking
   maintenance: false,
   plans: {
