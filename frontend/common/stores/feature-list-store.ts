@@ -189,6 +189,7 @@ const controller = {
               },
               value: flag.name,
             })
+            window.lintrk?.('track', { conversion_id: 16798354 })
           } else {
             flagsmith.trackEvent('feature_created', {
               metadata: {

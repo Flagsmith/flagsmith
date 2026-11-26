@@ -131,6 +131,12 @@ const controller = {
             })
           }
         }
+
+        if (Project.linkedinConversionId) {
+          window.lintrk?.('track', {
+            conversion_id: Project.linkedinConversionId,
+          })
+        }
       })
   },
   deleteOrganisation: () => {

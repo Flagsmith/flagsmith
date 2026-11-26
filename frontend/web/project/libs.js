@@ -53,6 +53,27 @@ if (typeof SENTRY_RELEASE_VERSION !== 'undefined' && Project.sentry && typeof Se
     });
 }
 
+if(Project.linkedinPartnerTracking) {
+    const _linkedin_partner_id = "5747572";
+    window._linkedin_data_partner_ids = window._linkedin_data_partner_ids || [];
+    window._linkedin_data_partner_ids.push(_linkedin_partner_id);
+        (function(l) {
+        if (!l){window.lintrk = function(a,b){window.lintrk.q.push([a,b])};
+        window.lintrk.q=[]}
+        var s = document.getElementsByTagName("script")[0];
+        var b = document.createElement("script");
+        b.type = "text/javascript";b.async = true;
+        b.src = "https://snap.licdn.com/li.lms-analytics/insight.min.js";
+        s.parentNode.insertBefore(b, s);})(window.lintrk);
+    var img = document.createElement("img");
+    img.setAttribute("height", "1");
+    img.setAttribute("width", "1");
+    img.setAttribute("style", "display:none;");
+    img.setAttribute("alt", "");
+    img.setAttribute("src", "https://px.ads.linkedin.com/collect/?pid=5747572&fmt=gif");
+    document.body.appendChild(img);
+}
+
 if(Project.hubspot && !disableThirdPartyScripts) {
     // Must be set before the script loads. The chat widget is loaded by
     // common/loadChat behind the hubspot_chat flag, not by chatflow targeting.
