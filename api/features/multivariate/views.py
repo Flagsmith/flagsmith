@@ -97,8 +97,6 @@ class MultivariateFeatureOptionViewSet(viewsets.ModelViewSet):  # type: ignore[t
             Feature.objects.filter(project__id=self.kwargs["project_pk"]),
             pk=self.kwargs["feature_pk"],
         )
-        if serializer.validated_data["feature"] != url_feature:
-            raise ValidationError({"feature": "Feature must match the URL."})
         with transaction.atomic():
             Feature.objects.select_for_update().filter(pk=url_feature.pk).exists()
             check_no_live_experiment(url_feature.id)
