@@ -25,14 +25,6 @@ declare global {
     command: 'send',
     fields: UniversalAnalytics.PageviewFieldsObject,
   ): void
-  const delighted: {
-    survey: (opts: {
-      createdAt: string
-      email: string
-      name: string
-      properties: Record<string, any>
-    }) => void
-  }
   const openModal: (
     title: ReactNode,
     body?: ReactNode,

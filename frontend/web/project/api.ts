@@ -3,9 +3,7 @@ import data from 'common/data/base/_data'
 // @ts-ignore
 import { loadReoScript, ReoInstance } from 'reodotdev'
 import * as amplitude from '@amplitude/analytics-browser'
-import isFreeEmailDomain from 'common/utils/isFreeEmailDomain'
 import { groupBy } from 'lodash'
-import getUserDisplayName from 'common/utils/getUserDisplayName'
 import Cookies from 'js-cookie'
 import Project from 'common/project'
 import { AccountModel, User } from 'common/types/responses'
@@ -165,23 +163,6 @@ const API = {
           ((flagsmith.getTrait('logins') as number) || 0) + 1,
         ),
       )
-      .then(() => {
-        const organisation = AccountStore.getOrganisation()
-        const emailDomain = user.email.split('@')[1] || ''
-        const freeDomain = isFreeEmailDomain(emailDomain)
-        if (
-          !freeDomain &&
-          typeof delighted !== 'undefined' &&
-          flagsmith.hasFeature('delighted')
-        ) {
-          delighted.survey({
-            createdAt: user.date_joined || new Date().toISOString(),
-            email: user.email,
-            name: getUserDisplayName(user),
-            properties: { company: organisation?.name },
-          })
-        }
-      })
   },
 
   getCookie(key: string): string | undefined {

@@ -44,7 +44,6 @@ module.exports = function setupRoutes(app) {
       { name: 'flagsmithRealtime', value: envToBool('ENABLE_FLAGSMITH_REALTIME', false) },
       { name: 'amplitude', value: process.env.AMPLITUDE_API_KEY },
       { name: 'reo', value: process.env.REO_API_KEY },
-      { name: 'delighted', value: process.env.DELIGHTED_API_KEY },
       { name: 'capterraKey', value: process.env.CAPTERRA_API_KEY },
       { name: 'hideInviteLinks', value: envToBool('DISABLE_INVITE_LINKS', false) },
       { name: 'useSecureCookies', value: envToBool('USE_SECURE_COOKIES', true) },
