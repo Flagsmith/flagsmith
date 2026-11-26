@@ -9,7 +9,6 @@ import { BodyText } from 'components/base/typography'
 type TableFilterOptionsType = {
   title: ReactNode
   label?: string
-  dropdownTitle?: ReactNode | string
   className?: string
   isLoading?: boolean
   options: { label: string; value: string | number; subtitle?: string }[]
@@ -46,7 +45,6 @@ const TableFilterOptions: FC<TableFilterOptionsType> = ({
       <TableFilter
         title={title}
         label={label}
-        hideTitle
         className={classNames('user-select-none', className)}
       >
         {(close) => (

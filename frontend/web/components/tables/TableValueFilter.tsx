@@ -51,7 +51,6 @@ const TableTagFilter: FC<TableFilterType> = ({
       <TableFilter
         label='Value'
         className={className}
-        hideTitle
         title={
           <Row>
             Value{' '}

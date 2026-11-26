@@ -35,7 +35,7 @@ const TableSortFilter: FC<TableFilterType> = ({
   }
   return (
     <div className={isLoading ? 'disabled' : ''}>
-      <TableFilter hideTitle title={'Sort'}>
+      <TableFilter title={'Sort'}>
         {options.map((sortOption, i) => {
           const isActive = sortOption?.value === value?.sortBy
           return (

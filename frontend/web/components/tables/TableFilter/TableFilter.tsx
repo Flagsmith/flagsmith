@@ -10,8 +10,6 @@ type TableFilterType = {
   title: string | ReactNode
   // Names the filter when the title isn't plain text (it has a count)
   label?: string
-  hideTitle?: boolean
-  dropdownTitle?: ReactNode | string
   className?: string
   children: ReactNode | ((close: () => void) => ReactNode)
 }
@@ -19,8 +17,6 @@ type TableFilterType = {
 const TableFilter: FC<TableFilterType> = ({
   children,
   className,
-  dropdownTitle,
-  hideTitle,
   label,
   title,
 }) => {
@@ -51,11 +47,6 @@ const TableFilter: FC<TableFilterType> = ({
             'table-filter__content--sheet': asSheet,
           })}
         >
-          {!hideTitle && (
-            <div className='table-filter__title px-3 py-2'>
-              {dropdownTitle || title}
-            </div>
-          )}
           {typeof children === 'function' ? children(close) : children}
         </div>
       )}

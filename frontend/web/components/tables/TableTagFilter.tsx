@@ -61,39 +61,6 @@ const TableTagFilter: FC<TableFilterType> = ({
       <TableFilter
         label='Tags'
         className={className}
-        dropdownTitle={
-          <>
-            <div className='full-width'>
-              <Select
-                size='select-xxsm'
-                styles={{
-                  control: (base) => ({
-                    ...base,
-                    height: 18,
-                  }),
-                }}
-                onChange={(v) => {
-                  if (v) onChangeStrategy(v.value)
-                }}
-                value={{
-                  label:
-                    tagStrategy === 'INTERSECTION' ? 'Has all' : 'Has some',
-                  value: tagStrategy,
-                }}
-                options={[
-                  {
-                    label: 'Has all',
-                    value: 'INTERSECTION',
-                  },
-                  {
-                    label: 'Has some',
-                    value: 'UNION',
-                  },
-                ]}
-              />
-            </div>
-          </>
-        }
         title={
           <Row>
             Tags{' '}
@@ -102,6 +69,34 @@ const TableTagFilter: FC<TableFilterType> = ({
         }
       >
         <div className='d-flex flex-column mx-0 py-0'>
+          <div className='px-3 pt-2'>
+            <Select
+              size='select-xxsm'
+              styles={{
+                control: (base) => ({
+                  ...base,
+                  height: 18,
+                }),
+              }}
+              onChange={(v) => {
+                if (v) onChangeStrategy(v.value)
+              }}
+              value={{
+                label: tagStrategy === 'INTERSECTION' ? 'Has all' : 'Has some',
+                value: tagStrategy,
+              }}
+              options={[
+                {
+                  label: 'Has all',
+                  value: 'INTERSECTION',
+                },
+                {
+                  label: 'Has some',
+                  value: 'UNION',
+                },
+              ]}
+            />
+          </div>
           <div className='px-3 my-2'>
             <Input
               autoFocus
