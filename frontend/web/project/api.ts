@@ -3,16 +3,14 @@ import data from 'common/data/base/_data'
 // @ts-ignore
 import { loadReoScript, ReoInstance } from 'reodotdev'
 import * as amplitude from '@amplitude/analytics-browser'
-import isFreeEmailDomain from 'common/utils/isFreeEmailDomain'
 import { groupBy } from 'lodash'
-import getUserDisplayName from 'common/utils/getUserDisplayName'
 import Cookies from 'js-cookie'
 import Project from 'common/project'
 import { AccountModel, User } from 'common/types/responses'
 import AccountStore from 'common/stores/account-store'
 import flagsmith from '@flagsmith/flagsmith'
 import Utils from 'common/utils/utils'
-import loadChat, { identifyChatUser } from 'common/loadChat'
+import { identifyChatUser } from 'common/loadChat'
 
 // Days, or an absolute date. This is js-cookie's own attribute type, spelled
 // out because the package ships no types.
@@ -82,10 +80,8 @@ const API = {
 
     await API.flagsmithIdentify()
 
-    // Load and setup chat widget based on feature flag
     const isWidget = document.location.href.includes('/widget')
     if (!E2E && !isWidget) {
-      await loadChat()
       identifyChatUser()
     }
 
@@ -122,17 +118,6 @@ const API = {
       const amplitudeUserId = user.uuid || id
       amplitude.setUserId(amplitudeUserId)
       API.trackTraits({ email: id })
-      if (window.engagement) {
-        window.engagement.boot({
-          integrations: [
-            {
-              track: (event: any) =>
-                amplitude.track(event.event_type, event.event_properties),
-            },
-          ],
-          user: { user_id: amplitudeUserId, user_properties: {} },
-        })
-      }
     }
   },
 
@@ -165,23 +150,6 @@ const API = {
           ((flagsmith.getTrait('logins') as number) || 0) + 1,
         ),
       )
-      .then(() => {
-        const organisation = AccountStore.getOrganisation()
-        const emailDomain = user.email.split('@')[1] || ''
-        const freeDomain = isFreeEmailDomain(emailDomain)
-        if (
-          !freeDomain &&
-          typeof delighted !== 'undefined' &&
-          flagsmith.hasFeature('delighted')
-        ) {
-          delighted.survey({
-            createdAt: user.date_joined || new Date().toISOString(),
-            email: user.email,
-            name: getUserDisplayName(user),
-            properties: { company: organisation?.name },
-          })
-        }
-      })
   },
 
   getCookie(key: string): string | undefined {
@@ -331,17 +299,14 @@ const API = {
     extra?: Record<string, any>
   }): void {
     try {
+      // First-time events also notify the team in Slack, via /api/event.
+      if (data.category === 'First') {
+        API.postEvent(
+          `${data.event}${data.extra ? ` ${JSON.stringify(data.extra)}` : ''}`,
+          'first_events',
+        )?.catch(() => {})
+      }
       if (Project.ga) {
-        if (Project.logAnalytics) console.log('ANALYTICS EVENT', data)
-        if (!data || !data.category || !data.event)
-          return console.error('Invalid event provided', data)
-        if (data.category === 'First')
-          API.postEvent(
-            `${data.event}${
-              data.extra ? ` ${JSON.stringify(data.extra)}` : ''
-            }`,
-            'first_events',
-          )
         ga('send', {
           eventAction: data.event,
           eventCategory: data.category,

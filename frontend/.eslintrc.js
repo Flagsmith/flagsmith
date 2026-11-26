@@ -158,7 +158,6 @@ module.exports = {
     '__DEV__': true,
     'closeModal': true,
     'closeModal2': true,
-    'delighted': true,
     'describe': true,
     'em': true,
     'flagsmith': true,

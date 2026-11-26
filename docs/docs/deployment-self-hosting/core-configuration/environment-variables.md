@@ -87,7 +87,6 @@ relevant section below for more details.
   the browser will use the frontend node server to send API requests. Do not prepend `api/v1/` - it will be added
   automatically.
 - `GOOGLE_ANALYTICS_API_KEY`: Google Analytics key to track API usage.
-- `PYLON_APP_ID`: Pylon in-app chat widget App ID.
 - `FIRST_PROMOTER_ID`: First Promoter ID for checkout affiliates.
 - `ALLOW_SIGNUPS`: **DEPRECATED** in favour of `PREVENT_SIGNUP` in the API. Determines whether to prevent manual signups
   without invites. Set it to any value to allow signups.
@@ -99,7 +98,6 @@ relevant section below for more details.
 - `REO_API_KEY`: The Reo key to use for behaviour tracking.
 - `MIXPANEL_API_KEY`: Mixpanel analytics key to use for behaviour tracking.
 - `SENTRY_API_KEY`: Sentry key for error reporting.
-- `ALBACROSS_CLIENT_ID`: Albacross client ID key for behaviour tracking.
 - `BASE_URL`: Used for specifying a base URL path that's ignored during routing if serving from a subdirectory.
 - `USE_SECURE_COOKIES`: Enable/disable the use of secure cookies. If deploying the frontend in a private network without
   a domain/SSL cert, disable secure cookies to ensure that session token is persisted. Default: true.

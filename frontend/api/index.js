@@ -69,7 +69,6 @@ app.get('/config/project-overrides', (req, res) => {
     { name: 'headway', value: process.env.HEADWAY_API_KEY },
     { name: 'ga', value: process.env.GOOGLE_ANALYTICS_API_KEY },
     { name: 'sha', value: sha },
-    { name: 'pylonAppId', value: process.env.PYLON_APP_ID },
     { name: 'fpr', value: process.env.FIRST_PROMOTER_ID },
     { name: 'sentry', value: process.env.SENTRY_API_KEY },
     {
@@ -101,7 +100,6 @@ app.get('/config/project-overrides', (req, res) => {
     },
     { name: 'amplitude', value: process.env.AMPLITUDE_API_KEY },
     { name: 'reo', value: process.env.REO_API_KEY },
-    { name: 'delighted', value: process.env.DELIGHTED_API_KEY },
     { name: 'capterraKey', value: process.env.CAPTERRA_API_KEY },
     {
       name: 'hideInviteLinks',
@@ -111,7 +109,6 @@ app.get('/config/project-overrides', (req, res) => {
       name: 'linkedinPartnerTracking',
       value: envToBool('LINKEDIN_PARTNER_TRACKING', false),
     },
-    { name: 'albacross', value: process.env.ALBACROSS_CLIENT_ID },
     { name: 'useSecureCookies', value: envToBool('USE_SECURE_COOKIES', true) },
     { name: 'cookieSameSite', value: process.env.USE_SECURE_COOKIES },
     { name: 'cookieAuthEnabled', value: process.env.COOKIE_AUTH_ENABLED },
