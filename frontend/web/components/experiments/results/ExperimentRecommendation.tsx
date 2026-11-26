@@ -8,6 +8,7 @@ import {
   WINNING_CHANCE_THRESHOLD,
   deriveSummary,
   formatChancePct,
+  getNoWinnerCopy,
 } from './derive'
 import VariantName from './VariantName'
 
@@ -28,18 +29,18 @@ const ExperimentRecommendation: FC<ExperimentRecommendationProps> = ({
   if (!summary) return null
 
   if (!summary.isConclusive) {
+    const copy = getNoWinnerCopy(experiment.status)
     return (
       <Banner
         type='info'
-        title='Not enough evidence yet'
+        title={copy.title}
         className='experiment-recommendation mb-3'
       >
         <div>
           {summary.controlWins ? (
             <>
               <VariantName name='Control' colour={summary.controlColour} /> is
-              ahead with {summary.chanceToBest} probability of being the best
-              arm, but at least one variant still has a{' '}
+              ahead, but at least one variant still has a{' '}
               {formatChancePct(LOSING_CHANCE_THRESHOLD)} or higher chance of
               beating it.
             </>
@@ -49,19 +50,14 @@ const ExperimentRecommendation: FC<ExperimentRecommendationProps> = ({
                 name={summary.winnerName}
                 colour={summary.winnerColour}
               />{' '}
-              leads with a lift of {summary.liftValue} over{' '}
-              <VariantName name='Control' colour={summary.controlColour} /> and{' '}
-              {summary.chanceToBest} probability of being the best variant,
-              below the {formatChancePct(WINNING_CHANCE_THRESHOLD)} needed to
-              call a winner.
+              has a {summary.chanceToBest} chance of beating{' '}
+              <VariantName name='Control' colour={summary.controlColour} />,
+              with a lift of {summary.liftValue}. A winner needs a chance over{' '}
+              {formatChancePct(WINNING_CHANCE_THRESHOLD)}.
             </>
           )}
         </div>
-        {experiment.status !== 'completed' && (
-          <div className='mt-2'>
-            Keep the experiment running to collect more data.
-          </div>
-        )}
+        {copy.nextStep && <div className='mt-2'>{copy.nextStep}</div>}
       </Banner>
     )
   }
@@ -77,8 +73,8 @@ const ExperimentRecommendation: FC<ExperimentRecommendationProps> = ({
         </div>
         <div>
           <VariantName name='Control' colour={summary.controlColour} /> has
-          shown the best performance, with {summary.chanceToBest} probability of
-          being the best arm. No variant has outperformed it.
+          shown the best performance. Every variant has under a{' '}
+          {formatChancePct(LOSING_CHANCE_THRESHOLD)} chance of beating it.
         </div>
         <div className='mt-2'>
           Consider rolling out{' '}
@@ -101,8 +97,7 @@ const ExperimentRecommendation: FC<ExperimentRecommendationProps> = ({
         <VariantName name={summary.winnerName} colour={summary.winnerColour} />{' '}
         is outperforming{' '}
         <VariantName name='Control' colour={summary.controlColour} /> by{' '}
-        {summary.liftValue} with {summary.chanceToBest} probability of being the
-        best variant.
+        {summary.liftValue}, with a {summary.chanceToBest} chance of beating it.
       </div>
       <div className='mt-2'>
         Consider rolling out{' '}

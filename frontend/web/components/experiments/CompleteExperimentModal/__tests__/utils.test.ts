@@ -91,6 +91,38 @@ describe('getDefaultSelection and getControlSelectedMessage', () => {
   })
 })
 
+describe('getDefaultSelection with many variants', () => {
+  it('selects control when every one of twenty variants is under 5%', () => {
+    // Given
+    const keys = Array.from({ length: 20 }, (_, i) => `v${i + 1}`)
+    const options: MultivariateOption[] = keys.map((key, i) => ({
+      boolean_value: undefined,
+      default_percentage_allocation: 5,
+      id: 100 + i,
+      integer_value: undefined,
+      key,
+      string_value: key,
+      type: 'unicode',
+      uuid: key,
+    }))
+    const manyVariants: Experiment = {
+      ...experiment,
+      feature: { ...experiment.feature, multivariate_options: options },
+    }
+    const res = results(Object.fromEntries(keys.map((key) => [key, 0.049])))
+    const choices = getVariantChoices(manyVariants, res)
+
+    // When
+    const selection = getDefaultSelection(manyVariants, choices, res)
+
+    // Then
+    expect(selection).toEqual({ decision: 'control', variantId: 100 })
+    expect(getControlSelectedMessage(manyVariants, res)).toBe(
+      'Control is ahead, so it is selected.',
+    )
+  })
+})
+
 describe('buildCompleteExperimentBody', () => {
   it.each<[RolloutSelection, object]>([
     [{ decision: 'control', variantId: 10 }, { rollout_decision: 'control' }],

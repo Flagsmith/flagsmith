@@ -4,9 +4,9 @@ import { getPrimaryMetric } from 'components/experiments/constants'
 import {
   computeAxisRange,
   computeLiftRange,
+  getConclusiveWinner,
   getMetricResult,
   getVariantIdentities,
-  getWinningVariant,
 } from './derive'
 import ExperimentResultsAxisChart from './ExperimentResultsAxisChart'
 import ExperimentResultsScorecardTable from './ExperimentResultsScorecardTable'
@@ -35,7 +35,7 @@ const ExperimentMetricScorecard: FC<ExperimentMetricScorecardProps> = ({
     !!results && results.srm_p_value !== null && results.srm_p_value < 0.001
 
   const winner = useMemo(
-    () => (metricResult ? getWinningVariant(metricResult, identities) : null),
+    () => (metricResult ? getConclusiveWinner(metricResult, identities) : null),
     [metricResult, identities],
   )
 

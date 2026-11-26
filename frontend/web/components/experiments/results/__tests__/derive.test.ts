@@ -8,9 +8,11 @@ import {
   deriveSummary,
   formatBucketLabel,
   formatChancePct,
+  formatControlChancePct,
   getCompletedRollout,
   getConclusiveWinner,
   getControlChanceToWin,
+  getNoWinnerCopy,
   getHeadlineTotal,
   getVariantIdentities,
   getVariantTotals,
@@ -24,7 +26,9 @@ import {
   BayesianResultsSummary,
   Experiment,
   ExperimentFeature,
+  ExperimentMetric,
   ExperimentRolloutDecision,
+  ExperimentStatus,
   ExposuresSummary,
   MetricDirection,
   MultivariateOption,
@@ -336,6 +340,17 @@ describe('getConclusiveWinner', () => {
     ['control ahead at 62% has not won yet', 0.38, 0, null],
     ['a variant at exactly 5% keeps control from winning', 0.05, 0.01, null],
     ['control wins once every variant is under 5%', 0.03, 0.01, 'control'],
+    ['a variant just over 95% wins', 0.9500001, 0.01, 'b'],
+    [
+      'control wins once every variant is just under 5%',
+      0.0499999,
+      0.01,
+      'control',
+    ],
+    ['a variant over 95% wins next to one at 50%', 0.5, 0.96, 'c'],
+    ['variants either side of 5% leave the result open', 0.04, 0.06, null],
+    ['two variants tied at 60% have not won yet', 0.6, 0.6, null],
+    ['the first of two variants tied over 95% wins', 0.97, 0.97, 'b'],
   ])('%s', (_, chanceB, chanceC, expectedKey) => {
     // Given
     const result: BayesianMetricResult = {
@@ -348,6 +363,86 @@ describe('getConclusiveWinner', () => {
 
     // When
     const winner = getConclusiveWinner(result, identities)
+
+    // Then
+    expect(winner?.key ?? null).toBe(expectedKey)
+  })
+
+  it.each<[string, BayesianMetricResult['inference'], string | null]>([
+    ['no variant has data', {}, null],
+    [
+      'control cannot win while a variant has no data',
+      {
+        b: { chance_to_win: 0.03, ci_high: 0.1, ci_low: -0.3, lift: -0.1 },
+        c: null,
+      },
+      null,
+    ],
+    [
+      'a variant over 95% wins while another has no data',
+      {
+        b: { chance_to_win: 0.97, ci_high: 0.4, ci_low: 0.1, lift: 0.2 },
+        c: null,
+      },
+      'b',
+    ],
+  ])('%s', (_, inference, expectedKey) => {
+    // Given
+    const result: BayesianMetricResult = { ...metricResult, inference }
+
+    // When
+    const winner = getConclusiveWinner(result, identities)
+
+    // Then
+    expect(winner?.key ?? null).toBe(expectedKey)
+  })
+
+  it.each<[string, number, string | null]>([
+    ['a single variant over 95% wins', 0.97, 'b'],
+    ['control wins against a single variant under 5%', 0.03, 'control'],
+    ['a single variant at 50% has not won yet', 0.5, null],
+  ])('%s', (_, chance, expectedKey) => {
+    // Given
+    const singleIdentities = getVariantIdentities(
+      feature({ multivariate_options: [option({ id: 10, key: 'b' })] }),
+    )
+    const result: BayesianMetricResult = {
+      ...metricResult,
+      inference: {
+        b: { chance_to_win: chance, ci_high: 0.3, ci_low: -0.1, lift: 0.1 },
+      },
+    }
+
+    // When
+    const winner = getConclusiveWinner(result, singleIdentities)
+
+    // Then
+    expect(winner?.key ?? null).toBe(expectedKey)
+  })
+
+  it.each<[string, number, string | null]>([
+    ['control wins when twenty variants are all under 5%', 0.049, 'control'],
+    ['twenty variants at exactly 5% have not lost yet', 0.05, null],
+  ])('%s', (_, chance, expectedKey) => {
+    // Given
+    const keys = Array.from({ length: 20 }, (_, i) => `v${i + 1}`)
+    const manyIdentities = getVariantIdentities(
+      feature({
+        multivariate_options: keys.map((key, i) => option({ id: i + 1, key })),
+      }),
+    )
+    const result: BayesianMetricResult = {
+      ...metricResult,
+      inference: Object.fromEntries(
+        keys.map((key) => [
+          key,
+          { chance_to_win: chance, ci_high: 0.1, ci_low: -0.3, lift: -0.1 },
+        ]),
+      ),
+    }
+
+    // When
+    const winner = getConclusiveWinner(result, manyIdentities)
 
     // Then
     expect(winner?.key ?? null).toBe(expectedKey)
@@ -428,7 +523,7 @@ describe('deriveSummary', () => {
     expect(
       deriveSummary(experiment, results(losingMetricResult)),
     ).toMatchObject({
-      chanceToBest: '85%',
+      chanceToBest: '≥ 85%',
       controlWins: true,
       isConclusive: false,
       liftLabel: 'Control vs best variant',
@@ -442,13 +537,15 @@ describe('deriveSummary', () => {
     const wipedOut: BayesianMetricResult = {
       ...losingMetricResult,
       inference: {
-        b: { chance_to_win: 0.05, ci_high: -0.9, ci_low: -1, lift: -1 },
+        b: { chance_to_win: 0.04, ci_high: -0.9, ci_low: -1, lift: -1 },
         c: { chance_to_win: 0.03, ci_high: -0.3, ci_low: -0.7, lift: -0.5 },
       },
     }
     expect(deriveSummary(experiment, results(wipedOut))).toMatchObject({
+      chanceToBest: '≥ 93%',
       chanceToBestHigh: true,
       controlWins: true,
+      isConclusive: true,
       liftLabel: 'Control vs best variant',
       liftTone: 'success',
       liftValue: '+100.0%',
@@ -491,6 +588,90 @@ describe('deriveSummary', () => {
     expect(summary?.isConclusive).toBe(isConclusive)
   })
 
+  it('summarises control as the winner when every one of many variants is under 5%', () => {
+    // Given
+    const keys = Array.from({ length: 20 }, (_, i) => `v${i + 1}`)
+    const exp: Experiment = {
+      ...experiment,
+      feature: feature({
+        multivariate_options: keys.map((key, i) => option({ id: i + 1, key })),
+      }),
+    }
+    const result: BayesianMetricResult = {
+      ...metricResult,
+      inference: Object.fromEntries(
+        keys.map((key) => [
+          key,
+          { chance_to_win: 0.049, ci_high: 0.1, ci_low: -0.3, lift: -0.1 },
+        ]),
+      ),
+    }
+
+    // When
+    const summary = deriveSummary(exp, results(result))
+
+    // Then
+    expect(summary).toMatchObject({
+      chanceToBest: '≥ 2%',
+      chanceToBestHigh: true,
+      controlWins: true,
+      isConclusive: true,
+      winnerName: 'Control',
+    })
+  })
+
+  it('highlights the chance of a control that won against three variants', () => {
+    // Given
+    const exp: Experiment = {
+      ...experiment,
+      feature: feature({
+        multivariate_options: [
+          option({ id: 10, key: 'b' }),
+          option({ id: 11, key: 'c' }),
+          option({ id: 12, key: 'd' }),
+        ],
+      }),
+    }
+    const losing = { chance_to_win: 0.04, ci_high: 0, ci_low: -0.3, lift: -0.1 }
+    const result: BayesianMetricResult = {
+      ...metricResult,
+      inference: { b: losing, c: losing, d: losing },
+    }
+
+    // When
+    const summary = deriveSummary(exp, results(result))
+
+    // Then
+    expect(summary).toMatchObject({
+      chanceToBest: '≥ 88%',
+      chanceToBestHigh: true,
+      controlWins: true,
+      isConclusive: true,
+    })
+  })
+
+  it('does not highlight the chance of a control lead that has not won', () => {
+    // Given
+    const result: BayesianMetricResult = {
+      ...metricResult,
+      inference: {
+        b: { chance_to_win: 0.05, ci_high: 0.02, ci_low: -0.3, lift: -0.15 },
+        c: { chance_to_win: 0.04, ci_high: 0.01, ci_low: -0.4, lift: -0.2 },
+      },
+    }
+
+    // When
+    const summary = deriveSummary(experiment, results(result))
+
+    // Then
+    expect(summary).toMatchObject({
+      chanceToBest: '≥ 91%',
+      chanceToBestHigh: false,
+      controlWins: true,
+      isConclusive: false,
+    })
+  })
+
   it.each<[OptionalMetricDirection, LiftTone]>([
     ['up', 'success'],
     ['down', 'danger'],
@@ -508,12 +689,138 @@ describe('deriveSummary', () => {
   )
 })
 
+describe('deriveSummary chance to be best', () => {
+  const metric: ExperimentMetric = {
+    aggregation: 'occurrence',
+    created_at: '2026-06-01T00:00:00Z',
+    direction: 'up',
+    expected_direction: 'increase',
+    id: 1,
+    metric: 1,
+    metric_name: 'Signup',
+  }
+
+  it.each<
+    [string, MultivariateOption[], BayesianMetricResult['inference'], string]
+  >([
+    [
+      'a variant just over 95%',
+      [option({ id: 10, key: 'b' })],
+      { b: { chance_to_win: 0.9500001, ci_high: 0.5, ci_low: 0.1, lift: 0.2 } },
+      '> 95%',
+    ],
+    [
+      'control against a single variant, where the chance is exact',
+      [option({ id: 10, key: 'b' })],
+      { b: { chance_to_win: 0.03, ci_high: 0, ci_low: -0.4, lift: -0.2 } },
+      '97%',
+    ],
+    [
+      'control against two variants with no chance at all',
+      [option({ id: 10, key: 'b' }), option({ id: 11, key: 'c' })],
+      {
+        b: { chance_to_win: 0, ci_high: -0.5, ci_low: -0.9, lift: -0.7 },
+        c: { chance_to_win: 0, ci_high: -0.5, ci_low: -0.9, lift: -0.7 },
+      },
+      '≥ 99%',
+    ],
+    [
+      'control against twenty-one variants, where the bound is zero',
+      Array.from({ length: 21 }, (_, i) =>
+        option({ id: i + 1, key: `v${i + 1}` }),
+      ),
+      Object.fromEntries(
+        Array.from({ length: 21 }, (_, i) => [
+          `v${i + 1}`,
+          { chance_to_win: 0.049, ci_high: 0, ci_low: -0.4, lift: -0.2 },
+        ]),
+      ),
+      '≥ 0%',
+    ],
+  ])('shows the chance for %s', (_, options, inference, chanceToBest) => {
+    // Given
+    const experiment: Experiment = {
+      created_at: '2026-06-01T00:00:00Z',
+      ended_at: null,
+      feature: feature({ multivariate_options: options }),
+      hypothesis: '',
+      id: 1,
+      metrics: [metric],
+      name: 'exp',
+      rollout_decision: null,
+      rollout_variant: null,
+      started_at: null,
+      status: 'running',
+      updated_at: '2026-06-01T00:00:00Z',
+    }
+    const result: BayesianMetricResult = {
+      inference,
+      metric_id: 1,
+      variants: {},
+    }
+
+    // When
+    const summary = deriveSummary(experiment, {
+      metrics: [result],
+      srm_p_value: null,
+    })
+
+    // Then
+    expect(summary?.chanceToBest).toBe(chanceToBest)
+  })
+})
+
+describe('getNoWinnerCopy', () => {
+  it.each<[ExperimentStatus, string, string | null]>([
+    [
+      'running',
+      'Not enough evidence yet',
+      'Keep the experiment running to collect more data.',
+    ],
+    [
+      'paused',
+      'Not enough evidence yet',
+      'Resume the experiment to collect more data.',
+    ],
+    ['completed', 'No clear winner', null],
+  ])('words a %s experiment without a winner', (status, title, nextStep) => {
+    // Given / When
+    const copy = getNoWinnerCopy(status)
+
+    // Then
+    expect(copy).toEqual({ nextStep, title })
+  })
+})
+
+describe('formatControlChancePct', () => {
+  it.each<[number, number, string]>([
+    [0.97, 1, '97%'],
+    [0.88, 3, '≥ 88%'],
+    [0.02, 20, '≥ 2%'],
+    [0, 21, '≥ 0%'],
+    [1, 2, '≥ 99%'],
+  ])(
+    'shows a control chance of %d with %d variants as %s',
+    (chance, treatmentCount, expected) => {
+      // Given / When
+      const text = formatControlChancePct(chance, treatmentCount)
+
+      // Then
+      expect(text).toBe(expected)
+    },
+  )
+})
+
 describe('formatChancePct', () => {
   it.each<[number, string]>([
     [1, '> 99%'],
     [0.996, '> 99%'],
     [0.994, '99%'],
     [0.75, '75%'],
+    [0.952, '> 95%'],
+    [0.95, '95%'],
+    [0.05, '5%'],
+    [0.048, '< 5%'],
     [0.006, '1%'],
     [0.004, '< 1%'],
     [0, '< 1%'],

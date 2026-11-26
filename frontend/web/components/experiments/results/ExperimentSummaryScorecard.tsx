@@ -1,22 +1,9 @@
 import { FC, useMemo } from 'react'
 import InfoMessage from 'components/InfoMessage'
 import { BayesianResultsSummary, Experiment } from 'common/types/responses'
-import { SummaryStats, deriveSummary } from './derive'
+import { deriveSummary } from './derive'
 import StatCard from './StatCard'
 import VariantName from './VariantName'
-
-const renderWinningVariation = (summary: SummaryStats | null) => {
-  if (!summary?.winnerName) return undefined
-  if (!summary.isConclusive) return 'No winner yet'
-  return (
-    <VariantName
-      fit
-      colour={summary.winnerColour}
-      fontSize={24}
-      name={summary.winnerName}
-    />
-  )
-}
 
 type ExperimentSummaryScorecardProps = {
   usersEnrolled: number | null
@@ -40,7 +27,7 @@ const ExperimentSummaryScorecard: FC<ExperimentSummaryScorecardProps> = ({
   if (summary?.liftTone === 'danger') liftClassName = 'text-danger'
 
   // Give long winner names room by borrowing a column from Users enrolled.
-  const wideWinner = !!summary?.isConclusive && summary.winnerName.length > 15
+  const wideWinner = (summary?.winnerName.length ?? 0) > 15
 
   return (
     <>
@@ -60,9 +47,22 @@ const ExperimentSummaryScorecard: FC<ExperimentSummaryScorecardProps> = ({
         </div>
         <div className={wideWinner ? 'col-md-4' : 'col-md-3'}>
           <StatCard
-            label='Winning variation'
+            label={
+              summary && !summary.isConclusive
+                ? 'Leading variation'
+                : 'Winning variation'
+            }
             loading={!hasResults}
-            value={renderWinningVariation(summary)}
+            value={
+              summary?.winnerName ? (
+                <VariantName
+                  fit
+                  colour={summary.winnerColour}
+                  fontSize={24}
+                  name={summary.winnerName}
+                />
+              ) : undefined
+            }
           />
         </div>
         <div className='col-md-3'>

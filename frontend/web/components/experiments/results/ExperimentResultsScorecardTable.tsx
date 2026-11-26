@@ -19,6 +19,7 @@ import {
 import {
   VariantIdentity,
   formatChancePct,
+  formatControlChancePct,
   formatLiftPct,
   getControlChanceToWin,
   getLiftColour,
@@ -105,6 +106,7 @@ const renderCI = (
 const renderWinProbability = (
   chanceToWin: number | null,
   isHighest: boolean,
+  label: string,
 ): ReactNode => {
   if (chanceToWin === null) return '—'
   const pct = Math.round(chanceToWin * 100)
@@ -118,7 +120,7 @@ const renderWinProbability = (
           style={{ background: fill, width: `${pct}%` }}
         />
       </div>
-      <span style={{ color: text }}>{formatChancePct(chanceToWin)}</span>
+      <span style={{ color: text }}>{label}</span>
     </div>
   )
 }
@@ -218,6 +220,12 @@ const ExperimentResultsScorecardTable: FC<
                         ? controlChance
                         : inference && inference.chance_to_win,
                       v.key === winnerKey,
+                      v.isControl && controlChance !== null
+                        ? formatControlChancePct(
+                            controlChance,
+                            identities.length - 1,
+                          )
+                        : formatChancePct(inference?.chance_to_win ?? 0),
                     )}
                   </td>
                 </tr>
