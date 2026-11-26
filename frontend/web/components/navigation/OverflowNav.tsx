@@ -1,7 +1,6 @@
 import React, { FC, ReactNode, useRef } from 'react'
-import { IonIcon } from '@ionic/react'
-import { ellipsisHorizontal } from 'ionicons/icons'
 import IconButton from 'components/base/IconButton'
+import Icon from 'components/icons/Icon'
 import DropdownMenu from 'components/base/DropdownMenu'
 import classNames from 'classnames'
 import { useOverflowVisibleCount } from 'common/hooks/useOverflowVisibleCount'
@@ -13,7 +12,8 @@ type OverflowNavProps = {
   containerClassName?: string
   className?: string
   gap?: number
-  icon?: string
+  // The trigger's icon; defaults to the "more" dots
+  icon?: ReactNode
   force?: boolean
 }
 // Room for the overflow button, with some spare: nav icons load late and
@@ -26,7 +26,7 @@ const OverflowNav: FC<OverflowNavProps> = ({
   containerClassName,
   force,
   gap = 2,
-  icon = ellipsisHorizontal,
+  icon = <Icon name='more-vertical' width={18} />,
   label,
 }) => {
   const items = React.Children.toArray(
@@ -88,7 +88,7 @@ const OverflowNav: FC<OverflowNavProps> = ({
               size='small'
               aria-label={label}
             >
-              <IonIcon className='fs-small' icon={icon} />
+              {icon}
             </IconButton>
           }
         >
