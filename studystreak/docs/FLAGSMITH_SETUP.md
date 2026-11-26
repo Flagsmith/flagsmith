@@ -84,11 +84,11 @@ flagsmith feature get study_streak_social_proof --json    # check the variation 
 Metrics belong to an environment, so create all three in **Production and Simulation**: **Metrics › Create Metric**.
 Event names are case-sensitive.
 
-| Name                                              | What do you want to measure? | Direction                   | Event name       |
-| ------------------------------------------------- | ---------------------------- | --------------------------- | ---------------- |
-| `Signup completion`                               | Occurrence                   | Higher is better            | `signed_up`      |
-| `Signup click-through`                            | Occurrence                   | Higher is better            | `signup_clicked` |
-| `Time to signup click (non-clickers count as 0s)` | Mean                         | Neither: informational only | `signup_clicked` |
+| Name                                              | What do you want to measure? | Direction                    | Event name       |
+| ------------------------------------------------- | ---------------------------- | ---------------------------- | ---------------- |
+| `Signup completion`                               | Occurrence                   | Higher is better             | `signed_up`      |
+| `Signup click-through`                            | Occurrence                   | Higher is better             | `signup_clicked` |
+| `Time to signup click (non-clickers count as 0s)` | Mean                         | Neither — informational only | `signup_clicked` |
 
 The two `signup_clicked` metrics share one event, and Flagsmith matches each metric to its events by name. The Mean
 metric averages the event's `value`, which is the seconds since first exposure. Flagsmith counts visitors without the

@@ -10,9 +10,15 @@ that is an honest and valid outcome.
 
 - [ ] The deployed app (or `npm run build && npm start` locally) has Production keys and loads the plain or social-proof
       button.
-- [ ] Two private browser windows are open on the site, one showing **control** and one showing **social proof**. To get
-      the other variant, close the private window and open a new one; that clears the visitor cookie. Repeat until you
-      have both. Flagsmith decides the variant, so you cannot pick it.
+- [ ] Two windows are open on the site, one showing **control** and one showing **social proof**.
+  - **Private windows of the same browser share one set of cookies**, so they get the same visitor ID and the same
+    variant. Use two separate browsers or browser profiles instead.
+  - To get a different variant in a window, delete the `studystreak_visitor_id` cookie (DevTools → Application →
+    Cookies) and reload. Repeat until you have both.
+  - Flagsmith decides the variant, so you cannot pick it.
+- [ ] Remember that against Production every visitor ID you create, and every click and signup you make, is counted in
+      the official results. Keep test visits and signups to a minimum, and mention in the video that team test visits
+      are included.
 - [ ] DevTools → Network is open in one window, filtered to `events.api.flagsmith.com`.
 - [ ] The Flagsmith dashboard is open on: **Metrics**, the **Production experiment** page, and **Environment Settings ›
       Warehouse**.
@@ -33,7 +39,7 @@ that is an honest and valid outcome.
 > "Our hypothesis: showing social proof next to the Sign Up button increases completed signups by at least 10% relative
 > to a plain button. The primary metric is completed signups, recorded as the event `signed_up`."
 
-### 0:50–1:30 · The two variants (screen: the two private windows side by side)
+### 0:50–1:30 · The two variants (screen: the two browser windows side by side)
 
 Point at the button and the line beneath it in each window.
 

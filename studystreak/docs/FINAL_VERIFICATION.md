@@ -96,13 +96,13 @@ access to Flagsmith's servers and no Flagsmith keys**, so nothing involving live
 
 ## Hackathon demo
 
-| Item                                                          | Status                 | Evidence / action                |
-| ------------------------------------------------------------- | ---------------------- | -------------------------------- |
-| Demo script written                                           | Verified               | [DEMO_SCRIPT.md](DEMO_SCRIPT.md) |
-| Both variants captured in two private windows                 | Requires manual action | Flagsmith decides the variant    |
-| Flagsmith dashboard (flag, metrics, experiment) ready to show | Requires manual action |                                  |
-| Demo recorded (3–5 minutes)                                   | Requires manual action |                                  |
-| "1,240" disclosed as demonstration copy in the demo           | Requires manual action | The script includes the line     |
+| Item                                                                                                 | Status                 | Evidence / action                                            |
+| ---------------------------------------------------------------------------------------------------- | ---------------------- | ------------------------------------------------------------ |
+| Demo script written                                                                                  | Verified               | [DEMO_SCRIPT.md](DEMO_SCRIPT.md)                             |
+| Both variants captured in two separate browsers or profiles (not two private windows of one browser) | Requires manual action | Flagsmith decides the variant; private windows share cookies |
+| Flagsmith dashboard (flag, metrics, experiment) ready to show                                        | Requires manual action |                                                              |
+| Demo recorded (3–5 minutes)                                                                          | Requires manual action |                                                              |
+| "1,240" disclosed as demonstration copy in the demo                                                  | Requires manual action | The script includes the line                                 |
 
 ## Submission readiness
 

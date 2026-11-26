@@ -105,8 +105,9 @@ npm run simulate:traffic  (Simulation environment only) ────────
 | Vitest and jsdom       | 5.1, 31 | Unit and integration tests                                 |
 | tsx                    | 4.23    | Running the simulator and analysis scripts                 |
 
-Node.js 20.9 or later is required. The app lives in `studystreak/` inside a fork of the Flagsmith monorepo and does not
-depend on any other part of it.
+The project was developed and tested on **Node.js 22.23**. Next.js 16 needs at least 20.9, but other versions have not
+been tested, and `npm run simulate:traffic` relies on Node's `--env-file-if-exists` flag. The app lives in
+`studystreak/` inside a fork of the Flagsmith monorepo and does not depend on any other part of it.
 
 ## Flagsmith integration
 
@@ -433,8 +434,9 @@ A full 3–5 minute script, including what to show on each screen, is in [docs/D
 short:
 
 1. Open `/`, introduce the problem and the hypothesis.
-2. Show the control and social-proof variants: use two private browser windows, or clear the `studystreak_visitor_id`
-   cookie, until both have appeared.
+2. Show the control and social-proof variants. Use two separate browsers or profiles: private windows of one browser
+   share cookies, and so show the same variant. Or delete the `studystreak_visitor_id` cookie and reload until both have
+   appeared.
 3. Click **Sign Up** and walk through the demo form and its disclosure.
 4. Show the events in DevTools → Network (`events.api.flagsmith.com`).
 5. Show the experiment, metrics and results in the Flagsmith dashboard.
