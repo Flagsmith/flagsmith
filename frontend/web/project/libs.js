@@ -45,16 +45,6 @@ window.NavLink = NavLink;
 // Analytics — not loaded in E2E runs, where widgets can overlay the UI
 const disableThirdPartyScripts = !!window.E2E
 
-if (Project.ga && !disableThirdPartyScripts) {
-    (function (i, s, o, g, r, a, m) {
-        i.GoogleAnalyticsObject = r; i[r] = i[r] || function () {
-            (i[r].q = i[r].q || []).push(arguments);
-        }, i[r].l = 1 * new Date(); a = s.createElement(o),
-        m = s.getElementsByTagName(o)[0]; a.async = 1; a.src = g; m.parentNode.insertBefore(a, m);
-    }(window, document, 'script', 'https://www.google-analytics.com/analytics.js', 'ga'));
-    ga('create', Project.ga, 'auto');
-}
-
 if (typeof SENTRY_RELEASE_VERSION !== 'undefined' && Project.sentry && typeof Sentry !== 'undefined') {
     Sentry.init({
         dsn: Project.sentry,

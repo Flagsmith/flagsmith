@@ -31,7 +31,6 @@ module.exports = function setupRoutes(app) {
       { name: 'superUserCreateOnly', value: envToBool('ONLY_SUPERUSERS_CAN_CREATE_ORGANISATIONS', false) },
       { name: 'flagsmith', value: process.env.FLAGSMITH_ON_FLAGSMITH_API_KEY },
       { name: 'headway', value: process.env.HEADWAY_API_KEY },
-      { name: 'ga', value: process.env.GOOGLE_ANALYTICS_API_KEY },
       { name: 'sha', value: sha },
       { name: 'fpr', value: process.env.FIRST_PROMOTER_ID },
       { name: 'sentry', value: process.env.SENTRY_API_KEY },

@@ -161,7 +161,6 @@ module.exports = {
     'describe': true,
     'em': true,
     'flagsmith': true,
-    'ga': true,
     'heap': true,
     'hljs': true,
     'hot': true,
