@@ -98,7 +98,6 @@ relevant section below for more details.
 - `REO_API_KEY`: The Reo key to use for behaviour tracking.
 - `MIXPANEL_API_KEY`: Mixpanel analytics key to use for behaviour tracking.
 - `SENTRY_API_KEY`: Sentry key for error reporting.
-- `ALBACROSS_CLIENT_ID`: Albacross client ID key for behaviour tracking.
 - `BASE_URL`: Used for specifying a base URL path that's ignored during routing if serving from a subdirectory.
 - `USE_SECURE_COOKIES`: Enable/disable the use of secure cookies. If deploying the frontend in a private network without
   a domain/SSL cert, disable secure cookies to ensure that session token is persisted. Default: true.
