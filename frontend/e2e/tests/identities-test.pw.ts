@@ -122,5 +122,8 @@ test.describe('Identities', () => {
     await confirm.getByRole('textbox').fill('identity_flag')
     await confirm.getByRole('button', { name: 'Confirm' }).click()
     await helpers.waitForUserFeatureSwitch('identity_flag', 'off')
+    await expect(
+      page.getByText('This feature is being overridden for this identity'),
+    ).toBeHidden({ timeout: LONG_TIMEOUT })
   })
 })
