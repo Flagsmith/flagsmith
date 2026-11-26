@@ -2,6 +2,7 @@ import { mkdtemp, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { simulatedDataset } from '@/test/simulated-dataset';
 import { loadSimulatedDataset } from './load-dataset';
 
 async function fileWith(contents: string) {
@@ -40,13 +41,11 @@ describe('loadSimulatedDataset', () => {
 
     it('loads a valid dataset', async () => {
         const filePath = await fileWith(
-            JSON.stringify({
-                kind: 'simulated',
-                environment: 'simulation',
-                seed: 1,
-                generatedAt: '2026-11-26T12:00:00.000Z',
-                visitors: [{ visitorId: 'sim-1', variant: 'control', clickedAfterSeconds: null, signedUp: false }],
-            }),
+            JSON.stringify(
+                simulatedDataset([
+                    { visitorId: 'sim-1', variant: 'control', clickedAfterSeconds: null, signedUp: false },
+                ]),
+            ),
         );
         const result = await loadSimulatedDataset(filePath);
         expect(result.status === 'loaded' && result.dataset.visitors).toHaveLength(1);

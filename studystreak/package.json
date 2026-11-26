@@ -12,7 +12,8 @@
         "lint": "eslint .",
         "typecheck": "tsc --noEmit",
         "test": "vitest run",
-        "analyse:simulation": "tsx scripts/analyse-simulation.ts"
+        "analyse:simulation": "tsx scripts/analyse-simulation.ts",
+        "simulate:traffic": "tsx --env-file-if-exists=.env.local scripts/simulate-traffic.ts"
     },
     "dependencies": {
         "@flagsmith/flagsmith": "12.6.0",

@@ -1,28 +1,18 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it } from 'vitest';
 import { analyseSimulatedDataset } from '@/lib/simulation/analysis';
-import type { SimulatedDataset, SimulatedVisitor, Variant } from '@/lib/simulation/dataset';
+import type { SimulatedDataset } from '@/lib/simulation/dataset';
 import { render, type Rendered } from '@/test/render';
+import { simulatedDataset, simulatedVisitors as visitors } from '@/test/simulated-dataset';
 import { SupplementaryReport } from './SupplementaryReport';
 
 const LABEL = 'SIMULATED DATA — SUPPLEMENTARY ANALYSIS';
 
-function visitors(variant: Variant, count: number, clicks: number, signups: number): SimulatedVisitor[] {
-    return Array.from({ length: count }, (_, index) => ({
-        visitorId: `sim-${variant}-${index}`,
-        variant,
-        clickedAfterSeconds: index < clicks ? 2 + index : null,
-        signedUp: index < signups,
-    }));
-}
-
-const dataset = (controlCount: number, treatmentCount: number): SimulatedDataset => ({
-    kind: 'simulated',
-    environment: 'simulation',
-    seed: 3,
-    generatedAt: '2026-11-26T12:00:00.000Z',
-    visitors: [...visitors('control', controlCount, 80, 50), ...visitors('social_proof', treatmentCount, 90, 62)],
-});
+const dataset = (controlCount: number, treatmentCount: number): SimulatedDataset =>
+    simulatedDataset(
+        [...visitors('control', controlCount, 80, 50), ...visitors('social_proof', treatmentCount, 90, 62)],
+        3,
+    );
 
 let rendered: Rendered;
 afterEach(() => rendered.unmount());
@@ -39,7 +29,7 @@ describe('SupplementaryReport', () => {
 
         expect(container.querySelector('[role="note"]')?.textContent).toContain(LABEL);
         expect(container.querySelector('[role="note"]')?.textContent).toContain('not an official Flagsmith result');
-        expect(sections).toHaveLength(4);
+        expect(sections).toHaveLength(5);
         for (const section of sections) {
             expect(section.textContent).toContain(LABEL);
         }
@@ -58,12 +48,21 @@ describe('SupplementaryReport', () => {
     });
 
     it('reports clicker-only times separately from the official zero-filled metric', async () => {
-        const section = [...(await renderReport(dataset(500, 500))).querySelectorAll('section')][3]!;
+        const section = [...(await renderReport(dataset(500, 500))).querySelectorAll('section')][4]!;
 
         expect(section.textContent).toContain('Time to signup click, clickers only');
         expect(section.textContent).toContain('41.5 s');
         expect(section.textContent).toContain('non-clickers count as 0s');
         expect(section.textContent).toContain('Informational');
+    });
+
+    it('describes the run, including inputs and event delivery', async () => {
+        const section = (await renderReport(dataset(500, 500))).querySelector('section')!;
+
+        expect(section.textContent).toContain('About this simulated run');
+        expect(section.textContent).toContain('None are real students');
+        expect(section.textContent).toContain('these are inputs, not findings');
+        expect(section.textContent).toContain('Confirmed by Flagsmith');
     });
 
     it('shows an SRM warning when the split is off', async () => {
@@ -74,10 +73,7 @@ describe('SupplementaryReport', () => {
     });
 
     it('explains when the SRM check is skipped for a small sample', async () => {
-        const small: SimulatedDataset = {
-            ...dataset(0, 0),
-            visitors: [...visitors('control', 20, 5, 2), ...visitors('social_proof', 20, 6, 3)],
-        };
+        const small = simulatedDataset([...visitors('control', 20, 5, 2), ...visitors('social_proof', 20, 6, 3)]);
         const text = (await renderReport(small)).textContent ?? '';
 
         expect(text).toContain('Not checked: Needs at least 100 visitors.');

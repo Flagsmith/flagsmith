@@ -1,7 +1,7 @@
 import { compareConversion, type ConversionComparison } from '@/lib/stats/conversion';
 import { checkSampleRatio, type SampleRatioCheck } from '@/lib/stats/srm';
 import { summariseTimeToClick, type TimeToClickSummary } from '@/lib/stats/time-to-click';
-import type { SimulatedDataset, Variant } from './dataset';
+import type { SimulatedDataset, SimulationRun, Variant } from './dataset';
 
 export const SIMULATED_DATA_LABEL = 'SIMULATED DATA — SUPPLEMENTARY ANALYSIS';
 
@@ -9,6 +9,8 @@ export type SupplementaryAnalysis = {
     label: typeof SIMULATED_DATA_LABEL;
     seed: number;
     generatedAt: string;
+    disclosure: string;
+    run: SimulationRun;
     totalVisitors: number;
     signedUp: ConversionComparison;
     clickedSignUp: ConversionComparison;
@@ -31,6 +33,8 @@ export function analyseSimulatedDataset(dataset: SimulatedDataset): Supplementar
         label: SIMULATED_DATA_LABEL,
         seed: dataset.seed,
         generatedAt: dataset.generatedAt,
+        disclosure: dataset.disclosure,
+        run: dataset.run,
         totalVisitors: dataset.visitors.length,
         signedUp: compareConversion(
             counts(control, (visitor) => visitor.signedUp),

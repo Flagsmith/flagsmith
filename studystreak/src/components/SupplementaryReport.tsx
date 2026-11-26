@@ -137,6 +137,25 @@ export function SupplementaryReport({ analysis }: { analysis: SupplementaryAnaly
                 intervals
             </p>
 
+            <Section title="About this simulated run" label={label}>
+                <p className="text-sm text-slate-700">{analysis.disclosure}</p>
+                <p className="mt-2 text-sm text-slate-700">
+                    Variants were assigned by Flagsmith&apos;s &ldquo;{analysis.run.environmentName}&rdquo; environment.
+                    The simulator was set to signup rates of {formatPercent(analysis.run.signupRate.control)} for
+                    control and {formatPercent(analysis.run.signupRate.social_proof)} for social proof; these are
+                    inputs, not findings. {analysis.run.notEnrolled} visitors were outside the experiment and{' '}
+                    {analysis.run.assignmentFailures} could not be assigned.
+                </p>
+                <Table
+                    headings={['Event', 'Sent to the SDK', 'Confirmed by Flagsmith']}
+                    rows={Object.entries(analysis.run.eventDelivery).map(([event, { tracked, confirmed }]) => [
+                        event,
+                        tracked,
+                        confirmed,
+                    ])}
+                />
+            </Section>
+
             <ConversionSection title="Signup completion (signed_up)" label={label} comparison={analysis.signedUp} />
             <ConversionSection
                 title="Signup click-through (signup_clicked)"

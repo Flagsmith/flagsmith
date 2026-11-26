@@ -10,7 +10,58 @@ signups?
 The 1,240 figure is static demonstration copy, not a verified live count.
 
 Flagsmith is the source of truth for variant assignment, exposures, conversions and the official results. The full setup
-and architecture guide is still to come; this document currently covers the supplementary analysis.
+and architecture guide is still to come; this document currently covers the traffic simulator and the supplementary
+analysis.
+
+## Traffic simulator (Simulation environment only)
+
+The simulator sends synthetic visitors through a separate Flagsmith **Simulation** environment, so the experiment, its
+metrics and Flagsmith's own results can be exercised end to end without touching real traffic.
+
+```bash
+# studystreak/.env.local holds FLAGSMITH_SIMULATION_SERVER_KEY (the Simulation environment's server-side key)
+npm run simulate:traffic
+npm run simulate:traffic -- --visitors 1000 --seed 20261129 --control-signup-rate 0.10 --social-proof-signup-rate 0.12
+```
+
+Other options: `--click-to-signup-rate` (share of clickers who sign up, default 0.6) and `--median-click-seconds`
+(default 8). Invalid or unknown options stop the run.
+
+For each visitor the simulator:
+
+1. Creates an identity `sim-s<seed>-<number>`.
+2. Calls `getExperimentFlag('study_streak_social_proof', identity)` from `@flagsmith/nodejs`. **Flagsmith assigns the
+   variant** and the SDK records the `$flag_exposure` event. The simulator never picks a variant; visitors Flagsmith
+   does not enrol are left out and counted.
+3. Decides, from the seed alone, whether the visitor clicks and signs up, using the configured rates. Click times follow
+   a log-normal distribution around the median.
+4. Sends `signup_clicked` (value: seconds to click) and `signed_up` with `trackEvent`, under the same identity.
+
+Events are flushed every 50 visitors so the SDK's buffer never overflows, and the client is closed at the end so
+everything buffered is sent.
+
+**Safety checks.**
+
+- The simulator reads only `FLAGSMITH_SIMULATION_SERVER_KEY`, which must be a `ser.` key. It refuses a key that matches
+  `FLAGSMITH_SERVER_KEY` or `FLAGSMITH_CLIENT_ENVIRONMENT_KEY`, and never falls back to another variable.
+- Before sending anything, it reads the environment's name from Flagsmith. It refuses any name containing "prod" or
+  "production", and any name that does not contain "Simulation".
+- It stops with a setup error if the flag is missing or disabled, no experiment is running, or Flagsmith returns a
+  variant other than `control` or `social_proof`. It also stops if more than 5% of assignment requests fail. Keys are
+  never printed.
+
+**Event delivery.** The SDK's `flushEvents()` and `close()` never report failures, so the simulator watches the events
+API's responses. An event counts as **confirmed** only when its batch received a 2xx response. The summary and dataset
+record, for each event, how many were sent to the SDK and how many Flagsmith confirmed.
+
+**Output.** The run is validated with the same parser the analysis uses, then written to
+`simulation/simulated-visitors.json`. Any existing file is first copied to `simulated-visitors.backup-<time>.json` and
+the new file is swapped in atomically. Backups and temporary files are ignored by Git.
+
+**Reproducibility.** A seed fixes every visitor's identity and behaviour. Flagsmith bucketing is deterministic per
+identity, so the same seed against the same experiment produces the same dataset. Rerunning a seed sends identical
+events for identities Flagsmith has already seen. Exposures and Occurrence metrics count each visitor once, and repeated
+identical click times leave each visitor's Mean unchanged.
 
 ## Supplementary analysis of simulated data
 

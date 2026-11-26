@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { InvalidDataError } from '@/lib/stats/invalid-data-error';
-import { parseSimulatedDataset } from './dataset';
+import { simulatedRun } from '@/test/simulated-dataset';
+import { parseSimulatedDataset, SIMULATED_DISCLOSURE } from './dataset';
 
 const visitor = (overrides: Record<string, unknown> = {}) => ({
     visitorId: 'sim-0001',
@@ -13,8 +14,10 @@ const visitor = (overrides: Record<string, unknown> = {}) => ({
 const dataset = (overrides: Record<string, unknown> = {}) => ({
     kind: 'simulated',
     environment: 'simulation',
+    disclosure: SIMULATED_DISCLOSURE,
     seed: 42,
     generatedAt: '2026-11-26T12:00:00.000Z',
+    run: simulatedRun(Array.isArray(overrides.visitors) ? overrides.visitors.length : 1),
     visitors: [visitor()],
     ...overrides,
 });
@@ -34,6 +37,26 @@ describe('parseSimulatedDataset', () => {
         ['a missing seed', { seed: undefined }],
         ['an invalid timestamp', { generatedAt: 'yesterday' }],
         ['a non-array visitors field', { visitors: {} }],
+        ['a missing disclosure', { disclosure: '' }],
+        ['a missing run', { run: undefined }],
+        ['a run whose counts do not add up', { run: simulatedRun(5) }],
+        [
+            'a run with more confirmed than tracked events',
+            {
+                run: simulatedRun(1, {
+                    eventDelivery: {
+                        $flag_exposure: { tracked: 1, confirmed: 2 },
+                        signup_clicked: { tracked: 0, confirmed: 0 },
+                        signed_up: { tracked: 0, confirmed: 0 },
+                    },
+                }),
+            },
+        ],
+        [
+            'a run with an impossible signup rate',
+            { run: simulatedRun(1, { signupRate: { control: 1.5, social_proof: 0.1 } }) },
+        ],
+        ['a run with an unnamed environment', { run: { ...simulatedRun(1), environmentName: 7 } }],
     ])('rejects %s', (_case, overrides) => {
         expect(() => parseSimulatedDataset(dataset(overrides))).toThrow(InvalidDataError);
     });

@@ -3,3 +3,5 @@
 /next-env.d.ts
 *.tsbuildinfo
 !.env.example
+/simulation/*.tmp
+/simulation/*.backup-*.json

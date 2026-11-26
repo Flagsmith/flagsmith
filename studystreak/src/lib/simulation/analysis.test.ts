@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { analyseSimulatedDataset, SIMULATED_DATA_LABEL } from './analysis';
-import type { SimulatedDataset, SimulatedVisitor, Variant } from './dataset';
+import { simulatedDataset } from '@/test/simulated-dataset';
+import type { SimulatedVisitor, Variant } from './dataset';
 
 function visitors(variant: Variant, count: number, clickTimes: number[], signups: number): SimulatedVisitor[] {
     return Array.from({ length: count }, (_, index) => ({
@@ -11,16 +12,10 @@ function visitors(variant: Variant, count: number, clickTimes: number[], signups
     }));
 }
 
-const dataset: SimulatedDataset = {
-    kind: 'simulated',
-    environment: 'simulation',
-    seed: 7,
-    generatedAt: '2026-11-26T12:00:00.000Z',
-    visitors: [
-        ...visitors('control', 500, [...Array.from({ length: 80 }, (_, i) => 10 + i)], 50),
-        ...visitors('social_proof', 500, [...Array.from({ length: 90 }, (_, i) => 5 + i)], 62),
-    ],
-};
+const dataset = simulatedDataset([
+    ...visitors('control', 500, [...Array.from({ length: 80 }, (_, i) => 10 + i)], 50),
+    ...visitors('social_proof', 500, [...Array.from({ length: 90 }, (_, i) => 5 + i)], 62),
+]);
 
 describe('analyseSimulatedDataset', () => {
     const analysis = analyseSimulatedDataset(dataset);
