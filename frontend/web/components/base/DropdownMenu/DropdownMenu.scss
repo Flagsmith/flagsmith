@@ -1,5 +1,11 @@
 .ds-dropdown-menu {
+  // States and the sheet set these; the elements below only read them
+  --ds-dropdown-menu-row: 44px;
+  --ds-dropdown-menu-padding: 10px 12px;
+  --ds-dropdown-menu-font: var(--font-size-body-md);
+  --ds-dropdown-menu-reason-font: var(--font-size-body-xs);
   --ds-dropdown-menu-icon: 16px;
+  --ds-dropdown-menu-gap: 12px;
 
   display: flex;
   flex-direction: column;
@@ -7,18 +13,31 @@
   padding: 4px;
   min-width: 200px;
 
+  // In a bottom sheet rows are larger, like native action sheets. There is no
+  // 16px body token, so the size is set here
+  &--sheet {
+    --ds-dropdown-menu-row: 48px;
+    --ds-dropdown-menu-padding: 12px;
+    --ds-dropdown-menu-font: 16px;
+    --ds-dropdown-menu-reason-font: var(--font-size-body-sm);
+    --ds-dropdown-menu-icon: 20px;
+  }
+
   &__item,
   &__row {
-    display: flex;
-    align-items: center;
-    min-height: 44px;
+    min-height: var(--ds-dropdown-menu-row);
     border-radius: var(--radius-md);
   }
 
   &__item {
-    gap: 12px;
+    --ds-dropdown-menu-icon-color: var(--color-icon-secondary);
+
+    display: flex;
+    align-items: center;
+    gap: var(--ds-dropdown-menu-gap);
     width: 100%;
-    padding: 10px 12px;
+    padding: var(--ds-dropdown-menu-padding);
+    font-size: var(--ds-dropdown-menu-font);
     color: var(--color-text-default);
     text-align: left;
 
@@ -33,38 +52,28 @@
     // Inset, so the ring stays inside the row and keeps its corners
     &:focus-visible {
       background: var(--color-surface-hover);
-      border-radius: var(--radius-md);
       outline-offset: -2px;
     }
 
     &[aria-current='true'] {
+      --ds-dropdown-menu-icon-color: var(--color-icon-action);
+
       font-weight: var(--font-weight-semibold);
       color: var(--color-text-action);
       background: var(--color-surface-action-subtle);
-
-      .ds-dropdown-menu__icon,
-      .ds-dropdown-menu__label > svg {
-        color: var(--color-icon-action);
-      }
     }
 
     &--destructive {
-      color: var(--color-text-danger);
+      --ds-dropdown-menu-icon-color: var(--color-icon-danger);
 
-      .ds-dropdown-menu__icon,
-      .ds-dropdown-menu__label > svg {
-        color: var(--color-icon-danger);
-      }
+      color: var(--color-text-danger);
     }
 
     &[aria-disabled='true'] {
+      --ds-dropdown-menu-icon-color: var(--color-icon-disabled);
+
       color: var(--color-text-disabled);
       cursor: not-allowed;
-
-      .ds-dropdown-menu__icon,
-      .ds-dropdown-menu__label > svg {
-        color: var(--color-icon-disabled);
-      }
 
       &:hover,
       &:focus-visible {
@@ -77,6 +86,7 @@
   // stretches it across the row, so all of the row is clickable
   &__row {
     display: grid;
+    align-items: center;
 
     // A row whose content renders nothing, such as a permission check
     &:empty {
@@ -95,56 +105,32 @@
   &__label {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: var(--ds-dropdown-menu-gap);
+  }
 
-    > svg {
-      flex-shrink: 0;
-      width: var(--ds-dropdown-menu-icon);
-      height: var(--ds-dropdown-menu-icon);
-      color: var(--color-icon-secondary);
-    }
+  &__label > svg,
+  &__check svg {
+    flex-shrink: 0;
+    width: var(--ds-dropdown-menu-icon);
+    height: var(--ds-dropdown-menu-icon);
+    color: var(--ds-dropdown-menu-icon-color);
   }
 
   // Why a disabled item can't be used; its description for screen readers
   &__reason {
-    font-size: var(--font-size-body-xs);
+    font-size: var(--ds-dropdown-menu-reason-font);
     color: var(--color-text-secondary);
   }
 
   // Lines up with the text, not the icon
   &__label:has(> svg) + &__reason {
-    padding-left: calc(var(--ds-dropdown-menu-icon) + 12px);
+    padding-left: calc(
+      var(--ds-dropdown-menu-icon) + var(--ds-dropdown-menu-gap)
+    );
   }
 
-  // Icons draw with currentColor
-  &__icon {
+  // The tick on the selected item
+  &__check {
     display: flex;
-    flex-shrink: 0;
-    color: var(--color-icon-secondary);
-
-    svg {
-      width: var(--ds-dropdown-menu-icon);
-      height: var(--ds-dropdown-menu-icon);
-    }
-  }
-
-  // In a bottom sheet rows are larger, like native action sheets. There is no
-  // 16px body token, so the size is set here
-  &--sheet {
-    --ds-dropdown-menu-icon: 20px;
-
-    .ds-dropdown-menu__item,
-    .ds-dropdown-menu__row {
-      min-height: 48px;
-    }
-
-    .ds-dropdown-menu__item {
-      padding: 12px;
-      font-size: 16px;
-    }
-
-    .ds-dropdown-menu__reason {
-      font-size: var(--font-size-body-sm);
-    }
   }
 }
