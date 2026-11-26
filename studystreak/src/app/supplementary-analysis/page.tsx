@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { SimulatedDataBanner, SupplementaryReport } from '@/components/SupplementaryReport';
 import { analyseSimulatedDataset, SIMULATED_DATA_LABEL } from '@/lib/simulation/analysis';
 import { loadSimulatedDataset } from '@/lib/simulation/load-dataset';
@@ -15,6 +16,9 @@ export default async function SupplementaryAnalysisPage() {
 
     return (
         <main className="mx-auto max-w-4xl space-y-6 px-6 py-12">
+            <Link href="/" className="text-sm font-medium text-indigo-700 hover:text-indigo-900">
+                ← Back to StudyStreak
+            </Link>
             <h1 className="text-3xl font-bold tracking-tight text-slate-900">Supplementary experiment analysis</h1>
             {result.status === 'loaded' ? (
                 <SupplementaryReport analysis={analyseSimulatedDataset(result.dataset)} />
