@@ -26,7 +26,7 @@ const NavSubLink: FC<NavSubLinkType> = ({
   const iconNode = typeof icon === 'string' ? <IonIcon icon={icon} /> : icon
   if (useIsInDropdownMenu()) {
     return (
-      <DropdownMenuLink to={rest.to} isActive={isActive}>
+      <DropdownMenuLink {...rest} isActive={isActive}>
         {iconNode}
         {children}
       </DropdownMenuLink>

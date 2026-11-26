@@ -25,7 +25,7 @@ const SidebarLink: FC<SidebarLinkType> = ({
   const inMenu = useIsInDropdownMenu()
   if (inMenu && to) {
     return (
-      <DropdownMenuLink to={to} exact>
+      <DropdownMenuLink {...rest} to={to} exact>
         {!!icon && <Icon name={icon} />}
         {children}
       </DropdownMenuLink>
