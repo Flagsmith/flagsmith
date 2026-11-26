@@ -569,6 +569,23 @@ def test_patch__change_feature__returns_400(
     assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
+def test_openapi_schema__update_experiment__exposed_to_mcp_as_patch(
+    api_client: APIClient,
+) -> None:
+    # Given
+    path = "/api/v1/environments/{environment_api_key}/experiments/{experiment_id}/"
+
+    # When
+    response = api_client.get("/api/v1/swagger.json", HTTP_ACCEPT="application/json")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    operations = response.json()["paths"][path]
+    assert operations["patch"]["operationId"] == "update_experiment"
+    assert operations["patch"]["tags"] == ["mcp"]
+    assert "mcp" not in operations["put"]["tags"]
+
+
 @pytest.mark.parametrize(
     "from_status, action_name, expected_status_code",
     [

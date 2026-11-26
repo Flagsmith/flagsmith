@@ -549,7 +549,7 @@
           "mcp"
         ]
       },
-      "put": {
+      "patch": {
         "operationId": "update_experiment",
         "description": "(Beta) Updates an experiment's name or its hypothesis.",
         "parameters": [
@@ -572,21 +572,20 @@
           }
         ],
         "requestBody": {
-          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Experiment"
+                "$ref": "#/components/schemas/PatchedExperiment"
               }
             },
             "application/x-www-form-urlencoded": {
               "schema": {
-                "$ref": "#/components/schemas/Experiment"
+                "$ref": "#/components/schemas/PatchedExperiment"
               }
             },
             "multipart/form-data": {
               "schema": {
-                "$ref": "#/components/schemas/Experiment"
+                "$ref": "#/components/schemas/PatchedExperiment"
               }
             }
           }
@@ -6749,6 +6748,92 @@
           "count",
           "results"
         ]
+      },
+      "PatchedExperiment": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "readOnly": true
+          },
+          "feature": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "hypothesis": {
+            "type": "string"
+          },
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Status7a8Enum"
+              }
+            ],
+            "readOnly": true
+          },
+          "metrics": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExperimentMetricInline"
+            },
+            "writeOnly": true
+          },
+          "experiment_rollout": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ExperimentRollout"
+              }
+            ],
+            "writeOnly": true
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          },
+          "started_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "readOnly": true
+          },
+          "ended_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "readOnly": true
+          },
+          "rollout_decision": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/RolloutDecisionEnum"
+              },
+              {
+                "$ref": "#/components/schemas/NullEnum"
+              }
+            ],
+            "readOnly": true
+          },
+          "rollout_variant": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "readOnly": true
+          }
+        }
       },
       "PaymentMethodEnum": {
         "description": "* `CHARGEBEE` - Chargebee\n* `XERO` - Xero\n* `AWS_MARKETPLACE` - AWS Marketplace",

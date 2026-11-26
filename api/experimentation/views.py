@@ -358,7 +358,7 @@ class WarehouseConnectionViewSet(
     ),
 )
 @method_decorator(
-    name="update",
+    name="partial_update",
     decorator=extend_schema(
         tags=["mcp"],
         operation_id="update_experiment",
