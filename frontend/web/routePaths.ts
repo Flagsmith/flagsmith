@@ -1,5 +1,4 @@
 import { matchPath } from 'react-router-dom'
-import AccountStore from 'common/stores/account-store'
 
 // Kept out of web/routes, which imports App: reading a path from there in a
 // component is a cycle, and it took the app down once.
@@ -18,10 +17,3 @@ export const isAllowedWhileBlocked = (pathname: string): boolean =>
 
 export const isOrganisationUsage = (pathname: string): boolean =>
   matches(pathname, ORGANISATION_USAGE)
-
-export const shouldShowOrganisationLimit = (
-  pathname: string,
-  usageDashboardEnabled: boolean,
-): boolean =>
-  Boolean(AccountStore.isAdmin()) &&
-  !(isOrganisationUsage(pathname) && usageDashboardEnabled)

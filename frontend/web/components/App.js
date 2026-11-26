@@ -30,10 +30,7 @@ import Announcement from './Announcement'
 import { getBuildVersion } from 'common/services/useBuildVersion'
 import AccountProvider from 'common/providers/AccountProvider'
 import Nav from './navigation/Nav'
-import {
-  isAllowedWhileBlocked,
-  shouldShowOrganisationLimit,
-} from 'web/routePaths'
+import { isAllowedWhileBlocked, isOrganisationUsage } from 'web/routePaths'
 import 'project/darkMode'
 
 const App = class extends Component {
@@ -272,6 +269,12 @@ const App = class extends Component {
       pathname === '/getting-started' &&
       getStoredOnboardingVariant() === 'single_page'
 
+    // The usage dashboard says the same thing in its own banner, with the
+    // detail this one cannot reach.
+    const hasOwnQuotaBanner =
+      isOrganisationUsage(pathname) &&
+      Utils.getFlagsmithHasFeature('usage_dashboard')
+
     const projectId = this.getProjectId(this.props)
     const environmentId = this.getEnvironmentId(this.props)
 
@@ -363,12 +366,10 @@ const App = class extends Component {
                     />
                     {user && (
                       <>
-                        {shouldShowOrganisationLimit(
-                          pathname,
-                          Utils.getFlagsmithHasFeature('usage_dashboard'),
-                        ) && (
+                        {!hasOwnQuotaBanner && (
                           <OrganisationLimit
                             id={AccountStore.getOrganisation()?.id}
+                            isAdmin={!!AccountStore.isAdmin()}
                             organisationPlan={
                               AccountStore.getOrganisation()?.subscription.plan
                             }
