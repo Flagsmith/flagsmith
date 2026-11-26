@@ -1,20 +1,15 @@
-:root {
-    color-scheme: light dark;
-    font-family:
-        system-ui,
-        -apple-system,
-        'Segoe UI',
-        Roboto,
-        sans-serif;
-    line-height: 1.5;
+@import 'tailwindcss';
+
+@theme {
+    --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 }
 
-body {
-    margin: 0;
+html {
+    scroll-behavior: smooth;
 }
 
-main {
-    max-width: 40rem;
-    margin: 0 auto;
-    padding: 4rem 1.5rem;
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto;
+    }
 }

@@ -1,8 +1,19 @@
+import { Features } from '@/components/Features';
+import { Hero } from '@/components/Hero';
+import { HowItWorks } from '@/components/HowItWorks';
+import { SiteFooter } from '@/components/SiteFooter';
+import { SiteHeader } from '@/components/SiteHeader';
+
 export default function HomePage() {
     return (
-        <main>
-            <h1>StudyStreak</h1>
-            <p>Build a daily study habit and keep your streak alive.</p>
-        </main>
+        <>
+            <SiteHeader />
+            <main>
+                <Hero />
+                <Features />
+                <HowItWorks />
+            </main>
+            <SiteFooter />
+        </>
     );
 }

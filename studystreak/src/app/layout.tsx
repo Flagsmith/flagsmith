@@ -8,7 +8,7 @@ import './globals.css';
 
 export const metadata: Metadata = {
     title: 'StudyStreak',
-    description: 'Build a daily study habit and keep your streak alive.',
+    description: 'Build better study habits with a simple daily streak.',
 };
 
 export default async function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
@@ -20,7 +20,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
 
     return (
         <html lang="en">
-            <body>
+            <body className="bg-white font-sans text-slate-900 antialiased">
                 <Providers
                     environmentKey={flagsmithConfig.ok ? flagsmithConfig.environmentKey : null}
                     visitorId={visitorId}

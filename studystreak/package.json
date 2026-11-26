@@ -20,12 +20,14 @@
         "react-dom": "^19.3.1"
     },
     "devDependencies": {
+        "@tailwindcss/postcss": "^4.3.5",
         "@types/node": "^22.20.7",
         "@types/react": "^19.3.3",
         "@types/react-dom": "^19.3.0",
         "eslint": "^9.39.5",
         "eslint-config-next": "^16.4.6",
         "jsdom": "^31.0.1",
+        "tailwindcss": "^4.3.5",
         "typescript": "^5.9.3",
         "vitest": "^5.1.2"
     }
