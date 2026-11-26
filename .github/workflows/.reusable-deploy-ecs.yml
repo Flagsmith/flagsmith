@@ -35,10 +35,8 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ vars.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
           aws-region: eu-west-2
-          mask-aws-account-id: 'no'
 
       - name: Login to Amazon ECR
         id: login-ecr
@@ -76,6 +74,9 @@ jobs:
     needs: docker-build-saas-api
     environment: ${{ inputs.environment }}
     runs-on: depot-ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - name: Cloning repo
         uses: actions/checkout@v5
@@ -84,8 +85,7 @@ jobs:
         id: deploy-api
         uses: ./.github/actions/api-deploy-ecs
         with:
-          aws_access_key_id: ${{ vars.AWS_ACCESS_KEY_ID }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws_role_arn: ${{ vars.AWS_ROLE_ARN }}
           aws_ecs_cluster_name: ${{ vars.AWS_ECS_CLUSTER_NAME }}
           aws_ecs_cluster_arn: ${{ vars.AWS_ECS_CLUSTER_ARN }}
           aws_ecs_service_name: ${{ vars.AWS_ECS_SERVICE_NAME }}
@@ -101,8 +101,7 @@ jobs:
       - name: Deploy Task processor to ${{ inputs.environment }}
         uses: ./.github/actions/task-processor-deploy-ecs
         with:
-          aws_access_key_id: ${{ vars.AWS_ACCESS_KEY_ID }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws_role_arn: ${{ vars.AWS_ROLE_ARN }}
           aws_ecs_cluster_name: ${{ vars.AWS_ECS_CLUSTER_NAME }}
           aws_ecs_service_name: ${{ vars.AWS_ECS_TASK_PROCESSOR_SERVICE_NAME }}
           aws_task_definitions_directory_path: infrastructure/aws/${{ inputs.environment }}
@@ -127,13 +126,11 @@ jobs:
         run: |
           sudo apt-get remove -y firefox || true
           sudo rm -rf /usr/bin/firefox /usr/lib/firefox*
-          
           ARCH=$(uname -m)
           wget -O /tmp/firefox.tar.xz "https://ftp.mozilla.org/pub/firefox/releases/143.0/linux-${ARCH}/en-US/firefox-143.0.tar.xz"
           sudo tar -xJf /tmp/firefox.tar.xz -C /opt
           sudo ln -s /opt/firefox/firefox /usr/local/bin/firefox
           rm /tmp/firefox.tar.xz
-          
           firefox --version
 
       - name: Run E2E tests against ${{ inputs.environment }}
