@@ -4,23 +4,11 @@ const exphbs = require('express-handlebars')
 const express = require('express')
 const bodyParser = require('body-parser')
 const spm = require('./middleware/single-page-middleware')
-const helmet = require('helmet')
+const securityHeaders = require('./middleware/security-headers-middleware')
 const path = require('path')
 const app = express()
 
-app.use(
-  helmet.contentSecurityPolicy({
-    directives: {
-      defaultSrc: helmet.contentSecurityPolicy.dangerouslyDisableDefaultSrc,
-      frameAncestors: ["'none'"],
-    },
-    useDefaults: false,
-  }),
-  helmet.xFrameOptions({ action: 'deny' }),
-  helmet.xContentTypeOptions(),
-  helmet.referrerPolicy({ policy: 'strict-origin-when-cross-origin' }),
-  helmet.xPoweredBy(),
-)
+app.use(securityHeaders)
 
 const SLACK_TOKEN = process.env.SLACK_TOKEN
 const slackClient = SLACK_TOKEN && require('./slack-client')
