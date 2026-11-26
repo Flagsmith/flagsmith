@@ -90,6 +90,8 @@ const App = class extends Component {
       })
       amplitude.add(engagementPlugin())
       const sessionReplayTracking = sessionReplayPlugin({
+        // Replays would otherwise capture customer data on screen (flag values, segment rules, identities)
+        privacyConfig: { defaultMaskLevel: 'conservative' },
         sampleRate: 0.5,
         serverZone: 'EU',
       })
