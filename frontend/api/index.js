@@ -105,10 +105,6 @@ app.get('/config/project-overrides', (req, res) => {
       name: 'hideInviteLinks',
       value: envToBool('DISABLE_INVITE_LINKS', false),
     },
-    {
-      name: 'linkedinPartnerTracking',
-      value: envToBool('LINKEDIN_PARTNER_TRACKING', false),
-    },
     { name: 'useSecureCookies', value: envToBool('USE_SECURE_COOKIES', true) },
     { name: 'cookieSameSite', value: process.env.USE_SECURE_COOKIES },
     { name: 'cookieAuthEnabled', value: process.env.COOKIE_AUTH_ENABLED },
@@ -292,10 +288,8 @@ app.post('/api/webflow/webhook', (req, res) => {
 
 // Catch all to render index template
 app.get('/', (req, res) => {
-  const linkedin = process.env.LINKEDIN || ''
   return res.render('index', {
     isDev,
-    linkedin,
   })
 })
 

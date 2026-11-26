@@ -46,7 +46,6 @@ module.exports = function setupRoutes(app) {
       { name: 'reo', value: process.env.REO_API_KEY },
       { name: 'capterraKey', value: process.env.CAPTERRA_API_KEY },
       { name: 'hideInviteLinks', value: envToBool('DISABLE_INVITE_LINKS', false) },
-      { name: 'linkedinPartnerTracking', value: envToBool('LINKEDIN_PARTNER_TRACKING', false) },
       { name: 'useSecureCookies', value: envToBool('USE_SECURE_COOKIES', true) },
       { name: 'cookieSameSite', value: process.env.USE_SECURE_COOKIES },
       { name: 'cookieAuthEnabled', value: process.env.COOKIE_AUTH_ENABLED },
