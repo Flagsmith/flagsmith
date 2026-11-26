@@ -100,7 +100,7 @@ const TableTagFilter: FC<TableFilterType> = ({
           </Row>
         }
       >
-        <div className='inline-modal__list d-flex flex-column mx-0 py-0'>
+        <div className='d-flex flex-column mx-0 py-0'>
           <div className='px-3 my-2'>
             <Input
               autoFocus

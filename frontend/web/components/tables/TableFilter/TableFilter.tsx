@@ -31,7 +31,7 @@ const TableFilter: FC<TableFilterType> = ({
       aria-label={label ?? (typeof title === 'string' ? title : 'Filter')}
       placement='bottom-end'
       // Width for the anchored panel; the phone sheet is full width
-      className='inline-modal--sm'
+      className='table-filter__panel'
       renderTrigger={(props) => (
         <BareButton
           {...props}
@@ -52,7 +52,7 @@ const TableFilter: FC<TableFilterType> = ({
           })}
         >
           {!hideTitle && (
-            <div className='inline-modal__title px-3 py-2'>
+            <div className='table-filter__title px-3 py-2'>
               {dropdownTitle || title}
             </div>
           )}

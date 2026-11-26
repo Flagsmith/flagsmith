@@ -1,6 +1,16 @@
 @import '../../../styles/variables';
 @import '../../../styles/mixins/custom-scrollbar';
 
+// The anchored panel; the phone sheet sizes itself
+.table-filter__panel {
+  min-width: 200px;
+  max-width: 355px;
+}
+
+.table-filter__title {
+  font-size: var(--font-size-body-sm);
+}
+
 // The sheet sets these; the rows read them
 .table-filter__content {
   --table-filter-row: 0;
