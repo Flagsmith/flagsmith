@@ -832,10 +832,9 @@ export class E2EHelpers {
   ) {
     await this.goToFeatureVersions(featureName);
     await this.click(byId(`history-item-${versionIndex}-compare`));
-    if (compareOption === 'LIVE') {
-      await this.click(byId(`history-item-${versionIndex}-compare-live`));
-    } else if (compareOption === 'PREVIOUS') {
-      await this.click(byId(`history-item-${versionIndex}-compare-previous`));
+    if (compareOption) {
+      const name = compareOption === 'LIVE' ? 'Live Version' : 'Previous Version';
+      await this.page.getByRole('button', { exact: true, name }).filter({ visible: true }).click();
     }
 
     // Wait for comparison modal to fully load data

@@ -1,5 +1,6 @@
 import React, { FC, ReactNode } from 'react'
 import Icon from 'components/icons/Icon'
+import BareButton from 'components/base/forms/BareButton'
 import classNames from 'classnames'
 import { SortOrder } from 'common/types/requests'
 import './TableFilterItem.scss'
@@ -11,7 +12,6 @@ type TableFilterItemType = {
   subtitle?: string
   title: string | ReactNode
   onClick: () => void
-  'data-test'?: string
 }
 
 const markerIcon = (sortOrder?: SortOrder) => {
@@ -28,28 +28,28 @@ const TableFilterItem: FC<TableFilterItemType> = ({
   ...rest
 }) => {
   return (
-    <a
+    <BareButton
       {...rest}
-      href={'#'}
-      onClick={(e) => {
-        e.preventDefault()
-        onClick()
-      }}
+      // Toggled filter or the active sort option
+      aria-pressed={!!isActive}
+      onClick={onClick}
       className='table-filter-item'
     >
-      <Row space className='px-3 no-wrap overflow-hidden py-2'>
-        <div className={'overflow-ellipsis'}>
+      <span className='d-flex align-items-center justify-content-between gap-2 px-3 py-2 overflow-hidden'>
+        <span className='overflow-ellipsis'>
           {title}
-          {subtitle && <div className='text-muted fw-normal'>{subtitle}</div>}
-        </div>
-        <div>
-          <Icon
-            className={classNames('text-default', { 'opacity-0': !isActive })}
-            name={markerIcon(sortOrder)}
-          />
-        </div>
-      </Row>
-    </a>
+          {subtitle && (
+            <span className='d-block text-muted fw-normal'>{subtitle}</span>
+          )}
+        </span>
+        <Icon
+          className={classNames('text-default flex-shrink-0', {
+            'opacity-0': !isActive,
+          })}
+          name={markerIcon(sortOrder)}
+        />
+      </span>
+    </BareButton>
   )
 }
 

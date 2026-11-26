@@ -14,13 +14,11 @@ type TableFilterType = {
   dropdownTitle?: ReactNode | string
   className?: string
   children: ReactNode | ((close: () => void) => ReactNode)
-  'data-test'?: string
 }
 
 const TableFilter: FC<TableFilterType> = ({
   children,
   className,
-  'data-test': dataTest,
   dropdownTitle,
   hideTitle,
   label,
@@ -37,12 +35,6 @@ const TableFilter: FC<TableFilterType> = ({
       renderTrigger={(props) => (
         <BareButton
           {...props}
-          data-test={
-            dataTest ||
-            (typeof title === 'string'
-              ? `table-filter-${title.toLowerCase()}`
-              : undefined)
-          }
           className={classNames(
             'd-flex align-items-center py-2 py-lg-0 user-select-none',
             className,

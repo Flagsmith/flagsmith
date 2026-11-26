@@ -58,7 +58,6 @@ const TableTagFilter: FC<TableFilterType> = ({
   return (
     <div className={isLoading ? 'disabled' : ''}>
       <TableFilter
-        data-test='table-filter-tags'
         label='Tags'
         className={className}
         dropdownTitle={
