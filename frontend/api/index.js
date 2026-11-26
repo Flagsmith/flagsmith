@@ -18,7 +18,7 @@ app.use(
   }),
   helmet.xFrameOptions({ action: 'deny' }),
   helmet.xContentTypeOptions(),
-  helmet.referrerPolicy({ policy: 'same-origin' }),
+  helmet.referrerPolicy({ policy: 'strict-origin-when-cross-origin' }),
   helmet.xPoweredBy(),
 )
 
