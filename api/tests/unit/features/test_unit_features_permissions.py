@@ -545,3 +545,42 @@ def test_nested_project_permissions_has_object_permission__varying_permissions__
 
     # Then
     assert result == expected_result
+
+
+@pytest.mark.parametrize("invalid_project_id", ["PROJECT_ID", ["invalid"], {}])
+def test_feature_permissions_has_permission__invalid_project_id__returns_false(
+    admin_user: FFAdminUser,
+    invalid_project_id: object,
+) -> None:
+    # Given
+    feature_permissions = FeaturePermissions()
+    mock_view = mock.MagicMock(
+        kwargs={"project_pk": invalid_project_id},
+        detail=False,
+        action="create",
+    )
+    mock_request = mock.MagicMock(data={}, user=admin_user)
+
+    # When
+    result = feature_permissions.has_permission(mock_request, mock_view)  # type: ignore[no-untyped-call]
+
+    # Then
+    assert result is False
+
+
+@pytest.mark.parametrize("invalid_project_pk", ["PROJECT_ID", ["invalid"], {}])
+def test_nested_project_permissions_has_permission__invalid_project_pk__returns_false(
+    admin_user: FFAdminUser,
+    invalid_project_pk: object,
+) -> None:
+    # Given
+    permission_class = NestedProjectPermissions()
+    request = MagicMock(user=admin_user)
+    view = MagicMock(action="list", kwargs={"project_pk": invalid_project_pk})
+
+    # When
+    result = permission_class.has_permission(request, view)  # type: ignore[no-untyped-call]
+
+    # Then
+    assert result is False
+
