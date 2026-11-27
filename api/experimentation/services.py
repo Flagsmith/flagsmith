@@ -651,16 +651,16 @@ def transition_experiment_status(
                     variant__id=rollout_decision.rollout_variant_id,
                 )
             )
-            transaction.on_commit(
-                lambda: compute_experiment_results.delay(
+
+            def _compute_final_results() -> None:
+                compute_experiment_results.delay(
                     kwargs={"experiment_id": experiment.id}
                 )
-            )
-            transaction.on_commit(
-                lambda: compute_experiment_exposures.delay(
+                compute_experiment_exposures.delay(
                     kwargs={"experiment_id": experiment.id}
                 )
-            )
+
+            transaction.on_commit(_compute_final_results)
 
         experiment.save()
         create_experiment_audit_log(experiment, user, action=target_status)
