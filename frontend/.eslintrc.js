@@ -1,6 +1,22 @@
 // Patterns we keep catching in review. Warnings only, on changed lines only
 // (CI and pre-commit), so they never block a PR. For a real exception,
 // disable the rule on that line and say why.
+const restrictedImports = [
+  {
+    group: ['**/ErrorMessage', '**/InfoMessage', '**/WarningMessage'],
+    message: 'Use the DS Banner (components/base/Banner) instead.',
+  },
+  {
+    group: ['@ionic/react', 'ionicons', 'ionicons/*'],
+    message: 'Use components/icons/Icon, our own SVG icons.',
+  },
+]
+const accountStoreImport = {
+  group: ['**/account-store'],
+  message:
+    'Read the organisation and user with useCurrentOrganisation, useIsOrganisationAdmin or useCurrentUser (common/hooks).',
+}
+
 const colourMessage = 'Use a colour token, not a hex, rgb or hsl literal.'
 const fetchMessage =
   'Add an RTK Query endpoint in common/services/ instead of fetch().'
@@ -197,6 +213,18 @@ module.exports = {
       },
     },
     {
+      // The store itself and the hooks that wrap it
+      'files': [
+        'common/stores/**',
+        'common/hooks/useAccountStoreUpdates.ts',
+        'common/hooks/useCurrentOrganisation.ts',
+        'common/hooks/useCurrentUser.ts',
+      ],
+      'rules': {
+        'no-restricted-imports': ['warn', { patterns: restrictedImports }],
+      },
+    },
+    {
       // The legacy request layer RTK Query is built on.
       'files': ['common/data/base/**'],
       'rules': {
@@ -259,18 +287,7 @@ module.exports = {
     ],
     'no-restricted-imports': [
       'warn',
-      {
-        patterns: [
-          {
-            group: ['**/ErrorMessage', '**/InfoMessage', '**/WarningMessage'],
-            message: 'Use the DS Banner (components/base/Banner) instead.',
-          },
-          {
-            group: ['@ionic/react', 'ionicons', 'ionicons/*'],
-            message: 'Use components/icons/Icon, our own SVG icons.',
-          },
-        ],
-      },
+      { patterns: [...restrictedImports, accountStoreImport] },
     ],
     'no-restricted-syntax': ['warn', ...colourLiterals, ...otherPatterns],
     'no-unused-vars': 'off',
