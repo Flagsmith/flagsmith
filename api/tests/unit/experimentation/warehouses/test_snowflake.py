@@ -1074,18 +1074,6 @@ def test_validate_credentials__valid__returns_trimmed_private_key(
             },
             {"credentials": {"private_key": "Enter an RSA private key."}},
         ),
-        (
-            lambda rsa_key: {
-                "private_key": _pem(
-                    rsa.generate_private_key(public_exponent=65537, key_size=1024)
-                )
-            },
-            {
-                "credentials": {
-                    "private_key": "Enter an RSA private key of at least 2048 bits."
-                }
-            },
-        ),
     ],
     ids=[
         "not-a-dict",
@@ -1096,7 +1084,6 @@ def test_validate_credentials__valid__returns_trimmed_private_key(
         "encrypted",
         "public-key",
         "not-rsa",
-        "rsa-1024",
     ],
 )
 def test_validate_credentials__invalid__raises_validation_error(
@@ -1113,6 +1100,27 @@ def test_validate_credentials__invalid__raises_validation_error(
 
     # Then
     assert exc_info.value.detail == expected_errors
+
+
+def test_validate_credentials__rsa_key_below_minimum_size__raises_validation_error(
+    snowflake_private_key_pem: str,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mocker.patch("experimentation.warehouses.snowflake.MIN_RSA_KEY_SIZE_BITS", 4096)
+
+    # When
+    with pytest.raises(serializers.ValidationError) as exc_info:
+        SnowflakeWarehouse().validate_credentials(
+            {"private_key": snowflake_private_key_pem}
+        )
+
+    # Then
+    assert exc_info.value.detail == {
+        "credentials": {
+            "private_key": "Enter an RSA private key of at least 4096 bits."
+        }
+    }
 
 
 def test_verify__reachable__checks_columns_then_probes_warehouse(
