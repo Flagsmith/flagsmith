@@ -176,7 +176,11 @@ const ReleasePipelinesList = ({
               </div>
               <DropdownMenu aria-label={`Actions for ${name}`}>
                 <DropdownMenuItem
-                  disabledReason='Cannot edit a published release pipeline'
+                  description={
+                    isPublished
+                      ? 'Cannot edit a published release pipeline'
+                      : undefined
+                  }
                   disabled={isPublished}
                   onSelect={() =>
                     history.push(
@@ -188,7 +192,11 @@ const ReleasePipelinesList = ({
                   Edit
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  disabledReason='Cannot unpublish a release pipeline with in-flight features'
+                  description={
+                    isPublished && !canUnpublish
+                      ? 'Cannot unpublish a release pipeline with in-flight features'
+                      : undefined
+                  }
                   disabled={isPublished && !canUnpublish}
                   onSelect={() =>
                     openChangeReleasePipelineStatusModal(
@@ -218,7 +226,11 @@ const ReleasePipelinesList = ({
                   Clone
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  disabledReason='Cannot remove a release pipeline with in-flight features'
+                  description={
+                    !canDelete
+                      ? 'Cannot remove a release pipeline with in-flight features'
+                      : undefined
+                  }
                   destructive
                   disabled={!canDelete}
                   onSelect={() =>

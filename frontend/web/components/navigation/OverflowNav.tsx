@@ -1,9 +1,13 @@
-import React, { FC, ReactNode, useRef } from 'react'
+import React, { createContext, FC, ReactNode, useContext, useRef } from 'react'
 import IconButton from 'components/base/IconButton'
 import Icon from 'components/icons/Icon'
 import DropdownMenu from 'components/base/DropdownMenu'
 import classNames from 'classnames'
 import { useOverflowVisibleCount } from 'common/hooks/useOverflowVisibleCount'
+
+// Nav links render as menu rows when they overflow into the menu
+const InOverflowMenuContext = createContext(false)
+export const useIsInOverflowMenu = () => useContext(InOverflowMenuContext)
 
 type OverflowNavProps = {
   // Names the overflow button; each nav on a page needs its own
@@ -92,8 +96,9 @@ const OverflowNav: FC<OverflowNavProps> = ({
             </IconButton>
           }
         >
-          {/* Nav links render as menu rows inside the menu */}
-          {overflow}
+          <InOverflowMenuContext.Provider value>
+            {overflow}
+          </InOverflowMenuContext.Provider>
         </DropdownMenu>
       )}
     </div>

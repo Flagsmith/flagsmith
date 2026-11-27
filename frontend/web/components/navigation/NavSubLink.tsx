@@ -3,10 +3,8 @@ import type * as H from 'history'
 import { LinkProps, NavLink, match } from 'react-router-dom'
 import { IonIcon } from '@ionic/react'
 import classNames from 'classnames'
-import {
-  DropdownMenuLink,
-  useIsInDropdownMenu,
-} from 'components/base/DropdownMenu'
+import { DropdownMenuLink } from 'components/base/DropdownMenu'
+import { useIsInOverflowMenu } from './OverflowNav'
 
 type NavSubLinkType = LinkProps & {
   icon: string | ReactNode
@@ -19,12 +17,13 @@ type NavSubLinkType = LinkProps & {
 
 const NavSubLink: FC<NavSubLinkType> = ({
   children,
+  className,
   icon,
   isActive,
   ...rest
 }) => {
   const iconNode = typeof icon === 'string' ? <IonIcon icon={icon} /> : icon
-  if (useIsInDropdownMenu()) {
+  if (useIsInOverflowMenu()) {
     return (
       <DropdownMenuLink {...rest} isActive={isActive}>
         {iconNode}
@@ -37,7 +36,7 @@ const NavSubLink: FC<NavSubLinkType> = ({
       {...rest}
       isActive={isActive}
       activeClassName='active'
-      className={classNames(rest.className, 'py-md-2 py-1 px-1 nav-sub-link')}
+      className={classNames(className, 'py-md-2 py-1 px-1 nav-sub-link')}
     >
       <div className='d-flex gap-2 text-nowrap nav-sub-link-inner align-items-center'>
         {iconNode}

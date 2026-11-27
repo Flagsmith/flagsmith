@@ -104,9 +104,7 @@ const Tabs: React.FC<TabsProps> = ({
     String(child.props.tabLabelString || child.props.tabLabel)
 
   const handleChange = useCallback(
-    (e: React.MouseEvent<HTMLButtonElement>, tabLabel: string, i: number) => {
-      e.stopPropagation()
-      e.preventDefault()
+    (tabLabel: string, i: number) => {
       if (urlParam) {
         const searchParams = new URLSearchParams(window.location.search)
         searchParams.set(
@@ -147,9 +145,11 @@ const Tabs: React.FC<TabsProps> = ({
                 isSelected={isSelected}
                 className={canGrow ? 'tab-nav-full' : ''}
                 noFocus={noFocus}
-                onClick={(e: React.MouseEvent<HTMLButtonElement>) =>
-                  handleChange(e, tabLabelOf(child), i)
-                }
+                onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+                  e.stopPropagation()
+                  e.preventDefault()
+                  handleChange(tabLabelOf(child), i)
+                }}
                 child={child}
                 buttonTheme={buttonTheme}
               >
@@ -177,8 +177,8 @@ const Tabs: React.FC<TabsProps> = ({
               return (
                 <DropdownMenuItem
                   key={`menu-${i}`}
-                  current={value === i}
-                  onSelect={(e) => handleChange(e, tabLabelOf(child), i)}
+                  selected={value === i}
+                  onSelect={() => handleChange(tabLabelOf(child), i)}
                 >
                   <TabLabel
                     tabLabel={child.props.tabLabel}

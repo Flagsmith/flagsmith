@@ -4,7 +4,12 @@ import { useCloseDropdownMenu } from './DropdownMenuContext'
 
 // A menu row that navigates; the current page gets the selected look.
 // Children are the label, with an optional icon first.
-const DropdownMenuLink: FC<NavLinkProps> = ({ children, onClick, ...rest }) => {
+// The row owns its styling, so it takes no className
+const DropdownMenuLink: FC<Omit<NavLinkProps, 'className'>> = ({
+  children,
+  onClick,
+  ...rest
+}) => {
   const close = useCloseDropdownMenu()
   return (
     <NavLink

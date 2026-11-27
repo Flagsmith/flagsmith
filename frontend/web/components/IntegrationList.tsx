@@ -279,7 +279,7 @@ const Integration: FC<IntegrationProps> = (props) => {
           <DropdownMenuItem
             key={action.label}
             disabled={action.disabled}
-            disabledReason={action.tooltip}
+            description={action.disabled ? action.tooltip : undefined}
             onSelect={action.onClick}
           >
             {action.label}

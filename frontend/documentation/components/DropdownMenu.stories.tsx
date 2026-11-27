@@ -32,7 +32,7 @@ const ActionsMenu = () => (
     </DropdownMenuItem>
     <DropdownMenuItem
       disabled
-      disabledReason='History needs feature versioning'
+      description='History needs feature versioning'
       onSelect={noop}
     >
       <Icon name='clock' />
@@ -57,7 +57,7 @@ const SectionsMenu = () => {
       {SECTIONS.map((section, i) => (
         <DropdownMenuItem
           key={section}
-          current={current === i}
+          selected={current === i}
           onSelect={() => setCurrent(i)}
         >
           {section}

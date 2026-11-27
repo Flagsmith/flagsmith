@@ -1,5 +1,5 @@
 import { cloneElement, FC, ReactElement, ReactNode } from 'react'
-import Popover, { PopoverPlacement } from 'components/base/Popover'
+import Popover from 'components/base/Popover'
 import IconButton from 'components/base/IconButton'
 import Icon from 'components/icons/Icon'
 import classNames from 'classnames'
@@ -14,13 +14,11 @@ export type DropdownMenuProps = {
   // "more" button.
   trigger?: ReactElement
   children: ReactNode
-  placement?: PopoverPlacement
 }
 
 const DropdownMenu: FC<DropdownMenuProps> = ({
   'aria-label': ariaLabel,
   children,
-  placement = 'bottom-end',
   trigger,
 }) => {
   // Popover opens as a sheet on the same breakpoint, where rows get larger
@@ -28,7 +26,7 @@ const DropdownMenu: FC<DropdownMenuProps> = ({
   return (
     <Popover
       aria-label={ariaLabel}
-      placement={placement}
+      placement='bottom-end'
       renderTrigger={(props) =>
         cloneElement(
           trigger ?? (

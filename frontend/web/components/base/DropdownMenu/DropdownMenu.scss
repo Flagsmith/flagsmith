@@ -102,14 +102,14 @@
     color: var(--ds-dropdown-menu-icon-color);
   }
 
-  // Why a disabled item can't be used; its description for screen readers
-  &__reason {
+  // A second line under the label
+  &__description {
     font-size: var(--font-size-body-sm);
     color: var(--color-text-secondary);
   }
 
   // Lines up with the text, not the icon
-  &__label:has(> svg) + &__reason {
+  &__label:has(> svg) + &__description {
     padding-left: calc(
       var(--ds-dropdown-menu-icon) + var(--ds-dropdown-menu-gap)
     );
