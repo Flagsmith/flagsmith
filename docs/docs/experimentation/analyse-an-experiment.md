@@ -55,7 +55,23 @@ growing one means users are slipping between variations.
 
 ## Ending the experiment
 
-When you have a conclusive result, click **End Experiment**. Results are frozen as final and the flag is unlocked.
+When you have a conclusive result, click **End Experiment** (or **Mark as Completed** from the experiments list), then
+choose what the flag serves from now on:
 
-To roll out the winner, update the flag so every user gets the winning variation. Once it's permanent, clean up the flag
-and remove the losing variations.
+- **Roll out control**: everyone gets the control value.
+- **Roll out a variant**: everyone gets the variation you pick. If one is ahead, it's selected for you.
+- **Turn the flag off**: the flag is disabled for everyone.
+
+![The Complete experiment dialog with a variation selected](/img/experimentation/experiment-complete-modal.png)
+
+Your choice becomes the environment default, for every identity in the environment, not only the experiment's audience.
+The experiment's rollout is removed, results are frozen as final and the flag is unlocked. This can't be undone.
+
+Once the rollout is permanent, clean up the flag and remove the losing variations.
+
+:::note Self-hosted
+
+Before v2.295.2, ending an experiment kept its rollout in place, so later changes to the flag didn't reach the
+identities in the experiment. Upgrade to apply your choice when the experiment ends.
+
+:::
