@@ -29,4 +29,19 @@ describe('checkSampleRatio', () => {
         const check = checkSampleRatio(800, 200, 0.2);
         expect(check).toMatchObject({ status: 'ok', expectedTreatment: 200, expectedControl: 800, chiSquare: 0 });
     });
+
+    it.each([
+        [1000, 0, 0],
+        [0, 1000, 1],
+        [500, 500, Number.NaN],
+        [500, 500, -0.1],
+        [500, 500, 1.5],
+    ])('does not check %d/%d against the boundary or invalid share %d', (control, treatment, share) => {
+        // Given / When
+        const check = checkSampleRatio(control, treatment, share);
+
+        // Then: never a NaN statistic reported as "ok"
+        expect(check.status).toBe('not_checked');
+        expect(check).toMatchObject({ reason: expect.stringContaining('strictly between 0 and 1') });
+    });
 });

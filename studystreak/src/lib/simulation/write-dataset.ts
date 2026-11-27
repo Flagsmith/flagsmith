@@ -1,5 +1,5 @@
 import { constants } from 'node:fs';
-import { copyFile, mkdir, rename, rm, writeFile } from 'node:fs/promises';
+import { copyFile, mkdir, open, rename, rm } from 'node:fs/promises';
 import path from 'node:path';
 import { parseSimulatedDataset, type SimulatedDataset } from './dataset';
 
@@ -12,19 +12,31 @@ export async function writeDatasetSafely(
     targetPath: string,
     now: () => Date = () => new Date(),
 ): Promise<{ backupPath: string | null }> {
-    parseSimulatedDataset(JSON.parse(JSON.stringify(dataset)));
+    // Serialise the validated snapshot before any await, so a caller mutating the dataset meanwhile cannot change
+    // what is written.
+    const snapshot = parseSimulatedDataset(JSON.parse(JSON.stringify(dataset)));
+    const contents = `${JSON.stringify(snapshot, null, 2)}\n`;
     await mkdir(path.dirname(targetPath), { recursive: true });
 
     const stamp = now().toISOString().replace(/[:.]/g, '-');
     const temporaryPath = `${targetPath}.${stamp}.tmp`;
-    await writeFile(temporaryPath, `${JSON.stringify(dataset, null, 2)}\n`, { flag: 'wx' });
-
+    // Only a temporary file this call created is cleaned up, including after a partial write.
+    let created = false;
     try {
+        const handle = await open(temporaryPath, 'wx');
+        created = true;
+        try {
+            await handle.writeFile(contents);
+        } finally {
+            await handle.close();
+        }
         const backupPath = await backUp(targetPath, stamp);
         await rename(temporaryPath, targetPath);
         return { backupPath };
     } finally {
-        await rm(temporaryPath, { force: true });
+        if (created) {
+            await rm(temporaryPath, { force: true });
+        }
     }
 }
 

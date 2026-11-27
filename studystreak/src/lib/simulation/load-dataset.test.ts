@@ -1,12 +1,19 @@
-import { mkdtemp, writeFile } from 'node:fs/promises';
+import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import { simulatedDataset } from '@/test/simulated-dataset';
 import { loadSimulatedDataset } from './load-dataset';
 
+const directories: string[] = [];
+
+afterEach(async () => {
+    await Promise.all(directories.splice(0).map((directory) => rm(directory, { recursive: true, force: true })));
+});
+
 async function fileWith(contents: string) {
     const directory = await mkdtemp(path.join(tmpdir(), 'studystreak-'));
+    directories.push(directory);
     const filePath = path.join(directory, 'simulated-visitors.json');
     await writeFile(filePath, contents);
     return filePath;

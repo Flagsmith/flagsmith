@@ -7,9 +7,13 @@ vi.mock('@/lib/use-social-proof-experiment', () => ({
     useSocialProofExperiment: () => ({ status: 'ready', variant: 'control', enrolled: true }),
 }));
 
-let rendered: Rendered;
+let rendered: Rendered | undefined;
 
-afterEach(() => rendered.unmount());
+// Conditional, so a render that rejects before assignment does not add a teardown error that hides the real failure.
+afterEach(async () => {
+    await rendered?.unmount();
+    rendered = undefined;
+});
 
 describe('HomePage', () => {
     it('has one page heading and labelled landmarks', async () => {
@@ -46,5 +50,25 @@ describe('HomePage', () => {
         rendered = await render(<HomePage />);
 
         expect(rendered.container.querySelector('footer')?.textContent).toContain('demonstration content');
+    });
+
+    it("gives assistive technology each example day's study status", async () => {
+        // Given / When
+        rendered = await render(<HomePage />);
+
+        // Then
+        const days = [...rendered.container.querySelectorAll('ol[aria-label="Five of seven days studied"] li')].map(
+            (day) => day.textContent,
+        );
+        // The decorative tick is aria-hidden; the hidden text after each day name carries the status.
+        expect(days).toEqual([
+            '✓Mon, studied',
+            '✓Tue, studied',
+            '✓Wed, studied',
+            '✓Thu, studied',
+            '✓Fri, studied',
+            'Sat, not studied',
+            'Sun, not studied',
+        ]);
     });
 });

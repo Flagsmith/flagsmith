@@ -11,8 +11,11 @@ export type SocialProofVariant = 'control' | typeof SOCIAL_PROOF_VARIANT;
 
 export type SocialProofExperimentState =
     | { status: 'loading' }
-    | { status: 'unavailable' }
+    | { status: 'unavailable'; reason?: 'unknown_variant' }
     | { status: 'ready'; variant: SocialProofVariant; enrolled: boolean };
+
+const isKnownVariant = (variant: unknown): variant is SocialProofVariant =>
+    variant === 'control' || variant === SOCIAL_PROOF_VARIANT;
 
 // Rendering branches on the variant key, never the flag value, so what is shown always matches the
 // exposure the SDK records for that key.
@@ -24,12 +27,23 @@ export function resolveSocialProofExperiment(
         return { status: 'unavailable' };
     }
     if (loadingState.source !== 'SERVER') {
-        return loadingState.isFetching || loadingState.isLoading ? { status: 'loading' } : { status: 'unavailable' };
+        // NONE (without an error) means the SDK has not finished initialising yet, even before it starts fetching.
+        // SignupCta's timeout ends this state if flags never arrive.
+        const pending = loadingState.isFetching || loadingState.isLoading || loadingState.source === 'NONE';
+        return pending ? { status: 'loading' } : { status: 'unavailable' };
     }
     if (!flag) {
         return { status: 'unavailable' };
     }
-    const enrolled = flag.experiment?.inExperiment === true;
-    const variant = enrolled && flag.variant === SOCIAL_PROOF_VARIANT ? SOCIAL_PROOF_VARIANT : 'control';
-    return { status: 'ready', variant, enrolled };
+    // The SDK records no exposure for a disabled flag, so a disabled flag never renders an assigned variant.
+    const enrolled = flag.enabled && flag.experiment?.inExperiment === true;
+    if (!enrolled) {
+        return { status: 'ready', variant: 'control', enrolled: false };
+    }
+    // An unrecognised key (such as the dashboard's default "Variant_1") is a misconfiguration. It is not shown as
+    // control, which would attribute control content to another arm; the CTA falls back and tracks no clicks.
+    if (!isKnownVariant(flag.variant)) {
+        return { status: 'unavailable', reason: 'unknown_variant' };
+    }
+    return { status: 'ready', variant: flag.variant, enrolled: true };
 }

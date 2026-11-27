@@ -17,6 +17,23 @@ describe('createDeliveryTracker', () => {
         expect(tracker.failedAttempts()).toBe(0);
     });
 
+    it('counts events when the SDK passes a Request instead of a body in init', async () => {
+        // Given
+        const fetchImpl = vi.fn(async (input: RequestInfo | URL) => {
+            await (input as Request).text(); // the real fetch consumes the request body
+            return new Response(null, { status: 202 });
+        });
+        const tracker = createDeliveryTracker(fetchImpl as typeof fetch);
+        const request = new Request(EVENTS_URL, batch('$flag_exposure', 'signed_up'));
+
+        // When
+        await tracker.fetch(request);
+
+        // Then
+        expect(tracker.confirmed()).toEqual({ $flag_exposure: 1, signup_clicked: 0, signed_up: 1 });
+        expect(fetchImpl).toHaveBeenCalledOnce();
+    });
+
     it('does not count rejected batches', async () => {
         const tracker = createDeliveryTracker(vi.fn(async () => new Response(null, { status: 503 })));
 

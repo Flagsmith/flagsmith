@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { claimFirstSignupClick, createBrowserStore, recordFirstExposure, secondsBetween } from './exposure-clock';
+import {
+    claimFirstSignupClick,
+    claimFirstSignupClickAcrossTabs,
+    createBrowserStore,
+    type LockManagerLike,
+    recordFirstExposure,
+    secondsBetween,
+} from './exposure-clock';
 
 const VISITOR = 'visitor-1';
 const mapStore = () => {
@@ -87,5 +94,73 @@ describe('createBrowserStore', () => {
         );
 
         expect([...values.values()]).toEqual(['123']);
+    });
+
+    it('finds a value kept in memory when storage reads work but writes fail', () => {
+        // Given: reads succeed (and miss), writes throw, as with a full quota
+        const storage = {
+            getItem: () => null,
+            setItem: () => {
+                throw new DOMException('full', 'QuotaExceededError');
+            },
+        } as unknown as Storage;
+        const store = createBrowserStore(() => storage);
+
+        // When
+        recordFirstExposure(store, VISITOR, 0);
+
+        // Then: the exposure is found and the click is counted only once
+        expect(claimFirstSignupClick(store, VISITOR, 1_000)).toBe(1);
+        expect(claimFirstSignupClick(store, VISITOR, 2_000)).toBeNull();
+    });
+});
+
+describe('claimFirstSignupClickAcrossTabs', () => {
+    // An exclusive lock per name, like the Web Locks API: callbacks for one name run one after another.
+    function fakeLocks() {
+        const tails = new Map<string, Promise<unknown>>();
+        const names: string[] = [];
+        const locks = {
+            request: (name: string, callback: () => unknown) => {
+                names.push(name);
+                const run = (tails.get(name) ?? Promise.resolve()).then(() => callback());
+                tails.set(
+                    name,
+                    run.catch(() => {}),
+                );
+                return run;
+            },
+        } as unknown as LockManagerLike;
+        return { locks, names };
+    }
+
+    it('lets only one of two concurrent tabs claim the first click', async () => {
+        // Given: two tabs sharing one storage, both exposed
+        const shared = mapStore();
+        recordFirstExposure(shared, VISITOR, 0);
+        const { locks, names } = fakeLocks();
+
+        // When: both claim at once
+        const results = await Promise.all([
+            claimFirstSignupClickAcrossTabs(shared, VISITOR, locks, () => 1_000),
+            claimFirstSignupClickAcrossTabs(shared, VISITOR, locks, () => 1_500),
+        ]);
+
+        // Then
+        expect(results.filter((seconds) => seconds !== null)).toEqual([1]);
+        expect(names).toEqual([
+            `studystreak:${VISITOR}:signup-click-claim`,
+            `studystreak:${VISITOR}:signup-click-claim`,
+        ]);
+    });
+
+    it('claims directly when the Web Locks API is unavailable', async () => {
+        // Given
+        const store = mapStore();
+        recordFirstExposure(store, VISITOR, 0);
+
+        // When / Then
+        await expect(claimFirstSignupClickAcrossTabs(store, VISITOR, undefined, () => 2_000)).resolves.toBe(2);
+        await expect(claimFirstSignupClickAcrossTabs(store, VISITOR, undefined, () => 3_000)).resolves.toBeNull();
     });
 });

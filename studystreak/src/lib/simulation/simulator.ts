@@ -88,23 +88,25 @@ export async function runSimulation(
         now?: () => Date;
     },
 ): Promise<SimulationResult> {
-    const environment = await client.getEnvironment().catch((error: unknown) => {
-        throw new SimulationSetupError(
-            `Could not read the Simulation environment. Check the key and network access. (${error instanceof Error ? error.message : error})`,
-        );
-    });
-    try {
-        assertSimulationEnvironmentName(environment.name);
-    } catch (error) {
-        throw new SimulationSetupError((error as InvalidDataError).message);
-    }
-
     const tracked = Object.fromEntries(TRACKED_EVENTS.map((event) => [event, 0])) as Record<TrackedEvent, number>;
     const visitors: Array<SimulatedVisitor | null> = new Array(options.visitors).fill(null);
     let notEnrolled = 0;
     let assignmentFailures = 0;
+    let environment: { name: string };
 
+    // The client is closed on every path, including a failed environment lookup or a refused environment name.
     try {
+        environment = await client.getEnvironment().catch((error: unknown) => {
+            throw new SimulationSetupError(
+                `Could not read the Simulation environment. Check the key and network access. (${error instanceof Error ? error.message : error})`,
+            );
+        });
+        try {
+            assertSimulationEnvironmentName(environment.name);
+        } catch (error) {
+            throw new SimulationSetupError((error as InvalidDataError).message);
+        }
+
         for (let start = 0; start < options.visitors; start += FLUSH_EVERY_VISITORS) {
             const indexes = Array.from(
                 { length: Math.min(FLUSH_EVERY_VISITORS, options.visitors - start) },

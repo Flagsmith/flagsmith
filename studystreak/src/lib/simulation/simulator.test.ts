@@ -115,24 +115,30 @@ describe('runSimulation', () => {
         expect(client.close).toHaveBeenCalledOnce();
     });
 
-    it.each(['Production', 'Staging'])(
-        'refuses the %s environment before sending anything',
+    it.each(['Production', 'SimulationProduction', 'Development', 'Staging', 'StudyStreak Simulation'])(
+        'refuses the %s environment before sending anything and still closes the client',
         async (environmentName) => {
+            // Given
             const { client } = fakeClient({ environmentName });
 
+            // When / Then
             await expect(runSimulation(client, OPTIONS, callbacks())).rejects.toThrow(SimulationSetupError);
             expect(client.getExperimentFlag).not.toHaveBeenCalled();
             expect(client.trackEvent).not.toHaveBeenCalled();
+            expect(client.close).toHaveBeenCalledOnce();
         },
     );
 
-    it('stops when the environment cannot be read', async () => {
+    it('stops when the environment cannot be read and still closes the client', async () => {
+        // Given
         const { client } = fakeClient();
         client.getEnvironment.mockRejectedValue(new Error('401'));
 
+        // When / Then
         await expect(runSimulation(client, OPTIONS, callbacks())).rejects.toThrow(
             'Could not read the Simulation environment',
         );
+        expect(client.close).toHaveBeenCalledOnce();
     });
 
     it.each([

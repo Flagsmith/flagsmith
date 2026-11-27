@@ -47,6 +47,26 @@ describe('SupplementaryReport', () => {
         expect(text).toContain('Inconclusive');
     });
 
+    it("shows each arm's visitor and conversion counts in both conversion tables", async () => {
+        // Given: unequal arms, so swapped or wrong counts cannot pass
+        const container = await renderReport(dataset(500, 400));
+
+        // When
+        const rows = [...container.querySelectorAll('tbody tr')].map((row) =>
+            [...row.querySelectorAll('td')].slice(0, 3).map((cell) => cell.textContent),
+        );
+
+        // Then: signups (50 and 62) and clicks (80 and 90) for 500 control and 400 social-proof visitors
+        expect(rows).toEqual(
+            expect.arrayContaining([
+                ['Control (plain button)', '500', '50'],
+                ['Social proof', '400', '62'],
+                ['Control (plain button)', '500', '80'],
+                ['Social proof', '400', '90'],
+            ]),
+        );
+    });
+
     it('reports clicker-only times separately from the official zero-filled metric', async () => {
         const section = [...(await renderReport(dataset(500, 500))).querySelectorAll('section')][4]!;
 

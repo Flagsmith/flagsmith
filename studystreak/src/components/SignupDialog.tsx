@@ -12,6 +12,18 @@ type SignupResponseBody = { error?: string; fieldErrors?: SignupErrors };
 
 const INITIAL_STATE: SubmissionState = { status: 'editing', errors: {} };
 
+const FIELD_ORDER = ['name', 'email'] as const;
+const FIELD_LABELS: Record<(typeof FIELD_ORDER)[number], string> = { name: 'Name', email: 'Email' };
+
+/** The text announced after a failed submit: the general message, then each field error in form order. */
+export function describeSubmissionErrors(errors: SignupErrors, message?: string): string | null {
+    const fieldMessages = FIELD_ORDER.filter((field) => errors[field]).map(
+        (field) => `${FIELD_LABELS[field]}: ${errors[field]}`,
+    );
+    const lead = message ?? (fieldMessages.length > 0 ? 'Check the highlighted fields.' : null);
+    return lead === null ? null : [lead, ...fieldMessages].join(' ');
+}
+
 async function submitSignup(form: HTMLFormElement): Promise<SubmissionState> {
     const formData = new FormData(form);
     const signup = validateSignup({ name: formData.get('name'), email: formData.get('email') });
@@ -43,6 +55,21 @@ export function SignupDialog({ open, onClose }: { open: boolean; onClose: () => 
     const submitting = useRef(false);
     const [state, setState] = useState<SubmissionState>(INITIAL_STATE);
     const ids = { title: useId(), notice: useId(), name: useId(), email: useId() };
+    const nameRef = useRef<HTMLInputElement>(null);
+    const emailRef = useRef<HTMLInputElement>(null);
+
+    // After a failed submit, move focus to the first invalid field so keyboard and screen-reader users land on it.
+    useEffect(() => {
+        if (state.status !== 'editing') {
+            return;
+        }
+        const firstInvalid = FIELD_ORDER.find((field) => state.errors[field]);
+        if (!firstInvalid) {
+            return;
+        }
+        // Each submit produces a new state object, so this runs once per submit.
+        (firstInvalid === 'name' ? nameRef : emailRef).current?.focus();
+    }, [state]);
 
     useEffect(() => {
         const dialog = dialogRef.current;
@@ -65,6 +92,9 @@ export function SignupDialog({ open, onClose }: { open: boolean; onClose: () => 
     }
 
     const errors = state.status === 'editing' ? state.errors : {};
+    const announcement = state.status === 'editing' ? describeSubmissionErrors(state.errors, state.message) : null;
+    // Closing the native dialog fires its close event, which notifies the parent exactly once.
+    const close = () => dialogRef.current?.close();
     const inputClass =
         'mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 focus:border-indigo-600 focus:outline-2 focus:outline-indigo-600 aria-invalid:border-red-600';
 
@@ -83,7 +113,7 @@ export function SignupDialog({ open, onClose }: { open: boolean; onClose: () => 
                     </h2>
                     <button
                         type="button"
-                        onClick={onClose}
+                        onClick={close}
                         aria-label="Close"
                         className="rounded-md px-2 text-2xl leading-none text-slate-500 hover:text-slate-900 focus-visible:outline-2 focus-visible:outline-indigo-600"
                     >
@@ -100,7 +130,7 @@ export function SignupDialog({ open, onClose }: { open: boolean; onClose: () => 
                         <p className="text-slate-700">Thanks for trying StudyStreak. Your demo sign-up was received.</p>
                         <button
                             type="button"
-                            onClick={onClose}
+                            onClick={close}
                             className="mt-5 h-11 w-full rounded-lg bg-indigo-600 font-semibold text-white hover:bg-indigo-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
                         >
                             Close
@@ -113,6 +143,7 @@ export function SignupDialog({ open, onClose }: { open: boolean; onClose: () => 
                                 Name
                             </label>
                             <input
+                                ref={nameRef}
                                 id={ids.name}
                                 name="name"
                                 autoComplete="name"
@@ -133,6 +164,7 @@ export function SignupDialog({ open, onClose }: { open: boolean; onClose: () => 
                                 Email
                             </label>
                             <input
+                                ref={emailRef}
                                 id={ids.email}
                                 name="email"
                                 type="email"
@@ -148,9 +180,9 @@ export function SignupDialog({ open, onClose }: { open: boolean; onClose: () => 
                                 </p>
                             )}
                         </div>
-                        {state.status === 'editing' && state.message && (
+                        {announcement && (
                             <p role="alert" className="text-sm text-red-700">
-                                {state.message}
+                                {announcement}
                             </p>
                         )}
                         <button

@@ -27,6 +27,9 @@ export function summariseTimeToClick(
         throw new InvalidDataError(`${name}: click times must be finite and non-negative (got ${invalid}).`);
     }
     const total = clickSeconds.reduce((sum, seconds) => sum + seconds, 0);
+    if (!Number.isFinite(total)) {
+        throw new InvalidDataError(`${name}: the total click time is too large to summarise.`);
+    }
     return {
         visitors,
         clickers: clickSeconds.length,

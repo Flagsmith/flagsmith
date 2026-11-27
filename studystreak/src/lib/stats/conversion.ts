@@ -11,6 +11,8 @@ export const MINIMUM_SAMPLE = { visitors: 50, conversions: 5 } as const;
 export const DECISION_THRESHOLD = 0.95;
 
 const DEFAULT_DRAWS = 100_000;
+/** Caps the Monte Carlo work so a mistaken draws argument cannot hang the caller. */
+const MAX_DRAWS = 10_000_000;
 const DEFAULT_SEED = 20_261_126;
 
 export type ArmCounts = { visitors: number; conversions: number };
@@ -97,6 +99,9 @@ export function compareConversion(
 ): ConversionComparison {
     validateArmCounts('control', control);
     validateArmCounts('treatment', treatment);
+    if (!Number.isSafeInteger(draws) || draws < 1 || draws > MAX_DRAWS) {
+        throw new InvalidDataError(`draws must be a positive integer no larger than ${MAX_DRAWS} (got ${draws}).`);
+    }
 
     const controlPosterior = posteriorOf(control);
     const treatmentPosterior = posteriorOf(treatment);

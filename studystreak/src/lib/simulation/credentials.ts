@@ -25,18 +25,26 @@ export function readSimulationServerKey(env: Readonly<Record<string, string | un
     return key;
 }
 
-const PRODUCTION_NAME_PATTERN = /\bprod(uction)?\b/i;
+/** The only environment name the simulator accepts, compared case-insensitively after trimming. */
+export const SIMULATION_ENVIRONMENT_NAME = 'Simulation';
 
-/** The environment behind the key must be named as a Simulation environment, and never as Production. */
-export function assertSimulationEnvironmentName(name: string): void {
-    if (PRODUCTION_NAME_PATTERN.test(name)) {
+/**
+ * The environment behind the key must be named exactly "Simulation". Any other name, including one that merely
+ * contains "Simulation" (such as "SimulationProduction"), is refused, so a name that cannot be identified with
+ * confidence always fails safe. A name containing "prod" anywhere gets an explicit Production error.
+ */
+export function assertSimulationEnvironmentName(name: unknown): void {
+    if (typeof name !== 'string' || name.trim() === '') {
+        throw new InvalidDataError('The key belongs to an environment with no name. Refusing to simulate.');
+    }
+    if (/prod/i.test(name)) {
         throw new InvalidDataError(
             `The key belongs to the "${name}" environment, which looks like Production. Refusing to simulate.`,
         );
     }
-    if (!/simulation/i.test(name)) {
+    if (name.trim().toLowerCase() !== SIMULATION_ENVIRONMENT_NAME.toLowerCase()) {
         throw new InvalidDataError(
-            `The key belongs to the "${name}" environment. The simulator only runs against an environment whose name contains "Simulation".`,
+            `The key belongs to the "${name}" environment. The simulator only runs against the environment named exactly "${SIMULATION_ENVIRONMENT_NAME}".`,
         );
     }
 }

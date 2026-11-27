@@ -57,6 +57,16 @@ export function checkSampleRatio(control: number, treatment: number, expectedTre
             expectedShare: expectedTreatmentShare,
         };
     }
+    // A boundary share makes one expected count zero, and the statistic NaN, which would read as "ok".
+    if (!(expectedTreatmentShare > 0 && expectedTreatmentShare < 1)) {
+        return {
+            status: 'not_checked',
+            reason: `The expected treatment share must be strictly between 0 and 1 (got ${expectedTreatmentShare}).`,
+            control,
+            treatment,
+            expectedShare: expectedTreatmentShare,
+        };
+    }
     const expectedTreatment = total * expectedTreatmentShare;
     const expectedControl = total - expectedTreatment;
     const chiSquare =

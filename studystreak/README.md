@@ -109,9 +109,11 @@ npm run simulate:traffic  (Simulation environment only) ────────
 | Vitest and jsdom       | 5.1, 31 | Unit and integration tests                                 |
 | tsx                    | 4.23    | Running the simulator and analysis scripts                 |
 
-The project was developed and tested on **Node.js 22.23**. Next.js 16 needs at least 20.9, but other versions have not
-been tested, and `npm run simulate:traffic` relies on Node's `--env-file-if-exists` flag. The app lives in
-`studystreak/` inside a fork of the Flagsmith monorepo and does not depend on any other part of it.
+The project was developed and tested on **Node.js 22.23**. `package.json` declares `^22.22.2 || ^24.15.0 || >=26.0.0`,
+the versions the installed test stack supports (jsdom 31 needs 22.22.2 or 24.15, and Vitest 5 does not support Node 23
+or 25). Next.js 16 alone would accept 20.9, but `npm test` would not run there. Only 22.23 has been tested, and
+`npm run simulate:traffic` relies on Node's `--env-file-if-exists` flag. The app lives in `studystreak/` inside a fork
+of the Flagsmith monorepo and does not depend on any other part of it.
 
 ## Flagsmith integration
 
@@ -229,8 +231,10 @@ buffered is sent.
 
 - The simulator reads only `FLAGSMITH_SIMULATION_SERVER_KEY`, which must be a `ser.` key. It refuses a key that matches
   `FLAGSMITH_SERVER_KEY` or `FLAGSMITH_CLIENT_ENVIRONMENT_KEY`, and never falls back to another variable.
-- Before sending anything, it reads the environment's name from Flagsmith. It refuses any name containing "prod" or
-  "production", and any name that does not contain "Simulation".
+- Before sending anything, it reads the environment's name from Flagsmith and runs only if the name is exactly
+  `Simulation` (ignoring case and surrounding spaces). Every other name is refused: a name containing "prod" anywhere
+  (including `SimulationProduction`) is reported as Production, and any other name (such as `StudyStreak Simulation` or
+  `Development`) is refused as ambiguous. The SDK client is closed even when this check fails.
 - It stops with a setup error in any of these cases:
   - the flag is missing or disabled;
   - no experiment is running;

@@ -34,6 +34,19 @@ describe('betaQuantile', () => {
     ])('quantile %d of Beta(%d, %d) matches SciPy', (probability, a, b, expected) => {
         expect(betaQuantile(probability, a, b)).toBeCloseTo(expected, 9);
     });
+
+    it.each([
+        [0, 0],
+        [1, 1],
+    ])('returns the exact support endpoint for probability %d', (probability, expected) => {
+        // Given / When / Then
+        expect(betaQuantile(probability, 51, 451)).toBe(expected);
+        expect(betaQuantile(probability, 1, 1)).toBe(expected);
+    });
+
+    it.each([-0.1, 1.1, Number.NaN])('rejects the probability %d', (probability) => {
+        expect(() => betaQuantile(probability, 2, 3)).toThrow(RangeError);
+    });
 });
 
 describe('probabilityBExceedsA', () => {

@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { readFlagsmithServerConfig } from '@/lib/env';
+import { readLimitedBody } from '@/lib/server/read-limited-body';
 import { recordSignupConversion } from '@/lib/server/record-signup-conversion';
 import { validateSignup } from '@/lib/signup';
 import { readVisitorId } from '@/lib/visitor-id';
@@ -13,15 +14,16 @@ const respond = (body: SignupResponse, status: number) => NextResponse.json(body
 async function readJsonBody(
     request: NextRequest,
 ): Promise<{ ok: true; body: unknown } | { ok: false; status: number }> {
+    // A declared oversized length is refused without reading; otherwise the limit is enforced while streaming.
     if (Number(request.headers.get('content-length') ?? 0) > MAX_BODY_BYTES) {
         return { ok: false, status: 413 };
     }
-    const text = await request.text();
-    if (new Blob([text]).size > MAX_BODY_BYTES) {
-        return { ok: false, status: 413 };
+    const read = await readLimitedBody(request.body, MAX_BODY_BYTES);
+    if (!read.ok) {
+        return { ok: false, status: read.reason === 'too_large' ? 413 : 400 };
     }
     try {
-        return { ok: true, body: JSON.parse(text) };
+        return { ok: true, body: JSON.parse(read.text) };
     } catch {
         return { ok: false, status: 400 };
     }

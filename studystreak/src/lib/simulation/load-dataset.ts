@@ -15,8 +15,7 @@ export async function loadSimulatedDataset(
 ): Promise<DatasetLoadResult> {
     let text: string;
     try {
-        // The dataset is bundled through outputFileTracingIncludes in next.config.ts, so tracing this
-        // dynamic path would only add the whole project to the server output.
+        // Bundled via outputFileTracingIncludes; tracing this dynamic path would add the whole project.
         text = await readFile(/*turbopackIgnore: true*/ filePath, 'utf8');
     } catch (error) {
         if ((error as NodeJS.ErrnoException).code === 'ENOENT') {

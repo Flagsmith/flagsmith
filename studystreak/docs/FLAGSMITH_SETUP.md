@@ -4,8 +4,15 @@ This guide configures Flagsmith **Cloud** (app.flagsmith.com) for the `study_str
 based on the Flagsmith Experimentation documentation and on the dashboard and API source code in this repository
 (`docs/docs/experimentation/`, `frontend/web/components/experiments/`, `api/experimentation/`).
 
-**Status:** these steps have **not yet been carried out against a live Flagsmith account** by the team. Treat each step
-as a checklist and record the results in [FINAL_VERIFICATION.md](FINAL_VERIFICATION.md).
+**Status:**
+
+| Environment    | Status                                                                                                          |
+| -------------- | --------------------------------------------------------------------------------------------------------------- |
+| **Simulation** | **Set up and used.** The team completed these steps and ran the simulator against it (see FINAL_VERIFICATION).  |
+| **Production** | **Not set up.** No Production experiment exists yet. Follow section 6's Production steps, in order, when ready. |
+
+Record each result in [FINAL_VERIFICATION.md](FINAL_VERIFICATION.md). Simulation results are synthetic and are never
+reported as real-user results.
 
 Flagsmith Experimentation is in beta. If the dashboard differs from what is described here, follow the dashboard and
 note the difference.
@@ -16,13 +23,15 @@ note the difference.
    If it does not, Experimentation is not enabled for your organisation.
 2. Create two environments in that project:
 
-| Environment    | Name must…                                  | Receives                              |
-| -------------- | ------------------------------------------- | ------------------------------------- |
-| **Production** | not contain "Simulation"                    | Real visitors only. Official results. |
-| **Simulation** | contain "Simulation" and not contain "prod" | `npm run simulate:traffic` only.      |
+| Environment    | Name                                         | Receives                              |
+| -------------- | -------------------------------------------- | ------------------------------------- |
+| **Production** | `Production` (must not contain "Simulation") | Real visitors only. Official results. |
+| **Simulation** | exactly `Simulation`                         | `npm run simulate:traffic` only.      |
 
-The simulator checks the environment's name and refuses to run against anything that is not clearly a Simulation
-environment. Never point the simulator at Production, or the app at Simulation.
+The simulator reads the name of the environment behind its key and runs only if that name is exactly `Simulation`
+(ignoring case and surrounding spaces). Every other name is refused, including `SimulationProduction`,
+`StudyStreak Simulation` and `Development`, and any name containing "prod" is reported as Production. Never point the
+simulator at Production, or the app at Simulation.
 
 ## 2. Warehouse (each environment)
 
@@ -112,11 +121,15 @@ Settings for both environments:
 
 - **The dashboard wizard attaches only one metric**, the primary one, in its Measurement step.
 - **Creating an experiment in the dashboard starts it immediately**, unless your account has experiment lifecycle states
-  enabled. A running experiment locks the flag's configuration and variations.
+  enabled. The wizard creates the experiment with its rollout disabled, then calls `/start/` straight away, and starting
+  is what enables the rollout and lets visitors into the variants
+  (`frontend/web/components/experiments/CreateExperimentWizard.tsx`, `enable_experiment_rollout` in
+  `api/experimentation/services.py`). A running experiment locks the flag's configuration and variations.
 
-### Simulation environment
+### Simulation environment (done)
 
-Create the experiment in the dashboard (**Experiments › Create Experiment**):
+The team created this experiment in the dashboard (**Experiments › Create Experiment**), which started it straight away.
+That is acceptable only because Simulation receives synthetic traffic:
 
 1. **Setup:** name, hypothesis, flag.
 2. **Rollout:** 100%, **Split evenly**.
@@ -125,39 +138,61 @@ Create the experiment in the dashboard (**Experiments › Create Experiment**):
 
 Then attach the two other metrics (section 7).
 
-### Production environment
+### Production environment (not done yet)
 
-**Do not start the Production experiment until the deployed app has passed the checks in
-[FINAL_VERIFICATION.md](FINAL_VERIFICATION.md).** Then either:
+**Visitors must not enter the Production experiment until every readiness check has passed.** So the Production
+experiment is created **with its rollout disabled**, and nothing is started until the checks pass.
 
-- create it in the dashboard as above and attach the other metrics straight away (section 7); or
-- create it through the API with all three metrics, which leaves it stopped, and start it when ready:
+**Do not use the dashboard wizard for Production** unless experiment lifecycle states are enabled for your account:
+without them, the wizard starts the experiment, and enables its rollout, as soon as it is created.
 
-```bash
-# Body for: flagsmith api api/v1/environments/<PRODUCTION_ENV_KEY>/experiments/ --input -
-{
-  "feature": <flag id>,
-  "name": "study_streak_social_proof",
-  "hypothesis": "Showing social proof next to the signup button will increase completed signup conversion by at least 10% relative to a plain signup button.",
-  "metrics": [
-    { "metric": <Signup completion id>, "expected_direction": "increase" },
-    { "metric": <Signup click-through id>, "expected_direction": "increase" },
-    { "metric": <Time to signup click id>, "expected_direction": "not_increase" }
-  ],
-  "experiment_rollout": {
-    "enabled": true,
-    "rollout_percentage": 100,
-    "feature_state_value": { "type": "string", "value": "control" },
-    "multivariate_feature_state_values": [
-      { "multivariate_feature_option": <social_proof variation id>, "percentage_allocation": 50 }
-    ]
-  }
-}
-# Later, to start it:  POST api/v1/environments/<PRODUCTION_ENV_KEY>/experiments/<experiment id>/start/
-```
+1. **Create it through the API, disabled.** This attaches all three metrics and leaves the experiment stopped, with its
+   rollout override disabled, so no visitor is enrolled and no exposure is recorded:
+
+   ```bash
+   # Body for: flagsmith api api/v1/environments/<PRODUCTION_ENV_KEY>/experiments/ --input -
+   {
+     "feature": <flag id>,
+     "name": "study_streak_social_proof",
+     "hypothesis": "Showing social proof next to the signup button will increase completed signup conversion by at least 10% relative to a plain signup button.",
+     "metrics": [
+       { "metric": <Signup completion id>, "expected_direction": "increase" },
+       { "metric": <Signup click-through id>, "expected_direction": "increase" },
+       { "metric": <Time to signup click id>, "expected_direction": "not_increase" }
+     ],
+     "experiment_rollout": {
+       "enabled": false,
+       "rollout_percentage": 100,
+       "feature_state_value": { "type": "string", "value": "control" },
+       "multivariate_feature_state_values": [
+         { "multivariate_feature_option": <social_proof variation id>, "percentage_allocation": 50 }
+       ]
+     }
+   }
+   ```
+
+   `"enabled": false` is required. **Never create the Production experiment with `"enabled": true`.** The
+   `rollout_percentage` only describes the split that will apply once the experiment is started.
+
+2. **Check that nothing is live yet.** Read the experiment back
+   (`flagsmith api api/v1/environments/<PRODUCTION_ENV_KEY>/experiments/<experiment id>/`) and confirm that it is not
+   running and that `experiment_rollout.enabled` is `false`.
+
+3. **Pass every readiness check** in [FINAL_VERIFICATION.md](FINAL_VERIFICATION.md) against the deployed app: the
+   Production keys are set (and the Simulation key is not), the deployed commit is the reviewed one, and the flag,
+   variation key and metrics match.
+
+4. **Only then start it**, with explicit approval from the person running the experiment:
+
+   ```bash
+   # POST api/v1/environments/<PRODUCTION_ENV_KEY>/experiments/<experiment id>/start/
+   ```
+
+   Starting marks the experiment as running and is the step that enables the rollout. From this moment real visitors are
+   enrolled and every enrolled visitor adds exposures.
 
 `<PRODUCTION_ENV_KEY>` is the environment's client-side key, which is how the API identifies environments. It is not a
-secret.
+secret, but keep it out of chat and commits anyway.
 
 ## 7. Attaching the other metrics
 

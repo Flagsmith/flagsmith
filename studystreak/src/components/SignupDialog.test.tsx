@@ -56,6 +56,32 @@ describe('SignupDialog', () => {
         expect(text()).toContain('Enter a valid email address.');
     });
 
+    it('announces client-side field errors and focuses the first invalid field', async () => {
+        // Given
+        fillIn('name', 'Asha');
+        fillIn('email', 'alice@example..com');
+
+        // When
+        await submit();
+
+        // Then
+        expect(query('[role="alert"]')?.textContent).toBe(
+            'Check the highlighted fields. Email: Enter a valid email address.',
+        );
+        expect(rendered.container.ownerDocument.activeElement).toBe(query('input[name="email"]'));
+    });
+
+    it('focuses the name field first when both fields are invalid', async () => {
+        // Given / When
+        await submit();
+
+        // Then
+        expect(query('[role="alert"]')?.textContent).toBe(
+            'Check the highlighted fields. Name: Enter your name. Email: Enter your email address.',
+        );
+        expect(rendered.container.ownerDocument.activeElement).toBe(query('input[name="name"]'));
+    });
+
     it('submits valid input once and shows the success state', async () => {
         fetchMock.mockResolvedValue(Response.json({ status: 'accepted' }, { status: 201 }));
         fillIn('name', ' Asha ');
@@ -125,9 +151,12 @@ describe('SignupDialog', () => {
         expect(query('[role="alert"]')?.textContent).toBe('Check your connection and try again.');
     });
 
-    it('closes from the close button', async () => {
+    it('closes from the close button and notifies the parent exactly once', async () => {
+        // Given / When
         await act(async () => query<HTMLButtonElement>('button[aria-label="Close"]')!.click());
 
-        expect(onClose).toHaveBeenCalled();
+        // Then
+        expect(dialog().open).toBe(false);
+        expect(onClose).toHaveBeenCalledOnce();
     });
 });

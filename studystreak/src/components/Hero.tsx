@@ -51,7 +51,11 @@ function StreakPreview() {
                         >
                             {studied ? '✓' : ''}
                         </span>
-                        <span className="text-xs text-slate-500">{day}</span>
+                        <span className="text-xs text-slate-500">
+                            {day}
+                            {/* The circle is decorative; this gives each day's status to assistive technology. */}
+                            <span className="sr-only">{studied ? ', studied' : ', not studied'}</span>
+                        </span>
                     </li>
                 ))}
             </ol>

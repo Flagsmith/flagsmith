@@ -35,7 +35,7 @@ verified.
 
 | Item                                                                                                                                | Status                                | Evidence / action                                                                                                         |
 | ----------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| Simulation environment exists, and its name contains "Simulation"                                                                   | Verified                              | Team setup: environment `Simulation`, id 121260, project 56690 (read-only diagnostic)                                     |
+| Simulation environment exists, and is named exactly "Simulation"                                                                    | Verified                              | Team setup: environment `Simulation`, id 121260, project 56690 (read-only diagnostic)                                     |
 | Managed warehouse shows **Connected**                                                                                               | Requires manual action                | §2                                                                                                                        |
 | Flag `study_streak_social_proof` enabled, with variation key `social_proof` (not `Variant_1`)                                       | Verified                              | Team setup: flag 306257 on in Simulation; variation key `social_proof`                                                    |
 | Three metrics created with the exact event names                                                                                    | Verified                              | Team setup: metrics 790 (`signed_up`), 791 and 792 (`signup_clicked`)                                                     |
@@ -56,7 +56,8 @@ verified.
 | App deployed to Vercel by the team at https://studystreak-five-delta.vercel.app                                        | Not verified           | Reported by the team. Not checked from our development environment, whose network blocks `vercel.app` |
 | Deployment serves branch `feature/studystreak-experimentation` and is reachable                                        | Requires manual action | Open the URL and check the Vercel deployment's commit                                                 |
 | Rate limit on `POST /api/signup` at the hosting edge                                                                   | Requires manual action | README → Security and privacy                                                                         |
-| Production experiment started **only after** the event-delivery checks below pass                                      | Requires manual action | §6                                                                                                    |
+| Production experiment created through the API with `experiment_rollout.enabled: false`, and read back as not running   | Requires manual action | [FLAGSMITH_SETUP.md §6](FLAGSMITH_SETUP.md), Production steps 1–2                                     |
+| Production experiment started **only after** the event-delivery checks below pass, with explicit approval              | Requires manual action | §6, Production step 4 (`/start/` is what enables the rollout)                                         |
 
 ## Event delivery
 

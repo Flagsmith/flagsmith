@@ -23,20 +23,57 @@ describe('readSimulationServerKey', () => {
     });
 
     it('never includes the key in its errors', () => {
+        // Given
+        const env = { FLAGSMITH_SIMULATION_SERVER_KEY: 'not-a-server-secret-123' };
+
+        // When
+        let error: unknown;
         try {
-            readSimulationServerKey({ FLAGSMITH_SIMULATION_SERVER_KEY: 'not-a-server-secret-123' });
-        } catch (error) {
-            expect((error as Error).message).not.toContain('not-a-server-secret-123');
+            readSimulationServerKey(env);
+        } catch (caught) {
+            error = caught;
         }
+
+        // Then
+        expect(error).toBeInstanceOf(InvalidDataError);
+        expect((error as Error).message).not.toContain('not-a-server-secret-123');
     });
 });
 
 describe('assertSimulationEnvironmentName', () => {
-    it.each(['Simulation', 'StudyStreak Simulation', 'simulation-env'])('accepts %s', (name) => {
+    it.each(['Simulation', 'simulation', 'SIMULATION', '  Simulation  '])('accepts %j', (name) => {
         expect(() => assertSimulationEnvironmentName(name)).not.toThrow();
     });
 
-    it.each(['Production', 'prod', 'Production Simulation', 'Staging', 'Development'])('refuses %s', (name) => {
+    it.each([
+        'Production',
+        'production',
+        'prod',
+        'Prod',
+        'SimulationProduction',
+        'Simulation Production',
+        'Simulation-prod',
+        'Production Simulation',
+        'ProdSimulation',
+        'preprod-simulation',
+    ])('refuses the Production-like name %j as Production', (name) => {
+        expect(() => assertSimulationEnvironmentName(name)).toThrow('looks like Production');
+    });
+
+    it.each([
+        'Development',
+        'Staging',
+        'StudyStreak Simulation',
+        'simulation-env',
+        'Simulation 2',
+        'Simulations',
+        'Sim',
+        'Test',
+    ])('refuses the ambiguous name %j', (name) => {
+        expect(() => assertSimulationEnvironmentName(name)).toThrow('named exactly "Simulation"');
+    });
+
+    it.each(['', '   ', undefined, null, 42])('refuses a missing or non-string name %j', (name) => {
         expect(() => assertSimulationEnvironmentName(name)).toThrow(InvalidDataError);
     });
 });

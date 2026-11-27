@@ -16,9 +16,18 @@ that is an honest and valid outcome.
   - To get a different variant in a window, delete the `studystreak_visitor_id` cookie (DevTools → Application →
     Cookies) and reload. Repeat until you have both.
   - Flagsmith decides the variant, so you cannot pick it.
-- [ ] Remember that against Production every visitor ID you create, and every click and signup you make, is counted in
-      the official results. Keep test visits and signups to a minimum, and mention in the video that team test visits
-      are included.
+- [ ] Remember what test traffic does to the official Production results, once the Production experiment has been
+      started:
+  - every visitor ID that Flagsmith enrols adds **exposures**, and each enrolled ID is counted as a visitor in its
+    variant;
+  - only that visitor's **first** signup click is sent (later clicks send nothing), and a completed signup sends
+    `signed_up`;
+  - Occurrence metrics count each identity **once**, so for click-through and signup completion only whether that
+    visitor's first click and conversion happened affects the result, not how many times they clicked or signed up.
+
+  Keep test visitors to a minimum, and mention in the video that team test visits are included. Before the Production
+  experiment is started, visitors are not enrolled, so test visits add no exposures.
+
 - [ ] DevTools → Network is open in one window, filtered to `events.api.flagsmith.com`.
 - [ ] The Flagsmith dashboard is open on: **Metrics**, the **Production experiment** page, and **Environment Settings ›
       Warehouse**.
@@ -80,11 +89,18 @@ Point at the button and the line beneath it in each window.
 
 3. **Experiment page:** show 100% rollout, the 50/50 split, the Exposures panel and the results table. Read out only
    what is shown:
-   - "Collecting data": "Each variant needs at least 50 visitors and 5 conversions before Flagsmith reports a result.
-     We're not there yet."
+   - "Collecting data": state the threshold for the metric on screen.
+     - **Occurrence** metrics (Signup completion, Signup click-through): "Each variant needs at least 50 visitors and 5
+       conversions before Flagsmith reports a result. We're not there yet."
+     - **Mean** metric (Time to signup click): "Each variant needs at least 50 visitors before Flagsmith reports this
+       metric. There is no conversion minimum for a Mean metric."
    - Numbers shown: "The social-proof lift is _[read from screen]_, with a 95% credible interval of _[read]_ and a win
      probability of _[read]_."
-   - If the interval crosses zero: "The interval includes zero, so this is inconclusive. We don't call a winner."
+   - The verdict: **read out the verdict Flagsmith displays for the metric** (for example winning, losing or
+     inconclusive) and do not replace it with your own rule. A 95% interval that crosses zero does not by itself make
+     the result inconclusive: Flagsmith can still show a win probability above 95% and label the variant as winning. If
+     you mention the interval, say it alongside the displayed verdict: "Flagsmith labels this _[verdict]_, with a win
+     probability of _[read]_; the 95% interval is _[read]_."
    - **Sample ratio mismatch** warning: "Traffic didn't split as configured, so we wouldn't trust these numbers yet."
 
 ### 3:10–4:00 · Supplementary analysis (screen: `/supplementary-analysis`)

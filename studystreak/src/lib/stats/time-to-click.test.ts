@@ -42,4 +42,12 @@ describe('summariseTimeToClick', () => {
     it('rejects more clickers than visitors', () => {
         expect(() => summariseTimeToClick('control', 1, [1, 2])).toThrow('exceed');
     });
+
+    it('rejects finite click times whose total overflows', () => {
+        // Given
+        const times = [Number.MAX_VALUE, Number.MAX_VALUE];
+
+        // When / Then
+        expect(() => summariseTimeToClick('control', 2, times)).toThrow('too large to summarise');
+    });
 });

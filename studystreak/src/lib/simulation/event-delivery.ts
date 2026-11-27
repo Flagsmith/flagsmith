@@ -29,6 +29,8 @@ export function createDeliveryTracker(fetchImpl: typeof fetch = fetch): Delivery
         if (!url.endsWith(EVENTS_ENDPOINT_PATH)) {
             return fetchImpl(input, init);
         }
+        // Read the body before dispatch: for fetch(request) it lives on the Request, which fetch then consumes.
+        const body = init?.body ?? (input instanceof Request ? await input.clone().text() : undefined);
         let response: Response;
         try {
             response = await fetchImpl(input, init);
@@ -40,7 +42,7 @@ export function createDeliveryTracker(fetchImpl: typeof fetch = fetch): Delivery
             failedAttempts++;
             return response;
         }
-        for (const name of eventNames(init?.body)) {
+        for (const name of eventNames(body)) {
             if (name in confirmed) {
                 confirmed[name as TrackedEvent]++;
             }

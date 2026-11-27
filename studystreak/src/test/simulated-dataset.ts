@@ -1,5 +1,6 @@
 import {
     SIMULATED_DISCLOSURE,
+    type EventDelivery,
     type SimulatedDataset,
     type SimulatedVisitor,
     type SimulationRun,
@@ -12,6 +13,10 @@ export function simulatedVisitors(
     clicks: number,
     signups: number,
 ): SimulatedVisitor[] {
+    // In the app every signup starts from a click, so the parser rejects a signup without one.
+    if (signups > clicks || clicks > count) {
+        throw new RangeError(`Need signups <= clicks <= count (got ${signups}, ${clicks}, ${count}).`);
+    }
     return Array.from({ length: count }, (_, index) => ({
         visitorId: `sim-${variant}-${index}`,
         variant,
@@ -20,7 +25,25 @@ export function simulatedVisitors(
     }));
 }
 
-export function simulatedRun(visitorsRequested: number, overrides: Partial<SimulationRun> = {}): SimulationRun {
+/** Event counts that agree with the visitor records, all confirmed. */
+export function eventDeliveryFor(visitors: readonly SimulatedVisitor[]): EventDelivery {
+    const clicks = visitors.filter((visitor) => visitor.clickedAfterSeconds !== null).length;
+    const signups = visitors.filter((visitor) => visitor.signedUp).length;
+    return {
+        $flag_exposure: { tracked: visitors.length, confirmed: visitors.length },
+        signup_clicked: { tracked: clicks, confirmed: clicks },
+        signed_up: { tracked: signups, confirmed: signups },
+    };
+}
+
+/** A run for the given visitors (or a visitor count, for visitors who never clicked). */
+export function simulatedRun(
+    visitorsOrCount: readonly SimulatedVisitor[] | number,
+    overrides: Partial<SimulationRun> = {},
+): SimulationRun {
+    const visitors = typeof visitorsOrCount === 'number' ? [] : visitorsOrCount;
+    const visitorsRequested = typeof visitorsOrCount === 'number' ? visitorsOrCount : visitorsOrCount.length;
+    const delivery = eventDeliveryFor(visitors);
     return {
         environmentName: 'Simulation',
         featureName: 'study_streak_social_proof',
@@ -30,11 +53,10 @@ export function simulatedRun(visitorsRequested: number, overrides: Partial<Simul
         medianClickSeconds: 8,
         notEnrolled: 0,
         assignmentFailures: 0,
-        eventDelivery: {
-            $flag_exposure: { tracked: visitorsRequested, confirmed: visitorsRequested },
-            signup_clicked: { tracked: 0, confirmed: 0 },
-            signed_up: { tracked: 0, confirmed: 0 },
-        },
+        eventDelivery:
+            typeof visitorsOrCount === 'number'
+                ? { ...delivery, $flag_exposure: { tracked: visitorsRequested, confirmed: visitorsRequested } }
+                : delivery,
         ...overrides,
     };
 }
@@ -46,7 +68,7 @@ export function simulatedDataset(visitors: SimulatedVisitor[], seed = 7): Simula
         disclosure: SIMULATED_DISCLOSURE,
         seed,
         generatedAt: '2026-11-26T12:00:00.000Z',
-        run: simulatedRun(visitors.length),
+        run: simulatedRun(visitors),
         visitors,
     };
 }

@@ -74,6 +74,8 @@ function parseVisitor(raw: unknown, index: number): SimulatedVisitor {
 
 const isCount = (value: unknown): value is number => Number.isSafeInteger(value) && (value as number) >= 0;
 const isRate = (value: unknown): value is number => typeof value === 'number' && value >= 0 && value <= 1;
+/** An ISO 8601 date-time with a UTC offset, as Date.prototype.toISOString writes it. */
+const ISO_TIMESTAMP_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?(?:Z|[+-]\d{2}:\d{2})$/;
 
 function parseRun(raw: unknown): SimulationRun {
     if (!isRecord(raw)) {
@@ -89,8 +91,19 @@ function parseRun(raw: unknown): SimulationRun {
     if (!isRecord(signupRate) || !VARIANTS.every((variant) => isRate(signupRate[variant]))) {
         throw new InvalidDataError('run.signupRate must give a rate from 0 to 1 for each variant.');
     }
-    if (!isRate(clickToSignupRate) || typeof medianClickSeconds !== 'number' || !(medianClickSeconds > 0)) {
-        throw new InvalidDataError('run.clickToSignupRate and run.medianClickSeconds are invalid.');
+    if (!isRate(clickToSignupRate) || clickToSignupRate === 0) {
+        throw new InvalidDataError('run.clickToSignupRate must be above 0 and at most 1.');
+    }
+    // The same rule as validateSimulationOptions: a signup rate above clickToSignupRate needs a click rate above 100%.
+    for (const variant of VARIANTS) {
+        if ((signupRate[variant] as number) > clickToSignupRate) {
+            throw new InvalidDataError(
+                `run.signupRate.${variant} cannot exceed run.clickToSignupRate (it would need a click rate above 100%).`,
+            );
+        }
+    }
+    if (typeof medianClickSeconds !== 'number' || !(medianClickSeconds > 0)) {
+        throw new InvalidDataError('run.medianClickSeconds must be a positive number.');
     }
     const delivery = raw.eventDelivery;
     if (!isRecord(delivery)) {
@@ -137,13 +150,18 @@ export function parseSimulatedDataset(raw: unknown): SimulatedDataset {
             'Only datasets marked kind "simulated" from the "simulation" environment are accepted.',
         );
     }
-    if (typeof raw.disclosure !== 'string' || raw.disclosure.trim() === '') {
-        throw new InvalidDataError('disclosure must state that the data is simulated.');
+    // Only the canonical wording is accepted, because the report renders it beneath the simulated-data banner.
+    if (raw.disclosure !== SIMULATED_DISCLOSURE) {
+        throw new InvalidDataError('disclosure must be the standard statement that every visitor is simulated.');
     }
     if (!Number.isSafeInteger(raw.seed)) {
         throw new InvalidDataError('seed must be an integer.');
     }
-    if (typeof raw.generatedAt !== 'string' || Number.isNaN(Date.parse(raw.generatedAt))) {
+    if (
+        typeof raw.generatedAt !== 'string' ||
+        !ISO_TIMESTAMP_PATTERN.test(raw.generatedAt) ||
+        Number.isNaN(Date.parse(raw.generatedAt))
+    ) {
         throw new InvalidDataError('generatedAt must be an ISO 8601 timestamp.');
     }
     if (!Array.isArray(raw.visitors)) {
@@ -159,6 +177,20 @@ export function parseSimulatedDataset(raw: unknown): SimulatedDataset {
         throw new InvalidDataError(
             'Visitors, unenrolled visitors and assignment failures must add up to run.visitorsRequested.',
         );
+    }
+    // Every recorded visitor was exposed once, and each click and signup was handed to the SDK once, so the tracked
+    // counts must agree with the visitor records.
+    const expectedTracked: Record<TrackedEvent, number> = {
+        $flag_exposure: visitors.length,
+        signup_clicked: visitors.filter((visitor) => visitor.clickedAfterSeconds !== null).length,
+        signed_up: visitors.filter((visitor) => visitor.signedUp).length,
+    };
+    for (const event of TRACKED_EVENTS) {
+        if (run.eventDelivery[event].tracked !== expectedTracked[event]) {
+            throw new InvalidDataError(
+                `run.eventDelivery.${event}.tracked is ${run.eventDelivery[event].tracked}, but the visitor records contain ${expectedTracked[event]}.`,
+            );
+        }
     }
     return {
         kind: 'simulated',

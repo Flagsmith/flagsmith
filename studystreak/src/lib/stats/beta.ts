@@ -62,8 +62,20 @@ export function betaCdf(x: number, a: number, b: number): number {
     return 1 - (Math.exp(logFront) * incompleteBetaFraction(1 - x, b, a)) / b;
 }
 
-/** Inverse CDF of Beta(a, b), by bisection to within 1e-12. */
+/**
+ * Inverse CDF of Beta(a, b), by bisection to within 1e-12. The boundary probabilities return the exact support
+ * endpoints, 0 and 1, and probabilities outside [0, 1] are rejected.
+ */
 export function betaQuantile(probability: number, a: number, b: number): number {
+    if (!(probability >= 0 && probability <= 1)) {
+        throw new RangeError(`probability must be between 0 and 1 (got ${probability}).`);
+    }
+    if (probability === 0) {
+        return 0;
+    }
+    if (probability === 1) {
+        return 1;
+    }
     let low = 0;
     let high = 1;
     while (high - low > 1e-12) {

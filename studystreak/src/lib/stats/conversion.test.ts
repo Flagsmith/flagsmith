@@ -28,9 +28,9 @@ describe('compareConversion', () => {
     it('estimates the difference and lift intervals within Monte Carlo error', () => {
         expect(result.absoluteDifference.credibleInterval.lower).toBeCloseTo(-0.0152, 2);
         expect(result.absoluteDifference.credibleInterval.upper).toBeCloseTo(0.0632, 2);
-        expect(result.relativeLift.median).toBeCloseTo(0.237, 1);
-        expect(result.relativeLift.credibleInterval.lower).toBeCloseTo(-0.1256, 1);
-        expect(result.relativeLift.credibleInterval.upper).toBeCloseTo(0.76, 1);
+        expect(result.relativeLift.median).toBeCloseTo(0.237, 2);
+        expect(result.relativeLift.credibleInterval.lower).toBeCloseTo(-0.1256, 2);
+        expect(result.relativeLift.credibleInterval.upper).toBeCloseTo(0.76, 2);
     });
 
     it('calls 88% inconclusive rather than declaring a winner', () => {
@@ -97,4 +97,15 @@ describe('compareConversion', () => {
         expect(() => compareConversion(counts, { visitors: 10, conversions: 1 })).toThrow(InvalidDataError);
         expect(() => compareConversion({ visitors: 10, conversions: 1 }, counts)).toThrow(message);
     });
+
+    it.each([0, -5, 1.5, Number.NaN, Number.POSITIVE_INFINITY, 2 ** 53, 10_000_001])(
+        'rejects %d draws before sampling',
+        (draws) => {
+            // Given
+            const arm = { visitors: 100, conversions: 10 };
+
+            // When / Then
+            expect(() => compareConversion(arm, arm, { draws })).toThrow('draws must be a positive integer');
+        },
+    );
 });
