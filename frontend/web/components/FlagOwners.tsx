@@ -18,7 +18,7 @@ const FlagOwners: FC<FlagOwnersProps> = ({ onAdd, onRemove, selectedIds }) => {
   const [showUsers, setShowUsers] = useState(false)
 
   const organisationId = useCurrentOrganisation()?.id
-  const { data: users } = useGetUsersQuery(
+  const { currentData: users } = useGetUsersQuery(
     organisationId ? { organisationId } : skipToken,
   )
 

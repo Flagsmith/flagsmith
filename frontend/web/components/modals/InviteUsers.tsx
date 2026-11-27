@@ -1,3 +1,4 @@
+import { skipToken } from '@reduxjs/toolkit/query'
 import React, { useState, useEffect, useRef, FC } from 'react'
 import IconButton from 'components/base/IconButton'
 import Button from 'components/base/forms/Button'
@@ -64,7 +65,9 @@ const InviteUsers: FC = () => {
 
   const orgId = useCurrentOrganisation()?.id
 
-  const { data: groupData } = useGetGroupsQuery({ orgId: orgId, page: 1 })
+  const { data: groupData } = useGetGroupsQuery(
+    orgId ? { orgId, page: 1 } : skipToken,
+  )
 
   const groupOptions = groupData?.results.map((group) => ({
     label: group.name,

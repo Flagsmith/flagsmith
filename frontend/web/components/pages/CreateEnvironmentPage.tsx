@@ -60,6 +60,8 @@ const CreateEnvironmentPage: React.FC = () => {
 
   const organisation = useCurrentOrganisation()
   const organisationId = organisation?.id
+  const organisationIdRef = useRef<number | undefined>(organisationId)
+  organisationIdRef.current = organisationId
   const currentUserId = useCurrentUser()?.id
   const hasRbac = Utils.getPlansPermission('RBAC')
   const { data: users } = useGetUsersQuery(
@@ -96,7 +98,7 @@ const CreateEnvironmentPage: React.FC = () => {
   const assignEnvironmentAdmins = async (environment: Environment) => {
     const userIds = adminIdsRef.current
     const roleIds = adminRoleIdsRef.current
-    const orgId = organisation?.id
+    const orgId = organisationIdRef.current
     const userRequests = userIds.map((userId) =>
       createUserPermission({
         body: { admin: true, permissions: [], user: userId },

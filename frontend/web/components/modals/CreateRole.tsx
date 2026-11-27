@@ -525,7 +525,7 @@ const CreateRole: FC<CreateRoleType> = ({
               value={userGroupTab}
               onChange={changeSubTab}
               role={role}
-              orgId={organisation?.id}
+              orgId={organisationId}
             />
           </div>
         </TabItem>

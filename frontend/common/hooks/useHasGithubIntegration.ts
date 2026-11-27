@@ -4,7 +4,7 @@ import { useGetGithubIntegrationQuery } from 'common/services/useGithubIntegrati
 
 export function useHasGithubIntegration() {
   const organisationId = useCurrentOrganisation()?.id
-  const { data } = useGetGithubIntegrationQuery(
+  const { currentData: data } = useGetGithubIntegrationQuery(
     organisationId ? { organisation_id: organisationId } : skipToken,
   )
 

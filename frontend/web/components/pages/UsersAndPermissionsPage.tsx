@@ -605,7 +605,6 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
 const UsersAndPermissionsPage: FC<UsersAndPermissionsPageType> = ({
   router,
 }) => {
-  const organisation = useCurrentOrganisation()
   return (
     <AccountProvider>
       {({ organisation }: { organisation: Organisation | null }) => (

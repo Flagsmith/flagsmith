@@ -214,14 +214,19 @@ const EnvironmentAside: FC<HomeAsideType> = ({ environmentId, projectId }) => {
                               }}
                               onChange={(newEnvironmentId) => {
                                 if (newEnvironmentId !== environmentId) {
-                                  AsyncStorage.setItem(
-                                    'lastEnv',
-                                    JSON.stringify({
-                                      environmentId: newEnvironmentId,
-                                      orgId: organisation?.id,
-                                      projectId: projectId,
-                                    }),
-                                  ).finally(() => {
+                                  // App.js can't restore an environment saved
+                                  // without its organisation
+                                  const saved = organisation
+                                    ? AsyncStorage.setItem(
+                                        'lastEnv',
+                                        JSON.stringify({
+                                          environmentId: newEnvironmentId,
+                                          orgId: organisation.id,
+                                          projectId: projectId,
+                                        }),
+                                      )
+                                    : Promise.resolve()
+                                  saved.finally(() => {
                                     const pathname =
                                       document.location.pathname.replace(
                                         /\/experiments\/[^/]+\/?$/,

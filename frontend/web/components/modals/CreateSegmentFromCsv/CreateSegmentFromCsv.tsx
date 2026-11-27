@@ -339,9 +339,9 @@ const CreateSegmentFromCsv: FC<CreateSegmentFromCsvType> = ({ projectId }) => {
       </TabItem>
       <TabItem tabLabelString='Custom Fields' tabLabel='Custom Fields'>
         <FormGroup className='pt-4 setting'>
-          <InputGroup
-            component={
-              organisation && (
+          {organisation && (
+            <InputGroup
+              component={
                 <AddMetadataToEntity
                   organisationId={organisation.id}
                   projectId={Number(projectId)}
@@ -349,9 +349,9 @@ const CreateSegmentFromCsv: FC<CreateSegmentFromCsvType> = ({ projectId }) => {
                   entity={segmentContentType.model}
                   onChange={(m) => setMetadata(m as Metadata[])}
                 />
-              )
-            }
-          />
+              }
+            />
+          )}
         </FormGroup>
       </TabItem>
     </Tabs>

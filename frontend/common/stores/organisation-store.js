@@ -205,6 +205,7 @@ const controller = {
   },
   invalidateInviteLink: (link) => {
     const id = getCurrentOrganisation()?.id
+    if (!id) return
     const role = link.role
     data
       .delete(`${Project.api}organisations/${id}/invite-links/${link.id}/`)

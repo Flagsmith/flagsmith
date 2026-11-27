@@ -992,7 +992,7 @@ export const EditPermissionsModal = ConfigProvider(
 
 const rolesWidths = [250, 600, 100]
 const EditPermissions: FC<EditPermissionsType> = (props) => {
-  const user = useCurrentUser()
+  const currentUser = useCurrentUser()
   const organisation = useCurrentOrganisation()
   const {
     envId,
@@ -1164,8 +1164,8 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
                                     <div className='mb-1 font-weight-medium d-flex align-items-center gap-2'>
                                       <span>
                                         {`${first_name} ${last_name}`}{' '}
-                                        {String(id) === String(user?.id) &&
-                                          '(You)'}
+                                        {String(id) ===
+                                          String(currentUser?.id) && '(You)'}
                                       </span>
                                       <InactiveMembershipChip user={user} />
                                     </div>

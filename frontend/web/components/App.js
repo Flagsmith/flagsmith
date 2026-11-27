@@ -168,8 +168,7 @@ const App = class extends Component {
       // Capped at 2s: a degraded flags API falls back to the legacy page
       // instead of blocking the redirect.
       const storedVariant = getStoredOnboardingVariant()
-      const deciding =
-        !storedVariant && !!getCurrentUser()?.isGettingStarted
+      const deciding = !storedVariant && !!getCurrentUser()?.isGettingStarted
       let timedOut = false
       Promise.race([
         deciding
