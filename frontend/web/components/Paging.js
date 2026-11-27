@@ -4,9 +4,8 @@ import map from 'lodash/map'
 import range from 'lodash/range'
 import propTypes from 'prop-types'
 import cn from 'classnames'
-import { chevronBackOutline, chevronForwardOutline } from 'ionicons/icons'
-import { IonIcon } from '@ionic/react'
 import BareButton from './base/forms/BareButton'
+import { ChevronLeftIcon, ChevronRightIcon } from './icons'
 
 export default class Paging extends PureComponent {
   static displayName = 'Paging'
@@ -59,7 +58,7 @@ export default class Paging extends PureComponent {
           onClick={() => prevPage()}
         >
           <div>
-            <IonIcon icon={chevronBackOutline} />
+            <ChevronLeftIcon width={16} />
           </div>
         </Button>
         {paging.currentPage ? (
@@ -157,7 +156,7 @@ export default class Paging extends PureComponent {
           onClick={() => nextPage()}
         >
           <div>
-            <IonIcon icon={chevronForwardOutline} />
+            <ChevronRightIcon width={16} />
           </div>
         </Button>
       </Row>

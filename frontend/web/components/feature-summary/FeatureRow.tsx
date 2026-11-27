@@ -6,7 +6,6 @@ import IconButton from 'components/base/IconButton'
 import ProjectStore from 'common/stores/project-store'
 import Constants from 'common/constants'
 import { useProtectedTags } from 'common/utils/useProtectedTags'
-import Icon from 'components/icons/Icon'
 import FeatureValue from './FeatureValue'
 import FeatureAction, { FeatureActionProps } from './FeatureAction'
 import classNames from 'classnames'
@@ -31,6 +30,7 @@ import FeatureModalTitle from './FeatureModalTitle'
 import FeatureDescription from './FeatureDescription'
 import FeatureTags from './FeatureTags'
 import { useFeatureRowState } from 'components/pages/features/hooks/useFeatureRowState'
+import { ArrowLeftIcon, PeopleIcon } from 'components/icons'
 
 interface FeatureRowProps {
   // Only the page that owns `?feature=` sets this: Compare renders one row per
@@ -245,7 +245,7 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
             onClick={() => history.goBack()}
             aria-label='Back to the previous flag'
           >
-            <Icon name='arrow-left' width={20} />
+            <ArrowLeftIcon width={20} />
           </IconButton>
         )}
         <FeatureModalTitle
@@ -254,7 +254,7 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
         />
         {ownerChips.length > 0 && (
           <div className='d-none d-md-flex align-items-center gap-1 ms-3'>
-            <Icon name='people' width={16} fill='#9DA4AE' />
+            <PeopleIcon width={16} fill='#9DA4AE' />
             {ownerChips.slice(0, 3).map((chip) => (
               <span key={chip.id} className='chip chip--xs'>
                 {chip.label}

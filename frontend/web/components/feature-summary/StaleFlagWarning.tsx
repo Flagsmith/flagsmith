@@ -3,11 +3,10 @@ import Constants from 'common/constants'
 import moment from 'moment'
 import { Project, ProjectFlag } from 'common/types/responses'
 import { useProtectedTags } from 'common/utils/useProtectedTags'
-import { IonIcon } from '@ionic/react'
-import { warning } from 'ionicons/icons'
 import Tooltip from 'components/Tooltip'
 import ProjectStore from 'common/stores/project-store'
 import Utils from 'common/utils/utils'
+import { AlertTriangleIcon } from 'components/icons'
 
 type StaleFlagWarningType = {
   projectFlag: ProjectFlag
@@ -47,7 +46,10 @@ const StaleFlagWarning: FC<StaleFlagWarningType> = ({ projectFlag }) => {
           style={{ color: Constants.tagColors[2] }}
         >
           Created {daysAgo} days ago
-          <IonIcon className='ms-1' icon={warning} />{' '}
+          <AlertTriangleIcon
+            className='ms-1 align-text-bottom'
+            width={14}
+          />{' '}
         </span>
       }
     >

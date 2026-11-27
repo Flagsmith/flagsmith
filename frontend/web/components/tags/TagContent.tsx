@@ -1,15 +1,21 @@
 import React, { FC } from 'react'
 import { Tag as TTag } from 'common/types/responses'
 import Format from 'common/utils/format'
-import { IonIcon } from '@ionic/react'
-import { alarmOutline, lockClosed, warning } from 'ionicons/icons'
 import Tooltip from 'components/Tooltip'
 import { getTagColor } from './Tag'
 import OrganisationStore from 'common/stores/organisation-store'
 import Utils from 'common/utils/utils'
 import classNames from 'classnames'
 import Icon from 'components/icons/Icon'
-import Color from 'color'
+import {
+  AlertTriangleIcon,
+  IssueLinkedIcon,
+  LockIcon,
+  PrClosedIcon,
+  PrLinkedIcon,
+  PrMergedIcon,
+  StaleIcon,
+} from 'components/icons'
 type TagContent = {
   tag: Partial<TTag>
 }
@@ -29,21 +35,21 @@ const renderIcon = (
   const darkened = tagColor.darken(0.1).string()
   switch (tagType) {
     case 'STALE':
-      return <IonIcon className='ms-1' icon={alarmOutline} color={darkened} />
+      return <StaleIcon className='ms-1' width={14} fill={darkened} />
     case 'UNHEALTHY':
-      return <IonIcon className='ms-1' icon={warning} color={darkened} />
+      return <AlertTriangleIcon className='ms-1' width={14} fill={darkened} />
     case 'GITHUB':
       switch (tagLabel) {
         case 'PR Open':
-          return <Icon name='pr-linked' />
+          return <PrLinkedIcon width={16} />
         case 'PR Merged':
-          return <Icon name='pr-merged' />
+          return <PrMergedIcon width={16} />
         case 'PR Closed':
-          return <Icon name='pr-closed' />
+          return <PrClosedIcon width={16} />
         case 'PR Draft':
           return <Icon name='pr-draft' />
         case 'Issue Open':
-          return <Icon name='issue-linked' />
+          return <IssueLinkedIcon width={16} />
         case 'Issue Closed':
           return <Icon name='issue-closed' />
         default:
@@ -51,7 +57,7 @@ const renderIcon = (
       }
     default:
       return isPermanent ? (
-        <IonIcon className='ms-1' icon={lockClosed} color={darkened} />
+        <LockIcon className='ms-1' width={14} fill={darkened} />
       ) : null
   }
 }

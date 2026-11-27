@@ -1,9 +1,9 @@
 import React, { FC } from 'react'
-import Icon from './icons/Icon'
 import { useGetProjectChangeRequestsQuery } from 'common/services/useProjectChangeRequest'
 import Utils from 'common/utils/utils'
 import { useGetProjectQuery } from 'common/services/useProject'
 import NavSubLink from './navigation/NavSubLink'
+import { PrLinkedIcon } from './icons'
 
 type ProjectChangeRequestsLinkType = {
   projectId: string
@@ -29,7 +29,7 @@ const ProjectChangeRequestsLink: FC<ProjectChangeRequestsLinkType> = ({
     changeRequestsData?.count
   return (
     <NavSubLink
-      icon={<Icon name='request' />}
+      icon={<PrLinkedIcon />}
       id={`segments-link`}
       to={`/project/${projectId}/change-requests`}
     >

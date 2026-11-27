@@ -1,10 +1,10 @@
 import React, { FC, ReactNode } from 'react'
 import { NavLink, NavLinkProps } from 'react-router-dom'
 import classNames from 'classnames'
-import Icon, { IconName } from 'components/icons/Icon'
+import { IconComponent } from 'components/icons'
 
 type SidebarLinkType = Partial<NavLinkProps> & {
-  icon?: IconName
+  icon?: IconComponent
   children?: ReactNode
   to?: string
   active?: boolean
@@ -14,7 +14,7 @@ type SidebarLinkType = Partial<NavLinkProps> & {
 const SidebarLink: FC<SidebarLinkType> = ({
   active,
   children,
-  icon,
+  icon: Icon,
   to,
   ...rest
 }) => {
@@ -34,7 +34,7 @@ const SidebarLink: FC<SidebarLinkType> = ({
         },
       )}
     >
-      {!!icon && <Icon width={18} name={icon} />}
+      {!!Icon && <Icon width={18} />}
       {children}
     </Tag>
   )

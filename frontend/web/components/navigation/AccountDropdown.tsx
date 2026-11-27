@@ -1,5 +1,4 @@
 import React, { useLayoutEffect, useRef, useState } from 'react'
-import Icon from 'components/icons/Icon'
 import { colorIconSecondary } from 'common/theme/tokens'
 import classNames from 'classnames'
 import useOutsideClick from 'common/useOutsideClick'
@@ -8,6 +7,13 @@ import { calculateListPosition } from 'common/utils/calculateListPosition'
 import { useHistory } from 'react-router-dom'
 import { getViewMode, setViewMode, ViewMode } from 'common/useViewMode'
 import AccountStore from 'common/stores/account-store'
+import {
+  BarChartIcon,
+  CodeIcon,
+  PersonIcon,
+  RocketIcon,
+  SettingsIcon,
+} from 'components/icons'
 
 const AccountDropdown: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false)
@@ -67,7 +73,7 @@ const AccountDropdown: React.FC = () => {
         data-test='account-settings-link'
       >
         <span className='mr-1 icon-secondary'>
-          <Icon name='person' width={20} />
+          <PersonIcon width={20} />
         </span>
         <span className='d-none d-md-block'>Account</span>
       </button>
@@ -89,7 +95,7 @@ const AccountDropdown: React.FC = () => {
               })}
               onClick={() => handleViewModeChange('release-manager')}
             >
-              <Icon name='rocket' width={18} fill={colorIconSecondary} />
+              <RocketIcon width={18} fill={colorIconSecondary} />
               Release Manager
             </div>
             <div
@@ -99,7 +105,7 @@ const AccountDropdown: React.FC = () => {
               })}
               onClick={() => handleViewModeChange('executive')}
             >
-              <Icon name='bar-chart' width={18} fill={colorIconSecondary} />
+              <BarChartIcon width={18} fill={colorIconSecondary} />
               Executive View
             </div>
             <div
@@ -108,7 +114,7 @@ const AccountDropdown: React.FC = () => {
               })}
               onClick={() => handleViewModeChange('dev')}
             >
-              <Icon name='code' width={18} fill={colorIconSecondary} />
+              <CodeIcon width={18} fill={colorIconSecondary} />
               Dev View
             </div>
             <div
@@ -124,7 +130,7 @@ const AccountDropdown: React.FC = () => {
               id='account-settings'
               data-test='account-settings'
             >
-              <Icon name='setting' width={18} fill={colorIconSecondary} />
+              <SettingsIcon width={18} fill={colorIconSecondary} />
               Account Settings
             </div>
           </div>,

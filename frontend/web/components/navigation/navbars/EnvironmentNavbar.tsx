@@ -9,6 +9,16 @@ import {
   useGetScheduledChangeRequestsQuery,
 } from 'common/services/useChangeRequest'
 import { useExperimentationEnabled } from 'common/hooks/useExperimentationEnabled'
+import {
+  BarChartIcon,
+  ClockIcon,
+  CodeIcon,
+  FeaturesIcon,
+  FlaskIcon,
+  PeopleIcon,
+  PrLinkedIcon,
+  SettingsIcon,
+} from 'components/icons'
 
 type EnvironmentNavType = {
   projectId: number
@@ -74,7 +84,7 @@ const EnvironmentNavbar: FC<EnvironmentNavType> = ({
             <>
               <SidebarLink
                 id={mobile ? undefined : 'features-link'}
-                icon='features'
+                icon={FeaturesIcon}
                 to={`/project/${projectId}/environment/${environmentId}/features`}
               >
                 Features
@@ -83,14 +93,14 @@ const EnvironmentNavbar: FC<EnvironmentNavType> = ({
                 <>
                   <SidebarLink
                     id={mobile ? undefined : 'experiments-link'}
-                    icon='flask'
+                    icon={FlaskIcon}
                     to={`/project/${projectId}/environment/${environmentId}/experiments`}
                   >
                     Experiments
                   </SidebarLink>
                   <SidebarLink
                     id={mobile ? undefined : 'metrics-link'}
-                    icon='bar-chart'
+                    icon={BarChartIcon}
                     to={`/project/${projectId}/environment/${environmentId}/metrics`}
                   >
                     Metrics
@@ -99,7 +109,7 @@ const EnvironmentNavbar: FC<EnvironmentNavType> = ({
               )}
               <SidebarLink
                 id='scheduled-link'
-                icon='timer'
+                icon={ClockIcon}
                 to={`/project/${projectId}/environment/${environmentId}/scheduled-changes/`}
               >
                 <div>
@@ -111,7 +121,7 @@ const EnvironmentNavbar: FC<EnvironmentNavType> = ({
               </SidebarLink>
               <SidebarLink
                 id={mobile ? undefined : 'change-requests-link'}
-                icon='request'
+                icon={PrLinkedIcon}
                 to={`/project/${projectId}/environment/${environmentId}/change-requests/`}
               >
                 <div>
@@ -126,14 +136,14 @@ const EnvironmentNavbar: FC<EnvironmentNavType> = ({
               <SidebarLink
                 id={mobile ? undefined : 'users-link'}
                 exact
-                icon='people'
+                icon={PeopleIcon}
                 to={`/project/${projectId}/environment/${environmentId}/identities`}
               >
                 Identities
               </SidebarLink>
               <SidebarLink
                 id={mobile ? undefined : 'sdk-keys-link'}
-                icon='code'
+                icon={CodeIcon}
                 exact
                 to={`/project/${projectId}/environment/${environmentId}/sdk-keys`}
               >
@@ -141,7 +151,7 @@ const EnvironmentNavbar: FC<EnvironmentNavType> = ({
               </SidebarLink>
               {environmentAdmin && (
                 <SidebarLink
-                  icon='setting'
+                  icon={SettingsIcon}
                   id={mobile ? undefined : 'env-settings-link'}
                   className='aside__environment-list-item'
                   to={`/project/${projectId}/environment/${environmentId}/settings`}

@@ -1,8 +1,7 @@
 import { FC } from 'react'
 import Constants from 'common/constants'
 import { HealthEvent } from 'common/types/responses'
-import { IonIcon } from '@ionic/react'
-import { warning } from 'ionicons/icons'
+import { AlertTriangleIcon } from 'components/icons'
 
 type UnhealthyFlagWarningType = {
   featureUnhealthyEvents?: HealthEvent[]
@@ -27,11 +26,7 @@ const UnhealthyFlagWarning: FC<UnhealthyFlagWarningType> = ({
             This feature has {featureUnhealthyEvents?.length} active alert
             {featureUnhealthyEvents?.length > 1 ? 's' : ''}. Check them in the
             'Feature Health' tab.
-            <IonIcon
-              style={{ marginBottom: -2 }}
-              className='ms-1'
-              icon={warning}
-            />
+            <AlertTriangleIcon className='ms-1 align-text-bottom' width={14} />
           </div>
         </div>
       }

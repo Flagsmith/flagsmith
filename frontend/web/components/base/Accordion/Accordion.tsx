@@ -3,7 +3,7 @@ import cn from 'classnames'
 import { colorIconSecondary } from 'common/theme/tokens'
 import useCollapsibleHeight from 'common/hooks/useCollapsibleHeight'
 import BareButton from 'components/base/forms/BareButton'
-import Icon from 'components/icons/Icon'
+import { ChevronDownIcon } from 'components/icons'
 import './Accordion.scss'
 
 // card: a section of its own. row: an item in a list, which owns the borders.
@@ -84,12 +84,10 @@ const Accordion: FC<AccordionProps> = ({
         >
           {title}
         </span>
-        <Icon
-          name='chevron-down'
+        <ChevronDownIcon
           width={isCard ? 24 : 16}
           fill={colorIconSecondary}
           className='ds-accordion__chevron flex-shrink-0'
-          aria-hidden
         />
       </BareButton>
       {/* Inert while closed, so its content leaves the tab order. */}
