@@ -611,6 +611,11 @@ def transition_experiment_status(
     *,
     rollout_decision: RolloutDecisionSpec | None = None,
 ) -> Experiment:
+    from experimentation.tasks import (
+        compute_experiment_exposures,
+        compute_experiment_results,
+    )
+
     with transaction.atomic():
         experiment.refresh_from_db(from_queryset=Experiment.objects.select_for_update())
         valid_targets = VALID_STATUS_TRANSITIONS.get(experiment.status, set())
@@ -644,6 +649,16 @@ def transition_experiment_status(
                     feature__id=experiment.feature_id,
                     rollout__decision=rollout_decision.decision,
                     variant__id=rollout_decision.rollout_variant_id,
+                )
+            )
+            transaction.on_commit(
+                lambda: compute_experiment_results.delay(
+                    kwargs={"experiment_id": experiment.id}
+                )
+            )
+            transaction.on_commit(
+                lambda: compute_experiment_exposures.delay(
+                    kwargs={"experiment_id": experiment.id}
                 )
             )
 
