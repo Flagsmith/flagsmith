@@ -1,5 +1,5 @@
 .ds-dropdown-menu {
-  --ds-dropdown-menu-row: 44px;
+  --ds-dropdown-menu-row: 36px;
   --ds-dropdown-menu-font: var(--font-size-body-md);
   --ds-dropdown-menu-icon: 16px;
   --ds-dropdown-menu-gap: 12px;
@@ -27,7 +27,7 @@
     align-items: center;
     gap: var(--ds-dropdown-menu-gap);
     width: 100%;
-    padding: 0 12px;
+    padding: 6px 12px;
     font-size: var(--ds-dropdown-menu-font);
     text-align: left;
     text-decoration: none;
