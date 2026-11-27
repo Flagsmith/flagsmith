@@ -254,8 +254,33 @@ identity, so the same seed against the same experiment produces the same dataset
 events for identities Flagsmith has already seen. That changes no metric: exposures and Occurrence metrics count each
 visitor once, and repeated identical click times leave each visitor's Mean unchanged.
 
-**Status:** the simulator has been tested against a stubbed Flagsmith API but **has not yet been run against a live
-Simulation environment**. No `simulation/simulated-visitors.json` is committed yet.
+**Status:** the team ran the simulator against the live Flagsmith **Simulation** environment. The validated dataset is
+committed as `simulation/simulated-visitors.json`. The run's summary reported every event as confirmed by Flagsmith's
+events API (a 2xx response):
+
+| Event            | Confirmed / sent |
+| ---------------- | ---------------- |
+| `$flag_exposure` | 1,000 / 1,000    |
+| `signup_clicked` | 189 / 189        |
+| `signed_up`      | 115 / 115        |
+
+These figures come from the team's run of `npm run simulate:traffic`. They have not been re-run independently.
+
+**SIMULATED DATA — SUPPLEMENTARY ANALYSIS.** The following are the results of `npm run analyse:simulation` on that
+dataset. They describe 1,000 **synthetic** visitors whose behaviour the simulator generated from the input rates we
+chose (10% and 12%). They are **not** results from real students or Production users, and they are not Flagsmith's
+official results. Flagsmith's experiment page remains the source of truth for every experiment.
+
+| Variant      | Visitors | Signups | Rate  |
+| ------------ | -------- | ------- | ----- |
+| Control      | 501      | 51      | 10.2% |
+| Social proof | 499      | 64      | 12.8% |
+
+- Relative lift: +26.0%. P(social proof beats control): 90.4%.
+- Supplementary verdict: **Inconclusive**, because 90.4% is below the 95% threshold.
+- Sample ratio check: no sample ratio mismatch (p = 0.950).
+
+That the analysis recovers roughly the input rates is a check of the pipeline, not evidence about real users.
 
 ## Supplementary analysis of simulated data
 
@@ -419,11 +444,12 @@ No test needs real credentials or network access.
     against a local stand-in for Flagsmith.
   - This was not tested on Safari, Firefox, mobile devices or Flagsmith's real servers.
   - Crashes and lost connections can still lose events.
-- **Not verified against live Flagsmith.** The integration was tested with stubbed and stand-in Flagsmith APIs. Events
-  arriving in a real warehouse and the official results page still need checking with real keys (see
+- **Production not yet verified.** The browser and server integration was tested with stubbed and stand-in Flagsmith
+  APIs. In the Simulation environment, the simulator's events were confirmed by Flagsmith's events API. Production event
+  delivery and the Production experiment's results have not been verified (see
   [docs/FINAL_VERIFICATION.md](docs/FINAL_VERIFICATION.md)).
-- **No live simulation yet.** The simulator has not been run against a live Simulation environment, so there is no
-  committed simulated dataset yet.
+- **Simulated results are not real results.** The committed dataset and its supplementary analysis describe synthetic
+  visitors only. They test the pipeline and say nothing about how real students respond to social proof.
 - **Clock differences.** Exposures are timestamped by the visitor's browser and `signed_up` by the server. Flagsmith
   only counts conversions after the first exposure, so a browser clock running well ahead of the server could cause a
   signup to be ignored.

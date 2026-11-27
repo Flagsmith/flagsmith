@@ -7,10 +7,14 @@ Status values:
 - **Requires manual action:** a team member has to do it, usually with real Flagsmith access.
 
 Evidence dates refer to development on branch `feature/studystreak-experimentation`. Our development sandbox had **no
-access to Flagsmith's servers and no Flagsmith keys**, so nothing involving live Flagsmith is marked verified.
+access to Flagsmith's servers and no Flagsmith keys**. Items involving the live Flagsmith **Simulation** environment
+were checked by the team on their own machine, with the evidence noted. Nothing involving **Production** is marked
+verified.
 
-> **The live Simulation run has not been completed.** `simulation/simulated-visitors.json` does not exist, so the
-> supplementary analysis page currently shows "No simulated dataset yet".
+> **The live Simulation run is complete.** The synthetic dataset `simulation/simulated-visitors.json` (1,000 simulated
+> visitors) was generated against the Flagsmith Simulation environment, validated, committed and analysed. All of its
+> results are **synthetic simulation data**, not real student or Production-user results. Flagsmith's official
+> experiment results remain the source of truth.
 
 ## Local application
 
@@ -29,18 +33,18 @@ access to Flagsmith's servers and no Flagsmith keys**, so nothing involving live
 
 ## Flagsmith Simulation environment
 
-| Item                                                                                                                                | Status                                | Evidence / action                                                          |
-| ----------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- | -------------------------------------------------------------------------- |
-| Simulation environment exists, and its name contains "Simulation"                                                                   | Requires manual action                | [FLAGSMITH_SETUP.md §1](FLAGSMITH_SETUP.md)                                |
-| Managed warehouse shows **Connected**                                                                                               | Requires manual action                | §2                                                                         |
-| Flag `study_streak_social_proof` enabled, with variation key `social_proof` (not `Variant_1`)                                       | Requires manual action                | §4                                                                         |
-| Three metrics created with the exact event names                                                                                    | Requires manual action                | §5                                                                         |
-| Experiment running at 100% rollout, 50/50, with all three metrics attached                                                          | Requires manual action                | §6–7                                                                       |
-| Simulator refuses a missing key, a key matching Production, invalid options, and an unreachable environment, without writing a file | Verified                              | CLI runs (Milestone 6), `credentials.test.ts`, `options.test.ts`           |
-| Simulator uses Flagsmith's assignment and accounts for delivered events correctly                                                   | Verified (stubbed Flagsmith API only) | `simulator.test.ts`, including the real `@flagsmith/nodejs` against a stub |
-| **Live `npm run simulate:traffic` run completed**                                                                                   | **Not verified**                      | Not run: no Simulation key and no network access to Flagsmith              |
-| `simulation/simulated-visitors.json` generated, validated and committed                                                             | Not verified                          | Depends on the live run                                                    |
-| Simulator summary shows confirmed counts equal to sent counts                                                                       | Not verified                          | Depends on the live run                                                    |
+| Item                                                                                                                                | Status                                | Evidence / action                                                                                                         |
+| ----------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| Simulation environment exists, and its name contains "Simulation"                                                                   | Verified                              | Team setup: environment `Simulation`, id 121260, project 56690 (read-only diagnostic)                                     |
+| Managed warehouse shows **Connected**                                                                                               | Requires manual action                | §2                                                                                                                        |
+| Flag `study_streak_social_proof` enabled, with variation key `social_proof` (not `Variant_1`)                                       | Verified                              | Team setup: flag 306257 on in Simulation; variation key `social_proof`                                                    |
+| Three metrics created with the exact event names                                                                                    | Verified                              | Team setup: metrics 790 (`signed_up`), 791 and 792 (`signup_clicked`)                                                     |
+| Experiment running at 100% rollout, 50/50, with all three metrics attached                                                          | Verified                              | Team setup: experiment 776 running, 100% rollout, 50/50; metrics 790, 791 and 792 attached                                |
+| Simulator refuses a missing key, a key matching Production, invalid options, and an unreachable environment, without writing a file | Verified                              | CLI runs (Milestone 6), `credentials.test.ts`, `options.test.ts`                                                          |
+| Simulator uses Flagsmith's assignment and accounts for delivered events correctly                                                   | Verified (stubbed Flagsmith API only) | `simulator.test.ts`, including the real `@flagsmith/nodejs` against a stub                                                |
+| **Live `npm run simulate:traffic` run completed**                                                                                   | **Verified**                          | Team run against the Simulation environment: 1,000 synthetic visitors                                                     |
+| `simulation/simulated-visitors.json` generated, validated, committed and analysed                                                   | Verified                              | Validated by the project parser; committed in `3dd36ccc1`; `npm run analyse:simulation` (synthetic results in the README) |
+| Simulator summary shows confirmed counts equal to sent counts                                                                       | Verified                              | Team run: exposures 1,000/1,000, `signup_clicked` 189/189, `signed_up` 115/115 (2xx from the events API)                  |
 
 ## Production experiment readiness
 
