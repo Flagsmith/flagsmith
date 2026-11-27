@@ -5,3 +5,4 @@
 !.env.example
 /simulation/*.tmp
 /simulation/*.backup-*.json
+.vercel
