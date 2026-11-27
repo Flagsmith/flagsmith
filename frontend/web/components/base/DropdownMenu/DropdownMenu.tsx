@@ -18,7 +18,7 @@ export type DropdownMenuProps = {
 }
 
 const rowsOf = (menu: HTMLElement) =>
-  Array.from(menu.querySelectorAll<HTMLElement>('.ds-dropdown-menu__item'))
+  Array.from(menu.querySelectorAll<HTMLElement>('[role^="menuitem"]'))
 
 // One row is the menu's Tab stop: the chosen option, else the first
 const setTabStop = (menu: HTMLElement | null) => {
