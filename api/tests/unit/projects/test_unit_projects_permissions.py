@@ -499,4 +499,3 @@ def test_is_project_admin_has_permission__invalid_project_pk__raises_permission_
     # When / Then
     with pytest.raises(PermissionDenied):
         IsProjectAdmin().has_permission(request, view)  # type: ignore[no-untyped-call]
-

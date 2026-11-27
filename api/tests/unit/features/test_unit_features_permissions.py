@@ -583,4 +583,3 @@ def test_nested_project_permissions_has_permission__invalid_project_pk__returns_
 
     # Then
     assert result is False
-
