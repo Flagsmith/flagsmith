@@ -17,15 +17,29 @@ export type DropdownMenuProps = {
   children: ReactNode
 }
 
-// Arrow keys, Home and End move focus between the rows
-const moveFocus = (e: KeyboardEvent<HTMLDivElement>) => {
-  const rows = Array.from(
-    e.currentTarget.querySelectorAll<HTMLElement>('.ds-dropdown-menu__item'),
+const rowsOf = (menu: HTMLElement) =>
+  Array.from(menu.querySelectorAll<HTMLElement>('.ds-dropdown-menu__item'))
+
+// One row is the menu's Tab stop: the chosen option, else the first
+const setTabStop = (menu: HTMLElement | null) => {
+  if (!menu) return
+  const rows = rowsOf(menu)
+  const stop = Math.max(
+    rows.findIndex((row) => row.getAttribute('aria-checked') === 'true'),
+    0,
   )
+  rows.forEach((row, i) => (row.tabIndex = i === stop ? 0 : -1))
+}
+
+// Arrow keys, Home and End move focus between the rows, and the Tab stop
+// moves with it
+const moveFocus = (e: KeyboardEvent<HTMLDivElement>) => {
+  const rows = rowsOf(e.currentTarget)
   const index = rows.findIndex((row) => row === document.activeElement)
   const next = nextMenuIndex(e.key, index, rows.length)
   if (next === null || !rows.length) return
   e.preventDefault()
+  rows.forEach((row, i) => (row.tabIndex = i === next ? 0 : -1))
   rows[next].focus()
 }
 
@@ -37,6 +51,7 @@ const DropdownMenu: FC<DropdownMenuProps> = ({
   <Popover
     aria-label={ariaLabel}
     placement='bottom-end'
+    role='menu'
     renderTrigger={(props) => (
       <DropdownMenuTrigger popoverProps={props}>
         {trigger ?? (
@@ -50,8 +65,10 @@ const DropdownMenu: FC<DropdownMenuProps> = ({
     {(close, asSheet) => (
       <DropdownMenuCloseProvider value={close}>
         <div
-          role='menu'
-          aria-label={ariaLabel}
+          ref={setTabStop}
+          // On desktop the popover panel is the menu; the sheet holds one
+          role={asSheet ? 'menu' : undefined}
+          aria-label={asSheet ? ariaLabel : undefined}
           className={classNames('ds-dropdown-menu', {
             // Larger rows in the phone sheet
             'ds-dropdown-menu--sheet': asSheet,

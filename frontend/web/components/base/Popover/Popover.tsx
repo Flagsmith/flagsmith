@@ -39,6 +39,9 @@ export type PopoverProps = {
   // A function gets close, and whether the panel is the phone sheet
   children: ReactNode | ((close: () => void, asSheet: boolean) => ReactNode)
   placement?: PopoverPlacement
+  // What the panel is, announced on the trigger. The phone sheet is always a
+  // dialog; a menu goes inside it
+  role?: 'dialog' | 'menu'
   // Applies to the desktop panel only; the phone sheet sizes itself.
   className?: string
 }
@@ -49,6 +52,7 @@ const Popover: FC<PopoverProps> = ({
   className,
   placement = 'bottom-start',
   renderTrigger,
+  role = 'dialog',
 }) => {
   const [isOpen, setIsOpen] = useState(false)
   const close = () => setIsOpen(false)
@@ -85,7 +89,7 @@ const Popover: FC<PopoverProps> = ({
     useClick(context),
     // The sheet handles its own dismiss and role
     useDismiss(context, { enabled: !asSheet }),
-    useRole(context, { enabled: !asSheet }),
+    useRole(context, { enabled: !asSheet, role }),
   ])
 
   return (
@@ -102,7 +106,7 @@ const Popover: FC<PopoverProps> = ({
           // useRole is off for the sheet, so state the popup here
           ...(asSheet && {
             'aria-expanded': isOpen,
-            'aria-haspopup': 'dialog',
+            'aria-haspopup': role,
           }),
         },
         isOpen,
