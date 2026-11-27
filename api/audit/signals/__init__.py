@@ -14,6 +14,7 @@ from features.multivariate.models import MultivariateFeatureStateValue
 from features.signals import feature_state_change_went_live
 from integrations.common.models import IntegrationsModel
 from integrations.datadog.datadog import DataDogWrapper
+from integrations.discord.discord import DiscordWrapper
 from integrations.dynatrace.dynatrace import DynatraceWrapper
 from integrations.grafana.grafana import GrafanaWrapper
 from integrations.new_relic.new_relic import NewRelicWrapper
@@ -33,6 +34,7 @@ logger = logging.getLogger(__name__)
 
 AuditLogIntegrationAttrName = Literal[
     "data_dog_config",
+    "discord_config",
     "dynatrace_config",
     "grafana_config",
     "new_relic_config",
@@ -148,6 +150,17 @@ def send_audit_log_event_to_datadog(sender, instance, **kwargs):  # type: ignore
         use_custom_source=data_dog_config.use_custom_source,
     )
     _track_event_async(instance, data_dog)  # type: ignore[no-untyped-call]
+
+
+@receiver(post_save, sender=AuditLog)
+@track_only_feature_related_events
+def send_audit_log_event_to_discord(sender, instance, **kwargs):  # type: ignore[no-untyped-def]
+    discord_config = _get_integration_config(instance, "discord_config")
+    if not discord_config:
+        return
+
+    discord = DiscordWrapper(webhook_url=discord_config.base_url)  # type: ignore[arg-type]
+    _track_event_async(instance, discord)  # type: ignore[no-untyped-call]
 
 
 @receiver(post_save, sender=AuditLog)

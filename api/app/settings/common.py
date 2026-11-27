@@ -154,6 +154,7 @@ INSTALLED_APPS = [
     "ordered_model",
     # Third party integrations
     "integrations.datadog",
+    "integrations.discord",
     "integrations.amplitude",
     "integrations.sentry",
     "integrations.new_relic",

@@ -19,6 +19,7 @@ from features.import_export.views import (
 from features.multivariate.views import MultivariateFeatureOptionViewSet
 from features.views import FeatureViewSet
 from integrations.datadog.views import DataDogConfigurationViewSet
+from integrations.discord.views import DiscordConfigurationViewSet
 from integrations.gitlab.views import (
     BrowseGitLabIssues,
     BrowseGitLabMergeRequests,
@@ -60,6 +61,11 @@ projects_router.register(
     r"integrations/datadog",
     DataDogConfigurationViewSet,
     basename="integrations-datadog",
+)
+projects_router.register(
+    r"integrations/discord",
+    DiscordConfigurationViewSet,
+    basename="integrations-discord",
 )
 projects_router.register(
     r"integrations/new-relic",

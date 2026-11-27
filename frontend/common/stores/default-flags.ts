@@ -81,6 +81,24 @@ const defaultFlags = {
       'project': true,
       'title': 'Datadog',
     },
+    'discord': {
+      'categories': ['Messaging'],
+      'description':
+        'Posts a message to a Discord channel when features, flags or segments change. Uses a channel webhook, so no bot is needed.',
+      'docs':
+        'https://docs.flagsmith.com/third-party-integrations/project-management/discord',
+      'fields': [
+        {
+          'hidden': true,
+          'key': 'base_url',
+          'label': 'Discord webhook URL',
+        },
+      ],
+      'image': '/static/images/integrations/discord.svg',
+      'perEnvironment': false,
+      'project': true,
+      'title': 'Discord',
+    },
     'dynatrace': {
       'categories': ['Monitoring'],
       'description':
