@@ -13,10 +13,18 @@ export default function markdownNegotiation(request: Request) {
     }
 
     const { pathname } = new URL(request.url);
+    if (pathname.startsWith('//')) {
+        return next();
+    }
+
     if (pathname === '/') {
-        return rewrite(new URL('/index.md', request.url));
+        const target = new URL(request.url);
+        target.pathname = '/index.md';
+        return rewrite(target);
     }
 
     const docPath = pathname.endsWith('/') ? pathname.slice(0, -1) : pathname;
-    return rewrite(new URL(`${docPath}.md`, request.url));
+    const target = new URL(request.url);
+    target.pathname = `${docPath}.md`;
+    return rewrite(target);
 }
