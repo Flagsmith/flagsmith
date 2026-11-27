@@ -99,7 +99,10 @@ class FeatureStatePermissions(IsAuthenticated):
                 "environment"
             )
 
-            if environment and (isinstance(environment, int) or environment.isdigit()):
+            if environment and (
+                isinstance(environment, int)
+                or (isinstance(environment, str) and environment.isdigit())
+            ):
                 environment = Environment.objects.get(id=int(environment))
 
                 tag_ids = None

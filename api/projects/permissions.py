@@ -19,7 +19,7 @@ class ProjectPermissions(IsAuthenticated):
         if view.action == "create":
             try:
                 organisation_id = int(request.data.get("organisation"))
-            except (TypeError, ValueError):
+            except (TypeError, ValueError, OverflowError):
                 return False
 
             if request.user.belongs_to(organisation_id):

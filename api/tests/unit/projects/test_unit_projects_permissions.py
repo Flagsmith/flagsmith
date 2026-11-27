@@ -469,8 +469,10 @@ def test_is_project_admin_has_permission__user_is_project_admin__returns_true(  
     assert result
 
 
-@pytest.mark.parametrize("invalid_organisation", [None, "not-an-id", ["invalid"]])
-def test_project_permissions_has_permission__invalid_organisation_on_create__returns_false(
+@pytest.mark.parametrize(
+    "invalid_organisation", [None, "not-an-id", ["invalid"], float("inf")]
+)
+def test_project_permissions_has_permission__invalid_organisation__returns_false(
     staff_user: FFAdminUser,
     invalid_organisation: object,
 ) -> None:
