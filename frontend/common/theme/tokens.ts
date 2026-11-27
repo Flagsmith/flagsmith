@@ -127,6 +127,10 @@ export const fontWeight: Record<string, TokenEntry> = {
 }
 // Font-size
 export const fontSize: Record<string, TokenEntry> = {
+  'body-lg': {
+    description: 'Large body text. Touch-sized rows on phones.',
+    value: 'var(--font-size-body-lg, 16px)',
+  },
   'body-md': {
     description: 'Default body text.',
     value: 'var(--font-size-body-md, 14px)',
@@ -346,6 +350,7 @@ export const fontWeightRegular = 'var(--font-weight-regular, 400)'
 export const fontWeightSemibold = 'var(--font-weight-semibold, 600)'
 
 // Font-size
+export const fontSizeBodyLg = 'var(--font-size-body-lg, 16px)'
 export const fontSizeBodyMd = 'var(--font-size-body-md, 14px)'
 export const fontSizeBodySm = 'var(--font-size-body-sm, 13px)'
 export const fontSizeBodyXs = 'var(--font-size-body-xs, 12px)'
