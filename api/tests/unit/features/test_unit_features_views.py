@@ -3722,6 +3722,27 @@ def test_update_feature_state__null_environment__returns_400(
     assert "environment" in response.json()
 
 
+def test_partial_update_feature_state__environment_omitted__updates_feature_state(
+    admin_client_new: APIClient,
+    feature_state: FeatureState,
+) -> None:
+    # Given
+    url = reverse("api-v1:features:featurestates-detail", args=[feature_state.id])
+    assert feature_state.enabled is False
+
+    # When
+    response = admin_client_new.patch(
+        url, data=json.dumps({"enabled": True}), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["enabled"] is True
+    assert response.json()["environment"] == feature_state.environment_id
+    feature_state.refresh_from_db()
+    assert feature_state.enabled is True
+
+
 @pytest.mark.parametrize(
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
