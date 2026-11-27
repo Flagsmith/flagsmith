@@ -77,7 +77,7 @@ beforeEach(() => {
 })
 
 describe('getChatProvider', () => {
-  it('returns hubspot when only hubspot_chat is on', () => {
+  it('returns hubspot when hubspot_chat is on', () => {
     // Given
     setFlags(['hubspot_chat'])
 
@@ -85,25 +85,9 @@ describe('getChatProvider', () => {
     expect(getChatProvider()).toBe('hubspot')
   })
 
-  it('prefers hubspot while both flags are on', () => {
-    // Given
-    setFlags(['hubspot_chat', 'pylon_chat'])
-
-    // When / Then
-    expect(getChatProvider()).toBe('hubspot')
-  })
-
-  it('returns pylon when only pylon_chat is on', () => {
-    // Given
-    setFlags(['pylon_chat'])
-
-    // When / Then
-    expect(getChatProvider()).toBe('pylon')
-  })
-
   it('keeps HubSpot to paid plans when hubspot_chat has no value', () => {
     // Given
-    setFlags(['hubspot_chat', 'pylon_chat'])
+    setFlags(['hubspot_chat'])
     mockUtils.isOrgOnFreePlan.mockReturnValue(true)
 
     // When / Then
@@ -127,15 +111,6 @@ describe('getChatProvider', () => {
 
     // When / Then
     expect(getChatProvider()).toBe('hubspot')
-  })
-
-  it('keeps Pylon to paid plans', () => {
-    // Given
-    setFlags(['pylon_chat'])
-    mockUtils.isOrgOnFreePlan.mockReturnValue(true)
-
-    // When / Then
-    expect(getChatProvider()).toBeNull()
   })
 })
 
@@ -192,19 +167,17 @@ describe('openChat', () => {
 })
 
 describe('identifyChatUser', () => {
-  it('hides Pylon and loads HubSpot when hubspot_chat is on', async () => {
+  it('loads HubSpot when hubspot_chat is on', async () => {
     // Given
-    setFlags(['hubspot_chat', 'pylon_chat'])
+    setFlags(['hubspot_chat'])
     const widget = hubSpotWidget(false)
     window.HubSpotConversations = { widget }
-    window.Pylon = jest.fn()
 
     // When
     identifyChatUser()
     await flushPromises()
 
     // Then
-    expect(window.Pylon).toHaveBeenCalledWith('hideChatBubble')
     expect(widget.load).toHaveBeenCalledWith({ widgetOpen: false })
   })
 

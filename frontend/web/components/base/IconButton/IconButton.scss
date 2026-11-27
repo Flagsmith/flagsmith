@@ -4,6 +4,7 @@
 // Icons on a filled variant use --slate-0: ink on a coloured surface stays
 // white in both themes, and we have no token for that yet.
 .ds-icon-button {
+  flex-shrink: 0;
   justify-content: center;
   border-radius: var(--radius-md);
   transition: background-color var(--duration-fast) var(--easing-standard),

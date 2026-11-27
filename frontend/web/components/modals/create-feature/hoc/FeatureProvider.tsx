@@ -2,6 +2,7 @@ import React, { Component } from 'react'
 import FeatureListStore from 'common/stores/feature-list-store'
 import ES6Component from 'common/ES6Component'
 import { setModalTitle } from 'components/modals/base/ModalDefault'
+import FeatureModalTitle from 'components/feature-summary/FeatureModalTitle'
 
 // TODO: Migrate to a custom hook once we move away from Flux stores.
 // This class component is necessary because it uses ES6Component/listenTo
@@ -49,7 +50,14 @@ export default function withFeatureProvider(
               `${document.location.pathname}?feature=${projectFlag.id}`,
             )
             const newEnvironmentFlag = envFlags?.[projectFlag.id] || {}
-            setModalTitle(`Edit Feature ${projectFlag.name}`)
+            setModalTitle(
+              <Row noWrap className='align-items-center'>
+                <FeatureModalTitle
+                  name={projectFlag.name}
+                  label='Edit Feature'
+                />
+              </Row>,
+            )
             this.setState({
               environmentFlag: {
                 ...this.state.environmentFlag,

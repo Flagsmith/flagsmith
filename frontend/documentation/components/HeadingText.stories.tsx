@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from 'storybook'
 
-import HeadingText from 'components/base/HeadingText'
+import { HeadingText } from 'components/base/typography'
 
 const meta: Meta<typeof HeadingText> = {
   args: { children: 'Feature flags', level: 1 },

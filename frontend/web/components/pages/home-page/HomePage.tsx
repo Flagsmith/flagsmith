@@ -137,26 +137,11 @@ const HomePage: React.FC = () => {
     API.setCookie('marketing_consent_given', 'true')
   }, [])
 
-  const addAlbacross = () => {
-    // @ts-ignore
-    window._nQc = Project.albacross
-    const script = document.createElement('script')
-    script.type = 'text/javascript'
-    script.async = true
-    script.src = 'https://serve.albacross.com/track.js'
-    script.id = 'albacross'
-    document.body.appendChild(script)
-  }
-
   useEffect(() => {
     if (!E2E) {
       const emailField = (document.querySelector('input[name="firstName"]') ||
         document.querySelector('input[name="email"]')) as HTMLInputElement
       emailField?.focus()
-    }
-
-    if (Project.albacross && location.pathname.indexOf('signup') !== -1) {
-      addAlbacross()
     }
   }, [location.pathname])
 
@@ -165,9 +150,6 @@ const HomePage: React.FC = () => {
     const plan = params.plan
     if (plan) {
       API.setCookie('plan', plan)
-    }
-    if (Project.albacross && location.pathname.indexOf('signup') !== -1) {
-      addAlbacross()
     }
     if (document.location.href.includes('oauth')) {
       const oAuthUtms = Utils.getUtmsFromUrl(document.location.href)

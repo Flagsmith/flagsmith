@@ -3776,6 +3776,7 @@ def test_transition_experiment_status__complete__serves_decision_and_removes_rol
     rollout_spec: RolloutSpecFactory,
     log: StructuredLogCapture,
     request: pytest.FixtureRequest,
+    mocker: MockerFixture,
     django_capture_on_commit_callbacks,
 ) -> None:
     # Given
@@ -3787,6 +3788,10 @@ def test_transition_experiment_status__complete__serves_decision_and_removes_rol
         status=ExperimentStatus.RUNNING,
     )
     rollout_segment_id = experiment.rollout_segment_id
+    compute_results = mocker.patch("experimentation.tasks.compute_experiment_results")
+    compute_exposures = mocker.patch(
+        "experimentation.tasks.compute_experiment_exposures"
+    )
     update_flag(
         environment=environment,
         feature=multivariate_feature,
@@ -3848,6 +3853,12 @@ def test_transition_experiment_status__complete__serves_decision_and_removes_rol
             "variant__id": variant_id,
         }
     ]
+    compute_results.delay.assert_called_once_with(
+        kwargs={"experiment_id": experiment.id}
+    )
+    compute_exposures.delay.assert_called_once_with(
+        kwargs={"experiment_id": experiment.id}
+    )
 
 
 def test_transition_experiment_status__complete_without_rollout_decision__raises(

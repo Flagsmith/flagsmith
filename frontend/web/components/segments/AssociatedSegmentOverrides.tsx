@@ -82,6 +82,7 @@ const AssociatedSegmentOverrides: FC<AssociatedSegmentOverridesType> = ({
       <>
         <div>
           <PageTitle
+            level={2}
             title={
               <div className='d-flex gap-4'>
                 Associated Feature
@@ -124,6 +125,7 @@ const AssociatedSegmentOverrides: FC<AssociatedSegmentOverridesType> = ({
     <>
       <div>
         <PageTitle
+          level={2}
           title={
             <div className='d-flex gap-4'>
               Associated Features

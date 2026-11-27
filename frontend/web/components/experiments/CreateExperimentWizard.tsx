@@ -28,7 +28,7 @@ import {
   toAudiencePayload,
   toRolloutFeatureValue,
 } from './rollout'
-import { experimentErrorMessage } from './errors'
+import { getApiErrorMessage } from 'common/utils/apiErrorMessage'
 import isValidPercentage from 'common/utils/isValidPercentage'
 import MeasurementStep from './steps/MeasurementStep'
 import ReviewStep from './steps/ReviewStep'
@@ -177,10 +177,7 @@ const CreateExperimentWizard: FC<CreateExperimentWizardProps> = ({
       toast('Experiment created and started')
       onCreated()
     } catch (error) {
-      toast(
-        experimentErrorMessage(error, 'Failed to create experiment'),
-        'danger',
-      )
+      toast(getApiErrorMessage(error, 'Failed to create experiment'), 'danger')
     }
   }, [
     audienceMatch,

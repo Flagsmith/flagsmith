@@ -33,6 +33,7 @@ import {
   hasUnmatchedIdentityOverride,
 } from 'common/utils/multivariate'
 import { saveFeatureWithValidation } from 'components/saveFeatureWithValidation'
+import { getSaveFeedback } from './saveFeedback'
 import FeatureHistory from 'components/FeatureHistory'
 import { getChangeRequests } from 'common/services/useChangeRequest'
 import FeatureHealthTabContent from 'components/feature-health/FeatureHealthTabContent'
@@ -333,26 +334,6 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
     return value
   }
 
-  const parseError = (error: any) => {
-    let featureError =
-      error?.metadata
-        ?.flatMap((m: any) => m.non_field_errors ?? [])
-        .join('\n') ||
-      error?.message ||
-      error?.name?.[0] ||
-      error
-    let featureWarning = ''
-    if (
-      featureError?.includes?.('no changes') &&
-      props.projectFlag?.multivariate_options?.length
-    ) {
-      featureWarning =
-        'Your feature contains no changes to its value, enabled state or environment weights. If you have adjusted any variation values this will have been saved for all environments.'
-      featureError = ''
-    }
-    return { featureError, featureWarning }
-  }
-
   const save = (func: (...args: any[]) => void, isSaving: boolean) => {
     const hasMultivariate =
       props.environmentFlag?.multivariate_feature_state_values?.length
@@ -604,6 +585,10 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
           saveVariationValues,
         }: any,
       ) => {
+        const saveFeedback = getSaveFeedback(
+          error,
+          !!props.projectFlag?.multivariate_options?.length,
+        )
         // Not props.projectFlag: that carries the project default weights, so
         // comparing against it reports a weight edit that is not one.
         const variationChanges = diffVariations({
@@ -1116,8 +1101,8 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                   }}
                   onRemoveMultivariateOption={removeMultivariateOption}
                   onHasMetadataRequiredChange={setHasMetadataRequired}
-                  featureError={parseError(error).featureError}
-                  featureWarning={parseError(error).featureWarning}
+                  featureError={saveFeedback.error}
+                  featureWarning={saveFeedback.warning}
                 />
                 <FeatureUpdateSummary
                   projectId={projectId}

@@ -40,7 +40,7 @@ const renderPopover = () => (
 )
 
 export const Default: Story = {
-  render: renderPopover,
+  render: () => renderPopover(),
 }
 
 export const Open: Story = {
@@ -52,5 +52,19 @@ export const Open: Story = {
     await userEvent.click(canvas.getByRole('button', { name: 'Sort by' }))
     await screen.findByRole('dialog', { name: 'Sort' })
   },
-  render: renderPopover,
+  render: () => renderPopover(),
+}
+
+// On phones the content opens as a bottom sheet
+export const MobileSheet: Story = {
+  globals: { viewport: { isRotated: false, value: 'mobile1' } },
+  parameters: {
+    docs: { story: { height: '420px', inline: false } },
+  },
+  play: async ({ canvasElement }: { canvasElement: HTMLElement }) => {
+    const canvas = within(canvasElement)
+    await userEvent.click(canvas.getByRole('button', { name: 'Sort by' }))
+    await screen.findByRole('dialog', { name: 'Sort' })
+  },
+  render: () => renderPopover(),
 }

@@ -42,7 +42,7 @@ Attributes:
 ### `api_usage.overage.charge_failed`
 
 Logged at `exception` from:
- - `api/organisations/tasks.py:331`
+ - `api/organisations/tasks.py:325`
 
 Attributes:
  - `api_overage`
@@ -51,7 +51,7 @@ Attributes:
 ### `api_usage.overage.charged`
 
 Logged at `info` from:
- - `api/organisations/tasks.py:338`
+ - `api/organisations/tasks.py:332`
 
 Attributes:
  - `api_overage`
@@ -61,7 +61,7 @@ Attributes:
 ### `api_usage.overage.missing_allowance`
 
 Logged at `error` from:
- - `api/organisations/tasks.py:229`
+ - `api/organisations/tasks.py:223`
 
 Attributes:
  - `organisation.id`
@@ -69,7 +69,7 @@ Attributes:
 ### `api_usage.overage.missing_subscription_id`
 
 Logged at `error` from:
- - `api/organisations/tasks.py:310`
+ - `api/organisations/tasks.py:304`
 
 Attributes:
  - `organisation.id`
@@ -77,8 +77,8 @@ Attributes:
 ### `api_usage.overage.skipped`
 
 Logged at `info` from:
- - `api/organisations/tasks.py:256`
- - `api/organisations/tasks.py:280`
+ - `api/organisations/tasks.py:250`
+ - `api/organisations/tasks.py:274`
 
 Attributes:
  - `allowed_30d_api_calls`
@@ -90,7 +90,7 @@ Attributes:
 ### `api_usage.overage.unknown_plan`
 
 Logged at `error` from:
- - `api/organisations/tasks.py:324`
+ - `api/organisations/tasks.py:318`
 
 Attributes:
  - `organisation.id`
@@ -99,7 +99,7 @@ Attributes:
 ### `api_usage.restriction.applied`
 
 Logged at `info` from:
- - `api/organisations/tasks.py:466`
+ - `api/organisations/tasks.py:460`
 
 Attributes:
  - `allowed_30d_api_calls`
@@ -111,7 +111,7 @@ Attributes:
 ### `api_usage.restriction.failed`
 
 Logged at `exception` from:
- - `api/organisations/tasks.py:400`
+ - `api/organisations/tasks.py:394`
 
 Attributes:
  - `organisation.id`
@@ -119,7 +119,7 @@ Attributes:
 ### `api_usage.restriction.skipped`
 
 Logged at `info` from:
- - `api/organisations/tasks.py:447`
+ - `api/organisations/tasks.py:441`
 
 Attributes:
  - `allowed_30d_api_calls`
@@ -305,7 +305,7 @@ Attributes:
 ### `experimentation.experiment.completed`
 
 Logged at `info` from:
- - `api/experimentation/services.py:640`
+ - `api/experimentation/services.py:645`
 
 Attributes:
  - `environment.id`
@@ -362,7 +362,7 @@ Attributes:
 ### `experimentation.rollout.applied`
 
 Logged at `info` from:
- - `api/experimentation/services.py:1168`
+ - `api/experimentation/services.py:1183`
 
 Attributes:
  - `audience.match`
@@ -378,7 +378,7 @@ Attributes:
 ### `experimentation.rollout.superseded`
 
 Logged at `info` from:
- - `api/experimentation/services.py:759`
+ - `api/experimentation/services.py:774`
 
 Attributes:
  - `environment.id`
@@ -1024,8 +1024,9 @@ Attributes:
 ### `usage_reporting.run.skipped`
 
 Logged at `debug` from:
- - `api/organisations/usage_reporting/services.py:60`
- - `api/organisations/usage_reporting/services.py:63`
+ - `api/telemetry/services.py:21`
+ - `api/telemetry/services.py:24`
+ - `api/telemetry/services.py:27`
 
 Attributes:
  - `reason`
@@ -1033,14 +1034,14 @@ Attributes:
 ### `usage_reporting.snapshot.errored`
 
 Logged at `exception` from:
- - `api/organisations/usage_reporting/services.py:75`
+ - `api/telemetry/services.py:39`
 
 Attributes:
 
 ### `usage_reporting.snapshot.push_failed`
 
 Logged at `warning` from:
- - `api/organisations/usage_reporting/services.py:55`
+ - `api/telemetry/control_plane/client.py:40`
 
 Attributes:
  - `status_code`
@@ -1048,7 +1049,7 @@ Attributes:
 ### `usage_reporting.snapshot.pushed`
 
 Logged at `info` from:
- - `api/organisations/usage_reporting/services.py:53`
+ - `api/telemetry/control_plane/client.py:38`
 
 Attributes:
  - `status_code`
@@ -1056,7 +1057,7 @@ Attributes:
 ### `warehouse.connection.connected`
 
 Logged at `info` from:
- - `api/experimentation/services.py:1344`
+ - `api/experimentation/services.py:1359`
 
 Attributes:
  - `environment.id`
@@ -1089,7 +1090,7 @@ Attributes:
 ### `warehouse.connection.test_event_sent`
 
 Logged at `info` from:
- - `api/experimentation/services.py:1287`
+ - `api/experimentation/services.py:1302`
 
 Attributes:
  - `environment.id`
@@ -1098,7 +1099,7 @@ Attributes:
 ### `warehouse.connection.verification_failed`
 
 Logged at `warning` from:
- - `api/experimentation/services.py:1319`
+ - `api/experimentation/services.py:1334`
 
 Attributes:
  - `environment.id`
@@ -1108,7 +1109,7 @@ Attributes:
 ### `warehouse.connection.verification_succeeded`
 
 Logged at `info` from:
- - `api/experimentation/services.py:1329`
+ - `api/experimentation/services.py:1344`
 
 Attributes:
  - `environment.id`

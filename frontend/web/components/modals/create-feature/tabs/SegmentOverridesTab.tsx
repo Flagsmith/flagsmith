@@ -6,8 +6,8 @@ import SegmentOverrides from 'components/SegmentOverrides'
 import Button from 'components/base/forms/Button'
 import Icon from 'components/icons/Icon'
 import InfoMessage from 'components/InfoMessage'
-import ErrorMessage from 'components/ErrorMessage'
-import WarningMessage from 'components/WarningMessage'
+import Banner from 'components/base/Banner'
+import { getSaveFeedback } from 'components/modals/create-feature/saveFeedback'
 import ModalHR from 'components/modals/ModalHR'
 import FeatureInPipelineGuard from 'components/release-pipelines/FeatureInPipelineGuard'
 import Utils from 'common/utils/utils'
@@ -120,20 +120,10 @@ const SegmentOverridesTab: FC<SegmentOverridesTabProps> = ({
 
   const environmentName = environment?.name || ''
 
-  let featureError =
-    error?.metadata?.flatMap((m: any) => m.non_field_errors ?? []).join('\n') ||
-    error?.message ||
-    error?.name?.[0] ||
-    error
-  let featureWarning = ''
-  if (
-    featureError?.includes?.('no changes') &&
-    projectFlag.multivariate_options?.length
-  ) {
-    featureWarning =
-      'Your feature contains no changes to its value, enabled state or environment weights. If you have adjusted any variation values this will have been saved for all environments.'
-    featureError = ''
-  }
+  const { error: saveError, warning: saveWarning } = getSaveFeedback(
+    error,
+    !!projectFlag.multivariate_options?.length,
+  )
 
   return (
     <FormGroup className='mb-4'>
@@ -222,8 +212,16 @@ const SegmentOverridesTab: FC<SegmentOverridesTabProps> = ({
           </div>
           {segmentOverrides ? (
             <>
-              <ErrorMessage error={featureError} />
-              <WarningMessage warningMessage={featureWarning} />
+              {!!saveError && (
+                <Banner type='error' className='mb-3'>
+                  {saveError}
+                </Banner>
+              )}
+              {!!saveWarning && (
+                <Banner type='warning' className='mb-3'>
+                  {saveWarning}
+                </Banner>
+              )}
               <SegmentOverrides
                 setShowCreateSegment={setShowCreateSegment}
                 onCompareChange={setIsComparing}

@@ -9,6 +9,7 @@ import ErrorMessage from 'components/ErrorMessage'
 import InfoMessage from 'components/InfoMessage'
 import WarningMessage from 'components/WarningMessage'
 import Banner from 'components/base/Banner'
+import { getSaveFeedback } from 'components/modals/create-feature/saveFeedback'
 import Tooltip from 'components/Tooltip'
 import Icon from 'components/icons/Icon'
 import Switch from 'components/Switch'
@@ -121,6 +122,10 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
   storedFeatureState,
 }) => {
   const isEdit = !!projectFlag?.id
+  const { error: saveError, warning: saveWarning } = getSaveFeedback(
+    error,
+    !!projectFlag?.multivariate_options?.length,
+  )
   const isDisabled = !!noPermissions || !!freeze?.isFrozen
   // Not isDisabled: variations are kept on create, only these two are not.
   const isDefaultDisabled = isDisabled || !!preventFlagDefaults
@@ -608,6 +613,16 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
               title={'Feature state'}
               json={environmentFlag}
             />
+            {!!saveError && (
+              <Banner type='error' className='my-3'>
+                {saveError}
+              </Banner>
+            )}
+            {!!saveWarning && (
+              <Banner type='warning' className='my-3'>
+                {saveWarning}
+              </Banner>
+            )}
             <FlagValueFooter
               is4Eyes={!!is4Eyes}
               isVersioned={!!isVersioned}

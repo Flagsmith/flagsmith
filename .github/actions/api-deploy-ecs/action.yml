@@ -2,11 +2,8 @@ name: API Deploy to ECS
 description: Deploy the Flagsmith API to ECS
 
 inputs:
-  aws_access_key_id:
-    description: The AWS access key ID to use for deploying to ECS.
-    required: true
-  aws_secret_access_key:
-    description: The AWS secret access key to use for deploying to ECS.
+  aws_role_arn:
+    description: The ARN of the AWS role to use for deploying to ECS
     required: true
   # TODO: do we need cluster name and ARN
   aws_ecs_cluster_name:
@@ -55,8 +52,7 @@ runs:
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v4
       with:
-        aws-access-key-id: ${{ inputs.aws_access_key_id }}
-        aws-secret-access-key: ${{ inputs.aws_secret_access_key }}
+        role-to-assume: ${{ inputs.aws_role_arn }}
         aws-region: eu-west-2
 
     - name: Render SDK API task definition
@@ -87,9 +83,6 @@ runs:
     - name: Register and perform SQL schema migration
       id: register-migrate-task
       env:
-        AWS_ACCESS_KEY_ID: ${{ inputs.aws_access_key_id }}
-        AWS_SECRET_ACCESS_KEY: ${{ inputs.aws_secret_access_key }}
-        AWS_DEFAULT_REGION: eu-west-2
         TASK_DEFINITION: ${{ steps.task-def-migration.outputs.task-definition }}
       run: |
         echo "task_definition_arn=$(aws ecs register-task-definition --cli-input-json file://$TASK_DEFINITION | jq '.taskDefinition.taskDefinitionArn')" >> $GITHUB_OUTPUT

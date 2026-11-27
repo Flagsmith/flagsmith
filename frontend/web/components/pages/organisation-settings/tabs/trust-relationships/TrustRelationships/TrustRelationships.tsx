@@ -148,6 +148,7 @@ const TrustRelationships: FC<TrustRelationshipsProps> = ({
   return (
     <div className='mt-4'>
       <PageTitle
+        level={2}
         title='Trust relationships'
         cta={
           <Button onClick={addTrustRelationship}>Add trust relationship</Button>

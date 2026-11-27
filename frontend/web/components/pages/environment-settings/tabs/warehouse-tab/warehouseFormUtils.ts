@@ -1,8 +1,8 @@
-import { experimentErrorMessage } from 'components/experiments/errors'
+import { getApiErrorMessage } from 'common/utils/apiErrorMessage'
 
 // The API's own message, e.g. {"config": {"host": ["..."]}}, or null.
 export const getApiErrorDetail = (error: unknown): string | null =>
-  experimentErrorMessage(error, '') || null
+  getApiErrorMessage(error, '') || null
 
 export const invalidIf = (
   value: string,

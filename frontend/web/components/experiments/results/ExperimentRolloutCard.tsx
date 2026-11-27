@@ -8,7 +8,7 @@ import Utils from 'common/utils/utils'
 import { Experiment } from 'common/types/responses'
 import { useUpdateExperimentRolloutMutation } from 'common/services/useExperiment'
 import AudienceSegmentList from 'components/experiments/AudienceSegmentList'
-import { experimentErrorMessage } from 'components/experiments/errors'
+import { getApiErrorMessage } from 'common/utils/apiErrorMessage'
 import {
   VariationSplitEntry,
   buildRolloutBody,
@@ -103,10 +103,7 @@ const ExperimentRolloutCard: FC<ExperimentRolloutCardProps> = ({
           }).unwrap()
           setIsEditing(false)
         } catch (error) {
-          toast(
-            experimentErrorMessage(error, 'Failed to update rollout'),
-            'danger',
-          )
+          toast(getApiErrorMessage(error, 'Failed to update rollout'), 'danger')
         }
       },
       title: 'Update rollout configuration',

@@ -27,6 +27,7 @@ import { useGetHealthEventsQuery } from 'common/services/useHealthEvents'
 import { useGetProjectQuery } from 'common/services/useProject'
 import getUserDisplayName from 'common/utils/getUserDisplayName'
 import FeatureName from './FeatureName'
+import FeatureModalTitle from './FeatureModalTitle'
 import FeatureDescription from './FeatureDescription'
 import FeatureTags from './FeatureTags'
 import { useFeatureRowState } from 'components/pages/features/hooks/useFeatureRowState'
@@ -235,7 +236,7 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
       : []
 
     openModal(
-      <Row className='align-items-center'>
+      <Row noWrap className='align-items-center'>
         {!!cameFrom && (
           <IconButton
             size='medium'
@@ -247,22 +248,12 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
             <Icon name='arrow-left' width={20} />
           </IconButton>
         )}
-        <span>
-          {permission ? 'Edit Feature' : 'Feature'}: {projectFlag.name}
-        </span>
-        <IconButton
-          variant='ghost'
-          size='small'
-          aria-label='Copy feature name'
-          onClick={() => {
-            Utils.copyToClipboard(projectFlag.name)
-          }}
-          className='ms-2'
-        >
-          <Icon width={16} name='copy' />
-        </IconButton>
+        <FeatureModalTitle
+          name={projectFlag.name}
+          label={permission ? 'Edit Feature' : 'Feature'}
+        />
         {ownerChips.length > 0 && (
-          <div className='d-flex align-items-center gap-1 ms-3'>
+          <div className='d-none d-md-flex align-items-center gap-1 ms-3'>
             <Icon name='people' width={16} fill='#9DA4AE' />
             {ownerChips.slice(0, 3).map((chip) => (
               <span key={chip.id} className='chip chip--xs'>

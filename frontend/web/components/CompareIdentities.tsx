@@ -234,6 +234,7 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
       {isReady && (
         <>
           <PageTitle
+            level={2}
             title={'Changed Flags'}
             className='mt-3'
             cta={

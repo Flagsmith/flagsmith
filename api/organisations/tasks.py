@@ -36,7 +36,6 @@ from organisations.subscriptions.constants import (
     FREE_PLAN_ID,
     MAX_API_CALLS_IN_FREE_PLAN,
 )
-from organisations.usage_reporting.services import push_usage_snapshots
 from users.models import FFAdminUser
 
 from .constants import (
@@ -95,11 +94,6 @@ def send_org_subscription_cancelled_alert(
 @register_recurring_task(run_every=timedelta(hours=6))
 def update_organisation_subscription_information_cache_recurring() -> None:
     update_organisation_subscription_information_cache()
-
-
-@register_recurring_task(run_every=timedelta(hours=1))
-def push_usage_to_control_plane() -> None:
-    push_usage_snapshots()
 
 
 @register_task_handler()

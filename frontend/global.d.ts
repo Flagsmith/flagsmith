@@ -25,14 +25,6 @@ declare global {
     command: 'send',
     fields: UniversalAnalytics.PageviewFieldsObject,
   ): void
-  const delighted: {
-    survey: (opts: {
-      createdAt: string
-      email: string
-      name: string
-      properties: Record<string, any>
-    }) => void
-  }
   const openModal: (
     title: ReactNode,
     body?: ReactNode,
@@ -92,10 +84,13 @@ declare global {
 
   interface Window {
     E2E: boolean
-    engagement: {
-      init(apiKey: string, options?: InitOptions): void
-      plugin(): unknown
-      boot(options: BootOptions): Promise<void>
-    }
+  }
+}
+
+// Lets a style object set CSS custom properties, the one inline style the lint
+// rule allows (runtime values feeding a SCSS class).
+declare module 'react' {
+  interface CSSProperties {
+    [key: `--${string}`]: string | number | undefined
   }
 }

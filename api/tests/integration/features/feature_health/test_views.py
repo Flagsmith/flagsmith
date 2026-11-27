@@ -267,6 +267,67 @@ def test_webhook__sample_provider__post_with_environment_expected_feature_health
     ]
 
 
+@pytest.mark.parametrize(
+    "reason, expected_reason",
+    [
+        (
+            {"text_blocks": [{"text": "Error rate spiked"}]},
+            {"text_blocks": [{"text": "Error rate spiked"}], "url_blocks": []},
+        ),
+        (
+            {"url_blocks": [{"url": "https://example.com/dashboard"}]},
+            {
+                "text_blocks": [],
+                "url_blocks": [{"url": "https://example.com/dashboard"}],
+            },
+        ),
+    ],
+)
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+def test_webhook__sample_provider_partial_reason__creates_event_with_empty_missing_blocks(
+    feature: int,
+    project: int,
+    feature_name: str,
+    webhook_feature_health_provider_webhook_url: str,
+    api_client: APIClient,
+    admin_client_new: APIClient,
+    mocker: MockerFixture,
+    reason: dict[str, list[dict[str, str]]],
+    expected_reason: dict[str, list[dict[str, str]]],
+) -> None:
+    # Given
+    feature_health_events_url = reverse(
+        "api-v1:projects:feature-health-events-list", args=[project]
+    )
+    webhook_data = {
+        "feature": feature_name,
+        "status": "unhealthy",
+        "reason": reason,
+    }
+
+    # When
+    response = api_client.post(
+        webhook_feature_health_provider_webhook_url,
+        data=json.dumps(webhook_data),
+        content_type="application/json",
+    )
+
+    # Then
+    assert response.status_code == 200
+    response = admin_client_new.get(feature_health_events_url)
+    assert response.json() == [
+        {
+            "id": mocker.ANY,
+            "created_at": "2023-01-19T09:09:47.325132Z",
+            "environment": None,
+            "feature": feature,
+            "provider_name": "Webhook",
+            "reason": expected_reason,
+            "type": "UNHEALTHY",
+        }
+    ]
+
+
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
 def test_webhook__unhealthy_feature_healthy_post__creates_event_and_removes_tag(
     unhealthy_feature: int,
