@@ -823,14 +823,7 @@ export class E2EHelpers {
   // Go to feature versions
   async goToFeatureVersions(featureName: string) {
     await this.gotoFeature(featureName);
-    // History is a tab, or an item in the "More tabs" menu when the tabs overflow
-    const history = this.page
-      .getByRole('button', { exact: true, name: 'History' })
-      .filter({ visible: true });
-    if (!(await history.count())) {
-      await this.page.getByRole('button', { exact: true, name: 'More tabs' }).click();
-    }
-    await history.first().click();
+    await this.openFeatureTab('History');
   }
 
   // Compare version

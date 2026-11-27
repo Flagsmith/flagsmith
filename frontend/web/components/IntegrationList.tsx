@@ -273,7 +273,7 @@ const Integration: FC<IntegrationProps> = (props) => {
     }
     return (
       <DropdownMenu
-        aria-label={`Actions for ${props.integration.title ?? 'integration'}`}
+        aria-label={configuredActionsLabel(props.integration.title, 0, 1)}
       >
         {actions.map((action) => (
           <DropdownMenuItem
