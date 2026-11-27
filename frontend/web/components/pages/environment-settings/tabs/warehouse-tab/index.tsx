@@ -17,13 +17,14 @@ import Project from 'common/project'
 import WarehouseConnectionCard from './WarehouseConnectionCard'
 import WarehouseSetup from './WarehouseSetup'
 import WarehouseSetupSkeleton from './WarehouseSetupSkeleton'
-import ConfigForm from './ConfigForm'
 import ClickHouseConfigForm from './ClickHouseConfigForm'
 import { ClickHouseFormData } from './clickhouseConfig'
 import DatabricksConfigForm from './DatabricksConfigForm'
 import { DatabricksFormData } from './databricksConfig'
 import PostgresConfigForm from './PostgresConfigForm'
 import { PostgresFormData } from './postgresConfig'
+import SnowflakeConfigForm from './SnowflakeConfigForm'
+import { SnowflakeFormData } from './snowflakeConfig'
 import sendWarehouseTestEvent from './sendWarehouseTestEvent'
 import { getApiEventsUrl } from './warehouseEventSnippets'
 import { getWarehousePollingInterval } from './warehousePolling'
@@ -145,37 +146,6 @@ const WarehouseTab: FC<WarehouseTabProps> = ({ environmentId }) => {
     })
   }
 
-  const handleCreateSnowflake = ({
-    name,
-    ...config
-  }: SnowflakeConfig & { name: string }) =>
-    createConnection({
-      config,
-      environmentId,
-      name,
-      warehouse_type: 'snowflake',
-    })
-      .unwrap()
-      .then(() => toast('Warehouse connection created'))
-
-  const handleUpdateSnowflake = ({
-    name,
-    ...config
-  }: SnowflakeConfig & { name: string }) => {
-    if (!connection) return Promise.reject()
-    return updateConnection({
-      config,
-      environmentId,
-      id: connection.id,
-      name,
-    })
-      .unwrap()
-      .then(() => {
-        setEditing(false)
-        toast('Warehouse connection updated')
-      })
-  }
-
   const handleCreateClickHouse = (data: ClickHouseFormData) =>
     createConnection({
       environmentId,
@@ -186,7 +156,11 @@ const WarehouseTab: FC<WarehouseTabProps> = ({ environmentId }) => {
       .then(() => toast('Warehouse connection created'))
 
   const handleUpdate = (
-    data: ClickHouseFormData | DatabricksFormData | PostgresFormData,
+    data:
+      | ClickHouseFormData
+      | DatabricksFormData
+      | PostgresFormData
+      | SnowflakeFormData,
   ) => {
     if (!connection) return Promise.reject()
     return updateConnection({
@@ -214,6 +188,15 @@ const WarehouseTab: FC<WarehouseTabProps> = ({ environmentId }) => {
     createConnection({
       environmentId,
       warehouse_type: 'postgres',
+      ...data,
+    })
+      .unwrap()
+      .then(() => toast('Warehouse connection created'))
+
+  const handleCreateSnowflake = (data: SnowflakeFormData) =>
+    createConnection({
+      environmentId,
+      warehouse_type: 'snowflake',
       ...data,
     })
       .unwrap()
@@ -300,20 +283,6 @@ const WarehouseTab: FC<WarehouseTabProps> = ({ environmentId }) => {
     )
   }
 
-  if (editing && connection.warehouse_type === 'snowflake') {
-    return (
-      <div className='mt-4 col-md-12'>
-        <ConfigForm
-          isEdit
-          initialConfig={connection.config as SnowflakeConfig}
-          initialName={connection.name}
-          onSave={handleUpdateSnowflake}
-          onCancel={() => setEditing(false)}
-        />
-      </div>
-    )
-  }
-
   if (editing && connection.warehouse_type === 'clickhouse') {
     return (
       <div className='mt-4 col-md-12'>
@@ -363,6 +332,21 @@ const WarehouseTab: FC<WarehouseTabProps> = ({ environmentId }) => {
     )
   }
 
+  if (editing && connection.warehouse_type === 'snowflake') {
+    return (
+      <div className='mt-4 col-md-12'>
+        <SnowflakeConfigForm
+          isEdit
+          environmentId={environmentId}
+          initialConfig={connection.config as SnowflakeConfig}
+          initialName={connection.name}
+          onSave={handleUpdate}
+          onCancel={() => setEditing(false)}
+        />
+      </div>
+    )
+  }
+
   return (
     <div className='mt-4 col-md-12'>
       <WarehouseConnectionCard
@@ -378,7 +362,8 @@ const WarehouseTab: FC<WarehouseTabProps> = ({ environmentId }) => {
         onTestConnection={
           connection.warehouse_type === 'clickhouse' ||
           connection.warehouse_type === 'databricks' ||
-          connection.warehouse_type === 'postgres'
+          connection.warehouse_type === 'postgres' ||
+          connection.warehouse_type === 'snowflake'
             ? handleTestConnection
             : undefined
         }

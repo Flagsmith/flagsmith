@@ -27,6 +27,7 @@ export const getConfigurableWarehouseTypes = (
   'clickhouse',
   'databricks',
   'postgres',
+  'snowflake',
 ]
 
 export const FLAGSMITH_DATABASE_CONFIG: FlagsmithDatabaseConfig = {
@@ -44,6 +45,7 @@ const CUSTOMER_WAREHOUSE_TYPES: WarehouseType[] = [
   'clickhouse',
   'databricks',
   'postgres',
+  'snowflake',
 ]
 
 // Customer warehouses are born connected, so the nudge stays until events

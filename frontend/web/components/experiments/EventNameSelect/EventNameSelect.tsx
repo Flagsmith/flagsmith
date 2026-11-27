@@ -21,6 +21,7 @@ const SUPPORTED_WAREHOUSE_TYPES: WarehouseType[] = [
   'clickhouse',
   'databricks',
   'postgres',
+  'snowflake',
 ]
 
 const EventNameSelect: FC<EventNameSelectProps> = ({ onChange, value }) => {

@@ -27,8 +27,17 @@ const flagValue = JSON.stringify({
 
 describe('getConfigurableWarehouseTypes', () => {
   it.each([
-    [false, ['flagsmith_database', 'clickhouse', 'databricks', 'postgres']],
-    [true, ['flagsmith', 'clickhouse', 'databricks', 'postgres']],
+    [
+      false,
+      [
+        'flagsmith_database',
+        'clickhouse',
+        'databricks',
+        'postgres',
+        'snowflake',
+      ],
+    ],
+    [true, ['flagsmith', 'clickhouse', 'databricks', 'postgres', 'snowflake']],
   ])('isSaas=%s => %j', (isSaas, expected) => {
     expect(getConfigurableWarehouseTypes(isSaas)).toEqual(expected)
   })
@@ -72,7 +81,8 @@ describe('getWarehouseTypeStatus', () => {
     ['databricks', 'scale-up', true, 'plan-gated'],
     ['databricks', 'enterprise', true, 'available'],
     ['postgres', 'startup', true, 'plan-gated'],
-    ['snowflake', 'enterprise', true, 'coming-soon'],
+    ['snowflake', 'startup', true, 'plan-gated'],
+    ['snowflake', 'scale-up', true, 'available'],
     ['bigquery', 'enterprise', true, 'coming-soon'],
     ['clickhouse', 'free', false, 'available'],
     ['databricks', null, false, 'available'],
