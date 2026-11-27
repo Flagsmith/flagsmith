@@ -108,3 +108,7 @@ For more information, see:
 
 - [Managing identities](/flagsmith-concepts/identities).
 
+:::tip Privacy & PII Minimization
+Even when using transient traits, avoid transmitting raw Personally Identifiable Information (PII) such as plain-text email addresses, phone numbers, or IP addresses from client SDKs unless strictly required. Prefer pseudonymous identifiers (such as hashed user IDs) or sanitize payloads at your API gateway or reverse-proxy layer before forwarding traffic to Flagsmith.
+:::
+
