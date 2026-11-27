@@ -657,4 +657,3 @@ def test_environment_feature_state_permissions__invalid_feature_id__returns_fals
 
     # Then
     assert result is False
-
