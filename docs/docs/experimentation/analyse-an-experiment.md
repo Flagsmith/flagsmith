@@ -56,8 +56,8 @@ growing one means users are slipping between variations.
 ## Ending the experiment
 
 To end the experiment, click **End Experiment** and choose what the flag serves next: control, one of the variations, or
-nothing (the flag is turned off). The choice becomes the flag's environment default, results are frozen as final and the
-flag is unlocked.
+nothing (the flag is turned off). The choice becomes the flag's environment default and the experiment stops splitting
+traffic. Results are frozen as final and the flag is unlocked.
 
 ![The Complete experiment dialog with a variation selected](/img/experimentation/experiment-complete-modal.png)
 
