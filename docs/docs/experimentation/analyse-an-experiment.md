@@ -55,7 +55,10 @@ growing one means users are slipping between variations.
 
 ## Ending the experiment
 
-When you have a conclusive result, click **End Experiment**. Results are frozen as final and the flag is unlocked.
+To end the experiment, click **End Experiment** and choose what the flag serves next: control, one of the variations, or
+nothing (the flag is turned off). The choice becomes the flag's environment default and the experiment stops splitting
+traffic. Results are frozen as final and the flag is unlocked.
 
-To roll out the winner, update the flag so every user gets the winning variation. Once it's permanent, clean up the flag
-and remove the losing variations.
+![The Complete experiment dialog with a variation selected](/img/experimentation/experiment-complete-modal.png)
+
+Once the change is permanent, clean up the flag and remove the unused variations.
