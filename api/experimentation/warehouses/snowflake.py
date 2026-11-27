@@ -50,7 +50,7 @@ _EPOCH = datetime(1970, 1, 1, tzinfo=timezone.utc)
 CONNECT_TIMEOUT_SECONDS = 5
 POLL_INTERVAL_SECONDS = 1
 MIN_STATEMENT_TIMEOUT_SECONDS = 1
-JWT_LIFETIME_SECONDS = 59 * 60
+JWT_LIFETIME_SECONDS = 60
 USER_AGENT = "Flagsmith"
 
 
@@ -142,7 +142,7 @@ def _convert_rows(payload: dict[str, Any]) -> QueryResult:
     return QueryResult(rows, [column["name"].lower() for column in columns])
 
 
-def _sign_jwt(config: SnowflakeConfig, credentials: SnowflakeCredentials) -> str:
+def _load_private_key(credentials: SnowflakeCredentials) -> rsa.RSAPrivateKey:
     try:
         private_key = serialization.load_pem_private_key(
             credentials["private_key"].encode(), password=None
@@ -151,6 +151,10 @@ def _sign_jwt(config: SnowflakeConfig, credentials: SnowflakeCredentials) -> str
         raise SnowflakeAuthError() from exc
     if not isinstance(private_key, rsa.RSAPrivateKey):
         raise SnowflakeAuthError()
+    return private_key
+
+
+def _sign_jwt(config: SnowflakeConfig, private_key: rsa.RSAPrivateKey) -> str:
     public_key_der = private_key.public_key().public_bytes(
         serialization.Encoding.DER,
         serialization.PublicFormat.SubjectPublicKeyInfo,
@@ -183,12 +187,7 @@ class _Session:
         host = config["account_identifier"].lower().replace("_", "-")
         self._base_url = f"https://{host}.snowflakecomputing.com"
         self._deadline = deadline
-        self._headers = {
-            "Authorization": f"Bearer {_sign_jwt(config, credentials)}",
-            "X-Snowflake-Authorization-Token-Type": "KEYPAIR_JWT",
-            "Accept": "application/json",
-            "User-Agent": USER_AGENT,
-        }
+        self._private_key = _load_private_key(credentials)
 
     def _remaining(self) -> float:
         return self._deadline - time.monotonic()
@@ -199,7 +198,12 @@ class _Session:
         response = self._http.request(
             method,
             f"{self._base_url}{path}",
-            headers=self._headers,
+            headers={
+                "Authorization": f"Bearer {_sign_jwt(self._config, self._private_key)}",
+                "X-Snowflake-Authorization-Token-Type": "KEYPAIR_JWT",
+                "Accept": "application/json",
+                "User-Agent": USER_AGENT,
+            },
             timeout=(CONNECT_TIMEOUT_SECONDS, read_timeout),
             allow_redirects=False,
             **kwargs,

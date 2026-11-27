@@ -255,7 +255,7 @@ def test_run__statement__sends_key_pair_authenticated_request(
         "iss": f"ACME_ORG-PROD.FLAGSMITH_SERVICE.SHA256:{fingerprint}",
         "sub": "ACME_ORG-PROD.FLAGSMITH_SERVICE",
         "iat": 1767225600,
-        "exp": 1767225600 + 59 * 60,
+        "exp": 1767225600 + 60,
     }
 
 
@@ -538,6 +538,7 @@ def test_run__redirect__is_not_followed(
 
 def test_run__still_running__polls_until_done(
     snowflake_connection: WarehouseConnection,
+    snowflake_private_key: rsa.RSAPrivateKey,
     requests_mock: RequestsMockerFixture,
     sleep: MagicMock,
 ) -> None:
@@ -560,10 +561,14 @@ def test_run__still_running__polls_until_done(
     # Then
     assert result == ([[42]], ["n"])
     assert poll.call_count == 2
-    assert (
-        poll.request_history[-1].headers["Authorization"]
-        == statements.request_history[-1].headers["Authorization"]
-    )
+    assert [
+        jwt.decode(
+            request.headers["Authorization"].removeprefix("Bearer "),
+            snowflake_private_key.public_key(),
+            algorithms=["RS256"],
+        )["iat"]
+        for request in (*statements.request_history, *poll.request_history)
+    ] == [1767225600, 1767225601, 1767225602]
     assert sleep.call_count == 2
 
 
