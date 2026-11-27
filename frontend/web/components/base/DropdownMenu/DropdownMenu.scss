@@ -57,8 +57,8 @@
       outline-offset: -2px;
     }
 
-    // true for a selected option, page for the current page's link
-    &[aria-current='true'],
+    // The chosen option, or the current page's link
+    &[aria-checked='true'],
     &[aria-current='page'] {
       --ds-dropdown-menu-text: var(--color-text-action);
       --ds-dropdown-menu-icon-color: var(--color-icon-action);

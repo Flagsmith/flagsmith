@@ -811,8 +811,11 @@ export class E2EHelpers {
 
   // Open a feature drawer tab, from "More tabs" when it has overflowed
   async openFeatureTab(name: string) {
+    const label = new RegExp(`^${name}`);
+    // A tab is a button; in the "More tabs" menu it is an option
     const tab = this.page
-      .getByRole('button', { name: new RegExp(`^${name}`) })
+      .getByRole('button', { name: label })
+      .or(this.page.getByRole('menuitemradio', { name: label }))
       .filter({ visible: true });
     if (!(await tab.count())) {
       await this.page.getByRole('button', { exact: true, name: 'More tabs' }).click();

@@ -36,7 +36,8 @@ const WINDOW_PADDING = 8
 export type PopoverProps = {
   'aria-label': string
   renderTrigger: (props: PopoverTriggerProps, isOpen: boolean) => ReactNode
-  children: ReactNode | ((close: () => void) => ReactNode)
+  // A function gets close, and whether the panel is the phone sheet
+  children: ReactNode | ((close: () => void, asSheet: boolean) => ReactNode)
   placement?: PopoverPlacement
   // Applies to the desktop panel only; the phone sheet sizes itself.
   className?: string
@@ -109,7 +110,9 @@ const Popover: FC<PopoverProps> = ({
       {asSheet ? (
         <BottomSheet open={isOpen} onOpenChange={setIsOpen} title={ariaLabel}>
           {isOpen &&
-            (typeof children === 'function' ? children(close) : children)}
+            (typeof children === 'function'
+              ? children(close, asSheet)
+              : children)}
         </BottomSheet>
       ) : (
         isOpen && (
@@ -128,7 +131,9 @@ const Popover: FC<PopoverProps> = ({
                 // Keys pass through, so Escape still closes it
                 {...getFloatingProps({ onClick: (e) => e.stopPropagation() })}
               >
-                {typeof children === 'function' ? children(close) : children}
+                {typeof children === 'function'
+                  ? children(close, asSheet)
+                  : children}
               </div>
             </FloatingFocusManager>
           </FloatingPortal>

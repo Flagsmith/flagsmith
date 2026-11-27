@@ -1,6 +1,7 @@
-import { FC } from 'react'
+import { FC, useId } from 'react'
 import { NavLink, NavLinkProps } from 'react-router-dom'
 import { useCloseDropdownMenu } from './DropdownMenuContext'
+import DropdownMenuRow from './DropdownMenuRow'
 
 // A menu row that navigates; the current page gets the selected look.
 // Children are the label, with an optional icon first.
@@ -11,18 +12,18 @@ const DropdownMenuLink: FC<Omit<NavLinkProps, 'className'>> = ({
   ...rest
 }) => {
   const close = useCloseDropdownMenu()
+  const id = useId()
   return (
     <NavLink
       {...rest}
+      role='menuitem'
       className='ds-dropdown-menu__item'
       onClick={(e) => {
         onClick?.(e)
         close()
       }}
     >
-      <span className='ds-dropdown-menu__content'>
-        <span className='ds-dropdown-menu__label'>{children}</span>
-      </span>
+      <DropdownMenuRow id={id}>{children}</DropdownMenuRow>
     </NavLink>
   )
 }

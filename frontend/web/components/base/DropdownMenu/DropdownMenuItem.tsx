@@ -1,14 +1,14 @@
 import { FC, ReactNode, useId } from 'react'
 import classNames from 'classnames'
 import BareButton from 'components/base/forms/BareButton'
-import Icon from 'components/icons/Icon'
 import { useCloseDropdownMenu } from './DropdownMenuContext'
+import DropdownMenuRow from './DropdownMenuRow'
 
 export type DropdownMenuItemProps = {
   // The label, with an optional icon first: <Icon name='copy' /> Copy
   children: ReactNode
   onSelect: () => void
-  // The selected option, as in a section switcher: ticked and announced
+  // Makes the item one option of a single choice, ticked when true
   selected?: boolean
   destructive?: boolean
   disabled?: boolean
@@ -22,11 +22,11 @@ const DropdownMenuItem: FC<DropdownMenuItemProps> = ({
   destructive = false,
   disabled = false,
   onSelect,
-  selected = false,
+  selected,
 }) => {
   const close = useCloseDropdownMenu()
   const id = useId()
-  const descriptionId = `${id}-description`
+  const isOption = selected !== undefined
   // aria-disabled keeps the item focusable, so a disabled item's description
   // still reaches keyboard and touch users. Named by the label alone, so the
   // description is read once
@@ -35,33 +35,20 @@ const DropdownMenuItem: FC<DropdownMenuItemProps> = ({
       className={classNames('ds-dropdown-menu__item', {
         'ds-dropdown-menu__item--destructive': destructive,
       })}
-      aria-current={selected || undefined}
+      role={isOption ? 'menuitemradio' : 'menuitem'}
+      aria-checked={isOption ? selected : undefined}
       aria-disabled={disabled || undefined}
       aria-labelledby={description ? `${id}-label` : undefined}
-      aria-describedby={description ? descriptionId : undefined}
+      aria-describedby={description ? `${id}-description` : undefined}
       onClick={() => {
         if (disabled) return
         onSelect()
         close()
       }}
     >
-      <span className='ds-dropdown-menu__content'>
-        <span id={`${id}-label`} className='ds-dropdown-menu__label'>
-          {children}
-        </span>
-        {description && (
-          <span id={descriptionId} className='ds-dropdown-menu__description'>
-            {description}
-          </span>
-        )}
-      </span>
-      {selected && (
-        <Icon
-          name='checkmark'
-          className='ds-dropdown-menu__check'
-          aria-hidden
-        />
-      )}
+      <DropdownMenuRow id={id} description={description} selected={selected}>
+        {children}
+      </DropdownMenuRow>
     </BareButton>
   )
 }
