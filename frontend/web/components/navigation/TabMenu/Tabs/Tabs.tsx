@@ -10,15 +10,18 @@ import React, {
 import ModalHR from 'components/modals/ModalHR'
 import Utils from 'common/utils/utils'
 import { useHistory } from 'react-router-dom'
-import TabButton from './TabButton'
-import { TabItemProps } from './TabItem'
-import TabLabel from './TabLabel'
+import TabButton from 'components/navigation/TabMenu/TabButton'
+import { TabItemProps } from 'components/navigation/TabMenu/TabItem'
+import TabLabel from 'components/navigation/TabMenu/TabLabel'
 
 import classNames from 'classnames'
 import DropdownMenu, { DropdownMenuItem } from 'components/base/DropdownMenu'
 import IconButton from 'components/base/IconButton'
 import Icon from 'components/icons/Icon'
 import { useOverflowVisibleCount } from 'common/hooks/useOverflowVisibleCount'
+import { useBreakpoint } from 'common/hooks/useBreakpoint'
+import { useTabScroller } from 'components/navigation/TabMenu/useTabScroller'
+import './Tabs.scss'
 
 // Room for the "More tabs" button, with some spare
 const OVERFLOW_BUTTON_WIDTH = 48
@@ -80,6 +83,7 @@ const Tabs: React.FC<TabsProps> = ({
 
   const outerContainerRef = useRef<HTMLDivElement>(null)
   const itemsContainerRef = useRef<HTMLDivElement>(null)
+  const isPhone = useBreakpoint('isPhone')
 
   const { isMeasuring, visibleCount } = useOverflowVisibleCount({
     extraWidth: OVERFLOW_BUTTON_WIDTH,
@@ -89,16 +93,31 @@ const Tabs: React.FC<TabsProps> = ({
     outerContainerRef,
   })
 
+  // Phones scroll the tabs sideways instead of hiding some behind a menu
+  const scrollTabs = isPhone && !disableOverflow
+  const { canScrollEnd, canScrollStart } = useTabScroller(
+    itemsContainerRef,
+    scrollTabs,
+    value,
+    tabChildren.length,
+  )
+
   const visible = useMemo(
     // Disable overflow for pill tabs
-    () => (disableOverflow ? tabChildren : tabChildren.slice(0, visibleCount)),
-    [tabChildren, visibleCount, disableOverflow],
+    () =>
+      disableOverflow || scrollTabs
+        ? tabChildren
+        : tabChildren.slice(0, visibleCount),
+    [tabChildren, visibleCount, disableOverflow, scrollTabs],
   )
   const overflow = useMemo(
-    () => (disableOverflow ? [] : tabChildren.slice(visibleCount)),
-    [tabChildren, visibleCount, disableOverflow],
+    () =>
+      disableOverflow || scrollTabs ? [] : tabChildren.slice(visibleCount),
+    [tabChildren, visibleCount, disableOverflow, scrollTabs],
   )
-  const canGrow = !isMeasuring && visibleCount === tabChildren.length
+  const measuring = isMeasuring && !scrollTabs
+  const canGrow =
+    !scrollTabs && !isMeasuring && visibleCount === tabChildren.length
   const hasOverflow = overflow.length > 0 && !isMeasuring
   const tabLabelOf = (child: ReactElement<TabItemProps>) =>
     String(child.props.tabLabelString || child.props.tabLabel)
@@ -134,11 +153,14 @@ const Tabs: React.FC<TabsProps> = ({
         <div
           ref={itemsContainerRef}
           className={classNames('d-flex align-items-center flex-1 gap-2', {
-            'opacity-0': isMeasuring,
+            'opacity-0': measuring,
+            'tabs-nav__scroller': scrollTabs,
+            'tabs-nav__scroller--fade-end': scrollTabs && canScrollEnd,
+            'tabs-nav__scroller--fade-start': scrollTabs && canScrollStart,
           })}
         >
-          {(isMeasuring ? tabChildren : visible).map((child, i) => {
-            const isSelected = !isMeasuring && value === i
+          {(measuring ? tabChildren : visible).map((child, i) => {
+            const isSelected = !measuring && value === i
             return (
               <TabButton
                 key={`button-${i}`}

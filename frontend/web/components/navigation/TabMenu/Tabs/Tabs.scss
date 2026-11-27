@@ -1,0 +1,42 @@
+// Phones: tabs scroll sideways, and the edge with more tabs behind it fades
+.tabs-nav__scroller {
+  --tabs-fade: 40px;
+
+  position: relative;
+  overflow-x: auto;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  > * {
+    flex-shrink: 0;
+  }
+
+  &--fade-end {
+    mask-image: linear-gradient(
+      to right,
+      black calc(100% - var(--tabs-fade)),
+      transparent
+    );
+  }
+
+  &--fade-start {
+    mask-image: linear-gradient(
+      to left,
+      black calc(100% - var(--tabs-fade)),
+      transparent
+    );
+  }
+
+  &--fade-start.tabs-nav__scroller--fade-end {
+    mask-image: linear-gradient(
+      to right,
+      transparent,
+      black var(--tabs-fade),
+      black calc(100% - var(--tabs-fade)),
+      transparent
+    );
+  }
+}
