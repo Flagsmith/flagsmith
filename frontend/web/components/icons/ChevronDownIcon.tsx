@@ -14,10 +14,10 @@ const ChevronDownIcon: FC<IconProps> = ({
     viewBox='0 0 24 24'
     fill='none'
     xmlns='http://www.w3.org/2000/svg'
+    {...rest}
     aria-hidden={
       rest['aria-label'] || rest['aria-labelledby'] ? undefined : true
     }
-    {...rest}
   >
     <path
       d='M16 10.5L14.2627 12.2373C13.4707 13.0293 13.0747 13.4253 12.618 13.5737C12.2163 13.7042 11.7837 13.7042 11.382 13.5737C10.9253 13.4253 10.5293 13.0293 9.73726 12.2373L8 10.5'

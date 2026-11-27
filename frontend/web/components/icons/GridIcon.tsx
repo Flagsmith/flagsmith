@@ -14,10 +14,10 @@ const GridIcon: FC<IconProps> = ({
     viewBox='0 0 24 24'
     fill='none'
     xmlns='http://www.w3.org/2000/svg'
+    {...rest}
     aria-hidden={
       rest['aria-label'] || rest['aria-labelledby'] ? undefined : true
     }
-    {...rest}
   >
     <path
       d='M4.75 3H8.25C10 3 10 3 10 4.75V8.25C10 10 10 10 8.25 10H4.75C3 10 3 10 3 8.25V4.75C3 3 3 3 4.75 3Z'

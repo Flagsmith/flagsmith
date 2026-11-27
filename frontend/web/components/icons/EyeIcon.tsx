@@ -14,10 +14,10 @@ const EyeIcon: FC<IconProps> = ({
     viewBox='0 0 24 24'
     fill='none'
     xmlns='http://www.w3.org/2000/svg'
+    {...rest}
     aria-hidden={
       rest['aria-label'] || rest['aria-labelledby'] ? undefined : true
     }
-    {...rest}
   >
     <path
       d='M2.08984 13.0899C7.56284 6.04294 16.4358 6.04294 21.9088 13.0899'

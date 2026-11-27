@@ -14,10 +14,10 @@ const ExternalLinkIcon: FC<IconProps> = ({
     viewBox='0 0 24 24'
     fill='none'
     xmlns='http://www.w3.org/2000/svg'
+    {...rest}
     aria-hidden={
       rest['aria-label'] || rest['aria-labelledby'] ? undefined : true
     }
-    {...rest}
   >
     <path
       d='M16 3H21V8'

@@ -14,10 +14,10 @@ const FeaturesIcon: FC<IconProps> = ({
     viewBox='0 0 24 24'
     fill='none'
     xmlns='http://www.w3.org/2000/svg'
+    {...rest}
     aria-hidden={
       rest['aria-label'] || rest['aria-labelledby'] ? undefined : true
     }
-    {...rest}
   >
     <path
       d='M6.5 3H17C18.933 3 20.5 4.567 20.5 6.5V6.5C20.5 8.433 18.933 10 17 10H6.5C4.567 10 3 8.433 3 6.5V6.5C3 4.567 4.567 3 6.5 3Z'

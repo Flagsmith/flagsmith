@@ -14,10 +14,10 @@ const SearchIcon: FC<IconProps> = ({
     viewBox='0 0 24 24'
     fill='none'
     xmlns='http://www.w3.org/2000/svg'
+    {...rest}
     aria-hidden={
       rest['aria-label'] || rest['aria-labelledby'] ? undefined : true
     }
-    {...rest}
   >
     <circle cx='11.5' cy='11.5' r='8.5' strokeWidth='1.5' stroke={fill} />
     <path

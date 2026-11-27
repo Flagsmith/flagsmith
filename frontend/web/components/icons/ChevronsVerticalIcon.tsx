@@ -14,10 +14,10 @@ const ChevronsVerticalIcon: FC<IconProps> = ({
     viewBox='0 0 24 24'
     fill='none'
     xmlns='http://www.w3.org/2000/svg'
+    {...rest}
     aria-hidden={
       rest['aria-label'] || rest['aria-labelledby'] ? undefined : true
     }
-    {...rest}
   >
     <path
       d='M16 15L14.2627 16.7373C13.4707 17.5293 13.0747 17.9253 12.618 18.0737C12.2163 18.2042 11.7837 18.2042 11.382 18.0737C10.9253 17.9253 10.5293 17.5293 9.73726 16.7373L8 15'

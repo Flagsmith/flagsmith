@@ -14,10 +14,10 @@ const PeopleIcon: FC<IconProps> = ({
     viewBox='0 0 24 24'
     fill='none'
     xmlns='http://www.w3.org/2000/svg'
+    {...rest}
     aria-hidden={
       rest['aria-label'] || rest['aria-labelledby'] ? undefined : true
     }
-    {...rest}
   >
     <path
       d='M8.90033 5.8001C10.0003 6.9001 10.0003 8.6001 8.90033 9.7001C7.80033 10.8001 6.10034 10.8001 5.00034 9.7001C3.90034 8.6001 4.00033 6.9001 5.10034 5.8001C6.20034 4.7001 7.90033 4.7001 8.90033 5.8001'

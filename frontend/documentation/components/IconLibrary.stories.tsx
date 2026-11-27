@@ -1,4 +1,3 @@
-import React from 'react'
 import type { Meta, StoryObj } from 'storybook'
 import * as icons from 'components/icons'
 import type { IconComponent } from 'components/icons'
@@ -36,6 +35,16 @@ export const Catalogue: StoryObj = {
 export const Sizes: StoryObj = {
   render: () => (
     <table>
+      <thead>
+        <tr>
+          <th />
+          {SIZES.map((size) => (
+            <th className='px-3 py-1' key={size}>
+              {size}px
+            </th>
+          ))}
+        </tr>
+      </thead>
       <tbody>
         {ICONS.map(([name, Svg]) => (
           <tr key={name}>

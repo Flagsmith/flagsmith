@@ -14,10 +14,10 @@ const PercentageIcon: FC<IconProps> = ({
     viewBox='0 0 24 24'
     fill='none'
     xmlns='http://www.w3.org/2000/svg'
+    {...rest}
     aria-hidden={
       rest['aria-label'] || rest['aria-labelledby'] ? undefined : true
     }
-    {...rest}
   >
     <path
       d='M18.4142 15.5858C19.1953 16.3668 19.1953 17.6332 18.4142 18.4142C17.6332 19.1953 16.3668 19.1953 15.5858 18.4142C14.8047 17.6332 14.8047 16.3668 15.5858 15.5858C16.3668 14.8047 17.6332 14.8047 18.4142 15.5858'

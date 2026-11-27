@@ -14,10 +14,10 @@ const CheckCircleIcon: FC<IconProps> = ({
     viewBox='0 0 24 24'
     fill='none'
     xmlns='http://www.w3.org/2000/svg'
+    {...rest}
     aria-hidden={
       rest['aria-label'] || rest['aria-labelledby'] ? undefined : true
     }
-    {...rest}
   >
     <path
       d='M16 10L11.6027 13.8476C10.9752 14.3967 10.6614 14.6712 10.2857 14.6712C9.90998 14.6712 9.59622 14.3967 8.96871 13.8476L8 13'

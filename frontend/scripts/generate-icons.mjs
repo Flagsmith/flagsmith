@@ -45,7 +45,11 @@ const componentName = (file) =>
 
 // Figma exports may wrap the icon in its frame, so take the drawn shapes only
 const toJsx = (svg) =>
-  [...svg.matchAll(/<(path|circle|line)\b([^>]*?)\/?>/g)]
+  [
+    ...svg.matchAll(
+      /<(path|circle|ellipse|line|polygon|polyline|rect)\b([^>]*?)\/?>/g,
+    ),
+  ]
     .map(([, tag, attributes]) => {
       const props = [...attributes.matchAll(/([\w-]+)="([^"]*)"/g)]
         .filter(([, key]) => key !== 'id')
@@ -74,8 +78,8 @@ const ${name}: FC<IconProps> = ({
     viewBox='0 0 24 24'
     fill='none'
     xmlns='http://www.w3.org/2000/svg'
-    aria-hidden={rest['aria-label'] || rest['aria-labelledby'] ? undefined : true}
     {...rest}
+    aria-hidden={rest['aria-label'] || rest['aria-labelledby'] ? undefined : true}
   >
     ${shapes}
   </svg>

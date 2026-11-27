@@ -14,10 +14,10 @@ const FlaskIcon: FC<IconProps> = ({
     viewBox='0 0 24 24'
     fill='none'
     xmlns='http://www.w3.org/2000/svg'
+    {...rest}
     aria-hidden={
       rest['aria-label'] || rest['aria-labelledby'] ? undefined : true
     }
-    {...rest}
   >
     <path
       d='M19.0028 7.99842V4.99717C19.0028 3.89214 18.107 2.99634 17.0019 2.99634H4.99693C3.8919 2.99634 2.99609 3.89214 2.99609 4.99717V18.0026'

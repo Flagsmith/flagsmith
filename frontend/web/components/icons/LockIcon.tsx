@@ -14,10 +14,10 @@ const LockIcon: FC<IconProps> = ({
     viewBox='0 0 24 24'
     fill='none'
     xmlns='http://www.w3.org/2000/svg'
+    {...rest}
     aria-hidden={
       rest['aria-label'] || rest['aria-labelledby'] ? undefined : true
     }
-    {...rest}
   >
     <path
       d='M8 10V8C8 7.27143 8.19479 6.58835 8.53513 6C9.22675 4.8044 10.5194 4 12 4C13.4736 4 14.7611 4.79684 15.4551 5.98314C15.6917 6.38765 15.7965 6.85143 15.8782 7.31288C15.9593 7.77008 16 8.2335 16 8.69783V10'

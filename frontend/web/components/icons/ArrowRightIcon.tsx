@@ -14,10 +14,10 @@ const ArrowRightIcon: FC<IconProps> = ({
     viewBox='0 0 24 24'
     fill='none'
     xmlns='http://www.w3.org/2000/svg'
+    {...rest}
     aria-hidden={
       rest['aria-label'] || rest['aria-labelledby'] ? undefined : true
     }
-    {...rest}
   >
     <path
       d='M6 12H16M12 7L14.7373 9.73726C15.5293 10.5293 15.9253 10.9253 16.0737 11.382C16.2042 11.7837 16.2042 12.2163 16.0737 12.618C15.9253 13.0747 15.5293 13.4707 14.7373 14.2627L12 17'
