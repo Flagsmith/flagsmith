@@ -1,0 +1,26 @@
+# Flagsmith documentation
+
+> Documentation for the Flagsmith feature flag service, written for developers and AI agents. Every page is available as Markdown. Append `.md` to any page URL to get it.
+
+## Tutorial
+
+- [Quickstart](quickstart.md)
+- [Feature flags basics](feature-flags-basics.md)
+- [Remote config](remote-config.md)
+
+## SDKs
+
+- [Node.js SDK](nodejs-sdk.md)
+- [Python SDK](python-sdk.md)
+- [React SDK](react-sdk.md)
+
+## How-to guides
+
+- [Create a feature flag](create-a-feature-flag.md)
+- [Enable a feature flag](enable-a-feature-flag.md)
+- [Use remote config](use-remote-config.md)
+
+## Reference
+
+- [API reference](api-reference.md)
+- [JavaScript API](javascript-api.md)
