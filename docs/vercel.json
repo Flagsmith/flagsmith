@@ -266,7 +266,7 @@
         },
         {
             "source": "/advanced-use/efficient-api-usage",
-            "destination": "https://docs.flagsmith.com/best-practices/efficient-api-usage"
+            "destination": "/best-practices/efficient-api-usage"
         },
         {
             "source": "/advanced-use/mobile-app-versioning",
@@ -302,6 +302,10 @@
         },
         {
             "source": "/clients/ruby",
+            "destination": "/integrating-with-flagsmith/sdks/server-side"
+        },
+        {
+            "source": "/clients/php",
             "destination": "/integrating-with-flagsmith/sdks/server-side"
         },
         {
@@ -537,6 +541,10 @@
             "destination": "/integrating-with-flagsmith/sdks/client-side-sdks/"
         },
         {
+            "source": "/clients/cli",
+            "destination": "/integrating-with-flagsmith/CLI"
+        },
+        {
             "source": "/integrations",
             "destination": "/third-party-integrations/"
         },
@@ -665,6 +673,10 @@
             "destination": "/third-party-integrations/observability-and-monitoring/dynatrace"
         },
         {
+            "source": "/integrations/apm/newrelic",
+            "destination": "/third-party-integrations/observability-and-monitoring/newrelic"
+        },
+        {
             "source": "/integrations/apm/grafana",
             "destination": "/third-party-integrations/observability-and-monitoring/grafana"
         },
@@ -738,11 +750,15 @@
         }
     ],
     "trailingSlash": false,
-    "rewrites": [
+    "headers": [
         {
             "source": "/(.*)",
-            "has": [{ "type": "header", "key": "accept", "value": "(?i).*text/markdown.*" }],
-            "destination": "/$1.md"
+            "headers": [
+                {
+                    "key": "Vary",
+                    "value": "Accept"
+                }
+            ]
         }
     ]
 }
