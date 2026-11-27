@@ -64,14 +64,8 @@ choose what the flag serves from now on:
 
 ![The Complete experiment dialog with a variation selected](/img/experimentation/experiment-complete-modal.png)
 
-Your choice becomes the environment default, for every identity in the environment, not only the experiment's audience.
-The experiment's rollout is removed, results are frozen as final and the flag is unlocked. This can't be undone.
+Your choice becomes the environment default for identities without a matching segment or identity override, not only the
+experiment's audience. The experiment's rollout is removed, results are frozen as final and the flag is unlocked. This
+can't be undone.
 
 Once the rollout is permanent, clean up the flag and remove the losing variations.
-
-:::note Self-hosted
-
-Before v2.295.2, ending an experiment kept its rollout in place, so later changes to the flag didn't reach the
-identities in the experiment. Upgrade to apply your choice when the experiment ends.
-
-:::
