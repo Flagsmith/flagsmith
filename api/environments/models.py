@@ -310,7 +310,14 @@ class Environment(
             qs_for_fk_api_key = base_qs.filter(api_keys__key=api_key)
 
             try:
-                environment = qs_for_embedded_api_key.union(qs_for_fk_api_key).get()
+                # UNION ALL: a key matches at most one environment, so there is
+                # nothing to deduplicate. Plain UNION sorts and compares every
+                # selected column, which raises the plan cost past Postgres'
+                # JIT threshold on larger databases and makes this lookup take
+                # seconds (#9132).
+                environment = qs_for_embedded_api_key.union(
+                    qs_for_fk_api_key, all=True
+                ).get()
             except cls.DoesNotExist:
                 cls.set_bad_key(api_key)
                 logger.info("Environment with api_key %s does not exist" % api_key)
