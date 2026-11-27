@@ -9,6 +9,7 @@ import DropdownMenuRow from './DropdownMenuRow'
 const DropdownMenuLink: FC<Omit<NavLinkProps, 'className'>> = ({
   children,
   onClick,
+  onKeyDown,
   ...rest
 }) => {
   const close = useCloseDropdownMenu()
@@ -21,6 +22,14 @@ const DropdownMenuLink: FC<Omit<NavLinkProps, 'className'>> = ({
       onClick={(e) => {
         onClick?.(e)
         close()
+      }}
+      // Menu rows answer Space like Enter; a link only answers Enter
+      onKeyDown={(e) => {
+        onKeyDown?.(e)
+        if (e.key === ' ') {
+          e.preventDefault()
+          e.currentTarget.click()
+        }
       }}
     >
       <DropdownMenuRow id={id}>{children}</DropdownMenuRow>
