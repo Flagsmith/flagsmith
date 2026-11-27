@@ -38,5 +38,20 @@ are not posted.
 
 ## Self-hosted Flagsmith
 
-Your Flagsmith API must be able to make outbound HTTPS requests to `discord.com`. Messages are sent by the task
-processor when it is enabled, or by the API otherwise.
+The process that sends the messages must be able to make outbound HTTPS requests to `discord.com`: the task processor
+when it is enabled, or the API otherwise.
+
+The dashboard reads its list of integrations from the `integration_data` flag. If Discord doesn't appear under
+**Integrations**, your instance is reading an `integration_data` value that doesn't include it yet. Either add the
+`discord` entry from
+[the default configuration](https://github.com/Flagsmith/flagsmith/blob/main/frontend/common/stores/default-flags.ts) to
+`integration_data` in your
+[Flagsmith on Flagsmith](/deployment-self-hosting/core-configuration/running-flagsmith-on-flagsmith) project, or create
+the integration through the API:
+
+```bash
+curl -X POST "https://<your-flagsmith-api>/api/v1/projects/<project id>/integrations/discord/" \
+  -H "Authorization: Api-Key <your Admin API key>" \
+  -H "Content-Type: application/json" \
+  -d '{"base_url": "https://discord.com/api/webhooks/<id>/<token>"}'
+```

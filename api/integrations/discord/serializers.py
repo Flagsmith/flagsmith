@@ -15,7 +15,9 @@ DISCORD_WEBHOOK_URL = re.compile(
 
 class DiscordConfigurationSerializer(BaseProjectIntegrationModelSerializer):
     base_url = serializers.CharField(
-        help_text="The Discord channel webhook URL (Server Settings > Integrations > Webhooks)."
+        # The model's URLField holds at most 200 characters.
+        max_length=200,
+        help_text="The Discord channel webhook URL (Server Settings > Integrations > Webhooks).",
     )
 
     class Meta:

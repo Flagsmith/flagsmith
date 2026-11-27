@@ -100,3 +100,22 @@ def test_discord_view__delete_then_recreate__restores_soft_deleted_configuration
     assert recreated.json()["id"] == config.id
     config.refresh_from_db()
     assert config.base_url.startswith("https://discord.com/api/webhooks/456/")
+
+
+def test_discord_view__create_configuration_url_too_long__returns_400(
+    admin_client_new: APIClient,
+    project: Project,
+) -> None:
+    # Given: a well-formed Discord webhook URL longer than the 200-character column
+    base_url = f"https://discord.com/api/webhooks/123/{'a' * 200}"
+    url = reverse("api-v1:projects:integrations-discord-list", args=[project.id])
+
+    # When
+    response = admin_client_new.post(
+        url, data=json.dumps({"base_url": base_url}), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "base_url" in response.json()
+    assert not DiscordConfiguration.objects.filter(project=project).exists()

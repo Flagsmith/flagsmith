@@ -1,6 +1,7 @@
 import json
 
 import pytest
+import requests
 import responses
 from pytest_mock import MockerFixture
 from pytest_structlog import StructuredLogCapture
@@ -93,6 +94,29 @@ def test_discord_wrapper__track_event_webhook_deleted__logs_failure(
             "level": "warning",
             "event": "webhook.failed",
             "response__status_code": 404,
+        }
+    ]
+
+
+@responses.activate()
+def test_discord_wrapper__track_event_discord_unreachable__logs_failure_without_raising(
+    log: StructuredLogCapture,
+) -> None:
+    # Given
+    wrapper = DiscordWrapper(webhook_url=WEBHOOK_URL)
+    responses.add(
+        url=WEBHOOK_URL, method="POST", body=requests.ConnectionError("unreachable")
+    )
+
+    # When
+    wrapper._track_event({"embeds": []})
+
+    # Then
+    assert log.events == [
+        {
+            "level": "warning",
+            "event": "webhook.failed",
+            "error__type": "ConnectionError",
         }
     ]
 

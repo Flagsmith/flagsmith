@@ -49,7 +49,16 @@ class DiscordWrapper(AbstractBaseEventIntegrationWrapper):
         }
 
     def _track_event(self, event: dict[str, Any]) -> None:
-        response = requests.post(self.webhook_url, json=event, timeout=10)
+        try:
+            response = requests.post(self.webhook_url, json=event, timeout=10)
+        except requests.RequestException as exc:
+            # Never let Discord being unreachable fail the change that was audited
+            # (the post runs inline when the postpone decorator is disabled).
+            structlog_logger.warning(
+                "webhook.failed",
+                error__type=type(exc).__name__,
+            )
+            return
         if not response.ok:
             # 404: the webhook was deleted in Discord; 429: rate limited.
             structlog_logger.warning(
