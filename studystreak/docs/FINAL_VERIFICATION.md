@@ -44,14 +44,15 @@ access to Flagsmith's servers and no Flagsmith keys**, so nothing involving live
 
 ## Production experiment readiness
 
-| Item                                                                                                                   | Status                 | Evidence / action                           |
-| ---------------------------------------------------------------------------------------------------------------------- | ---------------------- | ------------------------------------------- |
-| Production warehouse **Connected**                                                                                     | Requires manual action | [FLAGSMITH_SETUP.md §2](FLAGSMITH_SETUP.md) |
-| Flag, variation key and metrics match the Simulation environment                                                       | Requires manual action | §4–5                                        |
-| `FLAGSMITH_CLIENT_ENVIRONMENT_KEY` and `FLAGSMITH_SERVER_KEY` set on the host. The Simulation key is **not** set there | Requires manual action | §3                                          |
-| App deployed and reachable                                                                                             | Not verified           | No deployment has been made or tested       |
-| Rate limit on `POST /api/signup` at the hosting edge                                                                   | Requires manual action | README → Security and privacy               |
-| Production experiment started **only after** the event-delivery checks below pass                                      | Requires manual action | §6                                          |
+| Item                                                                                                                   | Status                 | Evidence / action                                                                                     |
+| ---------------------------------------------------------------------------------------------------------------------- | ---------------------- | ----------------------------------------------------------------------------------------------------- |
+| Production warehouse **Connected**                                                                                     | Requires manual action | [FLAGSMITH_SETUP.md §2](FLAGSMITH_SETUP.md)                                                           |
+| Flag, variation key and metrics match the Simulation environment                                                       | Requires manual action | §4–5                                                                                                  |
+| `FLAGSMITH_CLIENT_ENVIRONMENT_KEY` and `FLAGSMITH_SERVER_KEY` set on the host. The Simulation key is **not** set there | Requires manual action | §3                                                                                                    |
+| App deployed to Vercel by the team at https://studystreak-five-delta.vercel.app                                        | Not verified           | Reported by the team. Not checked from our development environment, whose network blocks `vercel.app` |
+| Deployment serves branch `feature/studystreak-experimentation` and is reachable                                        | Requires manual action | Open the URL and check the Vercel deployment's commit                                                 |
+| Rate limit on `POST /api/signup` at the hosting edge                                                                   | Requires manual action | README → Security and privacy                                                                         |
+| Production experiment started **only after** the event-delivery checks below pass                                      | Requires manual action | §6                                                                                                    |
 
 ## Event delivery
 
@@ -106,9 +107,9 @@ access to Flagsmith's servers and no Flagsmith keys**, so nothing involving live
 
 ## Submission readiness
 
-| Item                                               | Status                 | Evidence / action                                                                     |
-| -------------------------------------------------- | ---------------------- | ------------------------------------------------------------------------------------- |
-| Feature branch pushed to `Subas-mohanty/flagsmith` | Requires manual action | Not pushed. Pushing from the development session needs approval and GitHub App access |
-| Pull request into `main` opened for team review    | Requires manual action |                                                                                       |
-| Deployed demo URL                                  | Requires manual action |                                                                                       |
-| Video uploaded and submission form completed       | Requires manual action |                                                                                       |
+| Item                                                         | Status                 | Evidence / action                                                                     |
+| ------------------------------------------------------------ | ---------------------- | ------------------------------------------------------------------------------------- |
+| Feature branch pushed to `Subas-mohanty/flagsmith`           | Requires manual action | Not pushed. Pushing from the development session needs approval and GitHub App access |
+| Pull request into `main` opened for team review              | Requires manual action |                                                                                       |
+| Deployed demo URL: https://studystreak-five-delta.vercel.app | Not verified           | Deployed by the team; reachability not independently checked                          |
+| Video uploaded and submission form completed                 | Requires manual action |                                                                                       |

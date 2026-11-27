@@ -5,6 +5,10 @@ Flagsmith Experimentation.
 
 **Hackathon:** Toggle Wars: Flagsmith Experimentation Hackathon, Track 01: Test Something Real.
 
+**Production deployment:** https://studystreak-five-delta.vercel.app (deployed to Vercel by the team). Whether it is
+reachable, which commit it serves, and whether Production events reach Flagsmith have not been checked independently
+from our development environment. See [docs/FINAL_VERIFICATION.md](docs/FINAL_VERIFICATION.md).
+
 > **About "🔥 1,240 students joined this week".** This is static demonstration copy shown to the treatment group. It is
 > not a verified count of real users. The page footer says so in both variants.
 
@@ -425,8 +429,8 @@ No test needs real credentials or network access.
   signup to be ignored.
 - **Click de-duplication relies on `localStorage`.** Clearing site data allows a second `signup_clicked`.
 - **The Mean metric mixes rate and speed.** Flagsmith's version is zero-filled (see above), so it is Informational.
-- **Hosting.** Rate limiting must be added at the hosting layer, and deployment has not yet been tested on a hosting
-  platform.
+- **Hosting.** The team has deployed the app to Vercel (link above), but its reachability and Production event delivery
+  have not been verified independently. Rate limiting must still be added at the hosting layer.
 
 ## Demo walkthrough
 
