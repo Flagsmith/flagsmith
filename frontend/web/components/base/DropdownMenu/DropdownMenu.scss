@@ -98,11 +98,6 @@
     color: var(--ds-dropdown-menu-icon-color);
   }
 
-  &__description {
-    font-size: var(--font-size-body-sm);
-    color: var(--color-text-secondary);
-  }
-
   // Lines up with the text, not the icon
   &__label:has(> svg) + &__description {
     padding-left: calc(

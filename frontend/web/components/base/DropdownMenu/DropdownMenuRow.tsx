@@ -1,5 +1,6 @@
 import { FC, ReactNode } from 'react'
 import Icon from 'components/icons/Icon'
+import { BodyText } from 'components/base/typography'
 
 type DropdownMenuRowProps = {
   // Prefix for the label and description ids
@@ -21,12 +22,15 @@ const DropdownMenuRow: FC<DropdownMenuRowProps> = ({
         {children}
       </span>
       {description && (
-        <span
+        <BodyText
+          inline
+          size='sm'
+          muted
           id={`${id}-description`}
           className='ds-dropdown-menu__description'
         >
           {description}
-        </span>
+        </BodyText>
       )}
     </span>
     {selected && (
