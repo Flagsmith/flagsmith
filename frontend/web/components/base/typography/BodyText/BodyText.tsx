@@ -2,7 +2,7 @@ import { FC, HTMLAttributes } from 'react'
 import cn from 'classnames'
 import './BodyText.scss'
 
-export type BodyTextSize = 'sm' | 'xs'
+export type BodyTextSize = 'lg' | 'sm' | 'xs'
 export type BodyTextWeight = 'semibold'
 
 export type BodyTextProps = HTMLAttributes<HTMLElement> & {

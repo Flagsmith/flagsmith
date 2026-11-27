@@ -1190,6 +1190,15 @@ export const AllTokens: StoryObj = {
           </tr>
           <tr>
             <td>
+              <code>--font-size-body-lg</code>
+            </td>
+            <td>
+              <code>16px</code>
+            </td>
+            <td>Large body text. Touch-sized rows on phones.</td>
+          </tr>
+          <tr>
+            <td>
               <code>--font-size-body-md</code>
             </td>
             <td>

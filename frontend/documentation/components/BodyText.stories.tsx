@@ -11,7 +11,7 @@ const meta: Meta<typeof BodyText> = {
     docs: {
       description: {
         component:
-          'Body text, a `<p>` by default and a `<span>` with `inline`. The default is 14px regular; `size` is `sm` (13px) or `xs` (12px) and `weight` is `semibold`. `muted` uses the secondary text colour. Other colours come from the `text-*` utilities.',
+          'Body text, a `<p>` by default and a `<span>` with `inline`. The default is 14px regular; `size` is `lg` (16px), `sm` (13px) or `xs` (12px) and `weight` is `semibold`. `muted` uses the secondary text colour. Other colours come from the `text-*` utilities.',
       },
     },
   },
@@ -22,6 +22,10 @@ export default meta
 type Story = StoryObj<typeof BodyText>
 
 export const Default: Story = {}
+
+export const Large: Story = {
+  args: { size: 'lg' },
+}
 
 export const Small: Story = {
   args: { size: 'sm' },
