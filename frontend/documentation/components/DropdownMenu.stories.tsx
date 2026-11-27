@@ -70,7 +70,7 @@ const SectionsMenu = () => {
 const openMenu = async (canvasElement: HTMLElement, name: string) => {
   const canvas = within(canvasElement)
   await userEvent.click(canvas.getByRole('button', { name }))
-  await screen.findByRole('dialog')
+  await screen.findByRole('menu')
 }
 
 export const Actions: Story = {
