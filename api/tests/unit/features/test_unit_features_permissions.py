@@ -604,7 +604,7 @@ def test_feature_state_permissions_has_permission__non_string_environment__retur
     view = MagicMock(detail=False, action="create")
 
     # When
-    result = permission_class.has_permission(request, view)
+    result = permission_class.has_permission(request, view)  # type: ignore[arg-type]
 
     # Then
     assert result is False
@@ -627,7 +627,7 @@ def test_feature_state_permissions_has_permission__invalid_feature_id__returns_f
     view = MagicMock(detail=False, action="create")
 
     # When
-    result = permission_class.has_permission(request, view)
+    result = permission_class.has_permission(request, view)  # type: ignore[arg-type]
 
     # Then
     assert result is False
