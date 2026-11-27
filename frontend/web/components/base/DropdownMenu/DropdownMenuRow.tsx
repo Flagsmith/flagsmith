@@ -9,7 +9,6 @@ type DropdownMenuRowProps = {
   selected?: boolean
 }
 
-// The inside of a menu row, shared by items and links
 const DropdownMenuRow: FC<DropdownMenuRowProps> = ({
   children,
   description,

@@ -809,7 +809,6 @@ export class E2EHelpers {
     throw new Error(`Try-it failed after ${maxRetries} attempts: ${key}.${field} never became ${expected}`);
   }
 
-  // Open a feature drawer tab, from "More tabs" when it has overflowed
   async openFeatureTab(name: string) {
     const label = new RegExp(`^${name}`);
     // A tab is a button; in the "More tabs" menu it is an option

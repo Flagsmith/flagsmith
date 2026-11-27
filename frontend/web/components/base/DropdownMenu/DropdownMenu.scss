@@ -1,5 +1,4 @@
 .ds-dropdown-menu {
-  // States and the sheet set these; the elements below only read them
   --ds-dropdown-menu-row: 44px;
   --ds-dropdown-menu-font: var(--font-size-body-md);
   --ds-dropdown-menu-icon: 16px;
@@ -11,8 +10,7 @@
   padding: 4px;
   min-width: 200px;
 
-  // In a bottom sheet rows are larger, like native action sheets. There is no
-  // 16px body token, so the size is set here
+  // There is no 16px body token
   &--sheet {
     --ds-dropdown-menu-row: 48px;
     --ds-dropdown-menu-font: 16px;
@@ -57,7 +55,6 @@
       outline-offset: -2px;
     }
 
-    // The chosen option, or the current page's link
     &[aria-checked='true'],
     &[aria-current='page'] {
       --ds-dropdown-menu-text: var(--color-text-action);
@@ -87,7 +84,6 @@
     min-width: 0;
   }
 
-  // The label and an optional icon before it
   &__label {
     display: flex;
     align-items: center;
@@ -102,7 +98,6 @@
     color: var(--ds-dropdown-menu-icon-color);
   }
 
-  // A second line under the label
   &__description {
     font-size: var(--font-size-body-sm);
     color: var(--color-text-secondary);

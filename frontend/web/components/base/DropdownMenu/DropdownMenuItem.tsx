@@ -12,7 +12,6 @@ export type DropdownMenuItemProps = {
   selected?: boolean
   destructive?: boolean
   disabled?: boolean
-  // A second line under the label, such as why the item is disabled
   description?: string
 }
 
@@ -27,9 +26,8 @@ const DropdownMenuItem: FC<DropdownMenuItemProps> = ({
   const close = useCloseDropdownMenu()
   const id = useId()
   const isOption = selected !== undefined
-  // aria-disabled keeps the item focusable, so a disabled item's description
-  // still reaches keyboard and touch users. Named by the label alone, so the
-  // description is read once
+  // aria-disabled keeps it focusable, so the description stays reachable.
+  // Named by the label alone, so the description is read once
   return (
     <BareButton
       className={classNames('ds-dropdown-menu__item', {

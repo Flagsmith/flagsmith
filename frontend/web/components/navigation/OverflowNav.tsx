@@ -16,7 +16,6 @@ type OverflowNavProps = {
   containerClassName?: string
   className?: string
   gap?: number
-  // The trigger's icon; defaults to the "more" dots
   icon?: ReactNode
   force?: boolean
 }

@@ -39,8 +39,7 @@ export type PopoverProps = {
   // A function gets close, and whether the panel is the phone sheet
   children: ReactNode | ((close: () => void, asSheet: boolean) => ReactNode)
   placement?: PopoverPlacement
-  // What the panel is, announced on the trigger. The phone sheet is always a
-  // dialog; a menu goes inside it
+  // The phone sheet is always a dialog; a menu goes inside it
   role?: 'dialog' | 'menu'
   // Applies to the desktop panel only; the phone sheet sizes itself.
   className?: string
@@ -57,8 +56,7 @@ const Popover: FC<PopoverProps> = ({
   const [isOpen, setIsOpen] = useState(false)
   const close = () => setIsOpen(false)
   const asSheet = useBreakpoint('isPhone')
-  // Back or forward leaves the page, so an open popover goes with it. There
-  // is no router in stories
+  // Close on a route change. Stories have no router
   const history = useHistory()
   useEffect(() => history?.listen(() => setIsOpen(false)), [history])
 

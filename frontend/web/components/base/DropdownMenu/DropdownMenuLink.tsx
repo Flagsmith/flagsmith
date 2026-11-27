@@ -3,8 +3,6 @@ import { NavLink, NavLinkProps } from 'react-router-dom'
 import { useCloseDropdownMenu } from './DropdownMenuContext'
 import DropdownMenuRow from './DropdownMenuRow'
 
-// A menu row that navigates; the current page gets the selected look.
-// Children are the label, with an optional icon first.
 // The row owns its styling, so it takes no className
 const DropdownMenuLink: FC<Omit<NavLinkProps, 'className'>> = ({
   children,

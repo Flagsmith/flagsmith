@@ -11,8 +11,7 @@ import './DropdownMenu.scss'
 export type DropdownMenuProps = {
   // Names the menu, and the default trigger
   'aria-label': string
-  // Any element; it keeps its own handlers and ref. Defaults to a "more"
-  // button.
+  // Keeps its own handlers and ref
   trigger?: ReactElement
   children: ReactNode
 }
@@ -31,8 +30,6 @@ const setTabStop = (menu: HTMLElement | null) => {
   rows.forEach((row, i) => (row.tabIndex = i === stop ? 0 : -1))
 }
 
-// Arrow keys, Home and End move focus between the rows, and the Tab stop
-// moves with it
 const moveFocus = (e: KeyboardEvent<HTMLDivElement>) => {
   const rows = rowsOf(e.currentTarget)
   const index = rows.findIndex((row) => row === document.activeElement)
@@ -70,7 +67,6 @@ const DropdownMenu: FC<DropdownMenuProps> = ({
           role={asSheet ? 'menu' : undefined}
           aria-label={asSheet ? ariaLabel : undefined}
           className={classNames('ds-dropdown-menu', {
-            // Larger rows in the phone sheet
             'ds-dropdown-menu--sheet': asSheet,
           })}
           onKeyDown={moveFocus}
