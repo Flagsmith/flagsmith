@@ -1,5 +1,4 @@
 import { FC, ReactNode, useEffect, useState } from 'react'
-import { useHistory } from 'react-router-dom'
 import classNames from 'classnames'
 import {
   autoUpdate,
@@ -56,9 +55,12 @@ const Popover: FC<PopoverProps> = ({
   const [isOpen, setIsOpen] = useState(false)
   const close = () => setIsOpen(false)
   const asSheet = useBreakpoint('isPhone')
-  // Close on a route change. Stories have no router
-  const history = useHistory()
-  useEffect(() => history?.listen(() => setIsOpen(false)), [history])
+  // Back or forward closes it; navigating from inside closes it already
+  useEffect(() => {
+    const closeOnPop = () => setIsOpen(false)
+    window.addEventListener('popstate', closeOnPop)
+    return () => window.removeEventListener('popstate', closeOnPop)
+  }, [])
 
   const { context, refs, x, y } = useFloating({
     middleware: [
