@@ -297,9 +297,6 @@ export type Req = {
   getEnvironments: {
     projectId: number
   }
-  getAllEnvironments: {
-    projectId: number
-  }
   getOrganisationUsage: {
     organisationId: number
     projectId?: number

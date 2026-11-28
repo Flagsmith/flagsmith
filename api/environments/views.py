@@ -19,6 +19,7 @@ from rest_framework.response import Response
 from rest_framework.serializers import BaseSerializer
 from rest_framework.viewsets import GenericViewSet
 
+from app.pagination import CustomPagination
 from core.models import AbstractBaseExportableModel
 from environments.permissions.permissions import (
     EnvironmentAdminPermission,
@@ -86,6 +87,7 @@ logger = logging.getLogger(__name__)
 )
 class EnvironmentViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
     lookup_field = "api_key"
+    pagination_class = CustomPagination
     permission_classes = [EnvironmentPermissions]
 
     def get_serializer_class(self):  # type: ignore[no-untyped-def]
