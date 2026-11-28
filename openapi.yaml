@@ -3622,8 +3622,8 @@ paths:
       tags:
         - mcp
     put:
-      operationId: update_experiment
-      description: (Beta) Updates an experiment's name or its hypothesis.
+      operationId: api_v1_environments_experiments_update
+      description: Manage experiments for an environment.
       parameters:
         - name: environment_api_key
           in: path
@@ -3659,10 +3659,10 @@ paths:
         - tokenAuth: []
         - Master API Key: []
       tags:
-        - mcp
+        - Environments
     patch:
-      operationId: api_v1_environments_experiments_partial_update
-      description: Manage experiments for an environment.
+      operationId: update_experiment
+      description: (Beta) Updates an experiment's name or its hypothesis.
       parameters:
         - name: environment_api_key
           in: path
@@ -3697,7 +3697,7 @@ paths:
         - tokenAuth: []
         - Master API Key: []
       tags:
-        - Environments
+        - mcp
     delete:
       operationId: api_v1_environments_experiments_destroy
       description: Manage experiments for an environment.
