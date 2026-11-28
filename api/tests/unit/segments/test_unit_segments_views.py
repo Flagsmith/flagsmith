@@ -748,8 +748,8 @@ def test_get_segment_by_uuid__existing_segment__returns_segment_data(  # type: i
 @pytest.mark.parametrize(
     "client, num_queries",
     [
-        (lazy_fixture("admin_master_api_key_client"), 14),
-        (lazy_fixture("admin_client"), 16),
+        (lazy_fixture("admin_master_api_key_client"), 15),
+        (lazy_fixture("admin_client"), 17),
     ],
 )
 def test_list_segments__without_rbac__expected_num_queries(
@@ -805,8 +805,8 @@ def test_list_segments__system_segment_exists__excludes_system_segment(
 @pytest.mark.parametrize(
     "client, num_queries",
     [
-        (lazy_fixture("admin_master_api_key_client"), 14),
-        (lazy_fixture("admin_client"), 17),
+        (lazy_fixture("admin_master_api_key_client"), 15),
+        (lazy_fixture("admin_client"), 18),
     ],
 )
 def test_list_segments__with_rbac__expected_num_queries(

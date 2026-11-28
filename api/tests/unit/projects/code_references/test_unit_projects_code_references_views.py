@@ -13,6 +13,7 @@ def test_create_code_reference__valid_payload__returns_201_with_accepted_referen
     admin_client_new: APIClient,
     project: Project,
     log: StructuredLogCapture,
+    admin_client_new_user_context: dict[str, str],
 ) -> None:
     # Given
     Feature.objects.create(project=project, name="feature-1")
@@ -70,8 +71,10 @@ def test_create_code_reference__valid_payload__returns_201_with_accepted_referen
             "event": "scan.created",
             "http__request__method": "POST",
             "http__route": "/api/v1/projects/{project_pk}/code-references/",
+            **admin_client_new_user_context,
             "level": "info",
             "organisation__id": project.organisation_id,
+            "project__id": project.id,
             "code_references__count": 3,
             "feature__count": 2,
         },
@@ -83,6 +86,7 @@ def test_create_code_reference__empty_references__returns_201_and_clears_previou
     feature: Feature,
     project: Project,
     log: StructuredLogCapture,
+    admin_client_new_user_context: dict[str, str],
 ) -> None:
     # Given
     with freezegun.freeze_time("2099-06-01T12:00:00+00:00"):
@@ -127,8 +131,10 @@ def test_create_code_reference__empty_references__returns_201_and_clears_previou
         "event": "scan.created",
         "http__request__method": "POST",
         "http__route": "/api/v1/projects/{project_pk}/code-references/",
+        **admin_client_new_user_context,
         "level": "info",
         "organisation__id": project.organisation_id,
+        "project__id": project.id,
         "code_references__count": 0,
         "feature__count": 0,
     }

@@ -60,7 +60,6 @@ class FeatureFlagCodeReferencesScanCreateAPIView(
         feature_names = {ref["feature_name"] for ref in scan.code_references}
         logger.info(
             "scan.created",
-            organisation__id=scan.project.organisation_id,
             code_references__count=len(scan.code_references),
             feature__count=len(feature_names),
         )

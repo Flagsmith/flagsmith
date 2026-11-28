@@ -21,6 +21,7 @@ def test_create_configuration__valid_data__persists_and_masks_token(
     admin_client_new: APIClient,
     project: Project,
     log: StructuredLogCapture,
+    admin_client_new_user_context: dict[str, str],
 ) -> None:
     # Given / When
     response = admin_client_new.post(
@@ -45,6 +46,7 @@ def test_create_configuration__valid_data__persists_and_masks_token(
             "event": "configuration.created",
             "http__request__method": "POST",
             "http__route": "/api/v1/projects/{project_pk}/integrations/gitlab/",
+            **admin_client_new_user_context,
             "level": "info",
             "gitlab_instance_url": "https://gitlab.example.com",
             "project__id": project.id,
@@ -77,6 +79,7 @@ def test_update_configuration__valid_data__persists_and_masks_token(
     project: Project,
     gitlab_configuration: GitLabConfiguration,
     log: StructuredLogCapture,
+    admin_client_new_user_context: dict[str, str],
 ) -> None:
     # Given / When
     response = admin_client_new.put(
@@ -101,6 +104,7 @@ def test_update_configuration__valid_data__persists_and_masks_token(
             "event": "configuration.updated",
             "http__request__method": "PUT",
             "http__route": "/api/v1/projects/{project_pk}/integrations/gitlab/{id}/",
+            **admin_client_new_user_context,
             "level": "info",
             "gitlab_instance_url": "https://gitlab.updated.com",
             "project__id": project.id,
@@ -114,6 +118,7 @@ def test_delete_configuration__existing__soft_deletes(
     project: Project,
     gitlab_configuration: GitLabConfiguration,
     log: StructuredLogCapture,
+    admin_client_new_user_context: dict[str, str],
 ) -> None:
     # Given / When
     response = admin_client_new.delete(
@@ -129,6 +134,7 @@ def test_delete_configuration__existing__soft_deletes(
             "event": "configuration.deleted",
             "http__request__method": "DELETE",
             "http__route": "/api/v1/projects/{project_pk}/integrations/gitlab/{id}/",
+            **admin_client_new_user_context,
             "level": "info",
             "project__id": project.id,
             "organisation__id": project.organisation_id,

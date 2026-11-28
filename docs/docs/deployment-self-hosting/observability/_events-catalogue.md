@@ -151,8 +151,8 @@ Attributes:
 ### `cli.request.made`
 
 Logged at `info` from:
- - `api/telemetry/middleware.py:72`
- - `api/telemetry/middleware.py:74`
+ - `api/telemetry/middleware.py:71`
+ - `api/telemetry/middleware.py:73`
 
 Attributes:
  - `amplitude.user_id`
@@ -179,7 +179,6 @@ Logged at `info` from:
 Attributes:
  - `code_references.count`
  - `feature.count`
- - `organisation.id`
 
 ### `cohorts.cohort.created`
 
@@ -754,8 +753,8 @@ Attributes:
 ### `mcp.tool.called`
 
 Logged at `info` from:
- - `api/telemetry/middleware.py:48`
- - `api/telemetry/middleware.py:50`
+ - `api/telemetry/middleware.py:47`
+ - `api/telemetry/middleware.py:49`
 
 Attributes:
  - `organisation.id`
@@ -1024,9 +1023,9 @@ Attributes:
 ### `usage_reporting.run.skipped`
 
 Logged at `debug` from:
- - `api/telemetry/services.py:21`
- - `api/telemetry/services.py:24`
- - `api/telemetry/services.py:27`
+ - `api/telemetry/services.py:25`
+ - `api/telemetry/services.py:28`
+ - `api/telemetry/services.py:31`
 
 Attributes:
  - `reason`
@@ -1034,7 +1033,7 @@ Attributes:
 ### `usage_reporting.snapshot.errored`
 
 Logged at `exception` from:
- - `api/telemetry/services.py:39`
+ - `api/telemetry/services.py:43`
 
 Attributes:
 

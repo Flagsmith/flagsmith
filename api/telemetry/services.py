@@ -7,9 +7,13 @@ from django.utils import timezone
 
 from app_analytics.analytics_db_service import get_usage_data_for_window
 from app_analytics.dataclasses import UsageData
+from environments.models import Environment
+from features.models import Feature
 from organisations.models import Organisation
+from projects.models import Project
 from telemetry.control_plane.client import post_usage_snapshot
 from telemetry.dataclasses import ApiCallBreakdown, ProjectUsage, UsageSnapshot
+from telemetry.types import ResolvedTelemetryAttributes
 
 logger = structlog.get_logger("usage_reporting")
 
@@ -104,3 +108,51 @@ def _get_usage_snapshot(organisation: Organisation) -> UsageSnapshot:
         instance_version=instance_version,
         project_usage=_map_to_top_project_usage(usage_data_by_project_id),
     )
+
+
+def get_resolved_telemetry_attributes(
+    ids: ResolvedTelemetryAttributes,
+) -> ResolvedTelemetryAttributes:
+    """
+    Resolve as many keys in `ids` as possible from the database.
+
+    Makes at most one query, from the most specific key present.
+    """
+    resolved_ids = ids.copy()
+
+    if "environment__id" not in resolved_ids and (
+        environment_api_key := resolved_ids.get("environment__key")
+    ):
+        if environment_ids := (
+            Environment.objects.filter(api_key=environment_api_key)
+            .values_list("id", "project_id", "project__organisation_id")
+            .first()
+        ):
+            (
+                resolved_ids["environment__id"],
+                resolved_ids["project__id"],
+                resolved_ids["organisation__id"],
+            ) = environment_ids
+        return resolved_ids
+
+    if "project__id" not in resolved_ids and "feature__id" in resolved_ids:
+        if feature_ids := (
+            Feature.objects.filter(id=resolved_ids["feature__id"])
+            .values_list("project_id", "project__organisation_id")
+            .first()
+        ):
+            (
+                resolved_ids["project__id"],
+                resolved_ids["organisation__id"],
+            ) = feature_ids
+        return resolved_ids
+
+    if "organisation__id" not in resolved_ids and "project__id" in resolved_ids:
+        if (
+            organisation_id := Project.objects.filter(pk=resolved_ids["project__id"])
+            .values_list("organisation_id", flat=True)
+            .first()
+        ) is not None:
+            resolved_ids["organisation__id"] = organisation_id
+
+    return resolved_ids
