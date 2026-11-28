@@ -28,6 +28,12 @@
     }
   }
 }
+
+// Reserve room for the three stacked action buttons in the SDK install snippet.
+.sdk-install-code .hljs-container code {
+  min-height: 160px;
+}
+
 .dark {
   .tabs {
     .tabs-nav {

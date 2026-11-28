@@ -21,10 +21,12 @@ export const FeaturesSDKIntegration: FC<FeaturesSDKIntegrationProps> = ({
   return (
     <>
       <FormGroup className='mt-5'>
-        <CodeHelp
-          title='1: Installing the SDK'
-          snippets={Constants.codeHelp.INSTALL}
-        />
+        <div className='sdk-install-code'>
+          <CodeHelp
+            title='1: Installing the SDK'
+            snippets={Constants.codeHelp.INSTALL}
+          />
+        </div>
         <CodeHelp
           title='2: Initialising your project'
           snippets={Constants.codeHelp.INIT(environmentId)}
