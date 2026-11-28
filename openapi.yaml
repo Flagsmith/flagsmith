@@ -23836,7 +23836,8 @@ components:
           $ref: '#/components/schemas/AggregationEnum'
         direction:
           $ref: '#/components/schemas/DirectionEnum'
-        definition: {}
+        definition:
+          $ref: '#/components/schemas/MetricDefinitionV1'
         experiments:
           type: array
           items:
@@ -23867,6 +23868,22 @@ components:
       required:
         - definition
         - name
+    MetricDefinitionV1:
+      description: The warehouse event whose occurrences or values the metric aggregates.
+      type: object
+      properties:
+        version:
+          type: integer
+          const: 1
+          title: Version
+        event:
+          type: string
+          minLength: 1
+          title: Event
+      required:
+        - version
+        - event
+      title: MetricDefinitionV1
     MetricItem:
       type: object
       properties:
@@ -26098,7 +26115,8 @@ components:
           $ref: '#/components/schemas/AggregationEnum'
         direction:
           $ref: '#/components/schemas/DirectionEnum'
-        definition: {}
+        definition:
+          $ref: '#/components/schemas/MetricDefinitionV1'
         experiments:
           type: array
           items:
