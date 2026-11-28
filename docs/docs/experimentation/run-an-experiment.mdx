@@ -41,7 +41,10 @@ corrupt the results. The calls for each SDK are in the tabs below.
    client on shutdown (for example in your `SIGTERM` handler), or events still in the buffer are dropped.
 6. **Keep serving the page when Flagsmith is unreachable.** Give the client a short request timeout and a default flag
    handler that returns the control value, and catch errors from flag calls, so an outage falls back to the control
-   value instead of failing or hanging the request.
+   value instead of failing or hanging the request. The Node.js and Python tabs under [Initialise](#initialise) show
+   both. For other server-side SDKs, see
+   [Managing Default Flags](/integrating-with-flagsmith/sdks/server-side#managing-default-flags) and the timeout option
+   in [Configuring the SDK](/integrating-with-flagsmith/sdks/server-side#configuring-the-sdk).
 
 ## Instrument your application
 
