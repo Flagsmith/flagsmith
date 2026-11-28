@@ -1,0 +1,41 @@
+{
+    "name": "studystreak",
+    "version": "0.1.0",
+    "private": true,
+    "engines": {
+        "node": "^22.22.2 || ^24.15.0 || >=26.0.0"
+    },
+    "scripts": {
+        "dev": "next dev",
+        "build": "next build",
+        "start": "next start",
+        "lint": "eslint .",
+        "typecheck": "tsc --noEmit",
+        "test": "vitest run",
+        "analyse:simulation": "tsx scripts/analyse-simulation.ts",
+        "simulate:traffic": "tsx --env-file-if-exists=.env.local scripts/simulate-traffic.ts"
+    },
+    "dependencies": {
+        "@flagsmith/flagsmith": "12.6.0",
+        "@flagsmith/nodejs": "9.5.0",
+        "next": "^16.4.6",
+        "react": "^19.3.1",
+        "react-dom": "^19.3.1"
+    },
+    "devDependencies": {
+        "@tailwindcss/postcss": "^4.3.5",
+        "@types/node": "^22.20.7",
+        "@types/react": "^19.3.3",
+        "@types/react-dom": "^19.3.0",
+        "eslint": "^9.39.5",
+        "eslint-config-next": "^16.4.6",
+        "jsdom": "^31.0.1",
+        "tailwindcss": "^4.3.5",
+        "tsx": "4.23.15",
+        "typescript": "^5.9.3",
+        "vitest": "^5.1.2"
+    },
+    "allowScripts": {
+        "esbuild@0.28.2": true
+    }
+}
