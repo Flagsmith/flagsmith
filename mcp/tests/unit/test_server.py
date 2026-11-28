@@ -7,6 +7,7 @@ from fastmcp import Client
 from mcp.types import ToolAnnotations
 from pyfakefs.fake_filesystem import FakeFilesystem
 from pytest_mock import MockerFixture
+from respx import MockRouter
 
 from flagsmith_mcp import config, constants, server
 from flagsmith_mcp.middleware import RootRouterMiddleware
@@ -122,6 +123,31 @@ async def test_create_server__untagged_route__excluded_from_tools(
 
     # Then only the mcp-tagged route is exposed as a tool
     assert names == {"tagged"}
+
+
+async def test_list_project_tags__bundled_tool__returns_tag_labels_read_only(
+    respx_mock: MockRouter,
+) -> None:
+    # Given
+    tags = {
+        "count": 1,
+        "next": None,
+        "previous": None,
+        "results": [{"id": 7, "label": "stale", "color": "#ff0000"}],
+    }
+    list_tags = respx_mock.get(
+        "https://api.flagsmith.com/api/v1/projects/1/tags/"
+    ).respond(200, json=tags)
+
+    # When
+    async with Client(transport=server.create_server(config.Settings())) as client:
+        tools = {tool.name: tool for tool in await client.list_tools()}
+        result = await client.call_tool("list_project_tags", {"project_pk": 1})
+
+    # Then
+    assert tools["list_project_tags"].annotations.readOnlyHint is True
+    assert list_tags.called
+    assert result.structured_content == tags
 
 
 def test_run__configured_transport__runs_server_with_it(

@@ -18281,7 +18281,8 @@ paths:
         - Segments
   '/api/v1/projects/{project_pk}/tags/':
     get:
-      operationId: api_v1_projects_tags_list
+      operationId: list_project_tags
+      description: 'Lists a project''s tags (paginated), including system tags, with their IDs and labels. Feature flags reference tags by ID, so use this to find the ID for a tag label before filtering `list_project_features` with `tags=<id>`.'
       parameters:
         - name: page
           in: query
@@ -18305,7 +18306,7 @@ paths:
         - tokenAuth: []
         - Master API Key: []
       tags:
-        - Projects
+        - mcp
     post:
       operationId: api_v1_projects_tags_create
       parameters:

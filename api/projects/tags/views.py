@@ -1,4 +1,6 @@
 from common.projects.permissions import VIEW_PROJECT
+from django.utils.decorators import method_decorator
+from drf_spectacular.utils import extend_schema
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
@@ -11,6 +13,18 @@ from .models import Tag
 from .permissions import TagPermissions
 
 
+@method_decorator(
+    name="list",
+    decorator=extend_schema(
+        tags=["mcp"],
+        operation_id="list_project_tags",
+        description=(
+            "Lists a project's tags (paginated), including system tags, with their IDs and labels. "
+            "Feature flags reference tags by ID, so use this to find the ID for a tag "
+            "label before filtering `list_project_features` with `tags=<id>`."
+        ),
+    ),
+)
 class TagViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
     serializer_class = serializers.TagSerializer
     permission_classes = [IsAuthenticated, TagPermissions]
