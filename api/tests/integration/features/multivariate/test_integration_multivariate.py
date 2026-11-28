@@ -44,6 +44,32 @@ def test_create_mv_option__valid_data__returns_created(  # type: ignore[no-untyp
     assert set(data.items()).issubset(set(response.json().items()))
 
 
+def test_create_mv_option__no_default_percentage_allocation__defaults_to_100(
+    admin_client_new: APIClient,
+    project: int,
+    feature: int,
+) -> None:
+    # Given - the request omits `default_percentage_allocation` entirely
+    url = reverse(
+        "api-v1:projects:feature-mv-options-list",
+        args=[project, feature],
+    )
+    data = {
+        "type": "unicode",
+        "feature": feature,
+        "string_value": "bigger",
+    }
+    # When
+    response = admin_client_new.post(
+        url,
+        data=json.dumps(data),
+        content_type="application/json",
+    )
+    # Then - it defaults to the model's default instead of a 500 KeyError
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.json()["default_percentage_allocation"] == 100
+
+
 def test_create_mv_option__with_key__returns_created_with_key(
     admin_client_new: APIClient,
     project: int,
