@@ -36,10 +36,35 @@
 .toast-message {
   width: 250px;
   min-height: 50px;
-  background: $success-solid-alert;
+  background-color: var(--color-surface-success);
+  border: 1px solid
+    color-mix(in srgb, var(--color-border-success) 40%, transparent);
   font-weight: 500;
-  border: 1px solid $success;
+  box-shadow: var(--shadow-xl);
   animation: toast-in 0.3s ease-out;
+
+  &.alert-danger {
+    background-color: var(--color-surface-danger);
+    border-color: color-mix(
+      in srgb,
+      var(--color-border-danger) 40%,
+      transparent
+    );
+  }
+
+  &.alert-warning {
+    background-color: var(--color-surface-warning);
+    border-color: color-mix(
+      in srgb,
+      var(--color-border-warning) 40%,
+      transparent
+    );
+  }
+
+  &__close {
+    color: var(--color-icon-secondary);
+    padding-top: 2px;
+  }
 
   &.show {
     display: flex !important;
