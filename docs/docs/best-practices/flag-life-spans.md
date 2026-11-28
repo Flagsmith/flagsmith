@@ -1,10 +1,10 @@
 ---
-title: Feature Flags Lifecycles
-sidebar_label: Feature Flags Lifecycles
+title: Feature Flags Life Spans
+sidebar_label: Feature Flags Life Spans
 sidebar_position: 1
 ---
 
-Feature Flags generally have two lifecycles:
+Feature Flags generally have two life spans:
 
 1. Short-Lived Flags
 2. Long-Lived Flags
@@ -21,6 +21,8 @@ Short-lived flags are designed to be removed from your code and from Flagsmith a
 4. Once you are finished with the flag, remove it from your codebase.
 5. Deploy your application, so that there is no reference to the flag.
 6. Remove the flag from Flagsmith.
+
+[Feature Lifecycle](/managing-flags/feature-lifecycle) highlights feature flags at each of these steps, making it easier to spot the ones ready to be removed.
 
 :::info 
 
@@ -80,6 +82,5 @@ With Flagsmith, you can:
 
 ## Further Reading
 
-- For a deeper dive into the different types of feature flag lifecycles, check out the [Feature Flags Lifecycles guide](/best-practices/flag-lifecycle).
 - Learn more about [A/B and multivariate testing](/experimentation-ab-testing) to see how experimentation can be managed with Flagsmith.
 - Explore how [Segments](/flagsmith-concepts/segments) can help you target features to specific groups of users.

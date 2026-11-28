@@ -41,6 +41,11 @@ const Format = {
 
   newLineDelimiter: '↵',
 
+  pluralise(count: number, singular: string, plural: string): string {
+    // 1, 'repository', 'repositories' > 1 repository
+    return `${count} ${count === 1 ? singular : plural}`
+  },
+
   shortenNumber(number: NullableNumber): string {
     // Converts a float number into a short literal with suffix for the magnitude:
     // 1523125 > 1.5M

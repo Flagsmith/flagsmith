@@ -258,11 +258,15 @@
         },
         {
             "source": "/advanced-use/flag-lifecycle",
-            "destination": "/best-practices/flag-lifecycle"
+            "destination": "/best-practices/flag-life-spans"
         },
         {
             "source": "/guides-and-examples/flag-lifecycle",
-            "destination": "/best-practices/flag-lifecycle"
+            "destination": "/best-practices/flag-life-spans"
+        },
+        {
+            "source": "/best-practices/flag-lifecycle",
+            "destination": "/best-practices/flag-life-spans"
         },
         {
             "source": "/advanced-use/efficient-api-usage",

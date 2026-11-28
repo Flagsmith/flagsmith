@@ -85,7 +85,7 @@ In practice, many organisations use a hybrid approach: separate projects for tru
 
 Each project has [system limits](/administration-and-security/governance-and-compliance/system-limits) on features and segments.
 
-A well-scoped project should rarely approach these limits. Most feature flags are designed to be temporary, they serve their purpose during a release or experiment and should then be removed. If you find yourself nearing these limits, it's often a sign that stale flags need to be cleaned up or that your project scope is too broad. For guidance on managing flag removal, see [Flag Lifecycle](/best-practices/flag-lifecycle).
+A well-scoped project should rarely approach these limits. Most feature flags are designed to be temporary, they serve their purpose during a release or experiment and should then be removed. If you find yourself nearing these limits, it's often a sign that stale flags need to be cleaned up or that your project scope is too broad. For guidance on managing flag removal, see [Feature Flags Life Spans](/best-practices/flag-life-spans).
 
 ### Access control
 

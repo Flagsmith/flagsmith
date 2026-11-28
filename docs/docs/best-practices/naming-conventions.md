@@ -136,6 +136,6 @@ Common tag conventions:
 
 ## Further reading
 
-- [Feature Flag Lifecycles](/best-practices/flag-lifecycle) - understanding when to remove flags
+- [Feature Flags Life Spans](/best-practices/flag-life-spans) - understanding when to remove flags
 - [Structuring Your Projects](/best-practices/structuring-your-projects) - organising flags across projects
 - [Tagging](/managing-flags/tagging) - using tags to categorise flags

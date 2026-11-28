@@ -26,6 +26,19 @@ describe('Format', () => {
     })
   })
 
+  describe('pluralise', () => {
+    it.each`
+      count | expected
+      ${0}  | ${'0 repositories'}
+      ${1}  | ${'1 repository'}
+      ${2}  | ${'2 repositories'}
+    `('pluralise($count, ...) returns "$expected"', ({ count, expected }) => {
+      expect(Format.pluralise(count, 'repository', 'repositories')).toBe(
+        expected,
+      )
+    })
+  })
+
   describe('camelCase', () => {
     it.each`
       input            | expected

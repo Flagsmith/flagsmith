@@ -10,6 +10,8 @@ Integrate with Code References to track feature flag usage in your codebase, and
 - Navigate through the business logic in the code from a feature's perspective
 - Coordinate cleanup work around [stale feature flags](/managing-flags/stale-flags) easier
 
+Code References fuels [Feature Lifecycle](/managing-flags/feature-lifecycle), which uses it to highlight the feature flags ready to be removed: first from the code, then from Flagsmith.
+
 ![Code References badges displayed in the Features list, each containing a count of references of that feature](./code-references/feature-list.png)
 
 <p style={{textAlign: 'center', fontSize: '0.9em', color: 'gray', marginTop: '-1.5rem'}}>Code Reference counts displayed in Features list</p>
@@ -133,5 +135,6 @@ Feature details will expand on the _Usage_ tab, and list locations of each code 
 
 ## Related
 
+- [Feature Lifecycle](/managing-flags/feature-lifecycle): Spot feature flags ready to be removed from the code and from Flagsmith
 - [Management API Authentication](/integrating-with-flagsmith/flagsmith-api-overview/management-api/authentication): Generate API keys for Code References
-- [Flag Lifecycle](/best-practices/flag-lifecycle): Learn when to remove short-lived flags from your code
+- [Feature Flags Life Spans](/best-practices/flag-life-spans): Learn when to remove short-lived flags from your code
