@@ -56,3 +56,14 @@ def test_generate_mcp_tool_catalogue__description_with_pipe__escapes_pipe() -> N
     for line in out.getvalue().splitlines():
         if line.startswith("| `"):
             assert line.replace("\\|", "").count("|") == 3
+
+
+def test_generate_mcp_tool_catalogue__project_tags__lists_tag_lookup_tool() -> None:
+    # Given
+    out = io.StringIO()
+
+    # When
+    call_command("generate_mcp_tool_catalogue", stdout=out)
+
+    # Then
+    assert "list_project_tags" in _tool_names(out.getvalue())

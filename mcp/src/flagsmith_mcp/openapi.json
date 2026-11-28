@@ -3397,6 +3397,54 @@
           "mcp"
         ]
       }
+    },
+    "/api/v1/projects/{project_pk}/tags/": {
+      "get": {
+        "operationId": "list_project_tags",
+        "description": "Lists a project's tags (paginated), including system tags, with their IDs and labels. Feature flags reference tags by ID, so use this to find the ID for a tag label before filtering `list_project_features` with `tags=<id>`.",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "project_pk",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedTagList"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "tokenAuth": []
+          },
+          {
+            "Master API Key": []
+          }
+        ],
+        "tags": [
+          "mcp"
+        ]
+      }
     }
   },
   "components": {
@@ -6750,6 +6798,37 @@
           "results"
         ]
       },
+      "PaginatedTagList": {
+        "type": "object",
+        "properties": {
+          "count": {
+            "type": "integer",
+            "example": 123
+          },
+          "next": {
+            "type": "string",
+            "format": "uri",
+            "example": "http://api.example.org/accounts/?page=4",
+            "nullable": true
+          },
+          "previous": {
+            "type": "string",
+            "format": "uri",
+            "example": "http://api.example.org/accounts/?page=2",
+            "nullable": true
+          },
+          "results": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Tag"
+            }
+          }
+        },
+        "required": [
+          "count",
+          "results"
+        ]
+      },
       "PaymentMethodEnum": {
         "description": "* `CHARGEBEE` - Chargebee\n* `XERO` - Xero\n* `AWS_MARKETPLACE` - AWS Marketplace",
         "type": "string",
@@ -7690,6 +7769,74 @@
             "maxLength": 500
           }
         }
+      },
+      "Tag": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "readOnly": true
+          },
+          "label": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "color": {
+            "description": "Hexadecimal value of the tag color",
+            "type": "string",
+            "maxLength": 10
+          },
+          "description": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 512
+          },
+          "project": {
+            "type": "integer",
+            "readOnly": true
+          },
+          "uuid": {
+            "type": "string",
+            "format": "uuid",
+            "readOnly": true
+          },
+          "is_permanent": {
+            "description": "When applied to a feature, it means this feature should be excluded from stale flags logic.",
+            "type": "boolean"
+          },
+          "is_system_tag": {
+            "description": "Indicates that a tag was created by the system, not the user.",
+            "type": "boolean",
+            "default": false,
+            "readOnly": true
+          },
+          "type": {
+            "description": "Field used to provide a consistent identifier for the FE and API to use for business logic.\n\n* `NONE` - None\n* `STALE` - Stale\n* `GITHUB` - Github\n* `UNHEALTHY` - Unhealthy\n* `GITLAB` - Gitlab",
+            "default": "NONE",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/TagTypeEnum"
+              }
+            ],
+            "readOnly": true
+          }
+        },
+        "required": [
+          "label"
+        ]
+      },
+      "TagTypeEnum": {
+        "description": "* `NONE` - None\n* `STALE` - Stale\n* `GITHUB` - Github\n* `UNHEALTHY` - Unhealthy\n* `GITLAB` - Gitlab",
+        "type": "string",
+        "enum": [
+          "NONE",
+          "STALE",
+          "GITHUB",
+          "UNHEALTHY",
+          "GITLAB"
+        ]
       },
       "TriggerTypeEnum": {
         "description": "* `ON_ENTER` - Trigger when flag enters stage\n* `WAIT_FOR` - Trigger after waiting for x amount of time",
