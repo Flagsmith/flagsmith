@@ -12,7 +12,7 @@ export const ParameterizedRoute = ({
   component: Component,
   ...props
 }: ParameterizedRouteType) => {
-  const { organisationId, projectId } = props.computedMatch?.params
+  const { organisationId, projectId } = props.computedMatch?.params ?? {}
 
   const parsedOrganisationId = organisationId && parseInt(organisationId)
   const parsedProjectId = projectId && parseInt(projectId)
