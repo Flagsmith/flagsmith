@@ -191,6 +191,7 @@ def populate_api_usage_bucket(
                 defaults={"total_count": row["count"]},
                 environment_id=row["environment_id"],
                 resource=row["resource"],
+                host=row["host"],
                 bucket_size=bucket_size,
                 created_at=bucket_start_time,
                 labels=row["labels"],
@@ -229,12 +230,12 @@ def _get_api_usage_source_data(
     if source_bucket_size:
         return (
             APIUsageBucket.objects.filter(filters, bucket_size=source_bucket_size)
-            .values("environment_id", "resource", "labels")
+            .values("environment_id", "resource", "host", "labels")
             .annotate(count=Sum("total_count"))
         )
     return (
         APIUsageRaw.objects.filter(filters)
-        .values("environment_id", "resource", "labels")
+        .values("environment_id", "resource", "host", "labels")
         .annotate(
             count=Sum("count"),
         )
