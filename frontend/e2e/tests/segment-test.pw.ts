@@ -1,5 +1,5 @@
 import { test, expect } from '../test-setup';
-import { byId, log, createHelpers, visualSnapshot, getFlagsmith, isSaas } from '../helpers';
+import { byId, log, createHelpers, visualSnapshot, getFlagsmith } from '../helpers';
 import { E2E_USER, PASSWORD, E2E_TEST_IDENTITY, E2E_SEGMENT_PROJECT_1, E2E_SEGMENT_PROJECT_2, E2E_SEGMENT_PROJECT_3 } from '../config'
 
 const REMOTE_CONFIG_FEATURE = 'remote_config'
@@ -477,10 +477,6 @@ test('Segment test 4 - Create ANY rule type segment and verify match changes whe
 })
 
 test('Segment test 5 - Audit log shows segment rule changes @enterprise', async ({ page }) => {
-  test.skip(
-    await isSaas(),
-    'The E2E organisation has no audit log visibility on SaaS until the seeded subscription is deployed',
-  )
   const {
     click,
     createSegment,
