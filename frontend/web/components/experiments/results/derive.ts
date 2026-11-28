@@ -13,6 +13,7 @@ import {
   BayesianResultsSummary,
   Experiment,
   ExperimentFeature,
+  ExperimentStatus,
   ExposureGranularity,
   ExposuresSummary,
   Inference,
@@ -183,12 +184,28 @@ export const getLiftColour = (
   return isText ? colorTextDanger : colorIconDanger
 }
 
+// Decision rule from docs.flagsmith.com/experimentation/statistics: over 95% wins, under 5% loses, in between is inconclusive.
+export const WINNING_CHANCE_THRESHOLD = 0.95
+export const LOSING_CHANCE_THRESHOLD = 0.05
+
 // Extreme rounded probabilities would read as certainties — hedge them.
 export const formatChancePct = (chance: number): string => {
   const pct = Math.round(chance * 100)
   if (pct >= 100) return '> 99%'
   if (pct <= 0) return '< 1%'
+  if (pct === 95 && chance > WINNING_CHANCE_THRESHOLD) return '> 95%'
+  if (pct === 5 && chance < LOSING_CHANCE_THRESHOLD) return '< 5%'
   return `${pct}%`
+}
+
+// The control chance is a lower bound once there are several variants, so it is floored and marked as one.
+export const formatControlChancePct = (
+  chance: number,
+  treatmentCount: number,
+): string => {
+  if (treatmentCount <= 1) return formatChancePct(chance)
+  const floorPct = Math.min(99, Math.floor(chance * 100 + 1e-9))
+  return `≥ ${floorPct}%`
 }
 
 export const formatLiftPct = (lift: number): string => {
@@ -252,6 +269,17 @@ export const getBestTreatment = (
   return best
 }
 
+const toControlWinner = (
+  control: VariantIdentity,
+  chanceToWin: number,
+): WinningVariant => ({
+  chanceToWin,
+  inference: null,
+  isControl: true,
+  key: control.key,
+  name: control.name,
+})
+
 export const getWinningVariant = (
   metricResult: BayesianMetricResult,
   identities: VariantIdentity[],
@@ -261,15 +289,43 @@ export const getWinningVariant = (
   const control = identities.find((v) => v.isControl)
   const controlChance = getControlChanceToWin(metricResult, identities)
   if (control && controlChance !== null && controlChance > best.chanceToWin) {
-    return {
-      chanceToWin: controlChance,
-      inference: null,
-      isControl: true,
-      key: control.key,
-      name: control.name,
-    }
+    return toControlWinner(control, controlChance)
   }
   return best
+}
+
+export const getConclusiveWinner = (
+  metricResult: BayesianMetricResult,
+  identities: VariantIdentity[],
+  best: WinningVariant | null = getBestTreatment(metricResult, identities),
+): WinningVariant | null => {
+  if (!best) return null
+  if (best.chanceToWin > WINNING_CHANCE_THRESHOLD) return best
+  const control = identities.find((v) => v.isControl)
+  const controlChance = getControlChanceToWin(metricResult, identities)
+  const everyVariantLoses =
+    controlChance !== null && best.chanceToWin < LOSING_CHANCE_THRESHOLD
+  return control && everyVariantLoses
+    ? toControlWinner(control, controlChance)
+    : null
+}
+
+export type NoWinnerCopy = {
+  title: string
+  nextStep: string | null
+}
+
+export const getNoWinnerCopy = (status: ExperimentStatus): NoWinnerCopy => {
+  if (status === 'completed') {
+    return { nextStep: null, title: 'No clear winner' }
+  }
+  return {
+    nextStep:
+      status === 'paused'
+        ? 'Resume the experiment to collect more data.'
+        : 'Keep the experiment running to collect more data.',
+    title: 'Not enough evidence yet',
+  }
 }
 
 export type LiftTone = 'success' | 'danger' | 'neutral'
@@ -279,6 +335,7 @@ export type SummaryStats = {
   winnerColour: string
   controlColour: string
   controlWins: boolean
+  isConclusive: boolean
   chanceToBest: string
   chanceToBestHigh: boolean
   liftLabel: string
@@ -297,8 +354,14 @@ export const deriveSummary = (
 
   const identities = getVariantIdentities(experiment.feature)
   const bestTreatment = getBestTreatment(metricResult, identities)
-  const winner = getWinningVariant(metricResult, identities, bestTreatment)
-  if (!winner) return null
+  const leader = getWinningVariant(metricResult, identities, bestTreatment)
+  if (!leader) return null
+  const conclusiveWinner = getConclusiveWinner(
+    metricResult,
+    identities,
+    bestTreatment,
+  )
+  const winner = conclusiveWinner ?? leader
 
   const winnerIdentity = identities.find((v) => v.key === winner.key)
   const controlIdentity = identities.find((v) => v.isControl)
@@ -317,10 +380,13 @@ export const deriveSummary = (
   }
 
   return {
-    chanceToBest: formatChancePct(winner.chanceToWin),
-    chanceToBestHigh: winner.chanceToWin > 0.9,
+    chanceToBest: winner.isControl
+      ? formatControlChancePct(winner.chanceToWin, identities.length - 1)
+      : formatChancePct(winner.chanceToWin),
+    chanceToBestHigh: !!conclusiveWinner,
     controlColour: controlIdentity?.colour ?? '',
     controlWins: winner.isControl,
+    isConclusive: !!conclusiveWinner,
     liftLabel: winner.isControl ? 'Control vs best variant' : 'Lift vs control',
     liftTone,
     liftValue: lift !== null ? formatLiftPct(lift) : 'Baseline',

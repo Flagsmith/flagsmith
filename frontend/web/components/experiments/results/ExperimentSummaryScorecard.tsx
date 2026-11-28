@@ -47,7 +47,11 @@ const ExperimentSummaryScorecard: FC<ExperimentSummaryScorecardProps> = ({
         </div>
         <div className={wideWinner ? 'col-md-4' : 'col-md-3'}>
           <StatCard
-            label='Winning variation'
+            label={
+              summary && !summary.isConclusive
+                ? 'Leading variation'
+                : 'Winning variation'
+            }
             loading={!hasResults}
             value={
               summary?.winnerName ? (
