@@ -504,3 +504,16 @@ section[data-section] > h2 {
 [data-theme='dark'] .faq-help {
   background: rgba(255, 255, 255, 0.05);
 }
+
+/* Screen-reader-only text. It stays in the accessibility tree and the HTML. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

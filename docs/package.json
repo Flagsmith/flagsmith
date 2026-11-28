@@ -53,7 +53,11 @@
     "node": "24.x"
   },
   "devDependencies": {
-    "prettier": "3.3.3"
+    "@vercel/functions": "^3.12.0",
+    "cheerio": "^1.2.0",
+    "prettier": "3.3.3",
+    "turndown": "^7.2.5",
+    "turndown-plugin-gfm": "^1.0.2"
   },
   "overrides": {
     "qs": "^6.14.2",

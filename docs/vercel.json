@@ -470,7 +470,7 @@
         },
         {
             "source": "/integrations/newrelic",
-            "destination": "/third-party-integrations/observability-and-monitoring/newrelic"
+            "destination": "/third-party-integrations/observability-and-monitoring/new-relic"
         },
         {
             "source": "/system-administration/edge-proxy",
@@ -674,7 +674,7 @@
         },
         {
             "source": "/integrations/apm/newrelic",
-            "destination": "/third-party-integrations/observability-and-monitoring/newrelic"
+            "destination": "/third-party-integrations/observability-and-monitoring/new-relic"
         },
         {
             "source": "/integrations/apm/grafana",
@@ -749,5 +749,16 @@
             "destination": "/integrating-with-flagsmith/flagsmith-api-overview/management-api/code-examples"
         }
     ],
-    "trailingSlash": false
+    "trailingSlash": false,
+    "headers": [
+        {
+            "source": "/(.*)",
+            "headers": [
+                {
+                    "key": "Vary",
+                    "value": "Accept"
+                }
+            ]
+        }
+    ]
 }
