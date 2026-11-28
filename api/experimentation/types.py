@@ -1,20 +1,16 @@
-from typing import Literal
+from typing import Annotated, Literal
 
+from pydantic import Field
 from typing_extensions import TypedDict
 
 ExposureGranularity = Literal["hour", "day"]
 
 
 class MetricDefinitionV1(TypedDict):
-    """The recipe a metric is computed from.
+    """The warehouse event whose occurrences or values the metric aggregates."""
 
-    Versioned so the shape can evolve; see ``metric_definitions`` for the
-    registry of supported versions and their validators. v1 captures the
-    warehouse event whose occurrences/values the metric aggregates.
-    """
-
-    version: int
-    event: str
+    version: Literal[1]
+    event: Annotated[str, Field(min_length=1)]
 
 
 MetricDefinition = MetricDefinitionV1

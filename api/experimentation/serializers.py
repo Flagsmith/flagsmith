@@ -3,6 +3,7 @@ from typing import Any
 
 from django.db import transaction
 from django.db.models import QuerySet
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from core.dataclasses import AuthorData
@@ -37,7 +38,7 @@ from experimentation.services import (
     apply_experiment_rollout,
     get_experiment_rollout,
 )
-from experimentation.types import MetricExperimentResult
+from experimentation.types import MetricDefinition, MetricExperimentResult
 from experimentation.warehouse_validation import (
     validate_credentials,
     validate_warehouse_type_allowed,
@@ -161,7 +162,13 @@ class WarehouseConnectionSerializer(serializers.ModelSerializer):  # type: ignor
         return name[:WAREHOUSE_CONNECTION_NAME_MAX_LENGTH]
 
 
+@extend_schema_field(MetricDefinition)  # type: ignore[arg-type]
+class _MetricDefinitionField(serializers.JSONField):
+    """TypedDictSchemaExtension describes the definition without changing JSON validation."""
+
+
 class MetricSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
+    definition = _MetricDefinitionField()
     experiments = serializers.SerializerMethodField()
 
     class Meta:

@@ -1,3 +1,4 @@
+import json
 import os
 from importlib import resources
 
@@ -7,6 +8,7 @@ from fastmcp import Client
 from mcp.types import ToolAnnotations
 from pyfakefs.fake_filesystem import FakeFilesystem
 from pytest_mock import MockerFixture
+from respx import MockRouter
 
 from flagsmith_mcp import config, constants, server
 from flagsmith_mcp.middleware import RootRouterMiddleware
@@ -122,6 +124,29 @@ async def test_create_server__untagged_route__excluded_from_tools(
 
     # Then only the mcp-tagged route is exposed as a tool
     assert names == {"tagged"}
+
+
+async def test_create_metric__bundled_tool__sends_event_definition(
+    respx_mock: MockRouter,
+) -> None:
+    # Given
+    metric = {"name": "Signups", "definition": {"version": 1, "event": "signup"}}
+    create = respx_mock.post(
+        "https://api.flagsmith.com/api/v1/environments/test/experiment-metrics/"
+    ).respond(201, json={"id": 1, **metric})
+
+    # When
+    async with Client(transport=server.create_server(config.Settings())) as client:
+        tools = {tool.name: tool for tool in await client.list_tools()}
+        await client.call_tool(
+            "create_metric", {"environment_api_key": "test", **metric}
+        )
+
+    # Then
+    schema = tools["create_metric"].inputSchema
+    assert "definition" in schema["required"]
+    assert set(schema["properties"]["definition"]["required"]) == {"version", "event"}
+    assert json.loads(create.calls.last.request.content) == metric
 
 
 def test_run__configured_transport__runs_server_with_it(

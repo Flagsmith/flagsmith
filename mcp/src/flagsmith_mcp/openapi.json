@@ -5961,6 +5961,9 @@
           "direction": {
             "$ref": "#/components/schemas/DirectionEnum"
           },
+          "definition": {
+            "$ref": "#/components/schemas/MetricDefinitionV1"
+          },
           "experiments": {
             "type": "array",
             "items": {
@@ -6000,6 +6003,27 @@
           "definition",
           "name"
         ]
+      },
+      "MetricDefinitionV1": {
+        "description": "The warehouse event whose occurrences or values the metric aggregates.",
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "integer",
+            "const": 1,
+            "title": "Version"
+          },
+          "event": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Event"
+          }
+        },
+        "required": [
+          "version",
+          "event"
+        ],
+        "title": "MetricDefinitionV1"
       },
       "MultivariateFeatureOption": {
         "type": "object",
