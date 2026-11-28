@@ -369,6 +369,66 @@ def test_launch_darkly_client__rate_limit_no_headers__waits_expected(
     assert result == expected_result
 
 
+def test_launch_darkly_client__rate_limit_changing_retry_after__waits_latest_value(
+    mocker: MockerFixture,
+    requests_mock: RequestsMockerFixture,
+) -> None:
+    # Given
+    token = "test-token"
+    project_key = "test-project-key"
+
+    sleep_mock = mocker.patch("backoff._sync.time.sleep")
+
+    requests_mock.get(
+        "https://app.launchdarkly.com/api/v2/projects/test-project-key",
+        [
+            {"status_code": 429, "headers": {"Retry-After": "1"}},
+            {"status_code": 429, "headers": {"Retry-After": "5"}},
+            {"status_code": 429, "headers": {"Retry-After": "20"}},
+            {"status_code": 200, "text": "{}"},
+        ],
+    )
+
+    client = LaunchDarklyClient(token=token)
+
+    # When
+    client.get_project(project_key=project_key)
+
+    # Then
+    waits = [call.args[0] for call in sleep_mock.call_args_list]
+    # backoff.random_jitter adds up to one second to each wait.
+    assert [int(wait) for wait in waits] == [1, 5, 20]
+
+
+def test_launch_darkly_client__rate_limit_then_server_error__raises_without_retry(
+    mocker: MockerFixture,
+    requests_mock: RequestsMockerFixture,
+) -> None:
+    # Given
+    token = "test-token"
+    project_key = "test-project-key"
+
+    mocker.patch("backoff._sync.time.sleep")
+
+    requests_mock.get(
+        "https://app.launchdarkly.com/api/v2/projects/test-project-key",
+        [
+            {"status_code": 429, "headers": {"Retry-After": "1"}},
+            {"status_code": 500},
+            {"status_code": 200, "text": "{}"},
+        ],
+    )
+
+    client = LaunchDarklyClient(token=token)
+
+    # When & Then
+    with pytest.raises(HTTPError) as exc_info:
+        client.get_project(project_key=project_key)
+
+    assert exc_info.value.response.status_code == 500
+    assert requests_mock.call_count == 2
+
+
 def test_launch_darkly_client__get_flags_with_env_keys__return_expected(
     requests_mock: RequestsMockerFixture,
 ) -> None:
