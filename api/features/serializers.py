@@ -740,7 +740,12 @@ class FeatureStateSerializerBasic(WritableNestedModelSerializer):
         return feature_segment
 
     def validate(self, attrs):  # type: ignore[no-untyped-def]
-        environment = attrs.get("environment") or self.context["environment"]
+        # A partial update (PATCH) need not resend the environment: use the feature state's own.
+        environment = (
+            attrs.get("environment")
+            or self.context.get("environment")
+            or self.instance.environment  # type: ignore[union-attr]
+        )
         identity = attrs.get("identity")
         feature_segment = attrs.get("feature_segment")
         identifier = attrs.pop("identifier", None)
