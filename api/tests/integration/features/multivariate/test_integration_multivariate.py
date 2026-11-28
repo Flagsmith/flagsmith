@@ -304,6 +304,42 @@ def test_update_mv_option__duplicate_sibling_key__returns_bad_request(
 
 
 @pytest.mark.parametrize(
+    "update_data, expected_field, expected_value",
+    [
+        ({"string_value": "updated"}, "string_value", "updated"),
+        ({"key": "variant-a"}, "key", "variant-a"),
+    ],
+)
+def test_partial_update_mv_option__omitted_feature_and_allocation__updates_option(
+    admin_client_new: APIClient,
+    project: int,
+    feature: int,
+    mv_option_50_percent: int,
+    update_data: dict[str, str],
+    expected_field: str,
+    expected_value: str,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:projects:feature-mv-options-detail",
+        args=[project, feature, mv_option_50_percent],
+    )
+
+    # When
+    response = admin_client_new.patch(
+        url,
+        data=json.dumps(update_data),
+        content_type="application/json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()[expected_field] == expected_value
+    assert response.json()["feature"] == feature
+    assert response.json()["default_percentage_allocation"] == 50
+
+
+@pytest.mark.parametrize(
     "client, feature_id",
     [
         (lazy_fixture("admin_client"), "undefined"),
