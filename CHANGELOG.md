@@ -1,5 +1,65 @@
 # Changelog
 
+## [2.296.0](https://github.com/Flagsmith/flagsmith/compare/v2.295.2...v2.296.0) (2026-11-28)
+
+
+### Features
+
+* **BodyText:** add large size ([#9146](https://github.com/Flagsmith/flagsmith/issues/9146)) ([9f12873](https://github.com/Flagsmith/flagsmith/commit/9f128730e6d88591a51d381c1dc8c1a81449a288))
+* **DS:** Add a read-only variant to Switch ([#9088](https://github.com/Flagsmith/flagsmith/issues/9088)) ([44a3a77](https://github.com/Flagsmith/flagsmith/commit/44a3a77904564fb894242079759935fac81e22ef))
+* **DS:** Add HeadingText and BodyText ([#8709](https://github.com/Flagsmith/flagsmith/issues/8709)) ([4e2d453](https://github.com/Flagsmith/flagsmith/commit/4e2d453e4d4da4f90e96e7a0f92d91e1863e0a58))
+* **DS:** Give pages a navigable heading structure ([#9040](https://github.com/Flagsmith/flagsmith/issues/9040)) ([be9525c](https://github.com/Flagsmith/flagsmith/commit/be9525c8c7cf71364291bc2409479bebb3930c94))
+* **experimentation:** add a Snowflake statement client ([#9008](https://github.com/Flagsmith/flagsmith/issues/9008)) ([add5187](https://github.com/Flagsmith/flagsmith/commit/add5187ab7d7bb67c2ea32c96f799b24a770487e))
+* **experimentation:** add a Snowflake warehouse dialect ([#9007](https://github.com/Flagsmith/flagsmith/issues/9007)) ([e9a9550](https://github.com/Flagsmith/flagsmith/commit/e9a9550597e3ce618d7aea5c8ad8ff35288dc33c))
+* Keep host on aggregated API usage buckets ([#8471](https://github.com/Flagsmith/flagsmith/issues/8471)) ([91eb6f7](https://github.com/Flagsmith/flagsmith/commit/91eb6f75a7f2b165086ec6575e835844a938b2be))
+* **Popover:** Open as a bottom sheet on phones ([#8995](https://github.com/Flagsmith/flagsmith/issues/8995)) ([029b425](https://github.com/Flagsmith/flagsmith/commit/029b4258ba1f0cbe351cfa3c865ebb8b9829134e))
+
+
+### Bug Fixes
+
+* .id error when &gt;1000 features in a project ([#9061](https://github.com/Flagsmith/flagsmith/issues/9061)) ([71dab51](https://github.com/Flagsmith/flagsmith/commit/71dab51b370f3678fd12d3d92d2a1d4ab53b4783))
+* block framing of the dashboard to prevent clickjacking ([#8934](https://github.com/Flagsmith/flagsmith/issues/8934)) ([c10c014](https://github.com/Flagsmith/flagsmith/commit/c10c014fa6cb23699540b4a2531b73845bc5f5e1))
+* **Documentation:** New stale feature tagging behaviour ([#9027](https://github.com/Flagsmith/flagsmith/issues/9027)) ([6d9cb9d](https://github.com/Flagsmith/flagsmith/commit/6d9cb9dbddafe9caeaa5b416a3283357cdfb9bdc))
+* **DS:** make the modal close control a real button ([#9093](https://github.com/Flagsmith/flagsmith/issues/9093)) ([437cead](https://github.com/Flagsmith/flagsmith/commit/437ceadde674a385860d9252d0c460621b40dbd0))
+* **experimentation:** compute final results when an experiment is completed ([#9140](https://github.com/Flagsmith/flagsmith/issues/9140)) ([10483a0](https://github.com/Flagsmith/flagsmith/commit/10483a0dccfb6b26ad8fe895e8e609fc72349305))
+* **feature-health:** accept webhook reasons missing text or url blocks ([#9110](https://github.com/Flagsmith/flagsmith/issues/9110)) ([0c37fca](https://github.com/Flagsmith/flagsmith/commit/0c37fca299b94d54760fe7fa76818d19f05bf639))
+* **Features:** Show validation errors when a versioned save fails ([#9090](https://github.com/Flagsmith/flagsmith/issues/9090)) ([181a4f6](https://github.com/Flagsmith/flagsmith/commit/181a4f6c335055bdca6b6b80e70692f36037a07f))
+* **frontend:** respect v2 feature versioning in onboarding toggle ([#9086](https://github.com/Flagsmith/flagsmith/issues/9086)) ([c28d9ca](https://github.com/Flagsmith/flagsmith/commit/c28d9ca560d47bd0c561d2c4e676775bbe082504))
+* **frontend:** restore the View Docs colour in dark mode ([#9083](https://github.com/Flagsmith/flagsmith/issues/9083)) ([1b19b09](https://github.com/Flagsmith/flagsmith/commit/1b19b0959f60ec3aa8e9a469eb1f7c79bf4c86e7))
+* **frontend:** show payment warning with environment banner ([#9051](https://github.com/Flagsmith/flagsmith/issues/9051)) ([d8225b3](https://github.com/Flagsmith/flagsmith/commit/d8225b3704d18ba167b1e0147d0e3417cdeb460d))
+* **frontend:** theme dark mode switch icons ([#9053](https://github.com/Flagsmith/flagsmith/issues/9053)) ([41085fe](https://github.com/Flagsmith/flagsmith/commit/41085feff70aa6749fd1452dfb47160a3948acf8))
+* **Mobile:** Fix the feature drawer layout on phones ([#8994](https://github.com/Flagsmith/flagsmith/issues/8994)) ([899aa38](https://github.com/Flagsmith/flagsmith/commit/899aa383636d28d426e8e0645d0f06c9e63f60f0))
+* revert run experimentation tests on SaaS ([#9106](https://github.com/Flagsmith/flagsmith/issues/9106)) ([#9111](https://github.com/Flagsmith/flagsmith/issues/9111)) ([836147b](https://github.com/Flagsmith/flagsmith/commit/836147bbb6b780ceb27dc26b7b8b6d53ed4b38d1))
+* **Tabs:** Keep the overflow button in view when a tab grows after load ([#9094](https://github.com/Flagsmith/flagsmith/issues/9094)) ([5d0fdfd](https://github.com/Flagsmith/flagsmith/commit/5d0fdfdcd39ca1268da7b7b9a0865406c48e3630))
+
+
+### Dependency Updates
+
+* **api:** update dependency flagsmith-private to &gt;=0.16.1,&lt;1 ([#9091](https://github.com/Flagsmith/flagsmith/issues/9091)) ([35c32ed](https://github.com/Flagsmith/flagsmith/commit/35c32edee47c6094ab053915b0fcaf39c0a4b70c))
+
+
+### CI
+
+* Replace long-lived creds with OIDC ([#9130](https://github.com/Flagsmith/flagsmith/issues/9130)) ([cd4a9b0](https://github.com/Flagsmith/flagsmith/commit/cd4a9b08479be82107b3c00ef79b28ef92fdd029))
+
+
+### Docs
+
+* **experimentation:** describe choosing the rollout when ending an experiment ([#9141](https://github.com/Flagsmith/flagsmith/issues/9141)) ([f4de714](https://github.com/Flagsmith/flagsmith/commit/f4de714504934be8b5dd4308aa9e1fbab44d05ee))
+
+
+### Refactoring
+
+* Move telemetry reports to the telemetry app ([#9015](https://github.com/Flagsmith/flagsmith/issues/9015)) ([228e5bb](https://github.com/Flagsmith/flagsmith/commit/228e5bb8889dc56b08c36afa5cb28fa3570efec6))
+
+
+### Tests
+
+* **e2e:** cover experimentation critical paths ([#9031](https://github.com/Flagsmith/flagsmith/issues/9031)) ([1ec9fd3](https://github.com/Flagsmith/flagsmith/commit/1ec9fd3affd12e4825f0965a3b44838ae6cd4c76))
+* **e2e:** enable experimentation and seed an experiments project ([#9030](https://github.com/Flagsmith/flagsmith/issues/9030)) ([02dd781](https://github.com/Flagsmith/flagsmith/commit/02dd781c660ee73d9d14f2b3282e692897a4e8f4))
+* **e2e:** run experimentation tests on SaaS ([#9106](https://github.com/Flagsmith/flagsmith/issues/9106)) ([fde64ba](https://github.com/Flagsmith/flagsmith/commit/fde64ba68cf8018d5fdc37c0a8211994b56e2fa9))
+* **e2e:** seed a managed warehouse connection on SaaS ([#9105](https://github.com/Flagsmith/flagsmith/issues/9105)) ([cba977a](https://github.com/Flagsmith/flagsmith/commit/cba977a6ce9db476ffa22f5ba0a3f48c1b7c15d5))
+
 ## [2.295.2](https://github.com/Flagsmith/flagsmith/compare/v2.295.1...v2.295.2) (2026-11-23)
 
 
