@@ -723,6 +723,84 @@ def test_update_feature_state__two_mv_options_at_50_percent__returns_ok(  # type
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
+def test_partial_update_feature_state__multivariate_values__updates_allocations(  # type: ignore[no-untyped-def]
+    project, environment, environment_api_key, client, feature
+):
+    # Given
+    mv_option_url = reverse(
+        "api-v1:projects:feature-mv-options-list",
+        args=[project, feature],
+    )
+    for string_value in ("first", "second"):
+        response = client.post(
+            mv_option_url,
+            data=json.dumps(
+                {
+                    "type": "unicode",
+                    "feature": feature,
+                    "string_value": string_value,
+                    "default_percentage_allocation": 50,
+                }
+            ),
+            content_type="application/json",
+        )
+        assert response.status_code == status.HTTP_201_CREATED
+
+    list_url = reverse(
+        "api-v1:environments:environment-featurestates-list",
+        args=[environment_api_key],
+    )
+    list_response = client.get(list_url)
+    assert list_response.status_code == status.HTTP_200_OK
+    feature_state = next(
+        result
+        for result in list_response.json()["results"]
+        if result["feature"] == feature
+    )
+
+    update_url = reverse(
+        "api-v1:environments:environment-featurestates-detail",
+        args=[environment_api_key, feature_state["id"]],
+    )
+    allocations = [40, 60]
+
+    # When
+    response = client.patch(
+        update_url,
+        data=json.dumps(
+            {
+                "multivariate_feature_state_values": [
+                    {
+                        "id": mv_feature_state_value["id"],
+                        "multivariate_feature_option": mv_feature_state_value[
+                            "multivariate_feature_option"
+                        ],
+                        "percentage_allocation": allocation,
+                    }
+                    for mv_feature_state_value, allocation in zip(
+                        feature_state["multivariate_feature_state_values"],
+                        allocations,
+                    )
+                ]
+            }
+        ),
+        content_type="application/json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    updated_feature_state = client.get(update_url)
+    assert updated_feature_state.status_code == status.HTTP_200_OK
+    assert [
+        value["percentage_allocation"]
+        for value in updated_feature_state.json()["multivariate_feature_state_values"]
+    ] == allocations
+
+
+@pytest.mark.parametrize(
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+)
 def test_update_feature_state__swap_variation_weights__returns_ok(  # type: ignore[no-untyped-def]
     project, environment, environment_api_key, client, feature
 ):
