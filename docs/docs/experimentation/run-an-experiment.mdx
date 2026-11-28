@@ -20,6 +20,29 @@ jobs:
 1. **Record exposures**: tell Flagsmith when an identity actually experienced a variation.
 2. **Record conversion events**: send the events your metrics aggregate.
 
+## Wiring checklist
+
+Experiment results are only valid if every item below holds. Most of these mistakes don't throw an error; they silently
+corrupt the results. The calls for each SDK are in the tabs below.
+
+1. **One stable identifier per visitor, and check that it really is stable.** Exposures and conversions are joined per
+   identifier. For anonymous visitors, generate a random ID once, store it in a cookie, and reuse it on every later
+   request. Never create a new ID per request, and never hard-code an ID such as `user_42` from the examples below. Web
+   frameworks often do not parse cookies for you, and a missing parser silently creates a new ID on every request. So
+   before you finish, verify it: request the page twice, sending back the cookie from the first response, and confirm
+   the same identifier is used both times.
+2. **Record the exposure where the variation is shown.** Get the experiment flag for that identifier in the request that
+   renders the variation. See [Record exposures](#record-exposures).
+3. **Record the conversion when the action happens, with the same identifier.** Track the event in the handler for the
+   action, using the identifier from the visitor's cookie. See [Track conversions](#track-conversions).
+4. **Create the client once, at startup, with events enabled.** Don't create a client per request. When self-hosting,
+   set the events URL with the exact option shown in your SDK's tab under [Initialise](#initialise).
+5. **Send buffered events before the process exits.** Events are sent in batches every 10 seconds. Close or flush the
+   client on shutdown (for example in your `SIGTERM` handler), or events still in the buffer are dropped.
+6. **Keep serving the page when Flagsmith is unreachable.** Give the client a short request timeout and a default flag
+   handler that returns the control value, and catch errors from flag calls, so an outage falls back to the control
+   value instead of failing or hanging the request.
+
 ## Instrument your application
 
 Users must be [identified](/flagsmith-concepts/identities). Exposures and conversion events are joined per identity, so
@@ -194,10 +217,18 @@ export function App({ children }) {
 
 ```python
 from flagsmith import EventProcessorConfig, Flagsmith
+from flagsmith.models import DefaultFlag
 
 flagsmith = Flagsmith(
     environment_key="YOUR_ENVIRONMENT_KEY",
     enable_events=True,
+    # If Flagsmith is unreachable, the experiment's flag falls back to its control value; other flags stay off
+    request_timeout_seconds=3,
+    default_flag_handler=lambda feature_name: (
+        DefaultFlag(enabled=True, value="your-control-value")
+        if feature_name == "checkout_button"
+        else DefaultFlag(enabled=False, value=None)
+    ),
     # Self-hosted only:
     # api_url="https://flagsmith.example.com/api/v1/",
     # event_processor_config=EventProcessorConfig(
@@ -205,6 +236,9 @@ flagsmith = Flagsmith(
     # ),
 )
 ```
+
+`event_processor_config` takes an `EventProcessorConfig`, not a `dict`. `DefaultFlag` is imported from
+`flagsmith.models`, not from `flagsmith`.
 
 Events still buffered when the interpreter exits are dropped. In short-lived scripts and jobs, pass `max_buffer_items=1`
 to `EventProcessorConfig` so each event is sent as it is tracked.
@@ -234,19 +268,27 @@ flagsmith.close();
 <TabItem value="nodejs" label="Node.js">
 
 ```javascript
-import { Flagsmith } from '@flagsmith/nodejs';
+import { DefaultFlag, Flagsmith } from '@flagsmith/nodejs';
 
 const flagsmith = new Flagsmith({
     environmentKey: 'YOUR_ENVIRONMENT_KEY',
     enableEvents: true,
+    // If Flagsmith is unreachable, the experiment's flag falls back to its control value; other flags stay off
+    requestTimeoutSeconds: 3,
+    defaultFlagHandler: (featureName) =>
+        featureName === 'checkout_button'
+            ? new DefaultFlag('your-control-value', true)
+            : new DefaultFlag(undefined, false),
     // Self-hosted only:
     // apiUrl: 'https://flagsmith.example.com/api/v1/',
     // eventProcessorConfig: { eventsApiUrl: 'https://events.flagsmith.example.com/' },
 });
 
-// Before your application exits
+// Before your application exits, for example in a SIGTERM handler
 await flagsmith.close();
 ```
+
+The SDK reads the events URL only from `eventProcessorConfig.eventsApiUrl`.
 
 </TabItem>
 <TabItem value="go" label="Go">
