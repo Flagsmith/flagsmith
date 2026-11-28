@@ -98,6 +98,13 @@ const EnvironmentNavbar: FC<EnvironmentNavType> = ({
                 </>
               )}
               <SidebarLink
+                id={mobile ? undefined : 'flag-bisect-link'}
+                icon='layers'
+                to={`/project/${projectId}/environment/${environmentId}/flag-bisect`}
+              >
+                Flag Bisect
+              </SidebarLink>
+              <SidebarLink
                 id='scheduled-link'
                 icon='timer'
                 to={`/project/${projectId}/environment/${environmentId}/scheduled-changes/`}

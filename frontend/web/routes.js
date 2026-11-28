@@ -50,6 +50,7 @@ import CreateReleasePipelinePage from './components/pages/CreateReleasePipelineP
 import ReleasePipelineDetailPage from './components/pages/ReleasePipelineDetailPage'
 import SegmentPage from './components/pages/SegmentPage'
 import ExperimentsPage from './components/pages/ExperimentsPage'
+import FlagBisectPage from './components/pages/FlagBisectPage'
 import ExperimentDetailPage from './components/pages/ExperimentDetailPage'
 import MetricsPage from './components/pages/MetricsPage'
 import ReleaseManagerPage from './components/pages/ReleaseManagerPage'
@@ -92,6 +93,7 @@ export const routes = {
   'feature-history-detail':
     '/project/:projectId/environment/:environmentId/history/:id/',
   'features': '/project/:projectId/environment/:environmentId/features',
+  'flag-bisect': '/project/:projectId/environment/:environmentId/flag-bisect',
   'flag-environments': '/project/:projectId/flag/:flagId/environments',
   'gettingStarted': '/getting-started',
   'github-setup': '/github-setup',
@@ -187,6 +189,11 @@ export default (
           path={routes['experiment-detail']}
           exact
           component={ExperimentDetailPage}
+        />
+        <ParameterizedRoute
+          path={routes['flag-bisect']}
+          exact
+          component={FlagBisectPage}
         />
         <ParameterizedRoute
           path={routes.metrics}

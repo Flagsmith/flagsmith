@@ -182,6 +182,7 @@ INSTALLED_APPS = [
     "app_analytics",
     "experimentation",
     "oauth2_metadata",
+    "features.flag_bisect",
 ]
 
 SILENCED_SYSTEM_CHECKS = ["axes.W002"]
@@ -1557,6 +1558,9 @@ CLICKHOUSE_CONNECTION_CLIENT_NAME = "flagsmith-core-api"
 
 # Whether the experimentation infra is deployed.
 EXPERIMENTATION_ENABLED = env.bool("EXPERIMENTATION_ENABLED", default=False)
+
+# Flag Bisect: find which recent flag change caused a regression with canary-segment reverts.
+FLAG_BISECT_ENABLED = env.bool("FLAG_BISECT_ENABLED", default=False)
 
 # DSN for the ClickHouse instance holding ingested experimentation events.
 # TODO: consolidate connection management across the two CH use cases

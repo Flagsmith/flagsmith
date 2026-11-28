@@ -13,6 +13,7 @@ from environments.identities.views import SDKIdentities
 from environments.sdk.views import SDKEnvironmentAPIView
 from experimentation.views import SDKExperimentationEventsView
 from features.feature_health.views import feature_health_webhook
+from features.flag_bisect.views import SDKFlagBisectSignalsView
 from features.views import SDKFeatureStates, get_multivariate_options
 from integrations.github.views import github_webhook
 from integrations.gitlab.views import gitlab_webhook
@@ -78,6 +79,11 @@ urlpatterns = [
         r"^events/?$",
         SDKExperimentationEventsView.as_view(),
         name="experimentation-events",
+    ),
+    re_path(
+        r"^flag-bisect/signals/$",
+        SDKFlagBisectSignalsView.as_view(),
+        name="flag-bisect-signals",
     ),
     re_path(
         r"^environment-document/$",

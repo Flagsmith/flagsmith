@@ -847,6 +847,111 @@
         ]
       }
     },
+    "/api/v1/environments/{environment_api_key}/flag-bisect/incidents/": {
+      "get": {
+        "operationId": "list_flag_bisect_incidents",
+        "description": "Lists Flag Bisect incidents for an environment, newest first, with their state, rounds and conclusion.",
+        "parameters": [
+          {
+            "name": "environment_api_key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "A page number within the paginated result set.",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "description": "Number of results to return per page.",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedIncidentListList"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "tokenAuth": []
+          },
+          {
+            "Master API Key": []
+          }
+        ],
+        "tags": [
+          "mcp"
+        ]
+      }
+    },
+    "/api/v1/environments/{environment_api_key}/flag-bisect/incidents/{incident_id}/": {
+      "get": {
+        "operationId": "get_flag_bisect_incident",
+        "description": "Retrieves a Flag Bisect incident: suspected flag changes and their odds, canary probes and verdicts, and the swarm's trail. Approvals stay with people.",
+        "parameters": [
+          {
+            "name": "environment_api_key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "incident_id",
+            "in": "path",
+            "description": "A unique integer value identifying this incident.",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Incident"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "tokenAuth": []
+          },
+          {
+            "Master API Key": []
+          }
+        ],
+        "tags": [
+          "mcp"
+        ]
+      }
+    },
     "/api/v1/environments/{environment_api_key}/list-change-requests/": {
       "get": {
         "operationId": "list_environment_change_requests",
@@ -3401,6 +3506,40 @@
   },
   "components": {
     "schemas": {
+      "AgentEnum": {
+        "description": "* `sentinel` - Sentinel\n* `archivist` - Archivist\n* `profiler` - Profiler\n* `guardian` - Guardian\n* `prober` - Prober\n* `judge` - Judge\n* `scribe` - Scribe\n* `human` - Human",
+        "type": "string",
+        "enum": [
+          "sentinel",
+          "archivist",
+          "profiler",
+          "guardian",
+          "prober",
+          "judge",
+          "scribe",
+          "human"
+        ]
+      },
+      "AgentMessage": {
+        "type": "object",
+        "properties": {
+          "agent": {
+            "$ref": "#/components/schemas/AgentEnum"
+          },
+          "text": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          }
+        },
+        "required": [
+          "agent",
+          "text"
+        ]
+      },
       "ActionTypeEnum": {
         "description": "* `TOGGLE_FEATURE` - Enable/Disable Feature for the environment\n* `UPDATE_FEATURE_VALUE` - Update Feature Value for the environment\n* `TOGGLE_FEATURE_FOR_SEGMENT` - Enable/Disable Feature for a specific segment\n* `UPDATE_FEATURE_VALUE_FOR_SEGMENT` - Update Feature Value for a specific segment\n* `PHASED_ROLLOUT` - Create Phased Rollout",
         "type": "string",
@@ -5576,6 +5715,182 @@
           "boolean"
         ]
       },
+      "Incident": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "readOnly": true
+          },
+          "state": {
+            "$ref": "#/components/schemas/StateEnum"
+          },
+          "onset_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "baseline_rate": {
+            "type": "number",
+            "format": "double"
+          },
+          "regression_rate": {
+            "type": "number",
+            "format": "double"
+          },
+          "rounds": {
+            "type": "integer",
+            "maximum": 2147483647,
+            "minimum": 0
+          },
+          "conclusion": {
+            "oneOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "confirmed": {
+            "type": "boolean"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          },
+          "canary_percent": {
+            "type": "integer",
+            "maximum": 32767,
+            "minimum": 0
+          },
+          "max_rounds": {
+            "type": "integer",
+            "maximum": 32767,
+            "minimum": 0
+          },
+          "max_minutes": {
+            "type": "integer",
+            "maximum": 32767,
+            "minimum": 0
+          },
+          "envelope_approved_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "canary_segment": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "remediation_result": {
+            "oneOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "suspects": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            },
+            "readOnly": true
+          },
+          "probes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Probe"
+            },
+            "readOnly": true
+          },
+          "messages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AgentMessage"
+            },
+            "readOnly": true
+          },
+          "hypotheses": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            },
+            "readOnly": true
+          }
+        },
+        "required": [
+          "baseline_rate",
+          "onset_at",
+          "regression_rate",
+          "state"
+        ]
+      },
+      "IncidentList": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "readOnly": true
+          },
+          "state": {
+            "$ref": "#/components/schemas/StateEnum"
+          },
+          "onset_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "baseline_rate": {
+            "type": "number",
+            "format": "double"
+          },
+          "regression_rate": {
+            "type": "number",
+            "format": "double"
+          },
+          "rounds": {
+            "type": "integer",
+            "maximum": 2147483647,
+            "minimum": 0
+          },
+          "conclusion": {
+            "oneOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "confirmed": {
+            "type": "boolean"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          }
+        },
+        "required": [
+          "baseline_rate",
+          "onset_at",
+          "regression_rate",
+          "state"
+        ]
+      },
       "Invite": {
         "type": "object",
         "properties": {
@@ -5642,6 +5957,14 @@
         "required": [
           "email",
           "invited_by"
+        ]
+      },
+      "KindEnum": {
+        "description": "* `BISECT` - Bisect\n* `CONFIRM` - Confirm",
+        "type": "string",
+        "enum": [
+          "BISECT",
+          "CONFIRM"
         ]
       },
       "Labels": {
@@ -6440,6 +6763,37 @@
           "results"
         ]
       },
+      "PaginatedIncidentListList": {
+        "type": "object",
+        "properties": {
+          "count": {
+            "type": "integer",
+            "example": 123
+          },
+          "next": {
+            "type": "string",
+            "format": "uri",
+            "example": "http://api.example.org/accounts/?page=4",
+            "nullable": true
+          },
+          "previous": {
+            "type": "string",
+            "format": "uri",
+            "example": "http://api.example.org/accounts/?page=2",
+            "nullable": true
+          },
+          "results": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IncidentList"
+            }
+          }
+        },
+        "required": [
+          "count",
+          "results"
+        ]
+      },
       "PaginatedInviteListList": {
         "type": "object",
         "properties": {
@@ -6803,6 +7157,79 @@
           "name",
           "order",
           "trigger"
+        ]
+      },
+      "Probe": {
+        "type": "object",
+        "properties": {
+          "round": {
+            "type": "integer",
+            "maximum": 32767,
+            "minimum": 0
+          },
+          "kind": {
+            "$ref": "#/components/schemas/KindEnum"
+          },
+          "reverted_features": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "readOnly": true
+          },
+          "started_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "settles_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "ended_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "canary_total": {
+            "type": "integer",
+            "maximum": 2147483647,
+            "minimum": 0
+          },
+          "canary_failures": {
+            "type": "integer",
+            "maximum": 2147483647,
+            "minimum": 0
+          },
+          "main_total": {
+            "type": "integer",
+            "maximum": 2147483647,
+            "minimum": 0
+          },
+          "main_failures": {
+            "type": "integer",
+            "maximum": 2147483647,
+            "minimum": 0
+          },
+          "verdict": {
+            "type": "string",
+            "maxLength": 16
+          },
+          "judgement": {
+            "oneOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "kind",
+          "round",
+          "settles_at",
+          "started_at"
         ]
       },
       "ProjectChangeRequestList": {
@@ -7564,6 +7991,23 @@
             ]
           }
         }
+      },
+      "StateEnum": {
+        "description": "* `INVESTIGATING` - Investigating\n* `AWAITING_APPROVAL` - Awaiting Approval\n* `PROBING` - Probing\n* `CONFIRMING` - Confirming\n* `IDENTIFIED` - Identified\n* `NOT_A_FLAG_CHANGE` - Not A Flag Change\n* `INCONCLUSIVE` - Inconclusive\n* `ABORTED` - Aborted\n* `REMEDIATION_PROPOSED` - Remediation Proposed\n* `REMEDIATED` - Remediated\n* `RESOLVED` - Resolved",
+        "type": "string",
+        "enum": [
+          "INVESTIGATING",
+          "AWAITING_APPROVAL",
+          "PROBING",
+          "CONFIRMING",
+          "IDENTIFIED",
+          "NOT_A_FLAG_CHANGE",
+          "INCONCLUSIVE",
+          "ABORTED",
+          "REMEDIATION_PROPOSED",
+          "REMEDIATED",
+          "RESOLVED"
+        ]
       },
       "Status7a8Enum": {
         "description": "* `created` - Created\n* `running` - Running\n* `paused` - Paused\n* `completed` - Completed",

@@ -203,6 +203,10 @@ urlpatterns = [
         include("cohorts.urls"),
     ),
     path(
+        "<str:environment_api_key>/flag-bisect/",
+        include("features.flag_bisect.urls"),
+    ),
+    path(
         "<str:environment_api_key>/experiments/",
         include("experimentation.experiment_urls"),
     ),
