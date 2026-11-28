@@ -2,8 +2,8 @@ import { useDeleteReleasePipelineMutation } from 'common/services/useReleasePipe
 import { PagedResponse, ReleasePipeline } from 'common/types/responses'
 import { useHistory } from 'react-router-dom'
 import Button from 'components/base/forms/Button'
-import Icon, { IconName } from 'components/icons/Icon'
-import DropdownMenu from 'components/base/DropdownMenu'
+import Icon from 'components/icons/Icon'
+import DropdownMenu, { DropdownMenuItem } from 'components/base/DropdownMenu'
 import PanelSearch from 'components/PanelSearch'
 import Tag from 'components/tags/Tag'
 import { useEffect } from 'react'
@@ -146,13 +146,6 @@ const ReleasePipelinesList = ({
         const canUnpublish = isPublished && !features?.length
         const canDelete = !features?.length
 
-        const getTooltip = (action: string) => {
-          if (isPublished) {
-            return `Cannot ${action} a published release pipeline`
-          }
-          return undefined
-        }
-
         return (
           <Row key={id} className='list-item'>
             <Row
@@ -181,67 +174,79 @@ const ReleasePipelinesList = ({
                 <div className='fw-bold'>{features?.length ?? 0}</div>
                 <div>Features</div>
               </div>
-              <DropdownMenu
-                items={[
-                  {
-                    disabled: isPublished,
-                    icon: 'edit' as IconName,
-                    label: 'Edit',
-                    onClick: () => {
-                      history.push(
-                        `/project/${projectId}/release-pipelines/${id}/edit`,
-                      )
-                    },
-                    tooltip: getTooltip('edit'),
-                  },
-                  {
-                    disabled: isPublished && !canUnpublish,
-                    icon: isPublished
-                      ? 'minus-circle'
-                      : ('checkmark-circle' as IconName),
-                    label: isPublished ? 'Unpublish' : 'Publish',
-                    onClick: () =>
-                      openChangeReleasePipelineStatusModal(
-                        projectId,
-                        id,
-                        isPublished,
-                      ),
-                    tooltip:
-                      isPublished && !canUnpublish
-                        ? 'Cannot unpublish a release pipeline with in-flight features'
-                        : undefined,
-                  },
-                  {
-                    icon: 'copy' as IconName,
-                    label: 'Clone',
-                    onClick: () =>
-                      openModal2(
-                        'Clone Release Pipeline',
-                        <CloneReleasePipelineModal
-                          pipelineId={id}
-                          projectId={projectId}
-                        />,
-                      ),
-                  },
-                  {
-                    disabled: !canDelete,
-                    icon: 'trash-2',
-                    label: 'Remove',
-                    onClick: () => {
-                      openModal2(
-                        'Remove Release Pipeline',
-                        <DeleteReleasePipelineModal
-                          pipelineId={id}
-                          projectId={projectId}
-                        />,
-                      )
-                    },
-                    tooltip: canDelete
-                      ? undefined
-                      : 'Cannot remove a release pipeline with in-flight features',
-                  },
-                ]}
-              />
+              <DropdownMenu aria-label={`Actions for ${name}`}>
+                <DropdownMenuItem
+                  description={
+                    isPublished
+                      ? 'Cannot edit a published release pipeline'
+                      : undefined
+                  }
+                  disabled={isPublished}
+                  onSelect={() =>
+                    history.push(
+                      `/project/${projectId}/release-pipelines/${id}/edit`,
+                    )
+                  }
+                >
+                  <Icon name='edit' />
+                  Edit
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  description={
+                    isPublished && !canUnpublish
+                      ? 'Cannot unpublish a release pipeline with in-flight features'
+                      : undefined
+                  }
+                  disabled={isPublished && !canUnpublish}
+                  onSelect={() =>
+                    openChangeReleasePipelineStatusModal(
+                      projectId,
+                      id,
+                      isPublished,
+                    )
+                  }
+                >
+                  <Icon
+                    name={isPublished ? 'minus-circle' : 'checkmark-circle'}
+                  />
+                  {isPublished ? 'Unpublish' : 'Publish'}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onSelect={() =>
+                    openModal2(
+                      'Clone Release Pipeline',
+                      <CloneReleasePipelineModal
+                        pipelineId={id}
+                        projectId={projectId}
+                      />,
+                    )
+                  }
+                >
+                  <Icon name='copy' />
+                  Clone
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  description={
+                    !canDelete
+                      ? 'Cannot remove a release pipeline with in-flight features'
+                      : undefined
+                  }
+                  destructive
+                  disabled={!canDelete}
+                  onSelect={() =>
+                    openModal2(
+                      'Remove Release Pipeline',
+                      <DeleteReleasePipelineModal
+                        pipelineId={id}
+                        projectId={projectId}
+                      />,
+                    )
+                  }
+                >
+                  <Icon name='trash-2' />
+                  Remove
+                </DropdownMenuItem>
+              </DropdownMenu>
             </Row>
           </Row>
         )

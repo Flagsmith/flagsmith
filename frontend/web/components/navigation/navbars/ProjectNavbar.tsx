@@ -1,6 +1,6 @@
 import React, { FC } from 'react'
 import NavSubLink from 'components/navigation/NavSubLink'
-import { barChart, gitBranch, gitCompare } from 'ionicons/icons'
+import { gitBranch } from 'ionicons/icons'
 import SegmentsIcon from 'components/icons/SegmentsIcon'
 import Permission, { useHasPermission } from 'common/providers/Permission'
 import AuditLogIcon from 'components/icons/AuditLogIcon'
@@ -27,6 +27,7 @@ const ProjectNavbar: FC<ProjectNavType> = ({ environmentId, projectId }) => {
   )
   return (
     <OverflowNav
+      label='More project pages'
       gap={3}
       key='project'
       containerClassName='px-2 pb-1 pb-md-0 pb-mb-0 bg-faint'
@@ -93,7 +94,7 @@ const ProjectNavbar: FC<ProjectNavType> = ({ environmentId, projectId }) => {
       )}
       {projectMetricsTooltipEnabled && (
         <NavSubLink
-          icon={barChart}
+          icon={<Icon name='bar-chart' />}
           to={`/project/${projectId}/reporting`}
           id='reporting-link'
           disabled
@@ -106,7 +107,7 @@ const ProjectNavbar: FC<ProjectNavType> = ({ environmentId, projectId }) => {
         </NavSubLink>
       )}
       <NavSubLink
-        icon={gitCompare}
+        icon={<Icon name='difference' />}
         id='compare-link'
         to={`/project/${projectId}/compare`}
       >

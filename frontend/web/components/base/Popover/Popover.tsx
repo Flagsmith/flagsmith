@@ -1,4 +1,4 @@
-import { FC, ReactNode, useState } from 'react'
+import { FC, ReactNode, useEffect, useState } from 'react'
 import classNames from 'classnames'
 import {
   autoUpdate,
@@ -35,8 +35,11 @@ const WINDOW_PADDING = 8
 export type PopoverProps = {
   'aria-label': string
   renderTrigger: (props: PopoverTriggerProps, isOpen: boolean) => ReactNode
-  children: ReactNode | ((close: () => void) => ReactNode)
+  // A function gets close, and whether the panel is the phone sheet
+  children: ReactNode | ((close: () => void, asSheet: boolean) => ReactNode)
   placement?: PopoverPlacement
+  // The phone sheet is always a dialog; a menu goes inside it
+  role?: 'dialog' | 'menu'
   // Applies to the desktop panel only; the phone sheet sizes itself.
   className?: string
 }
@@ -47,10 +50,17 @@ const Popover: FC<PopoverProps> = ({
   className,
   placement = 'bottom-start',
   renderTrigger,
+  role = 'dialog',
 }) => {
   const [isOpen, setIsOpen] = useState(false)
   const close = () => setIsOpen(false)
   const asSheet = useBreakpoint('isPhone')
+  // Back or forward closes it; navigating from inside closes it already
+  useEffect(() => {
+    const closeOnPop = () => setIsOpen(false)
+    window.addEventListener('popstate', closeOnPop)
+    return () => window.removeEventListener('popstate', closeOnPop)
+  }, [])
 
   const { context, refs, x, y } = useFloating({
     middleware: [
@@ -79,7 +89,7 @@ const Popover: FC<PopoverProps> = ({
     useClick(context),
     // The sheet handles its own dismiss and role
     useDismiss(context, { enabled: !asSheet }),
-    useRole(context, { enabled: !asSheet }),
+    useRole(context, { enabled: !asSheet, role }),
   ])
 
   return (
@@ -87,11 +97,16 @@ const Popover: FC<PopoverProps> = ({
       {renderTrigger(
         {
           ref: refs.setReference,
-          ...getReferenceProps(),
+          // The trigger and panel can sit in a clickable row, and React
+          // bubbles portal events through it, so stop them here
+          ...getReferenceProps({
+            onClick: (e) => e.stopPropagation(),
+            onKeyDown: (e) => e.stopPropagation(),
+          }),
           // useRole is off for the sheet, so state the popup here
           ...(asSheet && {
             'aria-expanded': isOpen,
-            'aria-haspopup': 'dialog',
+            'aria-haspopup': role,
           }),
         },
         isOpen,
@@ -99,7 +114,9 @@ const Popover: FC<PopoverProps> = ({
       {asSheet ? (
         <BottomSheet open={isOpen} onOpenChange={setIsOpen} title={ariaLabel}>
           {isOpen &&
-            (typeof children === 'function' ? children(close) : children)}
+            (typeof children === 'function'
+              ? children(close, asSheet)
+              : children)}
         </BottomSheet>
       ) : (
         isOpen && (
@@ -115,9 +132,12 @@ const Popover: FC<PopoverProps> = ({
                 className={classNames('ds-popover', className)}
                 data-placement={context.placement}
                 aria-label={ariaLabel}
-                {...getFloatingProps()}
+                // Keys pass through, so Escape still closes it
+                {...getFloatingProps({ onClick: (e) => e.stopPropagation() })}
               >
-                {typeof children === 'function' ? children(close) : children}
+                {typeof children === 'function'
+                  ? children(close, asSheet)
+                  : children}
               </div>
             </FloatingFocusManager>
           </FloatingPortal>

@@ -1,0 +1,107 @@
+.ds-dropdown-menu {
+  --ds-dropdown-menu-row: 36px;
+  --ds-dropdown-menu-font: var(--font-size-body-md);
+  --ds-dropdown-menu-icon: 16px;
+  --ds-dropdown-menu-gap: 12px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 4px;
+  min-width: 200px;
+
+  // There is no 16px body token
+  &--sheet {
+    --ds-dropdown-menu-row: 48px;
+    --ds-dropdown-menu-font: 16px;
+    --ds-dropdown-menu-icon: 20px;
+  }
+
+  &__item {
+    --ds-dropdown-menu-text: var(--color-text-default);
+    --ds-dropdown-menu-icon-color: var(--color-icon-secondary);
+
+    display: flex;
+    min-height: var(--ds-dropdown-menu-row);
+    border-radius: var(--radius-md);
+    align-items: center;
+    gap: var(--ds-dropdown-menu-gap);
+    width: 100%;
+    padding: 6px 12px;
+    font-size: var(--ds-dropdown-menu-font);
+    text-align: left;
+    text-decoration: none;
+
+    // Scoped to outrank the global link colours (body.dark a), as rows can be
+    // links
+    .ds-dropdown-menu &,
+    .ds-dropdown-menu &:hover,
+    .ds-dropdown-menu &:focus {
+      color: var(--ds-dropdown-menu-text);
+    }
+
+    // Touch screens keep :hover after a tap, so only devices that can hover
+    // get it
+    @media (hover: hover) {
+      &:not([aria-disabled='true']):hover {
+        background: var(--color-surface-hover);
+      }
+    }
+
+    // Inset, so the ring stays inside the row and keeps its corners. Set here
+    // too, as link rows don't get BareButton's ring
+    &:focus-visible {
+      outline: 2px solid var(--color-border-action);
+      outline-offset: -2px;
+    }
+
+    &[aria-checked='true'],
+    &[aria-current='page'] {
+      --ds-dropdown-menu-text: var(--color-text-action);
+      --ds-dropdown-menu-icon-color: var(--color-icon-action);
+
+      font-weight: var(--font-weight-semibold);
+      background: var(--color-surface-action-subtle);
+    }
+
+    &--destructive {
+      --ds-dropdown-menu-text: var(--color-text-danger);
+      --ds-dropdown-menu-icon-color: var(--color-icon-danger);
+    }
+
+    &[aria-disabled='true'] {
+      --ds-dropdown-menu-text: var(--color-text-disabled);
+      --ds-dropdown-menu-icon-color: var(--color-icon-disabled);
+
+      cursor: not-allowed;
+    }
+  }
+
+  &__content {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  &__label {
+    display: flex;
+    align-items: center;
+    gap: var(--ds-dropdown-menu-gap);
+  }
+
+  &__label > svg,
+  &__check {
+    flex-shrink: 0;
+    width: var(--ds-dropdown-menu-icon);
+    height: var(--ds-dropdown-menu-icon);
+    color: var(--ds-dropdown-menu-icon-color);
+  }
+
+  // Lines up with the text, not the icon
+  &__label:has(> svg) + &__description {
+    padding-left: calc(
+      var(--ds-dropdown-menu-icon) + var(--ds-dropdown-menu-gap)
+    );
+  }
+}

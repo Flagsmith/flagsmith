@@ -61,7 +61,12 @@ const BottomSheet: FC<BottomSheetProps> = ({
 
   return (
     <FloatingPortal>
-      <FloatingOverlay className='ds-bottom-sheet__overlay' lockScroll>
+      <FloatingOverlay
+        className='ds-bottom-sheet__overlay'
+        lockScroll
+        // The sheet portals out of a row that may be clickable
+        onClick={(e) => e.stopPropagation()}
+      >
         <FloatingFocusManager
           context={context}
           initialFocus={prefersReducedMotion ? initialFocus : -1}

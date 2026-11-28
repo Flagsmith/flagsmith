@@ -14,7 +14,8 @@ import {
 } from 'common/types/responses'
 import map from 'lodash/map'
 import Button from './base/forms/Button'
-import DropdownMenu from './base/DropdownMenu'
+import DropdownMenu, { DropdownMenuItem } from './base/DropdownMenu'
+import { configuredActionsLabel } from './integrations/configuredActionsLabel'
 import Icon from './icons/Icon'
 import { IonIcon } from '@ionic/react'
 import { close as closeIcon } from 'ionicons/icons'
@@ -270,7 +271,22 @@ const Integration: FC<IntegrationProps> = (props) => {
       }
       return button
     }
-    return <DropdownMenu items={actions} />
+    return (
+      <DropdownMenu
+        aria-label={configuredActionsLabel(props.integration.title, 0, 1)}
+      >
+        {actions.map((action) => (
+          <DropdownMenuItem
+            key={action.label}
+            disabled={action.disabled}
+            description={action.disabled ? action.tooltip : undefined}
+            onSelect={action.onClick}
+          >
+            {action.label}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenu>
+    )
   }
 
   return (
@@ -325,7 +341,7 @@ const Integration: FC<IntegrationProps> = (props) => {
       )}
 
       {activeIntegrations &&
-        activeIntegrations.map((integration) => (
+        activeIntegrations.map((integration, index) => (
           <div
             key={integration.id}
             className='list-integrations clickable p-3 mt-3'
@@ -341,22 +357,23 @@ const Integration: FC<IntegrationProps> = (props) => {
                   integration={props.integration}
                 />
               </Flex>
-              <div onClick={(e) => e.stopPropagation()}>
-                <DropdownMenu
-                  items={[
-                    {
-                      dataTest: 'edit-integration',
-                      label: 'Edit',
-                      onClick: () => edit(integration),
-                    },
-                    {
-                      dataTest: 'delete-integration',
-                      label: 'Delete',
-                      onClick: () => remove(integration),
-                    },
-                  ]}
-                />
-              </div>
+              <DropdownMenu
+                aria-label={configuredActionsLabel(
+                  props.integration.title,
+                  index,
+                  activeIntegrations.length,
+                )}
+              >
+                <DropdownMenuItem onSelect={() => edit(integration)}>
+                  Edit
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  destructive
+                  onSelect={() => remove(integration)}
+                >
+                  Delete
+                </DropdownMenuItem>
+              </DropdownMenu>
             </Row>
           </div>
         ))}

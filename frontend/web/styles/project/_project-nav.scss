@@ -34,19 +34,16 @@ nav a {
       background-color: $primary-alfa-8;
     }
   }
-  &:hover {
-    svg {
-      path {
-        fill: $link-hover-color;
-      }
-    }
+  &:hover svg {
+    color: $link-hover-color;
   }
   svg {
     width: 14px;
     height: 14px;
     opacity: 0.6;
-    path {
-      fill: $body-color;
+    // Recolour filled icons; stroke icons already draw in currentColor
+    path[fill] {
+      fill: currentColor;
     }
   }
   ion-icon {
@@ -77,11 +74,6 @@ nav a {
         color: $body-color-dark;
       }
     }
-    svg {
-      path {
-        fill: $body-color-dark;
-      }
-    }
   }
 }
 .border-1 {
@@ -97,9 +89,6 @@ nav a {
     border-bottom: none !important;
     &.active {
       color: $primary;
-      path {
-        fill: $primary;
-      }
     }
   }
   .nav-modal {

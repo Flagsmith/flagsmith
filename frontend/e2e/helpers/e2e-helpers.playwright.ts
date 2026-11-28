@@ -79,7 +79,7 @@ export class E2EHelpers {
       await element.waitFor({ state: 'visible', timeout: SHORT_TIMEOUT });
       return;
     } catch {
-      const overflowButton = this.page.locator(byId('overflow-nav-button')).first();
+      const overflowButton = this.page.getByRole('button', { name: /^More (project|organisation|environment) pages$/ }).filter({ visible: true }).first();
       if (await overflowButton.isVisible()) {
         await overflowButton.click();
       }
@@ -612,7 +612,7 @@ export class E2EHelpers {
     const dropdownSelector = byId(`select-segment-option-${selectionIndex}`);
     const isDropdownVisible = await this.page.locator(dropdownSelector).isVisible().catch(() => false);
     if (!isDropdownVisible) {
-      await this.click(byId('segment_overrides'));
+      await this.openFeatureTab('Segment Overrides');
     }
     await this.click(dropdownSelector);
     await this.waitForElementVisible(this.segmentOverrideValueField(index));
@@ -638,7 +638,7 @@ export class E2EHelpers {
   // Add a remote config override for a segment picked by name, so other
   // segments in a shared project can't shift the selection
   async addSegmentOverrideConfigForSegment(segmentName: string, value: string) {
-    await this.click(byId('segment_overrides'));
+    await this.openFeatureTab('Segment Overrides');
     // E2E builds render the select's options as plain links
     await this.page
       .locator('[data-test^="select-segment-option-"]')
@@ -659,7 +659,7 @@ export class E2EHelpers {
 
   // Set segment override index (for reordering)
   async setSegmentOverrideIndex(index: number, newIndex: number) {
-    await this.click(byId('segment_overrides'));
+    await this.openFeatureTab('Segment Overrides');
     await this.setText(byId(`sort-${index}`), `${newIndex}`);
   }
 
@@ -809,15 +809,23 @@ export class E2EHelpers {
     throw new Error(`Try-it failed after ${maxRetries} attempts: ${key}.${field} never became ${expected}`);
   }
 
+  async openFeatureTab(name: string) {
+    const label = new RegExp(`^${name}`);
+    // A tab is a button; in the "More tabs" menu it is an option
+    const tab = this.page
+      .getByRole('button', { name: label })
+      .or(this.page.getByRole('menuitemradio', { name: label }))
+      .filter({ visible: true });
+    if (!(await tab.count())) {
+      await this.page.getByRole('button', { exact: true, name: 'More tabs' }).click();
+    }
+    await tab.first().click();
+  }
+
   // Go to feature versions
   async goToFeatureVersions(featureName: string) {
     await this.gotoFeature(featureName);
-    if (await this.isElementExists('change-history')) {
-      await this.click(byId('change-history'));
-    } else {
-      await this.click(byId('tabs-overflow-button'));
-      await this.click(byId('change-history'));
-    }
+    await this.openFeatureTab('History');
   }
 
   // Compare version

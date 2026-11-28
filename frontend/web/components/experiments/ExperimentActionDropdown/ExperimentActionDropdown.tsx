@@ -6,8 +6,14 @@ import {
   useStartExperimentMutation,
 } from 'common/services/useExperiment'
 import { ENABLE_EXPERIMENT_LIFECYCLE } from 'components/experiments/constants'
-import DropdownMenu from 'components/base/DropdownMenu'
+import DropdownMenu, { DropdownMenuItem } from 'components/base/DropdownMenu'
 import CompleteExperimentModal from 'components/experiments/CompleteExperimentModal'
+
+type ExperimentAction = {
+  label: string
+  onClick: () => void
+  destructive?: boolean
+}
 
 type ExperimentActionDropdownProps = {
   experimentId: number
@@ -83,13 +89,13 @@ const ExperimentActionDropdown: FC<ExperimentActionDropdownProps> = ({
     })
   }, [deleteExperiment, experimentName, params])
 
-  const items = useMemo(() => {
+  const items = useMemo((): ExperimentAction[] => {
     switch (status) {
       case 'created':
         return [
           { label: 'Start Experiment', onClick: handleStart },
           {
-            className: 'text-danger',
+            destructive: true,
             label: 'Delete',
             onClick: handleDelete,
           },
@@ -109,7 +115,7 @@ const ExperimentActionDropdown: FC<ExperimentActionDropdownProps> = ({
       case 'completed':
         return [
           {
-            className: 'text-danger',
+            destructive: true,
             label: 'Delete',
             onClick: handleDelete,
           },
@@ -119,7 +125,19 @@ const ExperimentActionDropdown: FC<ExperimentActionDropdownProps> = ({
     }
   }, [status, handleStart, handlePause, handleComplete, handleDelete])
 
-  return <DropdownMenu items={items} />
+  return (
+    <DropdownMenu aria-label={`Actions for ${experimentName}`}>
+      {items.map((item) => (
+        <DropdownMenuItem
+          key={item.label}
+          destructive={item.destructive}
+          onSelect={item.onClick}
+        >
+          {item.label}
+        </DropdownMenuItem>
+      ))}
+    </DropdownMenu>
+  )
 }
 
 export default ExperimentActionDropdown

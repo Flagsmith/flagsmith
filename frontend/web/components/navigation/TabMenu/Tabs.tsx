@@ -1,12 +1,27 @@
-import React, { ReactNode, useCallback, useMemo, useRef, useState } from 'react'
+import React, {
+  isValidElement,
+  ReactElement,
+  ReactNode,
+  useCallback,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import ModalHR from 'components/modals/ModalHR'
 import Utils from 'common/utils/utils'
 import { useHistory } from 'react-router-dom'
 import TabButton from './TabButton'
+import { TabItemProps } from './TabItem'
+import TabLabel from './TabLabel'
 
 import classNames from 'classnames'
-import DropdownMenu from 'components/base/DropdownMenu'
+import DropdownMenu, { DropdownMenuItem } from 'components/base/DropdownMenu'
+import IconButton from 'components/base/IconButton'
+import Icon from 'components/icons/Icon'
 import { useOverflowVisibleCount } from 'common/hooks/useOverflowVisibleCount'
+
+// Room for the "More tabs" button, with some spare
+const OVERFLOW_BUTTON_WIDTH = 48
 
 interface TabsProps {
   children: ReactNode | ReactNode[]
@@ -25,9 +40,6 @@ interface TabsProps {
   cta?: ReactNode
 }
 
-// 40px rendered button (btn padding beats its 32px width) + ms-2 margin
-const OVERFLOW_BUTTON_WIDTH = 48
-
 const Tabs: React.FC<TabsProps> = ({
   buttonTheme,
   children,
@@ -44,7 +56,7 @@ const Tabs: React.FC<TabsProps> = ({
   value: propValue = 0,
 }) => {
   const tabChildren = (Array.isArray(children) ? children : [children]).filter(
-    Boolean,
+    (child): child is ReactElement<TabItemProps> => isValidElement(child),
   )
   const [internalValue, setInternalValue] = useState(0)
   const routerHistory = useHistory() || history
@@ -68,6 +80,7 @@ const Tabs: React.FC<TabsProps> = ({
 
   const outerContainerRef = useRef<HTMLDivElement>(null)
   const itemsContainerRef = useRef<HTMLDivElement>(null)
+
   const { isMeasuring, visibleCount } = useOverflowVisibleCount({
     extraWidth: OVERFLOW_BUTTON_WIDTH,
     force: false,
@@ -86,11 +99,12 @@ const Tabs: React.FC<TabsProps> = ({
     [tabChildren, visibleCount, disableOverflow],
   )
   const canGrow = !isMeasuring && visibleCount === tabChildren.length
+  const hasOverflow = overflow.length > 0 && !isMeasuring
+  const tabLabelOf = (child: ReactElement<TabItemProps>) =>
+    String(child.props.tabLabelString || child.props.tabLabel)
 
   const handleChange = useCallback(
-    (e: React.MouseEvent<HTMLButtonElement>, tabLabel: string, i: number) => {
-      e.stopPropagation()
-      e.preventDefault()
+    (tabLabel: string, i: number) => {
       if (urlParam) {
         const searchParams = new URLSearchParams(window.location.search)
         searchParams.set(
@@ -119,7 +133,7 @@ const Tabs: React.FC<TabsProps> = ({
       >
         <div
           ref={itemsContainerRef}
-          className={classNames('d-flex align-items-center flex-1', 'gap-2', {
+          className={classNames('d-flex align-items-center flex-1 gap-2', {
             'opacity-0': isMeasuring,
           })}
         >
@@ -131,13 +145,11 @@ const Tabs: React.FC<TabsProps> = ({
                 isSelected={isSelected}
                 className={canGrow ? 'tab-nav-full' : ''}
                 noFocus={noFocus}
-                onClick={(e: React.MouseEvent<HTMLButtonElement>) =>
-                  handleChange(
-                    e,
-                    String(child.props.tabLabelString || child.props.tabLabel),
-                    i,
-                  )
-                }
+                onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+                  e.stopPropagation()
+                  e.preventDefault()
+                  handleChange(tabLabelOf(child), i)
+                }}
                 child={child}
                 buttonTheme={buttonTheme}
               >
@@ -146,57 +158,36 @@ const Tabs: React.FC<TabsProps> = ({
             )
           })}
         </div>
-        {overflow.length > 0 && !isMeasuring && (
-          <div
-            className='d-flex align-items-center justify-content-center ms-2 flex-shrink-0 btn btn-secondary'
-            style={{
-              backgroundColor: 'var(--bs-light300)',
-              borderRadius: 6,
-              height: 32,
-              width: 32,
-            }}
-            data-test='tabs-overflow-button'
+        {hasOverflow && (
+          <DropdownMenu
+            aria-label='More tabs'
+            trigger={
+              <IconButton
+                className='ms-2 flex-shrink-0'
+                variant='secondary'
+                size='small'
+                aria-label='More tabs'
+              >
+                <Icon name='more-vertical' width={18} />
+              </IconButton>
+            }
           >
-            <DropdownMenu
-              items={overflow.map((child, i) => {
-                const actualIndex = i + visibleCount
-                const active = value === actualIndex
-                return {
-                  className: classNames('', [
-                    active
-                      ? 'text-action fw-semibold bg-primary-opacity-5 fill-primary'
-                      : 'hover-color-primary',
-                  ]),
-                  label: (
-                    <div className='d-flex align-items-center text-nowrap tabs-nav full-width'>
-                      <TabButton
-                        key={`overflow-${actualIndex}`}
-                        isSelected={false}
-                        className={classNames(
-                          'full-width btn-no-focus width-100',
-                          active && 'text-action fw-semibold fill-primary',
-                        )}
-                        noFocus={noFocus}
-                        child={child}
-                        buttonTheme={buttonTheme}
-                      >
-                        {child.props.tabLabel}
-                      </TabButton>
-                    </div>
-                  ) as React.ReactNode,
-                  onClick: (e: any) => {
-                    handleChange(
-                      e,
-                      String(
-                        child.props.tabLabelString || child.props.tabLabel,
-                      ),
-                      actualIndex,
-                    )
-                  },
-                }
-              })}
-            />
-          </div>
+            {overflow.map((child) => {
+              const i = tabChildren.indexOf(child)
+              return (
+                <DropdownMenuItem
+                  key={`menu-${i}`}
+                  selected={value === i}
+                  onSelect={() => handleChange(tabLabelOf(child), i)}
+                >
+                  <TabLabel
+                    tabLabel={child.props.tabLabel}
+                    isDirty={child.props.isDirty}
+                  />
+                </DropdownMenuItem>
+              )
+            })}
+          </DropdownMenu>
         )}
         {cta && <div className='flex-shrink-0'>{cta}</div>}
       </div>
