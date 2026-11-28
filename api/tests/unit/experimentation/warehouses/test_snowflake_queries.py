@@ -84,11 +84,11 @@ RESULTS_SQL = (
 unit_values AS (
     SELECT
         e.variant AS variant,
-        iff(count_if(m.event = %(metric_0_event)s AND m.timestamp >= e.first_exposure) > 0, 1, 0) AS m0,
-        count_if(m.event = %(metric_1_event)s AND m.timestamp >= e.first_exposure) AS m1,
+        iff(coalesce(count_if(m.event = %(metric_0_event)s AND m.timestamp >= e.first_exposure), 0) > 0, 1, 0) AS m0,
+        coalesce(count_if(m.event = %(metric_1_event)s AND m.timestamp >= e.first_exposure), 0) AS m1,
         coalesce(sum(iff(m.event = %(metric_2_event)s AND m.timestamp >= e.first_exposure, iff(regexp_like(m.value, '^[-+]?([0-9]{1,30}([.][0-9]{0,30})?|[.][0-9]{1,30})([eE][-+]?[0-9]{1,2})?$'), try_to_double(m.value), 0), NULL)), 0) AS m2,
         coalesce(avg(iff(m.event = %(metric_3_event)s AND m.timestamp >= e.first_exposure, iff(regexp_like(m.value, '^[-+]?([0-9]{1,30}([.][0-9]{0,30})?|[.][0-9]{1,30})([eE][-+]?[0-9]{1,2})?$'), try_to_double(m.value), 0), NULL)), 0) AS m3,
-        iff(count_if(m.event = %(metric_4_event)s AND m.timestamp >= e.first_exposure) > 0, 1, 0) AS m4
+        iff(coalesce(count_if(m.event = %(metric_4_event)s AND m.timestamp >= e.first_exposure), 0) > 0, 1, 0) AS m4
     FROM exposures AS e
     LEFT JOIN events AS m
         ON m.identifier = e.identifier

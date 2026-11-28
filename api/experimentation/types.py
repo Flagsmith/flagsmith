@@ -40,10 +40,10 @@ class SnowflakeConfig(TypedDict):
 
 SNOWFLAKE_DEFAULTS: SnowflakeConfig = {
     "account_identifier": "",
-    "warehouse": "COMPUTE_WH",
+    "warehouse": "FLAGSMITH_WH",
     "database": "FLAGSMITH",
-    "schema": "ANALYTICS",
-    "role": "FLAGSMITH_LOADER",
+    "schema": "FLAGSMITH_EXP",
+    "role": "FLAGSMITH_ROLE",
     "user": "FLAGSMITH_SERVICE",
 }
 

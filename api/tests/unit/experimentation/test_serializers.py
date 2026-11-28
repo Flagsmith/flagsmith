@@ -89,13 +89,15 @@ def test_create__environment_name__name_uses_warehouse_type_label(
 
 def test_create__snowflake_minimal_config__applies_defaults(
     environment: Environment,
+    snowflake_private_key_pem: str,
 ) -> None:
     # Given
     serializer = WarehouseConnectionSerializer(
         data={
             "warehouse_type": "snowflake",
             "name": "My Snowflake",
-            "config": {"account_identifier": "xy12345.us-east-1"},
+            "config": {"account_identifier": "acme-prod"},
+            "credentials": {"private_key": snowflake_private_key_pem},
         },
     )
     serializer.is_valid(raise_exception=True)
@@ -104,16 +106,30 @@ def test_create__snowflake_minimal_config__applies_defaults(
     connection = serializer.save(environment=environment)
 
     # Then
-    assert connection.config["account_identifier"] == "xy12345.us-east-1"
-    assert connection.config["warehouse"] == "COMPUTE_WH"
-    assert connection.config["database"] == "FLAGSMITH"
-    assert connection.config["schema"] == "ANALYTICS"
-    assert connection.config["role"] == "FLAGSMITH_LOADER"
-    assert connection.config["user"] == "FLAGSMITH_SERVICE"
+    assert connection.config == {
+        "account_identifier": "ACME-PROD",
+        "warehouse": "FLAGSMITH_WH",
+        "database": "FLAGSMITH",
+        "schema": "FLAGSMITH_EXP",
+        "role": "FLAGSMITH_ROLE",
+        "user": "FLAGSMITH_SERVICE",
+    }
+    assert connection.credentials == {"private_key": snowflake_private_key_pem.strip()}
 
 
-def test_create__snowflake_missing_account_identifier__raises_validation_error(
+@pytest.mark.parametrize(
+    "with_private_key, expected_errors",
+    [
+        (False, {"credentials": {"private_key": "This field is required."}}),
+        (True, {"config": {"account_identifier": "This field is required."}}),
+    ],
+    ids=["missing-private-key", "missing-account-identifier"],
+)
+def test_create__snowflake_incomplete__raises_validation_error(
     environment: Environment,
+    snowflake_private_key_pem: str,
+    with_private_key: bool,
+    expected_errors: dict[str, object],
 ) -> None:
     # Given
     serializer = WarehouseConnectionSerializer(
@@ -121,12 +137,18 @@ def test_create__snowflake_missing_account_identifier__raises_validation_error(
             "warehouse_type": "snowflake",
             "name": "Bad Snowflake",
             "config": {"warehouse": "MY_WH"},
+            "credentials": (
+                {"private_key": snowflake_private_key_pem} if with_private_key else {}
+            ),
         },
     )
 
-    # When / Then
-    assert not serializer.is_valid()
-    assert "config" in serializer.errors
+    # When
+    is_valid = serializer.is_valid()
+
+    # Then
+    assert not is_valid
+    assert serializer.errors == expected_errors
 
 
 def test_create__flagsmith_with_config__raises_validation_error(

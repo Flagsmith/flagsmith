@@ -1069,6 +1069,7 @@ Logged at `warning` from:
  - `api/experimentation/warehouses/clickhouse.py:298`
  - `api/experimentation/warehouses/flagsmith.py:182`
  - `api/experimentation/warehouses/postgres.py:444`
+ - `api/experimentation/warehouses/snowflake.py:552`
 
 Attributes:
  - `environment.id`
@@ -1080,6 +1081,7 @@ Attributes:
 Logged at `warning` from:
  - `api/experimentation/warehouses/clickhouse.py:337`
  - `api/experimentation/warehouses/postgres.py:483`
+ - `api/experimentation/warehouses/snowflake.py:590`
 
 Attributes:
  - `environment.id`
