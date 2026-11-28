@@ -17,7 +17,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
 from django.urls import reverse
 from django.utils import timezone
-from flag_engine.segments.constants import EQUAL
+from flag_engine.segments.constants import EQUAL, PERCENTAGE_SPLIT
 from pytest_django import DjangoAssertNumQueries
 from pytest_django.fixtures import SettingsWrapper
 from pytest_lazy_fixtures import lf as lazy_fixture
@@ -250,6 +250,42 @@ def test_create_segment__condition_with_null_value__returns_201(project, client)
 
     # Then
     assert res.status_code == status.HTTP_201_CREATED
+
+
+def test_create_segment__condition_without_property__returns_201(
+    admin_client: APIClient,
+    project: Project,
+) -> None:
+    # Given
+    data = {
+        "name": "New segment name",
+        "project": project.id,
+        "rules": [
+            {
+                "type": "ALL",
+                "conditions": [],
+                "rules": [
+                    {
+                        "type": "ALL",
+                        "conditions": [{"operator": PERCENTAGE_SPLIT, "value": "10"}],
+                        "rules": [],
+                    }
+                ],
+            }
+        ],
+    }
+
+    # When
+    response = admin_client.post(
+        f"/api/v1/projects/{project.id}/segments/",
+        data=data,
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    condition = Condition.objects.get(rule__rule__segment__id=response.json()["id"])
+    assert condition.property is None
 
 
 def test_create_segment__invalid_rules__returns_400(
