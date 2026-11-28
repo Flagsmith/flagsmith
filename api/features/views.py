@@ -713,14 +713,14 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
     def get_serializer_class(self):  # type: ignore[no-untyped-def]
         if self.action == "list":
             return FeatureStateSerializerWithIdentity
-        elif self.action in ["retrieve", "update", "create"]:
+        elif self.action in ["retrieve", "update", "partial_update", "create"]:
             return FeatureStateSerializerBasic
         else:
             return FeatureStateSerializerCreate
 
     def get_serializer_context(self):  # type: ignore[no-untyped-def]
         context = super().get_serializer_context()
-        if self.action in ["update", "create"]:
+        if self.action in ["update", "partial_update", "create"]:
             context["environment"] = self.get_environment_from_request()  # type: ignore[no-untyped-call]
         return context
 
