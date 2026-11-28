@@ -185,16 +185,6 @@ $side-width: 800px;
   &.table-filter {
     top:12px;
   }
-  &--lg {
-    width: 355px;
-    .inline-modal__title {
-      padding: 8px 12px;
-      * {
-        font-size: $font-sm !important;
-        line-height: $line-height-sm !important;
-      }
-    }
-  }
   &--sm {
     min-width: 200px;
     max-width: 355px;
@@ -229,9 +219,6 @@ $side-width: 800px;
     max-width: 100vw;
     height: 100vh;
     max-height: 100vh;
-  }
-  .table-filter-list {
-    max-height: none !important;
   }
 }
 .modal-back-btn {
@@ -322,27 +309,6 @@ $side-width: 800px;
   }
 
 }
-.table-filter-list {
-  overflow-y: auto;
-  max-height: 350px;
-  @include customScroll();
-  text-overflow: ellipsis;
-  overflow-x: hidden;
-}
-.table-filter-item {
-  display: block;
-  border-bottom: 1px solid $input-border-color;
-  &:last-of-type {
-    border-bottom: none;
-  }
-}
-.dark {
-
-  .table-filter-item {
-    border-color: $white-alpha-8;
-  }
-}
-
 // Lets a long drawer title truncate instead of pushing its buttons out
 .side-modal .modal-title {
   min-width: 0;

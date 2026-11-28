@@ -1,0 +1,13 @@
+.table-filter-item {
+  display: grid;
+  align-items: center;
+  width: 100%;
+  text-align: left;
+  min-height: var(--table-filter-row);
+  font-size: var(--table-filter-font);
+  border-bottom: 1px solid var(--color-border-default);
+
+  &:last-of-type {
+    border-bottom: none;
+  }
+}

@@ -11,11 +11,10 @@ import React, {
 import { AutoSizer, List } from 'react-virtualized'
 import classNames from 'classnames'
 import Popover from './base/Popover'
+import TableFilterItem from './tables/TableFilterItem'
 import BareButton from './base/forms/BareButton'
 import Input from './base/forms/Input'
 import Icon from './icons/Icon'
-import { IonIcon } from '@ionic/react'
-import { chevronDown, chevronUp } from 'ionicons/icons'
 import Button from './base/forms/Button'
 import Paging from './Paging'
 import lodashFilter from 'lodash/filter'
@@ -131,8 +130,7 @@ const PanelSearch = <T,>(props: PanelSearchProps<T>): ReactElement => {
   }, [propSearch, internalSearch, exact, filter, filterRow, items, sortItems])
 
   const handleSort = useCallback(
-    (e: React.MouseEvent<HTMLAnchorElement>, sortOption: SortOption) => {
-      e.preventDefault()
+    (sortOption: SortOption) => {
       if (sortOption.value === sortBy) {
         const newSortOrder =
           sortOrder === SortOrder.ASC ? SortOrder.DESC : SortOrder.ASC
@@ -296,28 +294,16 @@ const PanelSearch = <T,>(props: PanelSearchProps<T>): ReactElement => {
                   {(close) => (
                     <div>
                       {sorting.map((sortOption, i) => (
-                        <a
+                        <TableFilterItem
                           key={i}
-                          className='table-filter-item'
-                          href='#'
-                          onClick={(e) => {
-                            handleSort(e, sortOption)
+                          title={sortOption.label}
+                          isActive={currentSort?.value === sortOption.value}
+                          sortOrder={sortOrder ?? SortOrder.ASC}
+                          onClick={() => {
+                            handleSort(sortOption)
                             close()
                           }}
-                        >
-                          <Row space className='px-3 align-items-center py-2'>
-                            <div>{sortOption.label}</div>
-                            {currentSort?.value === sortOption.value && (
-                              <IonIcon
-                                icon={
-                                  sortOrder === SortOrder.ASC
-                                    ? chevronUp
-                                    : chevronDown
-                                }
-                              />
-                            )}
-                          </Row>
-                        </a>
+                        />
                       ))}
                     </div>
                   )}

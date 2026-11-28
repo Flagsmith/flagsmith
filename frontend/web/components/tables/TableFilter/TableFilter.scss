@@ -1,0 +1,34 @@
+@import '../../../styles/variables';
+@import '../../../styles/mixins/custom-scrollbar';
+
+// The anchored panel; the phone sheet sizes itself
+.table-filter__panel {
+  min-width: 200px;
+  max-width: 355px;
+}
+
+// The sheet sets these; the rows read them
+.table-filter__content {
+  --table-filter-row: 0;
+  --table-filter-font: var(--font-size-body-md);
+
+  // In a bottom sheet rows are larger, like native action sheets. There is no
+  // 16px body token, so the size is set here
+  &--sheet {
+    --table-filter-row: 48px;
+    --table-filter-font: 16px;
+
+    // The sheet scrolls itself
+    .table-filter-list {
+      max-height: none;
+    }
+  }
+}
+
+.table-filter-list {
+  overflow-y: auto;
+  max-height: 350px;
+  @include customScroll();
+  text-overflow: ellipsis;
+  overflow-x: hidden;
+}

@@ -8,6 +8,7 @@ import TableFilterItem from './TableFilterItem'
 import Constants from 'common/constants'
 import { TagStrategy } from 'common/types/responses'
 import TagContent from 'components/tags/TagContent'
+import { BodyText } from 'components/base/typography'
 
 type TableFilterType = {
   projectId: number
@@ -58,41 +59,8 @@ const TableTagFilter: FC<TableFilterType> = ({
   return (
     <div className={isLoading ? 'disabled' : ''}>
       <TableFilter
-        data-test='table-filter-tags'
+        label='Tags'
         className={className}
-        dropdownTitle={
-          <>
-            <div className='full-width'>
-              <Select
-                size='select-xxsm'
-                styles={{
-                  control: (base) => ({
-                    ...base,
-                    height: 18,
-                  }),
-                }}
-                onChange={(v) => {
-                  if (v) onChangeStrategy(v.value)
-                }}
-                value={{
-                  label:
-                    tagStrategy === 'INTERSECTION' ? 'Has all' : 'Has some',
-                  value: tagStrategy,
-                }}
-                options={[
-                  {
-                    label: 'Has all',
-                    value: 'INTERSECTION',
-                  },
-                  {
-                    label: 'Has some',
-                    value: 'UNION',
-                  },
-                ]}
-              />
-            </div>
-          </>
-        }
         title={
           <Row>
             Tags{' '}
@@ -100,8 +68,36 @@ const TableTagFilter: FC<TableFilterType> = ({
           </Row>
         }
       >
-        <div className='inline-modal__list d-flex flex-column mx-0 py-0'>
-          <div className='px-2 my-2'>
+        <div className='d-flex flex-column mx-0 py-0'>
+          <div className='px-3 pt-2'>
+            <Select
+              size='select-xxsm'
+              styles={{
+                control: (base) => ({
+                  ...base,
+                  height: 18,
+                }),
+              }}
+              onChange={(v) => {
+                if (v) onChangeStrategy(v.value)
+              }}
+              value={{
+                label: tagStrategy === 'INTERSECTION' ? 'Has all' : 'Has some',
+                value: tagStrategy,
+              }}
+              options={[
+                {
+                  label: 'Has all',
+                  value: 'INTERSECTION',
+                },
+                {
+                  label: 'Has some',
+                  value: 'UNION',
+                },
+              ]}
+            />
+          </div>
+          <div className='px-3 my-2'>
             <Input
               autoFocus
               onChange={(e) => {
@@ -116,7 +112,9 @@ const TableTagFilter: FC<TableFilterType> = ({
             />
           </div>
           {filteredTags?.length === 0 && (
-            <div className='text-center'>No tags</div>
+            <BodyText muted className='text-center'>
+              No tags
+            </BodyText>
           )}
           <div className='table-filter-list'>
             <TableFilterItem

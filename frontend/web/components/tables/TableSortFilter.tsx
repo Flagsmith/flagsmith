@@ -1,7 +1,6 @@
 import React, { FC } from 'react'
+import TableFilterItem from './TableFilterItem'
 import TableFilter from './TableFilter'
-import Icon from 'components/icons/Icon'
-import classNames from 'classnames'
 import { SortOrder } from 'common/types/requests'
 
 type SortType = {
@@ -20,6 +19,9 @@ type TableFilterType = {
   onChange: (v: SortValue) => void
 }
 
+const oppositeOrder = (order: SortOrder) =>
+  order === SortOrder.ASC ? SortOrder.DESC : SortOrder.ASC
+
 const TableSortFilter: FC<TableFilterType> = ({
   isLoading,
   onChange,
@@ -33,44 +35,26 @@ const TableSortFilter: FC<TableFilterType> = ({
   }
   return (
     <div className={isLoading ? 'disabled' : ''}>
-      <TableFilter hideTitle title={'Sort'}>
+      <TableFilter title={'Sort'}>
         {options.map((sortOption, i) => {
           const isActive = sortOption?.value === value?.sortBy
           return (
-            <a
+            <TableFilterItem
               key={i}
-              className='table-filter-item'
-              href='#'
-              onClick={(e) => {
-                e.preventDefault()
+              title={sortOption.label}
+              isActive={isActive}
+              sortOrder={value.sortOrder}
+              onClick={() => {
                 if (isLoading) return
                 onChange({
                   label: sortOption.label,
                   sortBy: sortOption.value,
                   sortOrder: isActive
-                    ? value.sortOrder === SortOrder.ASC
-                      ? SortOrder.DESC
-                      : SortOrder.ASC
+                    ? oppositeOrder(value.sortOrder)
                     : SortOrder.ASC,
                 })
               }}
-            >
-              <Row space className='px-3 py-2'>
-                <div>{sortOption.label}</div>
-                <div>
-                  <Icon
-                    className={classNames('text-default', {
-                      'opacity-0': !isActive,
-                    })}
-                    name={
-                      value?.sortOrder === SortOrder.ASC
-                        ? 'chevron-up'
-                        : 'chevron-down'
-                    }
-                  />
-                </div>
-              </Row>
-            </a>
+            />
           )
         })}
       </TableFilter>

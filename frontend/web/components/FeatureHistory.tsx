@@ -174,7 +174,6 @@ const FeatureHistory: FC<FeatureHistoryPageType> = ({
                         className='inline-modal table-filter inline-modal--sm right'
                       >
                         <TableFilterItem
-                          data-test={`history-item-${i}-compare-live`}
                           title={'Live Version'}
                           onClick={() => {
                             setCompareToLive(true)
@@ -187,7 +186,6 @@ const FeatureHistory: FC<FeatureHistoryPageType> = ({
                           }}
                         />
                         <TableFilterItem
-                          data-test={`history-item-${i}-compare-previous`}
                           title={'Previous Version'}
                           onClick={() => {
                             setCompareToLive(false)

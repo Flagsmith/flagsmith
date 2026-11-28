@@ -49,8 +49,8 @@ const TableTagFilter: FC<TableFilterType> = ({
   return (
     <div className={isLoading ? 'disabled' : ''}>
       <TableFilter
+        label='Value'
         className={className}
-        hideTitle
         title={
           <Row>
             Value{' '}
@@ -60,8 +60,8 @@ const TableTagFilter: FC<TableFilterType> = ({
           </Row>
         }
       >
-        <div className='inline-modal__list d-flex flex-column mx-0 py-0'>
-          <div className='px-2 mt-2'>
+        <div className='d-flex flex-column mx-0 py-0'>
+          <div className='px-3 my-2'>
             <InputGroup
               title='Enabled State'
               className='mt-2'

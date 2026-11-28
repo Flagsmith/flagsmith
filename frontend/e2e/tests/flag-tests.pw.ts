@@ -221,14 +221,11 @@ test.describe('Flag Tests', () => {
     })).toHaveCount(0, { timeout: LONG_TIMEOUT })
 
     log('Enable archived filter')
-    // Click on Tags filter button
-    await click(byId('table-filter-tags'))
-
-    // Click on archived filter option
-    await clickByText(/^archived/, '.table-filter-item')
-
-    // Close the filter dropdown
-    await click(byId('table-filter-tags'))
+    // The trigger's name includes the count of selected tags
+    const tagsFilter = page.getByRole('button', { name: /^Tags/ })
+    await tagsFilter.click()
+    await page.getByRole('dialog', { name: 'Tags' }).getByRole('button', { name: 'archived' }).click()
+    await tagsFilter.click()
 
     log('Verify archived feature is now visible')
     // Wait for the features list to update and verify archived feature appears
