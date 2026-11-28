@@ -109,6 +109,7 @@ class OrganisationViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
             "subscription",
             "subscription_information_cache",
             "breached_grace_period",
+            "api_limit_access_block",
         )
 
     def get_throttles(self):  # type: ignore[no-untyped-def]

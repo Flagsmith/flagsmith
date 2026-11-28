@@ -15,14 +15,32 @@ describe('limitStatusOf', () => {
 
   // The block outlives the overage, so restriction wins even with none.
   it.each`
-    values                             | flagsPaused
-    ${{ block_access_to_admin: true }} | ${false}
-    ${{ stop_serving_flags: true }}    | ${true}
-  `('reports a restriction from $values', ({ flagsPaused, values }) => {
-    expect(limitStatusOf(organisation(values), undefined)).toEqual({
-      flagsPaused,
+    values                                                             | flagsPaused | apiLimitAccessBlocked
+    ${{ block_access_to_admin: true }}                                 | ${false}    | ${false}
+    ${{ stop_serving_flags: true }}                                    | ${true}     | ${false}
+    ${{ api_limit_access_blocked: true }}                              | ${false}    | ${true}
+    ${{ api_limit_access_blocked: true, block_access_to_admin: true }} | ${false}    | ${true}
+  `(
+    'reports a restriction from $values',
+    ({ apiLimitAccessBlocked, flagsPaused, values }) => {
+      expect(limitStatusOf(organisation(values), undefined)).toEqual({
+        apiLimitAccessBlocked,
+        flagsPaused,
+        kind: 'restricted',
+        over: undefined,
+      })
+    },
+  )
+
+  // Still over the limit, the block must win over the "will be restricted" copy.
+  it('treats an API-limit block as restricted while usage is still over', () => {
+    expect(
+      limitStatusOf(organisation({ api_limit_access_blocked: true }), over),
+    ).toEqual({
+      apiLimitAccessBlocked: true,
+      flagsPaused: false,
       kind: 'restricted',
-      over: undefined,
+      over,
     })
   })
 
