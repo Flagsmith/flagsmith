@@ -763,6 +763,12 @@ def test_partial_update_feature_state__multivariate_values__updates_allocations(
         args=[environment_api_key, feature_state["id"]],
     )
     allocations = [40, 60]
+    multivariate_values = feature_state["multivariate_feature_state_values"]
+    assert len(multivariate_values) == len(allocations)
+    expected_allocations_by_id = {
+        value["id"]: allocation
+        for value, allocation in zip(multivariate_values, allocations)
+    }
 
     # When
     response = client.patch(
@@ -778,8 +784,7 @@ def test_partial_update_feature_state__multivariate_values__updates_allocations(
                         "percentage_allocation": allocation,
                     }
                     for mv_feature_state_value, allocation in zip(
-                        feature_state["multivariate_feature_state_values"],
-                        allocations,
+                        multivariate_values, allocations
                     )
                 ]
             }
@@ -791,10 +796,14 @@ def test_partial_update_feature_state__multivariate_values__updates_allocations(
     assert response.status_code == status.HTTP_200_OK
     updated_feature_state = client.get(update_url)
     assert updated_feature_state.status_code == status.HTTP_200_OK
-    assert [
-        value["percentage_allocation"]
-        for value in updated_feature_state.json()["multivariate_feature_state_values"]
-    ] == allocations
+    updated_multivariate_values = updated_feature_state.json()[
+        "multivariate_feature_state_values"
+    ]
+    assert len(updated_multivariate_values) == len(expected_allocations_by_id)
+    assert {
+        value["id"]: value["percentage_allocation"]
+        for value in updated_multivariate_values
+    } == expected_allocations_by_id
 
 
 @pytest.mark.parametrize(
