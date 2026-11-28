@@ -80,6 +80,41 @@ Outcomes of connection verification attempts against customers&#x27; own data wa
 Labels:
  - `result`
 
+### `flagsmith_flag_bisect_conclusions`
+
+Counter.
+
+Incidents that reached a conclusion. `result` label is one of `identified`, `not_a_flag_change`, `inconclusive` or `aborted`.
+
+Labels:
+ - `result`
+
+### `flagsmith_flag_bisect_incidents`
+
+Counter.
+
+Incidents opened by the Flag Bisect Sentinel after a failure-rate shift.
+
+Labels:
+
+### `flagsmith_flag_bisect_probes`
+
+Counter.
+
+Canary probes decided by the Flag Bisect Judge. `verdict` label is one of `healed`, `not_healed`, `inconclusive` or `harmful`.
+
+Labels:
+ - `verdict`
+
+### `flagsmith_flag_bisect_signals`
+
+Counter.
+
+Request outcomes reported by SDK-side apps for Flag Bisect. `outcome` label is either `ok` or `failed`.
+
+Labels:
+ - `outcome`
+
 ### `flagsmith_http_server_request_duration_seconds`
 
 Histogram.

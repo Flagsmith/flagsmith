@@ -1592,6 +1592,87 @@ export type TrustRelationship = {
   created_by: number | null
 }
 
+export type FlagBisectState =
+  | 'INVESTIGATING'
+  | 'AWAITING_APPROVAL'
+  | 'PROBING'
+  | 'CONFIRMING'
+  | 'IDENTIFIED'
+  | 'NOT_A_FLAG_CHANGE'
+  | 'INCONCLUSIVE'
+  | 'ABORTED'
+  | 'REMEDIATION_PROPOSED'
+  | 'REMEDIATED'
+  | 'RESOLVED'
+
+export type FlagBisectIncidentSummary = {
+  id: number
+  state: FlagBisectState
+  onset_at: string
+  baseline_rate: number
+  regression_rate: number
+  rounds: number
+  conclusion: { ids: string[]; confidence: number } | null
+  confirmed: boolean
+  created_at: string
+  updated_at: string
+}
+
+export type FlagBisectSuspect = {
+  id: number
+  feature: number
+  feature_name: string
+  before_enabled: boolean
+  before_value: string | number | boolean | null
+  after_enabled: boolean
+  after_value: string | number | boolean | null
+  changed_at: string
+  prior: number
+  posterior: number
+}
+
+export type FlagBisectProbe = {
+  round: number
+  kind: 'BISECT' | 'CONFIRM'
+  reverted_features: string[]
+  started_at: string
+  settles_at: string
+  ended_at: string | null
+  canary_total: number
+  canary_failures: number
+  main_total: number
+  main_failures: number
+  verdict: '' | 'healed' | 'not_healed' | 'inconclusive' | 'harmful'
+  judgement: {
+    canary_rate: number
+    main_rate: number
+    recovered: number
+    evidence: number
+    reason: string
+  } | null
+}
+
+export type FlagBisectIncident = FlagBisectIncidentSummary & {
+  canary_percent: number
+  max_rounds: number
+  max_minutes: number
+  envelope_approved_at: string | null
+  canary_segment: number | null
+  remediation_result: {
+    restored: { feature: string; verified: boolean }[]
+  } | null
+  suspects: FlagBisectSuspect[]
+  probes: FlagBisectProbe[]
+  messages: { agent: string; text: string; created_at: string }[]
+  hypotheses: { features: string[]; probability: number }[]
+}
+
+export type FlagBisectSignalSource = {
+  failure_event: string | null
+  success_event: string | null
+  events_stored_in_flagsmith: boolean
+}
+
 export type Res = {
   segments: PagedResponse<Segment>
   segment: Segment
@@ -1852,6 +1933,9 @@ export type Res = {
     status_counts?: ExperimentStatusCounts
   }
   experiment: Experiment
+  flagBisectIncidents: PagedResponse<FlagBisectIncidentSummary>
+  flagBisectIncident: FlagBisectIncident
+  flagBisectSignalSource: FlagBisectSignalSource
   experimentExposures: ExperimentExposures
   experimentBayesianResults: ExperimentBayesianResults
   metric: Metric

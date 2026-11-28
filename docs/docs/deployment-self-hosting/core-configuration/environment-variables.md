@@ -52,6 +52,8 @@ relevant section below for more details.
 - `INFLUXDB_ORG`: The organisation string for your InfluxDB API call.
 - `EXPERIMENTATION_ENABLED`: Set to `true` to turn on experiments and warehouse connections. Defaults to `false`. See
   [Self-Hosting and Open Source](/experimentation/self-hosting).
+- `FLAG_BISECT_ENABLED`: Set to `true` to turn on [Flag Bisect](/managing-flags/flag-bisect), which finds which recent
+  flag change caused a regression. Set it on the API and the task processor. Defaults to `false`.
 - `WAREHOUSE_CREDENTIALS_SECRET`: Secret used to encrypt warehouse connection credentials. Warehouse delivery must use
   the same value. Changing it makes saved credentials unreadable.
 - `GA_TABLE_ID`: GA table ID (view) to query when looking for organisation usage.

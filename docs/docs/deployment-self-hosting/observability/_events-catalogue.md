@@ -543,6 +543,83 @@ Attributes:
  - `project.id`
  - `reason`
 
+### `flag_bisect.envelope.approved`
+
+Logged at `info` from:
+ - `api/features/flag_bisect/services.py:753`
+
+Attributes:
+ - `environment.id`
+ - `incident.id`
+
+### `flag_bisect.incident.concluded`
+
+Logged at `info` from:
+ - `api/features/flag_bisect/services.py:843`
+ - `api/features/flag_bisect/services.py:1010`
+
+Attributes:
+ - `environment.id`
+ - `incident.id`
+ - `result`
+
+### `flag_bisect.incident.opened`
+
+Logged at `info` from:
+ - `api/features/flag_bisect/services.py:535`
+
+Attributes:
+ - `environment.id`
+ - `incident.id`
+ - `organisation.id`
+
+### `flag_bisect.incident.resolved`
+
+Logged at `info` from:
+ - `api/features/flag_bisect/services.py:680`
+
+Attributes:
+ - `environment.id`
+ - `incident.id`
+
+### `flag_bisect.override.already_removed`
+
+Logged at `info` from:
+ - `api/features/flag_bisect/services.py:818`
+
+Attributes:
+ - `error`
+ - `feature.id`
+ - `incident.id`
+
+### `flag_bisect.probe.started`
+
+Logged at `info` from:
+ - `api/features/flag_bisect/services.py:912`
+
+Attributes:
+ - `environment.id`
+ - `incident.id`
+ - `probe.round`
+
+### `flag_bisect.remediation.applied`
+
+Logged at `info` from:
+ - `api/features/flag_bisect/services.py:1100`
+
+Attributes:
+ - `environment.id`
+ - `incident.id`
+
+### `flag_bisect.signal_source.saved`
+
+Logged at `info` from:
+ - `api/features/flag_bisect/services.py:278`
+
+Attributes:
+ - `environment.id`
+ - `organisation.id`
+
 ### `gitlab.api_call.failed`
 
 Logged at `error` from:

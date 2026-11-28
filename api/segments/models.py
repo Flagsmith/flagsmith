@@ -88,6 +88,7 @@ class SegmentManagedBy(models.TextChoices):
     DEPENDENCY = "dependency", "Flag dependency"
     EXPERIMENT = "experiment", "Experiment"
     RELEASE_PIPELINE = "release_pipeline", "Gradual rollout"
+    FLAG_BISECT = "flag_bisect", "Flag Bisect canary"
 
 
 class Segment(
