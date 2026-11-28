@@ -198,3 +198,19 @@ def test_feature_state_serializer_basic__save__dispatches_gitlab_state_change(
 
     # Then
     mock_dispatch.assert_called_once_with(feature_state)
+
+
+def test_feature_state_serializer_basic__no_environment_anywhere__returns_validation_error(
+    feature: Feature,
+) -> None:
+    # Given
+    serializer = FeatureStateSerializerBasic(
+        data={"feature": feature.id, "enabled": True}, context={}
+    )
+
+    # When
+    is_valid = serializer.is_valid()
+
+    # Then
+    assert is_valid is False
+    assert serializer.errors == {"environment": ["This field is required."]}

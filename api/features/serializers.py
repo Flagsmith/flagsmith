@@ -740,7 +740,17 @@ class FeatureStateSerializerBasic(WritableNestedModelSerializer):
         return feature_segment
 
     def validate(self, attrs):  # type: ignore[no-untyped-def]
-        environment = attrs.get("environment") or self.context["environment"]
+        # A partial update may omit the environment, and not every view
+        # provides one in the context, so fall back to the feature state's own.
+        environment = (
+            attrs.get("environment")
+            or self.context.get("environment")
+            or getattr(self.instance, "environment", None)
+        )
+        if environment is None:
+            raise serializers.ValidationError(
+                {"environment": "This field is required."}
+            )
         identity = attrs.get("identity")
         feature_segment = attrs.get("feature_segment")
         identifier = attrs.pop("identifier", None)
