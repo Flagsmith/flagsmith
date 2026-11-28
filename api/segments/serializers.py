@@ -322,7 +322,7 @@ class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
                 "type": rule["type"],
                 "conditions": [
                     {
-                        "property": condition["property"],
+                        "property": condition.get("property"),
                         "operator": condition["operator"],
                         "value": condition.get("value"),
                         "description": condition.get("description"),
