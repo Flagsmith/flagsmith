@@ -267,6 +267,20 @@ def test_get_from_cache__environment_api_key_model_key__returns_environment(
     assert environment_from_cache == environment
 
 
+def test_get_from_cache__key_matches_embedded_and_api_key_model__returns_environment(
+    environment: Environment,
+) -> None:
+    # Given
+    api_key = EnvironmentAPIKey.objects.create(name="Some key", environment=environment)
+    Environment.objects.filter(id=environment.id).update(api_key=api_key.key)
+
+    # When
+    environment_from_cache = Environment.get_from_cache(api_key=api_key.key)
+
+    # Then
+    assert environment_from_cache == environment
+
+
 def test_get_from_cache__null_api_key__returns_none(
     environment: Environment,
 ) -> None:
