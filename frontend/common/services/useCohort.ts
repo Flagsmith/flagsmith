@@ -2,6 +2,7 @@ import { Res } from 'common/types/responses'
 import { Req } from 'common/types/requests'
 import { service } from 'common/service'
 import toFormData from 'common/utils/toFormData'
+import { saveCohortSyncTotal } from 'common/utils/cohortSyncTotal'
 
 export const cohortService = service
   .enhanceEndpoints({ addTagTypes: ['Cohort', 'CohortSyncKey', 'Segment'] })
@@ -73,6 +74,18 @@ export const cohortService = service
           { id: arg.cohortId, type: 'Cohort' },
           { id: `LIST${arg.projectId}`, type: 'Segment' },
         ],
+        async onQueryStarted({ cohortId }, { queryFulfilled }) {
+          try {
+            const { data } = await queryFulfilled
+            saveCohortSyncTotal(
+              cohortId,
+              data.version,
+              data.added + data.removed,
+            )
+          } catch {
+            // The caller surfaces the failed sync.
+          }
+        },
         queryFn: async (query, baseQueryApi, extraOptions, baseQuery) => {
           // projectId only feeds tag invalidation; keep it out of the form data.
           const { cohortId, environmentApiKey, projectId: _, ...rest } = query

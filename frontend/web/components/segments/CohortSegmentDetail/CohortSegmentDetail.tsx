@@ -4,7 +4,12 @@ import moment from 'moment'
 import Constants from 'common/constants'
 import Format from 'common/utils/format'
 import Utils from 'common/utils/utils'
+import {
+  clearCohortSyncTotal,
+  getCohortSyncProgress,
+} from 'common/utils/cohortSyncTotal'
 import { Segment } from 'common/types/responses'
+import { colorSurfaceAction } from 'common/theme/tokens'
 import {
   useGetCohortQuery,
   useUpdateCohortMutation,
@@ -13,6 +18,7 @@ import Button from 'components/base/forms/Button'
 import Chip from 'components/base/Chip'
 import ErrorMessage from 'components/ErrorMessage'
 import InputGroup from 'components/base/forms/InputGroup'
+import ValueBar from 'components/shared/ValueBar'
 import CohortCsvSync from './CohortCsvSync'
 import './CohortSegmentDetail.scss'
 
@@ -52,7 +58,8 @@ const CohortSegmentDetail: FC<CohortSegmentDetailType> = ({
   // Poll while a synchronisation is in flight; the interval derives from the
   // response.
   const [pollingInterval, setPollingInterval] = useState(0)
-  const { data } = useGetCohortQuery(
+  // currentData, unlike data, never holds a previously selected cohort.
+  const { currentData: data } = useGetCohortQuery(
     {
       cohortId: cohort?.id ?? 0,
       environmentApiKey: cohort?.environment_api_key ?? '',
@@ -69,19 +76,22 @@ const CohortSegmentDetail: FC<CohortSegmentDetailType> = ({
   const isSyncing = pendingCount > 0
   const identityCount = appliedCount + (counts?.pending_add ?? 0)
 
-  // Snapshot the pending work when a synchronisation starts; applied totals
-  // shrink on removals so they cannot measure progress.
-  const [syncTotal, setSyncTotal] = useState(0)
-  const syncDone = Math.max(syncTotal - pendingCount, 0)
+  const cohortId = cohort?.id
+  const version = data?.version
+  const syncProgress =
+    isSyncing && cohortId !== undefined && version !== undefined
+      ? getCohortSyncProgress(cohortId, version, pendingCount)
+      : null
+  const percentApplied = syncProgress
+    ? Math.round((syncProgress.done / syncProgress.total) * 100)
+    : 0
 
   useEffect(() => {
     setPollingInterval(isSyncing ? SYNC_POLL_INTERVAL_MS : 0)
-    if (isSyncing) {
-      setSyncTotal((total) => Math.max(total, pendingCount))
-    } else {
-      setSyncTotal(0)
+    if (!isSyncing && cohortId !== undefined && version !== undefined) {
+      clearCohortSyncTotal(cohortId, version)
     }
-  }, [isSyncing, pendingCount])
+  }, [isSyncing, cohortId, version])
 
   useEffect(() => {
     setName(segment.name)
@@ -212,24 +222,24 @@ const CohortSegmentDetail: FC<CohortSegmentDetailType> = ({
               <span className='fw-semibold'>…</span>
             )}
           </InfoRow>
-          {isSyncing && (
-            <div className='d-flex flex-column mx-0 gap-1'>
-              <div className='fs-small text-secondary'>
-                {syncDone.toLocaleString()} of {syncTotal.toLocaleString()}{' '}
-                applied
-              </div>
-              <div className='cohort-segment-detail__progress-track bg-surface-default'>
-                <div
-                  className='cohort-segment-detail__progress-bar bg-surface-action'
-                  style={{
-                    width: `${
-                      syncTotal ? Math.round((syncDone / syncTotal) * 100) : 0
-                    }%`,
-                  }}
+          {isSyncing &&
+            (syncProgress ? (
+              <div className='d-flex flex-column mx-0 gap-1'>
+                <div className='fs-small text-secondary'>
+                  {syncProgress.done.toLocaleString()} of{' '}
+                  {syncProgress.total.toLocaleString()} applied
+                </div>
+                <ValueBar
+                  className='cohort-segment-detail__progress'
+                  percent={percentApplied}
+                  colour={colorSurfaceAction}
                 />
               </div>
-            </div>
-          )}
+            ) : (
+              <div className='fs-small text-secondary'>
+                {pendingCount.toLocaleString()} left to apply
+              </div>
+            ))}
         </div>
         {!readOnly && (
           <CohortCsvSync
