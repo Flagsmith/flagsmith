@@ -5,6 +5,17 @@
             "includeFiles": "{CI_COMMIT_SHA,public/static/index.handlebars}"
         }
     },
+    "headers": [
+        {
+            "source": "/static/(.*)",
+            "headers": [
+                {
+                    "key": "X-Content-Type-Options",
+                    "value": "nosniff"
+                }
+            ]
+        }
+    ],
     "rewrites": [
         {
             "source": "/(.*)",
