@@ -16,32 +16,36 @@ class ProjectPermissions(IsAuthenticated):
         if not super().has_permission(request, view):
             return False
 
-        if view.action == "create" and request.user.belongs_to(
-            int(request.data.get("organisation"))
-        ):
-            organisation = Organisation.objects.select_related("subscription").get(
-                id=int(request.data.get("organisation"))
-            )
-
-            # Allow project creation based on the active subscription
-            subscription_metadata = (
-                organisation.subscription.get_subscription_metadata()
-            )
-
-            total_projects_created = Project.objects.filter(
-                organisation=organisation
-            ).count()
-            if (
-                subscription_metadata.projects
-                and total_projects_created >= subscription_metadata.projects
-                and getattr(request, "is_e2e", False) is not True
-            ):
+        if view.action == "create":
+            try:
+                organisation_id = int(request.data.get("organisation"))
+            except (TypeError, ValueError, OverflowError):
                 return False
-            if organisation.restrict_project_create_to_admin:
-                return request.user.is_organisation_admin(organisation.pk)
-            return request.user.has_organisation_permission(
-                organisation, CREATE_PROJECT
-            )
+
+            if request.user.belongs_to(organisation_id):
+                organisation = Organisation.objects.select_related("subscription").get(
+                    id=organisation_id
+                )
+
+                # Allow project creation based on the active subscription
+                subscription_metadata = (
+                    organisation.subscription.get_subscription_metadata()
+                )
+
+                total_projects_created = Project.objects.filter(
+                    organisation=organisation
+                ).count()
+                if (
+                    subscription_metadata.projects
+                    and total_projects_created >= subscription_metadata.projects
+                    and getattr(request, "is_e2e", False) is not True
+                ):
+                    return False
+                if organisation.restrict_project_create_to_admin:
+                    return request.user.is_organisation_admin(organisation.pk)
+                return request.user.has_organisation_permission(
+                    organisation, CREATE_PROJECT
+                )
         if view.action in ("list", "permissions", "get_by_uuid"):
             return True
 
@@ -95,7 +99,7 @@ class IsProjectAdmin(BasePermission):
             raise APIException(
                 "`IsProjectAdmin` incorrectly configured. No project pk found."
             )
-        except Project.DoesNotExist:
+        except (Project.DoesNotExist, ValueError, TypeError):
             raise PermissionDenied()
 
 
@@ -122,7 +126,7 @@ class NestedProjectPermissions(IsAuthenticated):
         try:
             pk = view.kwargs.get("project_pk")
             project = Project.objects.get(pk=pk)
-        except Project.DoesNotExist:
+        except (Project.DoesNotExist, ValueError, TypeError):
             return False
 
         if view.action in self.action_permission_map:

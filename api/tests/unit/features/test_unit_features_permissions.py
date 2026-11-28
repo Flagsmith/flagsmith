@@ -9,7 +9,11 @@ from common.projects.permissions import (
 )
 
 from features.models import Feature
-from features.permissions import FeaturePermissions
+from features.permissions import (
+    EnvironmentFeatureStatePermissions,
+    FeaturePermissions,
+    FeatureStatePermissions,
+)
 from organisations.models import Organisation
 from permissions.models import PermissionModel
 from projects.models import (
@@ -545,3 +549,111 @@ def test_nested_project_permissions_has_object_permission__varying_permissions__
 
     # Then
     assert result == expected_result
+
+
+@pytest.mark.parametrize("invalid_project_id", ["PROJECT_ID", ["invalid"], {}])
+def test_feature_permissions_has_permission__invalid_project_id__returns_false(
+    admin_user: FFAdminUser,
+    invalid_project_id: object,
+) -> None:
+    # Given
+    feature_permissions = FeaturePermissions()
+    mock_view = mock.MagicMock(
+        kwargs={"project_pk": invalid_project_id},
+        detail=False,
+        action="create",
+    )
+    mock_request = mock.MagicMock(data={}, user=admin_user)
+
+    # When
+    result = feature_permissions.has_permission(mock_request, mock_view)  # type: ignore[no-untyped-call]
+
+    # Then
+    assert result is False
+
+
+@pytest.mark.parametrize("invalid_project_pk", ["PROJECT_ID", ["invalid"], {}])
+def test_nested_project_permissions_has_permission__invalid_project_pk__returns_false(
+    admin_user: FFAdminUser,
+    invalid_project_pk: object,
+) -> None:
+    # Given
+    permission_class = NestedProjectPermissions()
+    request = MagicMock(user=admin_user)
+    view = MagicMock(action="list", kwargs={"project_pk": invalid_project_pk})
+
+    # When
+    result = permission_class.has_permission(request, view)  # type: ignore[no-untyped-call]
+
+    # Then
+    assert result is False
+
+
+@pytest.mark.parametrize("invalid_environment", [1.5, ["invalid"], {}])
+def test_feature_state_permissions_has_permission__non_string_environment__returns_false(
+    admin_user: FFAdminUser,
+    invalid_environment: object,
+) -> None:
+    # Given
+    permission_class = FeatureStatePermissions()
+    request = MagicMock(
+        user=admin_user,
+        data={"environment": invalid_environment},
+        query_params={},
+    )
+    view = MagicMock(detail=False, action="create")
+
+    # When
+    result = permission_class.has_permission(request, view)  # type: ignore[arg-type]
+
+    # Then
+    assert result is False
+
+
+@pytest.mark.parametrize("invalid_feature_id", ["FEATURE_ID", ["invalid"], {}])
+def test_feature_state_permissions_has_permission__invalid_feature_id__returns_false(
+    admin_user: FFAdminUser,
+    environment: object,
+    invalid_feature_id: object,
+) -> None:
+    # Given
+    permission_class = FeatureStatePermissions()
+    env_id = getattr(environment, "id")
+    request = MagicMock(
+        user=admin_user,
+        data={"environment": env_id, "feature": invalid_feature_id},
+        query_params={},
+    )
+    view = MagicMock(detail=False, action="create")
+
+    # When
+    result = permission_class.has_permission(request, view)  # type: ignore[arg-type]
+
+    # Then
+    assert result is False
+
+
+@pytest.mark.parametrize("invalid_feature_id", ["FEATURE_ID", ["invalid"], {}])
+def test_environment_feature_state_permissions__invalid_feature_id__returns_false(
+    admin_user: FFAdminUser,
+    environment: object,
+    invalid_feature_id: object,
+) -> None:
+    # Given
+    permission_class = EnvironmentFeatureStatePermissions()
+    api_key = getattr(environment, "api_key")
+    request = MagicMock(
+        user=admin_user,
+        data={"feature": invalid_feature_id},
+    )
+    view = MagicMock(
+        detail=False,
+        action="create",
+        kwargs={"environment_api_key": api_key},
+    )
+
+    # When
+    result = permission_class.has_permission(request, view)  # type: ignore[no-untyped-call]
+
+    # Then
+    assert result is False

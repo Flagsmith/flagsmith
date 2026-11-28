@@ -467,3 +467,37 @@ def test_is_project_admin_has_permission__user_is_project_admin__returns_true(  
 
     # Then
     assert result
+
+
+@pytest.mark.parametrize(
+    "invalid_organisation", [None, "not-an-id", ["invalid"], float("inf")]
+)
+def test_project_permissions_has_permission__invalid_organisation__returns_false(
+    staff_user: FFAdminUser,
+    invalid_organisation: object,
+) -> None:
+    # Given
+    mock_request = mock.MagicMock(
+        user=staff_user,
+        data={"name": "Test", "organisation": invalid_organisation},
+    )
+    mock_view = mock.MagicMock(action="create", detail=False)
+    project_permissions = ProjectPermissions()
+
+    # When
+    result = project_permissions.has_permission(mock_request, mock_view)  # type: ignore[no-untyped-call]
+
+    # Then
+    assert result is False
+
+
+def test_is_project_admin_has_permission__invalid_project_pk__raises_permission_denied(  # type: ignore[no-untyped-def]
+    mocker, admin_user
+) -> None:
+    # Given
+    request = mocker.MagicMock(user=admin_user)
+    view = mocker.MagicMock(kwargs={"project_pk": "PROJECT_ID"})
+
+    # When / Then
+    with pytest.raises(PermissionDenied):
+        IsProjectAdmin().has_permission(request, view)  # type: ignore[no-untyped-call]

@@ -64,7 +64,7 @@ class FeaturePermissions(IsAuthenticated):
             # move on to object specific permissions
             return view.detail
 
-        except Project.DoesNotExist:
+        except (Project.DoesNotExist, ValueError, TypeError):
             return False
 
     def has_object_permission(self, request, view, obj):  # type: ignore[no-untyped-def]
@@ -99,7 +99,10 @@ class FeatureStatePermissions(IsAuthenticated):
                 "environment"
             )
 
-            if environment and (isinstance(environment, int) or environment.isdigit()):
+            if environment and (
+                isinstance(environment, int)
+                or (isinstance(environment, str) and environment.isdigit())
+            ):
                 environment = Environment.objects.get(id=int(environment))
 
                 tag_ids = None
@@ -127,7 +130,7 @@ class FeatureStatePermissions(IsAuthenticated):
                 )
             return False
 
-        except (Environment.DoesNotExist, Feature.DoesNotExist):
+        except (Environment.DoesNotExist, Feature.DoesNotExist, ValueError, TypeError):
             return False
 
     def has_object_permission(
@@ -166,7 +169,12 @@ class EnvironmentFeatureStatePermissions(IsAuthenticated):
             return True
 
         environment_api_key = view.kwargs.get("environment_api_key")
-        with suppress(Environment.DoesNotExist, Feature.DoesNotExist):
+        with suppress(
+            Environment.DoesNotExist,
+            Feature.DoesNotExist,
+            ValueError,
+            TypeError,
+        ):
             environment = Environment.objects.get(api_key=environment_api_key)
 
             tag_ids = None
