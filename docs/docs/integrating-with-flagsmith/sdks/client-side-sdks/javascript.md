@@ -217,6 +217,85 @@ flagsmith.init({
 });
 ```
 
+## Transient identities and traits
+
+Available in `@flagsmith/flagsmith` [v5.0.0](https://github.com/Flagsmith/flagsmith-js-client/releases/tag/5.0.0) and above.
+
+Transient identities and traits let you evaluate flags using identity context without persisting that identity or trait data in Flagsmith long term. This is useful for privacy-sensitive client-side targeting where you need segment-based evaluation but do not want to store user data in the platform.
+
+See also: [Transient Traits and Identities](/flagsmith-concepts/identities#transient-traits).
+
+### Example: Initialising the SDK with a transient identity
+
+Use a UUIDv4 session identifier with transient traits for anonymous or ephemeral evaluation:
+
+```javascript
+import flagsmith from '@flagsmith/flagsmith';
+
+flagsmith.init({
+ environmentID: '<YOUR_CLIENT_SIDE_ENVIRONMENT_KEY>',
+ identity: crypto.randomUUID(), // UUIDv4 session identifier
+ transient: true,
+ traits: {
+  locale: navigator.language,
+  country: 'GB',
+  onboarding_variant: 'B',
+ },
+ onChange: () => {
+  if (flagsmith.hasFeature('localized_banner')) {
+   showLocalizedBanner();
+  }
+ },
+});
+```
+
+### Per-trait transient
+
+You can mark individual traits as transient while keeping others persistent:
+
+```javascript
+flagsmith.init({
+ environmentID: '<YOUR_CLIENT_SIDE_ENVIRONMENT_KEY>',
+ identity: 'user-123',
+ traits: {
+  plan: 'pro', // persisted
+  locale: { value: navigator.language, transient: true }, // not persisted
+ },
+});
+```
+
+You can also set context after initialisation using `setContext`:
+
+```javascript
+flagsmith.setContext({
+ identifier: crypto.randomUUID(),
+ transient: true,
+ traits: {
+  locale: { value: navigator.language, transient: true },
+  country: { value: 'GB', transient: true },
+ },
+});
+```
+
+### When to use transient vs persistent identity
+
+| Use transient | Use persistent |
+| --- | --- |
+| Anonymous or pre-login users | Logged-in users with a stable identifier |
+| Locale, coarse geo, or device/UX context | Stable user attributes such as plan or role |
+| Privacy-sensitive data you do not want stored | Cross-session targeting and identity overrides |
+| Ephemeral session experiments | Long-lived trait history in the Flagsmith dashboard |
+
+### Evaluation Context schema
+
+The SDK maps identity information to the Flagsmith evaluation context:
+
+- `identity.identifier` — the user or session identifier
+- `identity.traits` — trait key/value pairs used for segment evaluation
+- `identity.transient` — whether the identity and traits are transient
+
+For the full schema, see [evaluation-context.json](https://github.com/Flagsmith/flagsmith/blob/main/sdk/evaluation-context.json). For the JavaScript SDK type definitions, see [evaluation-context.ts](https://github.com/Flagsmith/flagsmith-js-client/blob/main/evaluation-context.ts).
+
 ## API Reference
 
 All function and property types can be seen
@@ -241,7 +320,8 @@ All function and property types can be seen
 | `api?: string`                                                                              |                                                                         Use this property to define where you're getting feature flags from, e.g. if you're self hosting.                                                                         |          |                https://edge.api.flagsmith.com/api/v1/ |
 | `eventSourceUrl?: string`                                                                   |                                                       Use this property to define where you're getting real-time flag update events (server sent events) from, e.g. if you're self hosting.                                                       |          |                https://edge.api.flagsmith.com/api/v1/ |
 | `identity?: string`                                                                         |                                                                                Specifying an identity will fetch flags for that identity in the initial API call.                                                                                 |  **YES** |                                                  null |
-| `traits?:Record<string, string or number or boolean>`                                       |                                                                                 Specifying traits will send the traits for that identity in the initial API call.                                                                                 |  **YES** |                                                  null |
+| `traits?:Record<string, string or number or boolean or \{ value: string or number or boolean, transient?: boolean \}>` | Specifying traits will send the traits for that identity in the initial API call. Individual traits can be marked as transient using the object form. |  **YES** |                                                  null |
+| `transient?: boolean`                                                                       |                                                                 Marks the identity and traits as transient for evaluation. Transient data is not persisted long term in Flagsmith.                                                                  |          |                                                 false |
 
 ### Available Functions
 
@@ -262,6 +342,7 @@ All function and property types can be seen
 | <code>getFlags()=> Promise&lt;IFlags&gt;</code>                                                                                                     |                                                         Trigger a manual fetch of the environment features, if a user is identified it will fetch their features. Resolves a promise when the flags are updated.                                                          |
 | <code>getAllFlags()=> &lt;IFlags&gt;</code>                                                                                                         |                                                                                                                        Returns the current flags.                                                                                                                         |
 | <code>identify(userId:string, traits?:Record\<string, string or number or boolean\>)=> Promise&lt;IFlags&gt;</code>                                 | Identify as a user, optionally with traits e.g. `{foo:"bar",numericProp:1,boolProp:true}`. This will create a user for your environment in the dashboard if they don't exist, it will also trigger a call to `getFlags()`, resolves a promise when the flags are updated. |
+| <code>setContext(context: EvaluationContext)=> Promise&lt;IFlags&gt;</code>                                                                          |                                                                 Set identity context (identifier, traits, transient). Available from v5.0.0. Partial context merges with existing context.                                                                  |
 | <code>logout()=>Promise&lt;IFlags&gt;</code>                                                                                                        |                                                                                                   Stop identifying as a user, this will trigger a call to `getFlags()`                                                                                                    |
 
 ## Multiple SDK Instances
