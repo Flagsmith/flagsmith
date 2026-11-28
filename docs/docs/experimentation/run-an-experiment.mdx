@@ -206,8 +206,9 @@ flagsmith = Flagsmith(
 )
 ```
 
-Events still buffered when the interpreter exits are dropped. In short-lived scripts and jobs, pass `max_buffer_items=1`
-to `EventProcessorConfig` so each event is sent as it is tracked.
+Events still buffered when the interpreter exits are dropped. In short-lived scripts and jobs, use the default buffer
+and call `flush_events()` then `close()` before the script exits. Don't set `max_buffer_items=1`, because events tracked
+back to back can be dropped.
 
 </TabItem>
 <TabItem value="java" label="Java">
