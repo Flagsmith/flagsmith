@@ -114,7 +114,7 @@ jobs:
     environment: ${{ inputs.environment }}
     concurrency:
       group: e2e-tests-${{ inputs.environment }}
-      cancel-in-progress: true
+      cancel-in-progress: false
 
     steps:
       - name: Cloning repo
