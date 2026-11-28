@@ -209,3 +209,19 @@ def test_create_project__edge_enabled__sets_edge_v2_migration_complete(
 
     # Then
     assert project.edge_v2_migration_status == EdgeV2MigrationStatus.COMPLETE
+
+
+def test_live_segment_count__hidden_and_old_segments__counts_visible_segments_only(
+    project: Project,
+    segment: Segment,
+    feature_specific_segment: Segment,
+) -> None:
+    # Given
+    segment.clone(is_revision=True)
+    Segment.objects.create(name="system", project=project, is_system_segment=True)
+
+    # When
+    result = project.live_segment_count()
+
+    # Then
+    assert result == 1
