@@ -132,6 +132,8 @@ def generate_audit_log_records(
             change_details["change_type"]
         )
         log = f"Feature override {action} for feature '{feature_name}' and identity '{identifier}'"
+        old = change_details.get("old", {})
+        new = change_details.get("new", {})
         audit_records.append(
             AuditLog(
                 project=environment.project,
@@ -142,6 +144,19 @@ def generate_audit_log_records(
                 related_object_uuid=identity_uuid,
                 master_api_key_id=master_api_key_id,
                 created_date=timezone.now(),
+                change_data={
+                    "change_type": change_details["change_type"],
+                    "change_details": [
+                        {
+                            "field": field,
+                            "old": old.get(field),
+                            "new": new.get(field),
+                        }
+                        for field in ("enabled", "feature_state_value")
+                        if (type(old.get(field)), old.get(field))
+                        != (type(new.get(field)), new.get(field))
+                    ],
+                },
             )
         )
 

@@ -206,21 +206,24 @@ class EdgeIdentity:
                     environment=environment,
                     old=previous_fs,
                 )
-            elif current_matching_fs.enabled != previous_fs.enabled or (
-                get_edge_identity_override_value(
+            else:
+                current_value = get_edge_identity_override_value(
                     self, current_matching_fs, environment=environment
                 )
-                != get_edge_identity_override_value(
+                previous_value = get_edge_identity_override_value(
                     self, previous_fs, environment=environment
                 )
-            ):
-                feature_changes[previous_fs.feature.name] = generate_change_dict(
-                    change_type="~",
-                    edge_identity=self,
-                    environment=environment,
-                    new=current_matching_fs,
-                    old=previous_fs,
-                )
+                if current_matching_fs.enabled != previous_fs.enabled or (
+                    (type(current_value), current_value)
+                    != (type(previous_value), previous_value)
+                ):
+                    feature_changes[previous_fs.feature.name] = generate_change_dict(
+                        change_type="~",
+                        edge_identity=self,
+                        environment=environment,
+                        new=current_matching_fs,
+                        old=previous_fs,
+                    )
 
         for uuid_, previous_fs in current_feature_overrides.items():
             if uuid_ not in previous_feature_overrides:

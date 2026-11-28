@@ -3,6 +3,7 @@ from functools import cached_property
 from importlib import import_module
 
 from django.contrib.postgres.indexes import GinIndex, OpClass
+from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
 from django.db.models import Model, Q
 from django.db.models.functions import Upper
@@ -74,6 +75,7 @@ class AuditLog(LifecycleModel):  # type: ignore[misc]
 
     history_record_id = models.IntegerField(blank=True, null=True)  # type: ignore[var-annotated]
     history_record_class_path = models.CharField(max_length=200, blank=True, null=True)  # type: ignore[var-annotated]
+    change_data = models.JSONField(blank=True, null=True, encoder=DjangoJSONEncoder)
 
     class Meta:
         verbose_name_plural = "Audit Logs"
