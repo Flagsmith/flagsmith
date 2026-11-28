@@ -1,6 +1,7 @@
 // Shared Express routes used by both RspackDevServer (dev) and api/index.js (prod)
 require('dotenv').config()
 const bodyParser = require('body-parser')
+const { healthCheck } = require('./health')
 
 module.exports = function setupRoutes(app) {
   app.get('/config/project-overrides', (req, res) => {
@@ -76,9 +77,5 @@ module.exports = function setupRoutes(app) {
 
   app.use(bodyParser.json())
 
-  app.get('/health', (req, res) => {
-    // eslint-disable-next-line
-    console.log('Healthcheck complete')
-    res.send('OK')
-  })
+  app.get('/health', healthCheck)
 }
