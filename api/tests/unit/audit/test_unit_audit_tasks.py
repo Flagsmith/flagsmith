@@ -263,6 +263,44 @@ def test_create_audit_log_from_historical_record__cascade_deleted_feature_segmen
     assert get_update_log_message.spy_return is None
 
 
+def test_create_audit_log_from_historical_record__segment_override_deleted_before_create_task__does_nothing(
+    admin_user: FFAdminUser,
+    feature: Feature,
+    segment: Segment,
+    environment: Environment,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    feature_segment = FeatureSegment.objects.create(
+        environment=environment,
+        feature=feature,
+        segment=segment,
+    )
+    feature_state = FeatureState.objects.create(
+        environment=environment,
+        feature=feature,
+        feature_segment=feature_segment,
+        enabled=True,  # differs from the environment default, so a message is due
+    )
+    history_instance = feature_state.history.filter(history_type="+").first()
+    assert history_instance is not None
+    feature_segment.delete()  # cascade-deletes the FeatureState before the task runs
+    get_create_log_message = mocker.spy(FeatureState, "get_create_log_message")
+    audit_log_count = AuditLog.objects.count()
+
+    # When
+    create_audit_log_from_historical_record(
+        history_instance.history_id,
+        admin_user.id,
+        feature_state.history_record_class_path,
+    )
+
+    # Then
+    assert get_create_log_message.call_count == 1
+    assert get_create_log_message.spy_return is None
+    assert AuditLog.objects.count() == audit_log_count
+
+
 def test_create_segment_priorities_changed_audit_log__priorities_changed__creates_audit_log(
     admin_user: FFAdminUser,
     feature_segment: FeatureSegment,
