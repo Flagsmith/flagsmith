@@ -1,3 +1,4 @@
+import errno
 import hashlib
 import hmac
 import json
@@ -605,6 +606,43 @@ def test_send_test_webhook__request_exception__returns_error_response(
     assert response.json() == {
         "detail": "Could not connect to webhook URL",
         "body": "Please check the URL, and ensure it is valid and accessible from the server.",
+    }
+
+
+def test_send_test_webhook__connection_refused__returns_error_code_without_details(
+    mocker: MockerFixture,
+    admin_client: APIClient,
+    organisation: Organisation,
+) -> None:
+    # Given
+    mocker.patch(
+        "core.network.socket.getaddrinfo",
+        return_value=[(socket.AF_INET, None, None, None, ("93.184.216.34", 0))],
+    )
+    refused = ConnectionRefusedError(
+        errno.ECONNREFUSED, "Connection refused by 10.1.2.3:7000"
+    )
+    error = ConnectionError("HTTPSConnectionPool(host='example.com', port=7000)")
+    error.__cause__ = refused
+    mocker.patch("webhooks.webhooks.requests.post", side_effect=error)
+
+    url = reverse("api-v1:webhooks:webhooks-test")
+    data = {
+        "webhook_url": "https://example.com:7000/hook",
+        "scope": {"type": "organisation", "id": organisation.id},
+    }
+
+    # When
+    response = admin_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json() == {
+        "detail": "Could not connect to webhook URL",
+        "body": "Please check the URL, and ensure it is valid and accessible from the server.",
+        "code": "ECONNREFUSED",
     }
 
 
