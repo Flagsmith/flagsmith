@@ -6,7 +6,7 @@ import ErrorMessage from 'components/ErrorMessage'
 import TestWebhook from 'components/TestWebhook'
 import ViewDocs from 'components/ViewDocs'
 import Button from 'components/base/forms/Button'
-import AccountStore from 'common/stores/account-store'
+import { useCurrentOrganisation } from 'common/hooks/useCurrentOrganisation'
 import Utils from 'common/utils/utils'
 import Input from 'components/base/forms/Input'
 import Switch from 'components/Switch'
@@ -25,6 +25,7 @@ const CreateAuditLogWebhook: React.FC<Props> = ({
   organisationId,
   webhook,
 }) => {
+  const organisation = useCurrentOrganisation()
   const [create, { error: createError, isLoading: isCreating }] =
     useCreateAuditLogWebhooksMutation({})
   const [update, { error: updateError, isLoading: isUpdating }] =
@@ -133,8 +134,7 @@ const CreateAuditLogWebhook: React.FC<Props> = ({
             <div className='mb-3'>
               <p className='text-default fw-bold'>
                 This will {isEdit ? 'update' : 'create'} a webhook for the
-                Organisation{' '}
-                <strong>{AccountStore.getOrganisation().name}</strong>
+                Organisation <strong>{organisation?.name}</strong>
               </p>
             </div>
             <div className='justify-content-end flex-row gap-3'>

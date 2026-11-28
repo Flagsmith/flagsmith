@@ -1,3 +1,4 @@
+import { skipToken } from '@reduxjs/toolkit/query'
 import React, { useState, useEffect, useRef, FC } from 'react'
 import IconButton from 'components/base/IconButton'
 import Button from 'components/base/forms/Button'
@@ -12,7 +13,7 @@ import Utils from 'common/utils/utils'
 import every from 'lodash/every'
 import map from 'lodash/map'
 import ErrorMessage from 'components/ErrorMessage'
-import AccountStore from 'common/stores/account-store'
+import { useCurrentOrganisation } from 'common/hooks/useCurrentOrganisation'
 import { close as closeIcon } from 'ionicons/icons'
 import { MultiValueProps } from 'react-select'
 import { useGetGroupsQuery } from 'common/services/useGroup'
@@ -62,9 +63,11 @@ const InviteUsers: FC = () => {
   ])
   const inputRef = useRef<HTMLInputElement>(null)
 
-  const { id: orgId } = AccountStore.getOrganisation()
+  const orgId = useCurrentOrganisation()?.id
 
-  const { data: groupData } = useGetGroupsQuery({ orgId: orgId, page: 1 })
+  const { data: groupData } = useGetGroupsQuery(
+    orgId ? { orgId, page: 1 } : skipToken,
+  )
 
   const groupOptions = groupData?.results.map((group) => ({
     label: group.name,
@@ -131,6 +134,7 @@ const InviteUsers: FC = () => {
           <form
             onSubmit={(e) => {
               e.preventDefault()
+              if (!orgId) return
               createUserInvite(getPayload(invites, orgId))
                 .then(() => {
                   toast('Invite sent successfully')

@@ -9,7 +9,6 @@ import {
   useGetAuditLogWebhooksQuery,
 } from 'common/services/useAuditLogWebhook'
 import CreateAuditWebhookModal from './CreateAuditLogWebhook'
-import AccountStore from 'common/stores/account-store'
 import ConfirmRemoveAuditWebhook from './ConfirmRemoveAuditWebhook'
 import { getStore } from 'common/store'
 import { Webhook } from 'common/types/responses'
@@ -31,9 +30,7 @@ const AuditLogWebhooks: FC<AuditLogWebhooksType> = ({ organisationId }) => {
   const createWebhook = () => {
     openModal(
       'New Webhook',
-      <CreateAuditWebhookModal
-        organisationId={AccountStore.getOrganisation().id}
-      />,
+      <CreateAuditWebhookModal organisationId={organisationId} />,
       'side-modal',
     )
   }
@@ -43,7 +40,7 @@ const AuditLogWebhooks: FC<AuditLogWebhooksType> = ({ organisationId }) => {
       'Edit Webhook',
       <CreateAuditWebhookModal
         webhook={webhook}
-        organisationId={AccountStore.getOrganisation().id}
+        organisationId={organisationId}
       />,
       'side-modal',
     )
@@ -57,7 +54,7 @@ const AuditLogWebhooks: FC<AuditLogWebhooksType> = ({ organisationId }) => {
         cb={() =>
           deleteAuditLogWebhook(getStore(), {
             id: webhook.id,
-            organisationId: AccountStore.getOrganisation().id,
+            organisationId: parseInt(organisationId),
           })
         }
       />,

@@ -1,6 +1,7 @@
 import { FC, ReactNode, useEffect, useState } from 'react'
 import OrganisationStore from 'common/stores/organisation-store'
 import AccountStore from 'common/stores/account-store'
+import { useCurrentOrganisation } from 'common/hooks/useCurrentOrganisation'
 import AppActions from 'common/dispatcher/app-actions'
 import {
   Invite,
@@ -39,6 +40,7 @@ const OrganisationProvider: FC<OrganisationProviderType> = ({
   onRemoveProject,
   onSave,
 }) => {
+  const organisation = useCurrentOrganisation()
   const [_, setUpdate] = useState(Date.now())
   const { data: groups } = useGetGroupsQuery(
     { orgId: id!, page: 1 },
@@ -84,7 +86,7 @@ const OrganisationProvider: FC<OrganisationProviderType> = ({
         invites: OrganisationStore.getInvites(),
         isLoading: OrganisationStore.isLoading,
         isSaving: OrganisationStore.isSaving,
-        name: AccountStore.getOrganisation()?.name || '',
+        name: organisation?.name || '',
         project: OrganisationStore.getProject(id),
         projects: OrganisationStore.getProjects(),
         subscriptionMeta: OrganisationStore.getSubscriptionMeta(),

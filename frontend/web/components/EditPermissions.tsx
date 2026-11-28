@@ -13,7 +13,8 @@ import {
   UserGroupSummary,
   UserPermission,
 } from 'common/types/responses'
-import AccountStore from 'common/stores/account-store'
+import { useCurrentUser } from 'common/hooks/useCurrentUser'
+import { useCurrentOrganisation } from 'common/hooks/useCurrentOrganisation'
 import Format from 'common/utils/format'
 import PanelSearch from './PanelSearch'
 import Button from './base/forms/Button'
@@ -991,6 +992,8 @@ export const EditPermissionsModal = ConfigProvider(
 
 const rolesWidths = [250, 600, 100]
 const EditPermissions: FC<EditPermissionsType> = (props) => {
+  const currentUser = useCurrentUser()
+  const organisation = useCurrentOrganisation()
   const {
     envId,
     id,
@@ -1162,8 +1165,7 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
                                       <span>
                                         {`${first_name} ${last_name}`}{' '}
                                         {String(id) ===
-                                          String(AccountStore.getUserId()) &&
-                                          '(You)'}
+                                          String(currentUser?.id) && '(You)'}
                                       </span>
                                       <InactiveMembershipChip user={user} />
                                     </div>
@@ -1243,7 +1245,7 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
             <div className={tabClassName}>
               <UserGroupList
                 noTitle
-                orgId={AccountStore.getOrganisation().id}
+                orgId={`${organisation?.id ?? ''}`}
                 projectId={level === 'project' ? id : undefined}
                 onClick={(group: UserGroup) => editGroupPermissions(group)}
               />

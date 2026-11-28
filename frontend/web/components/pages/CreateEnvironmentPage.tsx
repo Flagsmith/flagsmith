@@ -12,7 +12,8 @@ import { getStore } from 'common/store'
 import ProjectProvider, {
   CreateEnvType,
 } from 'common/providers/ProjectProvider'
-import AccountStore from 'common/stores/account-store'
+import { useCurrentUser } from 'common/hooks/useCurrentUser'
+import { useCurrentOrganisation } from 'common/hooks/useCurrentOrganisation'
 import Utils from 'common/utils/utils'
 import { useHistory } from 'react-router-dom'
 import API from 'project/api'
@@ -57,10 +58,11 @@ const CreateEnvironmentPage: React.FC = () => {
   adminRoleIdsRef.current = adminRoleIds
   projectIdRef.current = projectId
 
-  const organisationId = AccountStore.getOrganisation()?.id as
-    | number
-    | undefined
-  const currentUserId = AccountStore.getUser()?.id as number | undefined
+  const organisation = useCurrentOrganisation()
+  const organisationId = organisation?.id
+  const organisationIdRef = useRef<number | undefined>(organisationId)
+  organisationIdRef.current = organisationId
+  const currentUserId = useCurrentUser()?.id
   const hasRbac = Utils.getPlansPermission('RBAC')
   const { data: users } = useGetUsersQuery(
     { organisationId: organisationId! },
@@ -96,7 +98,7 @@ const CreateEnvironmentPage: React.FC = () => {
   const assignEnvironmentAdmins = async (environment: Environment) => {
     const userIds = adminIdsRef.current
     const roleIds = adminRoleIdsRef.current
-    const orgId = AccountStore.getOrganisation()?.id
+    const orgId = organisationIdRef.current
     const userRequests = userIds.map((userId) =>
       createUserPermission({
         body: { admin: true, permissions: [], user: userId },
@@ -138,19 +140,6 @@ const CreateEnvironmentPage: React.FC = () => {
   useEffect(() => {
     API.trackPage(Constants.pages.CREATE_ENVIRONMENT)
 
-    if (Utils.getPlansPermission('METADATA')) {
-      getSupportedContentType(getStore(), {
-        organisation_id: AccountStore.getOrganisation().id,
-      }).then((res) => {
-        const contentType = Utils.getContentType(
-          res.data,
-          'model',
-          'environment',
-        )
-        setEnvContentType(contentType)
-      })
-    }
-
     const focusTimeout = setTimeout(() => {
       if (!E2E) {
         inputRef.current?.focus()
@@ -159,6 +148,16 @@ const CreateEnvironmentPage: React.FC = () => {
 
     return () => clearTimeout(focusTimeout)
   }, [])
+
+  useEffect(() => {
+    if (!organisationId || !Utils.getPlansPermission('METADATA')) return
+    getSupportedContentType(getStore(), {
+      organisation_id: organisationId,
+    }).then((res) => {
+      const contentType = Utils.getContentType(res.data, 'model', 'environment')
+      setEnvContentType(contentType)
+    })
+  }, [organisationId])
 
   const handleCreateEnv =
     (createEnv: CreateEnvType, busy: boolean) => (e: React.FormEvent) => {
@@ -411,7 +410,8 @@ const CreateEnvironmentPage: React.FC = () => {
                       )}
                     </div>
                     {Utils.getPlansPermission('METADATA') &&
-                      envContentType?.id && (
+                      envContentType?.id &&
+                      organisation && (
                         <CondensedRow>
                           <FormGroup className='mt-2 setting'>
                             <div className='form-group'>
@@ -422,9 +422,7 @@ const CreateEnvironmentPage: React.FC = () => {
                                 Custom fields
                               </FieldLabel>
                               <AddMetadataToEntity
-                                organisationId={
-                                  AccountStore.getOrganisation().id
-                                }
+                                organisationId={organisation.id}
                                 projectId={projectId}
                                 entityId={selectedEnv?.api_key}
                                 envName={name}

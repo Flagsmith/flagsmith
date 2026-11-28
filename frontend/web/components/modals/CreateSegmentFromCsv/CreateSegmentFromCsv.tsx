@@ -1,3 +1,4 @@
+import { skipToken } from '@reduxjs/toolkit/query'
 import React, { FC, FormEvent, useMemo, useState } from 'react'
 import Constants from 'common/constants'
 import Format from 'common/utils/format'
@@ -16,7 +17,7 @@ import {
   useSyncCohortCsvMutation,
 } from 'common/services/useCohort'
 import { Metadata } from 'common/types/responses'
-import AccountStore from 'common/stores/account-store'
+import { useCurrentOrganisation } from 'common/hooks/useCurrentOrganisation'
 import { colorIconSuccess } from 'common/theme/tokens'
 import Button from 'components/base/forms/Button'
 import Checkbox from 'components/base/forms/Checkbox'
@@ -38,6 +39,7 @@ type CreateSegmentFromCsvType = {
 }
 
 const CreateSegmentFromCsv: FC<CreateSegmentFromCsvType> = ({ projectId }) => {
+  const organisation = useCurrentOrganisation()
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [environmentId, setEnvironmentId] = useState('')
@@ -56,9 +58,9 @@ const CreateSegmentFromCsv: FC<CreateSegmentFromCsvType> = ({ projectId }) => {
   const isSaving = isCreating || isSyncing
 
   const metadataEnable = Utils.getPlansPermission('METADATA')
-  const { data: supportedContentTypes } = useGetSupportedContentTypeQuery({
-    organisation_id: AccountStore.getOrganisation().id,
-  })
+  const { data: supportedContentTypes } = useGetSupportedContentTypeQuery(
+    organisation ? { organisation_id: organisation.id } : skipToken,
+  )
   const segmentContentType = useMemo(
     () =>
       supportedContentTypes &&
@@ -337,17 +339,19 @@ const CreateSegmentFromCsv: FC<CreateSegmentFromCsvType> = ({ projectId }) => {
       </TabItem>
       <TabItem tabLabelString='Custom Fields' tabLabel='Custom Fields'>
         <FormGroup className='pt-4 setting'>
-          <InputGroup
-            component={
-              <AddMetadataToEntity
-                organisationId={AccountStore.getOrganisation().id}
-                projectId={Number(projectId)}
-                entityContentType={segmentContentType.id}
-                entity={segmentContentType.model}
-                onChange={(m) => setMetadata(m as Metadata[])}
-              />
-            }
-          />
+          {organisation && (
+            <InputGroup
+              component={
+                <AddMetadataToEntity
+                  organisationId={organisation.id}
+                  projectId={Number(projectId)}
+                  entityContentType={segmentContentType.id}
+                  entity={segmentContentType.model}
+                  onChange={(m) => setMetadata(m as Metadata[])}
+                />
+              }
+            />
+          )}
         </FormGroup>
       </TabItem>
     </Tabs>

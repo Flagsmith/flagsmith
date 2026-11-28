@@ -8,6 +8,8 @@ import Cookies from 'js-cookie'
 import Project from 'common/project'
 import { AccountModel, User } from 'common/types/responses'
 import AccountStore from 'common/stores/account-store'
+import { getCurrentUser } from 'common/hooks/useCurrentUser'
+import { getCurrentOrganisation } from 'common/hooks/useCurrentOrganisation'
 import flagsmith from '@flagsmith/flagsmith'
 import Utils from 'common/utils/utils'
 import { identifyChatUser } from 'common/loadChat'
@@ -126,7 +128,7 @@ const API = {
     const user = AccountStore.model as unknown as AccountModel
     if (!user) return
 
-    const currentOrganisation = AccountStore.getOrganisation()
+    const currentOrganisation = getCurrentOrganisation()
 
     return flagsmith
       .identify(`${user.id}`, {
@@ -240,9 +242,9 @@ const API = {
   },
 
   postEvent(event: string, tag?: string): Promise<any> | void {
-    const currentUser = AccountStore.getUser()
+    const currentUser = getCurrentUser()
     if (!currentUser) return
-    const organisation = AccountStore.getOrganisation()
+    const organisation = getCurrentOrganisation()
     const name = organisation?.name ? ` - ${organisation.name}` : ''
     return data.post('/api/event', {
       event: `${event}(${currentUser.email} ${currentUser.first_name} ${currentUser.last_name})${name}`,

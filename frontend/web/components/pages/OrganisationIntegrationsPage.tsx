@@ -3,7 +3,7 @@ import IntegrationList from 'components/IntegrationList'
 import Constants from 'common/constants'
 import PageTitle from 'components/PageTitle'
 import Utils from 'common/utils/utils'
-import AccountStore from 'common/stores/account-store'
+import { useIsOrganisationAdmin } from 'common/hooks/useCurrentOrganisation'
 import { OrganisationPermission } from 'common/types/permissions.types'
 import { useHasPermission } from 'common/providers/Permission'
 import API from 'project/api'
@@ -26,12 +26,13 @@ const OrganisationIntegrationsPage = ({ match }) => {
     (key) => !integrationData[key]?.organisation,
   )
   const organisationId = Utils.getOrganisationIdFromUrl(match)
+  const isAdmin = useIsOrganisationAdmin()
   const { permission: isOrgAdmin } = useHasPermission({
     id: organisationId,
     level: 'organisation',
     permission: OrganisationPermission.ADMIN,
   })
-  if (!AccountStore.isAdmin()) {
+  if (!isAdmin) {
     return (
       <div
         dangerouslySetInnerHTML={{

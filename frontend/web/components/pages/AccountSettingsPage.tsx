@@ -17,6 +17,7 @@ import PageTitle from 'components/PageTitle'
 import InfoMessage from 'components/InfoMessage'
 import Setting from 'components/Setting'
 import AccountStore from 'common/stores/account-store'
+import { useCurrentUser } from 'common/hooks/useCurrentUser'
 import DarkModeSwitch from 'components/DarkModeSwitch'
 import SettingTitle from 'components/SettingTitle'
 import InputGroup from 'components/base/forms/InputGroup'
@@ -25,23 +26,18 @@ import AppActions from 'common/dispatcher/app-actions'
 import Project from 'common/project'
 import { PASSWORD_CHANGED_SESSION_KEY } from 'common/constants'
 import flagsmith from '@flagsmith/flagsmith'
-import { Account, AuthType } from 'common/types/responses'
+import { AuthType } from 'common/types/responses'
 
 const AccountSettingsPage: FC = () => {
-  const [firstName, setFirstName] = useState<string>(
-    AccountStore.getUser()?.first_name || '',
-  )
-  const [lastName, setLastName] = useState<string>(
-    AccountStore.getUser()?.last_name || '',
-  )
-  const [email, setEmail] = useState<string>(
-    AccountStore.getUser()?.email || '',
-  )
+  const user = useCurrentUser()
+  const [firstName, setFirstName] = useState<string>(user?.first_name || '')
+  const [lastName, setLastName] = useState<string>(user?.last_name || '')
+  const [email, setEmail] = useState<string>(user?.email || '')
   const [authType, setAuthType] = useState<AuthType | undefined>(
-    AccountStore.getUser()?.auth_type,
+    user?.auth_type,
   )
   const [organisations, setOrganisations] = useState<any[]>(
-    AccountStore.getUser()?.organisations || [],
+    user?.organisations || [],
   )
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -51,31 +47,29 @@ const AccountSettingsPage: FC = () => {
   const [newPassword2, setNewPassword2] = useState('')
 
   useEffect(() => {
-    const handleChange = () => {
-      const user = AccountStore.getUser()
-      if (user) {
-        setFirstName(user.first_name || '')
-        setLastName(user.last_name || '')
-        setEmail(user.email || '')
-        setAuthType(user.auth_type)
-        setOrganisations(user.organisations || [])
-      }
-    }
-    AccountStore.on('change', handleChange)
-    return () => {
-      AccountStore.off('change', handleChange)
-    }
-  }, [])
+    if (!user) return
+    setFirstName(user.first_name || '')
+    setLastName(user.last_name || '')
+    setEmail(user.email || '')
+    setAuthType(user.auth_type)
+    setOrganisations(user.organisations || [])
+  }, [
+    user,
+    user?.first_name,
+    user?.last_name,
+    user?.email,
+    user?.auth_type,
+    user?.organisations,
+  ])
 
   const save = (e: React.FormEvent<HTMLFormElement>) => {
     Utils.preventDefault(e)
-    if (isSaving || !firstName || !lastName) {
+    if (isSaving || !firstName || !lastName || !user) {
       return
     }
     setIsSaving(true)
-    const account = AccountStore.getUser() as Account
     updateAccount(getStore(), {
-      ...account,
+      ...user,
       email,
       first_name: firstName,
       last_name: lastName,
@@ -186,7 +180,6 @@ const AccountSettingsPage: FC = () => {
   }
 
   const forced2Factor = AccountStore.forced2Factor()
-  const account = AccountStore.getUser() as Account
   const lastUserOrganisations =
     organisations.length >= 1
       ? organisations?.filter((o: any) => o?.num_seats == 1)
@@ -223,13 +216,9 @@ const AccountSettingsPage: FC = () => {
         <TabItem tabLabel='General'>
           <div className='mt-4 col-md-8'>
             <SettingTitle>Account Information</SettingTitle>
-            <JSONReference
-              showNamesButton
-              title={'User'}
-              json={AccountStore.getUser()}
-            />
+            <JSONReference showNamesButton title={'User'} json={user} />
             <form className='mb-0' onSubmit={save}>
-              {!['LDAP', 'SAML'].includes(account?.auth_type) && (
+              {!['LDAP', 'SAML'].includes(user?.auth_type ?? '') && (
                 <div>
                   <InputGroup
                     className='mt-2'
@@ -378,7 +367,7 @@ const AccountSettingsPage: FC = () => {
         </TabItem>
         <TabItem tabLabel='Security'>
           <div className='mt-4'>
-            {account?.auth_type === 'EMAIL' && (
+            {user?.auth_type === 'EMAIL' && (
               <div className='col-md-6'>
                 <h5 className='mb-5'>Change password</h5>
                 <form className='mb-0' onSubmit={savePassword}>

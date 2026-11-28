@@ -1,11 +1,11 @@
-import AccountStore from 'common/stores/account-store'
+import { skipToken } from '@reduxjs/toolkit/query'
+import { useCurrentOrganisation } from './useCurrentOrganisation'
 import { useGetGithubIntegrationQuery } from 'common/services/useGithubIntegration'
 
 export function useHasGithubIntegration() {
-  const organisationId = AccountStore.getOrganisation()?.id
-  const { data } = useGetGithubIntegrationQuery(
-    { organisation_id: organisationId },
-    { skip: !organisationId },
+  const organisationId = useCurrentOrganisation()?.id
+  const { currentData: data } = useGetGithubIntegrationQuery(
+    organisationId ? { organisation_id: organisationId } : skipToken,
   )
 
   return {

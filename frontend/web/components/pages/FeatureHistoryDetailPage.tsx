@@ -1,3 +1,4 @@
+import { skipToken } from '@reduxjs/toolkit/query'
 import React, { FC } from 'react'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import { useRouteMatch } from 'react-router-dom'
@@ -7,7 +8,7 @@ import {
   useGetFeatureVersionsQuery,
 } from 'common/services/useFeatureVersion'
 import { useGetUsersQuery } from 'common/services/useUser'
-import AccountStore from 'common/stores/account-store'
+import { useCurrentOrganisation } from 'common/hooks/useCurrentOrganisation'
 import { Environment } from 'common/types/responses'
 import PageTitle from 'components/PageTitle'
 import FeatureVersion from 'components/FeatureVersion'
@@ -26,6 +27,7 @@ interface RouteParams {
 }
 
 const FeatureHistoryPage: FC = () => {
+  const organisation = useCurrentOrganisation()
   const match = useRouteMatch<RouteParams>()
   const { projectId } = useRouteContext()
 
@@ -35,9 +37,9 @@ const FeatureHistoryPage: FC = () => {
   // @ts-ignore
   const environmentId = `${env?.id}`
   const uuid = match.params.id
-  const { data: users } = useGetUsersQuery({
-    organisationId: AccountStore.getOrganisation().id,
-  })
+  const { data: users } = useGetUsersQuery(
+    organisation ? { organisationId: organisation.id } : skipToken,
+  )
   const { data, error, isLoading } = useGetFeatureVersionQuery({
     uuid,
   })

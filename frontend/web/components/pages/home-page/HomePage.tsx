@@ -33,6 +33,7 @@ import GoogleButton from 'components/GoogleButton'
 import SamlForm from 'components/SamlForm'
 import AccountProvider from 'common/providers/AccountProvider'
 import AccountStore from 'common/stores/account-store'
+import { useCurrentUser } from 'common/hooks/useCurrentUser'
 import { LoginRequest, RegisterRequest } from 'common/types/requests'
 import { useGetBuildVersionQuery } from 'common/services/useBuildVersion'
 import { useUTMs } from 'common/useUTMs'
@@ -97,6 +98,7 @@ const RedirectWhenTaken: FC<{ taken: boolean; onTaken: () => void }> = ({
 }
 
 const HomePage: React.FC = () => {
+  const user = useCurrentUser()
   const history = useHistory()
   const location = useLocation()
   const [googleReady, setGoogleReady] = useState(false)
@@ -261,7 +263,7 @@ const HomePage: React.FC = () => {
   const preventEmailPassword = Project.preventEmailPassword
 
   const signupVariant = useSignupExperiment(
-    !isSignup || isInvite || !!preventEmailPassword || !!AccountStore.getUser(),
+    !isSignup || isInvite || !!preventEmailPassword || !!user,
     email,
   )
   const blockGenericEmailDomain =

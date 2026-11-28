@@ -2,9 +2,8 @@ import React, { FC, useEffect, useState } from 'react'
 import Loader from 'components/Loader'
 import Link from 'components/base/link'
 import { useScript } from 'common/hooks/useScript'
-import AccountStore from 'common/stores/account-store'
+import { getCurrentUser } from 'common/hooks/useCurrentUser'
 import Project from 'common/project'
-import { AccountModel } from 'common/types/responses'
 import {
   CONTACT_SALES_URL,
   HUBSPOT_FORMS_SCRIPT_URL,
@@ -34,7 +33,7 @@ const TARGET_ID = 'contact-sales-form'
 // Set values the way HubSpot documents: assign, then fire an input event so
 // the form registers them.
 const prefill = (form: HTMLFormElement) => {
-  const user = AccountStore.getUser() as AccountModel | undefined
+  const user = getCurrentUser()
   if (!user) return
   const values: Record<string, string | undefined> = {
     email: user.email,

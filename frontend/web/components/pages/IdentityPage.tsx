@@ -7,7 +7,7 @@ import { getStore } from 'common/store'
 import { getTags } from 'common/services/useTag'
 import { Identity, IdentityFeatureState } from 'common/types/responses'
 import API from 'project/api'
-import AccountStore from 'common/stores/account-store'
+import { useCurrentOrganisation } from 'common/hooks/useCurrentOrganisation'
 import AppActions from 'common/dispatcher/app-actions'
 import Button from 'components/base/forms/Button'
 import CodeHelp from 'components/CodeHelp'
@@ -46,6 +46,7 @@ interface RouteParams {
 }
 
 const IdentityPage: FC = () => {
+  const organisation = useCurrentOrganisation()
   const match = useRouteMatch<RouteParams>()
   const history = useHistory()
   const environmentId = match?.params?.environmentId
@@ -131,7 +132,7 @@ const IdentityPage: FC = () => {
     )
   }
 
-  const preventAddTrait = !AccountStore.getOrganisation().persist_trait_data
+  const preventAddTrait = !organisation?.persist_trait_data
   const showAliases = Utils.getIsEdge()
 
   return (
@@ -250,7 +251,7 @@ const IdentityPage: FC = () => {
                                 page,
                               }}
                               projectId={projectId}
-                              orgId={AccountStore.getOrganisation()?.id}
+                              orgId={organisation?.id}
                               isLoading={isLoadingFeatures}
                               onChange={(next) => {
                                 handleFilterChange({

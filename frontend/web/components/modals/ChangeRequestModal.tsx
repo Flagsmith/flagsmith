@@ -1,3 +1,4 @@
+import { skipToken } from '@reduxjs/toolkit/query'
 import React, { FC, useEffect, useMemo, useState } from 'react'
 import Icon from 'components/icons/Icon'
 import FieldLabel from 'components/base/forms/FieldLabel'
@@ -8,7 +9,8 @@ import MyGroupsSelect from 'components/MyGroupsSelect'
 import { useGetMyGroupsQuery } from 'common/services/useMyGroup'
 import DateSelect, { DateSelectProps } from 'components/DateSelect'
 import InfoMessage from 'components/InfoMessage'
-import AccountStore from 'common/stores/account-store'
+import { useCurrentUser } from 'common/hooks/useCurrentUser'
+import { useCurrentOrganisation } from 'common/hooks/useCurrentOrganisation'
 import InputGroup from 'components/base/forms/InputGroup'
 import moment from 'moment'
 import Utils from 'common/utils/utils'
@@ -50,6 +52,8 @@ const ChangeRequestModal: FC<ChangeRequestModalProps> = ({
   showAssignees,
   showIgnoreConflicts,
 }) => {
+  const user = useCurrentUser()
+  const organisation = useCurrentOrganisation()
   const [approvals, setApprovals] = useState<Approval[]>([
     ...(changeRequest?.approvals ?? []),
     ...(changeRequest?.group_assignments ?? []),
@@ -68,9 +72,9 @@ const ChangeRequestModal: FC<ChangeRequestModalProps> = ({
   const [ignoreConflicts, setIgnoreConflicts] = useState(false)
   const [hasChanges, setHasChanges] = useState(true)
 
-  const { data: groups } = useGetMyGroupsQuery({
-    orgId: AccountStore.getOrganisation().id,
-  })
+  const { data: groups } = useGetMyGroupsQuery(
+    organisation ? { orgId: organisation.id } : skipToken,
+  )
 
   useEffect(() => {
     const currLiveFromDate =
@@ -277,9 +281,7 @@ const ChangeRequestModal: FC<ChangeRequestModalProps> = ({
             {!changeRequest &&
               !Utils.getFlagsmithHasFeature('disable_users_as_reviewers') && (
                 <UserSelect
-                  users={users.filter(
-                    (v) => v.id !== AccountStore.getUser().id,
-                  )}
+                  users={users.filter((v) => v.id !== user?.id)}
                   value={approvals.map((v) => v.user)}
                   onAdd={addOwner}
                   onRemove={removeOwner}
@@ -289,7 +291,7 @@ const ChangeRequestModal: FC<ChangeRequestModalProps> = ({
               )}
             {!changeRequest && (
               <MyGroupsSelect
-                orgId={AccountStore.getOrganisation().id}
+                orgId={organisation?.id}
                 value={approvals.map((v) => Number(v.group))}
                 onAdd={addOwner}
                 onRemove={removeOwner}

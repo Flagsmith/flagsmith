@@ -11,7 +11,7 @@ import ProjectProvider from 'common/providers/ProjectProvider'
 import OrganisationProvider from 'common/providers/OrganisationProvider'
 // @ts-ignore
 import { AsyncStorage } from 'polyfill-react-native'
-import AccountStore from 'common/stores/account-store'
+import { useCurrentOrganisation } from 'common/hooks/useCurrentOrganisation'
 import AppActions from 'common/dispatcher/app-actions'
 import EnvironmentSelect from 'components/EnvironmentSelect'
 import { components } from 'react-select'
@@ -101,6 +101,7 @@ const CustomSingleValue = ({ hasWarning, ...rest }: CustomSingleValueProps) => {
 }
 
 const EnvironmentAside: FC<HomeAsideType> = ({ environmentId, projectId }) => {
+  const organisation = useCurrentOrganisation()
   const history = useHistory()
   const { data: healthEvents } = useGetHealthEventsQuery(
     { projectId: projectId },
@@ -213,14 +214,19 @@ const EnvironmentAside: FC<HomeAsideType> = ({ environmentId, projectId }) => {
                               }}
                               onChange={(newEnvironmentId) => {
                                 if (newEnvironmentId !== environmentId) {
-                                  AsyncStorage.setItem(
-                                    'lastEnv',
-                                    JSON.stringify({
-                                      environmentId: newEnvironmentId,
-                                      orgId: AccountStore.getOrganisation().id,
-                                      projectId: projectId,
-                                    }),
-                                  ).finally(() => {
+                                  // App.js can't restore an environment saved
+                                  // without its organisation
+                                  const saved = organisation
+                                    ? AsyncStorage.setItem(
+                                        'lastEnv',
+                                        JSON.stringify({
+                                          environmentId: newEnvironmentId,
+                                          orgId: organisation.id,
+                                          projectId: projectId,
+                                        }),
+                                      )
+                                    : Promise.resolve()
+                                  saved.finally(() => {
                                     const pathname =
                                       document.location.pathname.replace(
                                         /\/experiments\/[^/]+\/?$/,

@@ -4,7 +4,7 @@ import ProjectStore from 'common/stores/project-store'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import { getStore } from 'common/store'
 import { getGithubIntegration } from 'common/services/useGithubIntegration'
-import AccountStore from 'common/stores/account-store'
+import { useCurrentOrganisation } from 'common/hooks/useCurrentOrganisation'
 import CreateEditIntegration from './modals/CreateEditIntegrationModal'
 import Project from 'common/project'
 import {
@@ -66,6 +66,7 @@ type IntegrationProps = {
 }
 
 const Integration: FC<IntegrationProps> = (props) => {
+  const organisation = useCurrentOrganisation()
   const history = useHistory()
   const [reFetchgithubId, setReFetchgithubId] = useState<string>('')
   const [windowInstallationId, setWindowInstallationId] = useState<string>('')
@@ -116,10 +117,11 @@ const Integration: FC<IntegrationProps> = (props) => {
         setWindowInstallationId(event.data.installationId)
         localStorage.removeItem('githubIntegrationSetupFromFlagsmith')
         childWindow?.close()
+        if (!organisation) return
         getGithubIntegration(
           getStore(),
           {
-            organisation_id: AccountStore.getOrganisation().id,
+            organisation_id: organisation.id,
           },
           { forceRefetch: true },
         ).then((res) => {
@@ -164,9 +166,7 @@ const Integration: FC<IntegrationProps> = (props) => {
     !isOrgPage && !!isOrganisationLevel && !!isProjectLevel
   // Project-only integration surfaced on the org page (read-only, informational)
   const isProjectOnlyOnOrgPage = isOrgPage && !isOrganisationLevel
-  const orgIntegrationsHref = `/organisation/${
-    AccountStore.getOrganisation()?.id
-  }/integrations`
+  const orgIntegrationsHref = `/organisation/${organisation?.id}/integrations`
   const isConnectedAtOrg = !!props.githubMeta.hasIntegrationWithGithub
   const hasActiveConfig = !!activeIntegrations?.length
   const isEditing = hasActiveConfig && !perEnvironment
@@ -371,6 +371,7 @@ interface IntegrationListProps {
   isOrgAdmin?: boolean
 }
 const IntegrationList: FC<IntegrationListProps> = (props) => {
+  const organisation = useCurrentOrganisation()
   const [githubId, setGithubId] = useState<number>(0)
   const [hasIntegrationWithGithub, setHasIntegrationWithGithub] =
     useState<boolean>(false)
@@ -391,10 +392,11 @@ const IntegrationList: FC<IntegrationListProps> = (props) => {
   }, [])
 
   const fetchGithubIntegration = () => {
+    if (!organisation) return
     getGithubIntegration(
       getStore(),
       {
-        organisation_id: AccountStore.getOrganisation().id,
+        organisation_id: organisation.id,
       },
       { forceRefetch: true },
     ).then((res) => {
