@@ -740,7 +740,11 @@ class FeatureStateSerializerBasic(WritableNestedModelSerializer):
         return feature_segment
 
     def validate(self, attrs):  # type: ignore[no-untyped-def]
-        environment = attrs.get("environment") or self.context["environment"]
+        environment = (
+            attrs.get("environment")
+            or getattr(self.instance, "environment", None)
+            or self.context["environment"]
+        )
         identity = attrs.get("identity")
         feature_segment = attrs.get("feature_segment")
         identifier = attrs.pop("identifier", None)
