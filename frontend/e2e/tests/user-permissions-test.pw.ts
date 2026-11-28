@@ -34,13 +34,9 @@ test.describe('User permissions dialogs', () => {
         .getByRole('button', { exact: true, name: 'Environment' })
         .click()
 
-      // E2E builds render Select's options as plain, always visible links
       const pickProject = async (name: string) => {
-        // Inactive tabs stay in the page, so the Project tab also lists the name
-        await dialog
-          .getByText(name, { exact: true })
-          .filter({ visible: true })
-          .click()
+        await dialog.getByRole('combobox', { name: 'Project' }).click()
+        await page.getByRole('option', { name, exact: true }).click()
       }
 
       log('A project lists its environments')

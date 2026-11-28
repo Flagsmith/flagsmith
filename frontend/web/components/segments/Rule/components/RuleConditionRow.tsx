@@ -88,7 +88,6 @@ const RuleConditionRow: React.FC<RuleConditionRowProps> = ({
         <div className='d-flex flex-grow-1 flex-column flex-sm-row rule align-items-stretch align-items-sm-center justify-content-between gap-1 col-12 col-sm-8 col-md-10 mx-0'>
           <div className='col-12 col-sm-4 col-md-4'>
             <RuleConditionPropertySelect
-              dataTest={`${dataTest}-property-${ruleIndex}`}
               ruleIndex={ruleIndex}
               setRuleProperty={setRuleProperty}
               propertyValue={rule.property}
@@ -101,7 +100,7 @@ const RuleConditionRow: React.FC<RuleConditionRowProps> = ({
             !!find(operators, { value: operator })?.label
           ) : (
             <Select
-              data-test={`${dataTest}-operator-${ruleIndex}`}
+              aria-label='Operator'
               value={operator && find(operators, { value: operator })}
               onChange={(value: { value: string }) => {
                 setRuleProperty(ruleIndex, 'operator', value)

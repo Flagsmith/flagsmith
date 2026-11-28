@@ -40,7 +40,8 @@ const createExperiment = async (page: Page, name: string) => {
     'textarea[placeholder^="e.g. Redesigning the checkout button"]',
     'A clearer checkout increases conversion',
   )
-  await page.locator('a').getByText(FEATURE, { exact: true }).click()
+  await page.getByRole('combobox', { name: 'Feature Flag' }).click()
+  await page.getByRole('option', { name: FEATURE, exact: true }).click()
   await click('#experiment-wizard-setup-continue')
 
   log('Rollout step: all users, even split')
@@ -63,7 +64,7 @@ const rolloutOverride = (page: Page) =>
 // The segment picker renders once the overrides have loaded and the feature
 // is no longer frozen, so an absent override is not a list still loading.
 const expectNoRolloutOverride = async (page: Page) => {
-  await createHelpers(page).waitForElementVisible(byId('select-segment'))
+  await expect(page.getByRole('combobox', { name: 'Segment' })).toBeVisible()
   await expect(rolloutOverride(page)).toHaveCount(0)
 }
 
@@ -154,7 +155,12 @@ test.describe('Experimentation Tests', () => {
       .filter({ hasText: `after ${FIRST_EXPERIMENT} ends` })
       .last()
     await modal.getByText('Roll out a variant').click()
-    await modal.locator('a').getByText('variant_b', { exact: true }).click()
+    const variantSelect = modal.getByRole('combobox', { name: 'Variant' })
+    await variantSelect.press('ArrowDown')
+    await modal
+      .getByRole('option')
+      .filter({ hasText: 'variant_b' })
+      .click()
     await expect(modal).toContainText('100% of users get variant_b')
     await clickByText('Complete experiment')
     await waitForToast()

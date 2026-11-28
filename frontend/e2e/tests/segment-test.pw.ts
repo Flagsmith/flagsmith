@@ -415,6 +415,7 @@ test('Segment test 4 - Create ANY rule type segment and verify match changes whe
     setSegmentRule,
     waitAndRefresh,
     waitForElementVisible,
+    waitForToast,
   } = createHelpers(page)
   const flagsmith = await getFlagsmith()
   const hasFeature = flagsmith.hasFeature('segment_any_rule_type')
@@ -460,6 +461,7 @@ test('Segment test 4 - Create ANY rule type segment and verify match changes whe
   // Change the first group's `team` condition from "alpha" to "gamma" — user has team=alpha so no longer matches.
   await setSegmentRule(0, 1, 'team', 'EQUAL', 'gamma')
   await click(byId('update-segment'))
+  await waitForToast()
 
   log('Verify user is no longer in the segment (gets default value)')
   await goToUser(E2E_TEST_IDENTITY)

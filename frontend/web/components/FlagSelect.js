@@ -52,6 +52,7 @@ class FlagSelect extends Component {
     )
     return (
       <Select
+        aria-label='Feature'
         value={
           this.props.value
             ? options.find((v) => v.value === this.props.value)

@@ -132,34 +132,7 @@ global.Select = class extends PureComponent {
 
   render() {
     const { className, ...props } = this.props
-    return E2E ? (
-      <div>
-        <input
-          type='text'
-          ref={(input) => (this.input = input)}
-          value={props.value && props.value.value}
-          onChange={(e) =>
-            props.onChange({ value: Utils.safeParseEventValue(e) })
-          }
-          id={props.id}
-          data-test={props['data-test']}
-        />
-        {this.props.options &&
-          this.props.options.map((option, index) => (
-            <a
-              key={index}
-              onClick={() => props.onChange(option)}
-              data-test={
-                this.props.dataTest
-                  ? this.props.dataTest(option)
-                  : `${props['data-test']}-option-${index}`
-              }
-            >
-              {option.label}
-            </a>
-          ))}
-      </div>
-    ) : (
+    return (
       <div
         className={className}
         onClick={(e) => {

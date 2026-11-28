@@ -17,6 +17,27 @@ export type Rule = {
   ors?: Rule[];
 };
 
+const SEGMENT_OPERATOR_LABELS: Record<string, string> = {
+  EQUAL: 'Exactly Matches (=)',
+  NOT_EQUAL: 'Does not match (!=)',
+  PERCENTAGE_SPLIT: '% Split',
+  GREATER_THAN: '>',
+  GREATER_THAN_INCLUSIVE: '>=',
+  LESS_THAN: '<',
+  LESS_THAN_INCLUSIVE: '<=',
+  'GREATER_THAN:semver': 'SemVer >',
+  'GREATER_THAN_INCLUSIVE:semver': 'SemVer >=',
+  'LESS_THAN:semver': 'SemVer <',
+  'LESS_THAN_INCLUSIVE:semver': 'SemVer <=',
+  MODULO: 'Modulo',
+  CONTAINS: 'Contains',
+  NOT_CONTAINS: 'Does not contain',
+  REGEX: 'Matches regex',
+  IS_SET: 'Is set',
+  IS_NOT_SET: 'Is not set',
+  IN: 'In',
+};
+
 // Page-based helper functions
 export class E2EHelpers {
   constructor(private page: Page) {}
@@ -548,10 +569,23 @@ export class E2EHelpers {
 
   // Set segment rule
   async setSegmentRule(ruleIndex: number, orIndex: number, name: string, operator: string, value: string | number | boolean) {
-    await this.setText(byId(`rule-${ruleIndex}-property-${orIndex}`), name);
+    const ruleRow = this.page
+      .locator('.panel-rule-wrapper')
+      .nth(ruleIndex)
+      .locator('.rule__row')
+      .nth(orIndex);
+    const propertySelect = ruleRow.getByRole('combobox', { name: 'Trait / Context value' });
+    await propertySelect.click();
+    await propertySelect.fill(name);
+    await this.page.getByRole('option', { name, exact: true }).click();
     if (operator) {
-      await this.setText(byId(`rule-${ruleIndex}-operator-${orIndex}`), operator);
-      await this.page.waitForTimeout(200);
+      await ruleRow.getByRole('combobox', { name: 'Operator' }).click();
+      await this.page
+        .getByRole('option', {
+          name: SEGMENT_OPERATOR_LABELS[operator] || operator,
+          exact: true,
+        })
+        .click();
     }
     await this.waitForElementVisible(byId(`rule-${ruleIndex}-value-${orIndex}`));
     await this.setText(byId(`rule-${ruleIndex}-value-${orIndex}`), `${value}`);
@@ -588,14 +622,14 @@ export class E2EHelpers {
         const rule = rules[x];
         if (x > 0) {
           await this.click(byId('add-rule'));
-          await this.waitForElementVisible(byId(`rule-${x}-property-0`));
+          await this.waitForSegmentRule(x, 0);
         }
         await this.setSegmentRule(x, 0, rule.name, rule.operator, rule.value);
         if (rule.ors) {
           for (let orIndex = 0; orIndex < rule.ors.length; orIndex++) {
             const or = rule.ors[orIndex];
             await this.click(byId(`rule-${x}-or`));
-            await this.waitForElementVisible(byId(`rule-${x}-property-${orIndex + 1}`));
+            await this.waitForSegmentRule(x, orIndex + 1);
             await this.setSegmentRule(x, orIndex + 1, or.name, or.operator, or.value);
           }
         }
@@ -607,14 +641,25 @@ export class E2EHelpers {
     await element.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
   }
 
+  private async waitForSegmentRule(ruleIndex: number, orIndex: number) {
+    await this.page
+      .locator('.panel-rule-wrapper')
+      .nth(ruleIndex)
+      .locator('.rule__row')
+      .nth(orIndex)
+      .getByRole('combobox', { name: 'Trait / Context value' })
+      .waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
+  }
+
   // Open segment override dropdown and select a segment
   private async openSegmentOverride(index: number, selectionIndex: number = 0) {
-    const dropdownSelector = byId(`select-segment-option-${selectionIndex}`);
-    const isDropdownVisible = await this.page.locator(dropdownSelector).isVisible().catch(() => false);
+    const dropdown = this.page.getByRole('combobox', { name: 'Segment' }).first();
+    const isDropdownVisible = await dropdown.isVisible().catch(() => false);
     if (!isDropdownVisible) {
       await this.click(byId('segment_overrides'));
     }
-    await this.click(dropdownSelector);
+    await dropdown.click();
+    await this.page.getByRole('option').nth(selectionIndex).click();
     await this.waitForElementVisible(this.segmentOverrideValueField(index));
   }
 
@@ -639,9 +684,9 @@ export class E2EHelpers {
   // segments in a shared project can't shift the selection
   async addSegmentOverrideConfigForSegment(segmentName: string, value: string) {
     await this.click(byId('segment_overrides'));
-    // E2E builds render the select's options as plain links
+    await this.page.getByRole('combobox', { name: 'Segment' }).first().click();
     await this.page
-      .locator('[data-test^="select-segment-option-"]')
+      .getByRole('option')
       .filter({ hasText: segmentName })
       .first()
       .click();
@@ -736,7 +781,26 @@ export class E2EHelpers {
     await nameInput.click();
     await nameInput.fill(name);
     await this.click('#create-env-btn');
-    await this.waitForElementVisible(byId(`switch-environment-${name.toLowerCase()}-active`));
+    await this.waitForEnvironmentSelect();
+  }
+
+  private environmentSelect() {
+    return this.page.getByRole('combobox', { name: 'Environment' });
+  }
+
+  async waitForEnvironmentSelect() {
+    await this.environmentSelect().waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
+  }
+
+  async waitForSelectedEnvironment(name: string) {
+    await expect(this.environmentSelect().locator('xpath=../..')).toContainText(name, {
+      timeout: LONG_TIMEOUT,
+    });
+  }
+
+  async selectEnvironment(name: string) {
+    await this.environmentSelect().click();
+    await this.page.getByRole('option', { name, exact: true }).click();
   }
 
   // Create a project of the test's own, so environments it changes can't

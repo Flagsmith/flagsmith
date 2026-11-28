@@ -199,10 +199,8 @@ test.describe('Deep link to feature slideout', () => {
     // The page opens on Environments; the per-environment rows are behind
     // Feature Values.
     await page.getByRole('button', { name: 'Feature Values' }).click()
-    // The E2E build swaps the Select for an input and one anchor per option.
-    // The anchors carry no href, so they are not links in the accessibility
-    // tree and their text is the only thing to select on.
-    await page.getByText(featureName, { exact: true }).click()
+    await page.getByRole('combobox', { name: 'Feature' }).click()
+    await page.getByRole('option', { name: featureName, exact: true }).click()
 
     // The compare rows are condensed, so the value is the row's own handle.
     const rows = page.locator('[data-test^="feature-value-"]')

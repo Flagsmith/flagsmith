@@ -15,9 +15,9 @@ test.describe('Flag Tests', () => {
       gotoProject,
       login,
       scrollBy,
+      selectEnvironment,
       tryItExpect,
       toggleFeature,
-      waitForElementClickable,
       waitForElementVisible,
       waitForFeatureSwitch,
       waitForToastsToClear,
@@ -33,15 +33,8 @@ test.describe('Flag Tests', () => {
 
     await gotoProject(E2E_TEST_PROJECT)
 
-    // Ensure we're on the Development environment
-    const isDevelopmentActive = await page.locator(byId('switch-environment-development-active')).isVisible().catch(() => false)
-
-    if (!isDevelopmentActive) {
-      log('Switching to development first')
-      await waitForElementClickable(byId('switch-environment-development'))
-      await click(byId('switch-environment-development'))
-      await waitForElementVisible(byId('switch-environment-development-active'))
-    }
+    log('Switching to development first')
+    await selectEnvironment('Development')
 
     log('Create Features')
     await click('#features-link')
@@ -99,11 +92,9 @@ test.describe('Flag Tests', () => {
 
     // Now we're definitely in development, switch to production
     log('Switching to production')
-    await waitForElementClickable(byId('switch-environment-production'))
-    await click(byId('switch-environment-production'))
+    await selectEnvironment('Production')
 
     log('Feature should be off under different environment')
-    await waitForElementVisible(byId('switch-environment-production-active'))
     await waitForFeatureSwitch('header_enabled', 'off')
 
     await visualSnapshot(page, 'features-list-production', testInfo)

@@ -23,6 +23,7 @@ const PrerequisitePicker: FC<PrerequisitePickerProps> = ({
     projectId={projectId}
     environmentId={environmentId}
     disabled={disabled}
+    aria-label='Prerequisite'
     placeholder='Add a prerequisite flag...'
     // The API refuses both of these, so keep them out of the list.
     ignore={[featureId, ...existingPrerequisiteIds]}

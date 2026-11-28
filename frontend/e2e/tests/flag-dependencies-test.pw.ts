@@ -49,13 +49,8 @@ test.describe('Flag Dependencies', () => {
 
     log('Add the prerequisite')
     await page.getByRole('button', { name: 'Add prerequisite' }).click()
-    // An E2E build swaps the Select for an input and one anchor per option.
-    // The anchors carry no href, so they are not links in the accessibility
-    // tree and their text is the only thing to select on.
-    await page
-      .locator('#create-feature-modal')
-      .getByText(PREREQUISITE, { exact: true })
-      .click()
+    await page.getByRole('combobox', { name: 'Prerequisite' }).click()
+    await page.getByRole('option', { name: PREREQUISITE, exact: true }).click()
 
     // The row standing in while the POST runs carries the same name, so pick
     // the one that has a status.

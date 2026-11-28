@@ -108,6 +108,7 @@ const SetupStep: FC<SetupStepProps> = ({
         <div className='wizard-field'>
           <label className='wizard-field__label'>Feature Flag</label>
           <Select
+            aria-label='Feature Flag'
             value={
               selectedFeature
                 ? { label: selectedFeature.name, value: selectedFeature.id }
