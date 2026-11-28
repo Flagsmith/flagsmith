@@ -1,10 +1,22 @@
 from dataclasses import dataclass
 
 from django.conf import settings
+from django.db import models
 from django.db.models import Count
 
 from organisations.models import Organisation
 from users.models import FFAdminUser
+
+
+class UsageReportingState(models.Model):
+    """
+    End of the last window pushed successfully
+    """
+
+    organisation = models.OneToOneField(
+        Organisation, on_delete=models.CASCADE, related_name="usage_reporting_state"
+    )
+    reported_until = models.DateTimeField()
 
 
 @dataclass
