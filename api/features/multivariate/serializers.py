@@ -82,8 +82,15 @@ class MultivariateFeatureOptionSerializer(NestedMultivariateFeatureOptionSeriali
 
     def validate(self, attrs):  # type: ignore[no-untyped-def]
         attrs = super().validate(attrs)
-        feature = attrs["feature"]
-        default_percentage_allocation = attrs["default_percentage_allocation"]
+        if isinstance(self.instance, MultivariateFeatureOption):
+            feature = attrs.get("feature", self.instance.feature)
+            default_percentage_allocation = attrs.get(
+                "default_percentage_allocation",
+                self.instance.default_percentage_allocation,
+            )
+        else:
+            feature = attrs["feature"]
+            default_percentage_allocation = attrs["default_percentage_allocation"]
 
         total_sibling_percentage_allocation = (
             self._get_siblings(feature).aggregate(
@@ -112,7 +119,7 @@ class MultivariateFeatureOptionSerializer(NestedMultivariateFeatureOptionSeriali
                 feature, default_percentage_allocation
             )
 
-        self._validate_key_is_unique(attrs)
+        self._validate_key_is_unique(attrs, feature)
 
         return attrs
 
@@ -135,11 +142,13 @@ class MultivariateFeatureOptionSerializer(NestedMultivariateFeatureOptionSeriali
                 {"default_percentage_allocation": "Invalid percentage allocation"}
             )
 
-    def _validate_key_is_unique(self, attrs: dict[str, typing.Any]) -> None:
+    def _validate_key_is_unique(
+        self, attrs: dict[str, typing.Any], feature: Feature
+    ) -> None:
         key = attrs.get("key")
         if key is None:
             return
-        if self._get_siblings(attrs["feature"]).filter(key=key).exists():
+        if self._get_siblings(feature).filter(key=key).exists():
             raise ValidationError(
                 {
                     "key": "Multivariate option with this key already exists for the feature."
