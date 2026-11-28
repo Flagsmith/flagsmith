@@ -729,3 +729,43 @@ def test_get_environment_flags_list__from_replica__returns_feature_states(
     # Then
     assert len(result) >= 1
     assert result[0].feature == feature
+
+
+def test_get_updated_feature_states_for_version__more_overrides__same_query_count(
+    project: Project,
+    environment_v2_versioning: Environment,
+    feature: Feature,
+    django_assert_max_num_queries: DjangoAssertNumQueries,
+) -> None:
+    # Given
+    v1 = EnvironmentFeatureVersion.objects.get(
+        environment=environment_v2_versioning, feature=feature
+    )
+    for i in range(5):
+        segment = Segment.objects.create(name=f"segment {i}", project=project)
+        feature_segment = FeatureSegment.objects.create(
+            feature=feature,
+            segment=segment,
+            environment=environment_v2_versioning,
+            environment_feature_version=v1,
+        )
+        FeatureState.objects.create(
+            feature=feature,
+            environment=environment_v2_versioning,
+            feature_segment=feature_segment,
+            environment_feature_version=v1,
+            enabled=False,
+        )
+
+    v2 = EnvironmentFeatureVersion.objects.create(
+        environment=environment_v2_versioning, feature=feature
+    )
+    for feature_state in v2.feature_states.all():
+        feature_state.enabled = not feature_state.enabled
+        feature_state.save()
+
+    # When / Then
+    with django_assert_max_num_queries(7):
+        updated_feature_states = get_updated_feature_states_for_version(v2)
+
+    assert len(updated_feature_states) == 6
