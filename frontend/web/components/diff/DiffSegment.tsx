@@ -1,9 +1,11 @@
 import {
+  DIFF_SEGMENT_MODES,
   getSegmentDiff,
+  getSegmentDiffPair,
   TSegmentConditionDiff,
   TSegmentRuleDiff,
 } from './diff-utils'
-import React, { FC, useEffect, useMemo, useState } from 'react'
+import React, { FC, useMemo, useState } from 'react'
 import { Operator, Segment } from 'common/types/responses'
 import SegmentRuleDivider from 'components/SegmentRuleDivider'
 import DiffString from './DiffString'
@@ -20,36 +22,21 @@ type DiffRuleType = {
   diff: TSegmentRuleDiff
   index: number
 }
-const modes = {
-  'Diff': 0,
-  'New Value': 1,
-  'Old Value': 2,
-}
 const DiffSegment: FC<DiffSegmentType> = ({ newSegment, oldSegment }) => {
-  const [a, setA] = useState(oldSegment)
-  const [b, setB] = useState(newSegment)
   const [mode, setMode] = useState(0)
 
+  const [a, b] = useMemo(
+    () => getSegmentDiffPair(mode, oldSegment, newSegment),
+    [mode, oldSegment, newSegment],
+  )
   const diff = useMemo(() => {
     return getSegmentDiff(a, b)
   }, [a, b])
-  useEffect(() => {
-    if (mode === modes.Diff) {
-      setA(oldSegment)
-      setB(newSegment)
-    } else if (mode === modes['New Value']) {
-      setA(newSegment)
-      setB(newSegment)
-    } else {
-      setA(oldSegment)
-      setB(oldSegment)
-    }
-  }, [mode])
   return (
     <div>
       <Tabs onChange={setMode} className='mb-2' theme='pill' value={mode}>
-        {Object.keys(modes).map((key, i) => (
-          <TabItem tabLabel={key} />
+        {Object.keys(DIFF_SEGMENT_MODES).map((key) => (
+          <TabItem key={key} tabLabel={key} />
         ))}
       </Tabs>
       <div className='d-flex flex-column ml-0 me-0 gap-3'>
