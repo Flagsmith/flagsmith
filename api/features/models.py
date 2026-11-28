@@ -1022,7 +1022,11 @@ class FeatureState(
         if self.identity_id:
             return audit_helpers.get_identity_override_created_audit_message(self)
         elif self.feature_segment_id:
-            return audit_helpers.get_segment_override_created_audit_message(self)
+            try:
+                return audit_helpers.get_segment_override_created_audit_message(self)
+            except FeatureSegment.DoesNotExist:
+                # Cascade-deleted from segment overrides before this task ran
+                return None
 
         if self.environment.created_date > self.feature.created_date:  # type: ignore[union-attr]
             # Don't create an audit log record for feature states created when
