@@ -12,46 +12,53 @@ const JSONUpload: FC<DropAreaType> = ({ onChange, value }) => {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
 
-  const onDrop = useCallback((acceptedFiles: File[]) => {
-    setIsLoading(true)
-    setError('')
-    // Do something with the files
-    const reader = new FileReader()
+  const onDrop = useCallback(
+    (acceptedFiles: File[]) => {
+      setIsLoading(true)
+      setError('')
+      // Do something with the files
+      const reader = new FileReader()
 
-    reader.addEventListener(
-      'load',
-      () => {
-        let json
-        try {
-          json = JSON.parse(reader.result)
-          onChange(acceptedFiles[0], json)
-        } catch (e) {
-          setError('File is not valid JSON')
-        }
-      },
-      false,
-    )
+      reader.addEventListener(
+        'load',
+        () => {
+          if (typeof reader.result !== 'string') {
+            setError('Error reading file')
+            return
+          }
+          let json
+          try {
+            json = JSON.parse(reader.result)
+            onChange(acceptedFiles[0], json)
+          } catch (e) {
+            setError('File is not valid JSON')
+          }
+        },
+        false,
+      )
 
-    reader.addEventListener(
-      'error',
-      () => {
-        setIsLoading(false)
-        setError('Error reading file')
-      },
-      false,
-    )
-    reader.addEventListener(
-      'abort',
-      () => {
-        setIsLoading(false)
-      },
-      false,
-    )
+      reader.addEventListener(
+        'error',
+        () => {
+          setIsLoading(false)
+          setError('Error reading file')
+        },
+        false,
+      )
+      reader.addEventListener(
+        'abort',
+        () => {
+          setIsLoading(false)
+        },
+        false,
+      )
 
-    if (acceptedFiles[0]) {
-      reader.readAsText(acceptedFiles[0])
-    }
-  }, [])
+      if (acceptedFiles[0]) {
+        reader.readAsText(acceptedFiles[0])
+      }
+    },
+    [onChange],
+  )
   const { getInputProps, getRootProps, isDragActive } = useDropzone({
     accept: {
       'application/json': [],
