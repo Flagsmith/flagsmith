@@ -10,11 +10,13 @@ import Constants from 'common/constants'
 
 type OrganisationLimitType = {
   id: string
+  isAdmin?: boolean
   organisationPlan: string
 }
 
 const OrganisationLimit: FC<OrganisationLimitType> = ({
   id,
+  isAdmin,
   organisationPlan,
 }) => {
   let body = { organisationId: id }
@@ -57,19 +59,25 @@ const OrganisationLimit: FC<OrganisationLimitType> = ({
             Your organisation has exceeded its API usage quota{' '}
             {`(${alertMaxApiCallsText}).`}{' '}
             {Utils.getPlanName(organisationPlan) === 'Free' ? (
-              <b>Please upgrade your plan to continue receiving service.</b>
+              <b>
+                {isAdmin
+                  ? 'Please upgrade your plan to continue receiving service.'
+                  : 'Ask an organisation admin to upgrade to continue receiving service.'}
+              </b>
             ) : (
               <b>Automated billing for the overages may apply.</b>
             )}
           </div>
-          <Button
-            className='btn ml-3'
-            onClick={() => {
-              document.location.replace(Constants.upgradeURL)
-            }}
-          >
-            Upgrade plan
-          </Button>
+          {isAdmin && (
+            <Button
+              className='btn ml-3'
+              onClick={() => {
+                document.location.replace(Constants.getUpgradeUrl('usage'))
+              }}
+            >
+              Upgrade plan
+            </Button>
+          )}
         </Row>
       </div>
     )

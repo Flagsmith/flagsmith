@@ -394,6 +394,7 @@ const App = class extends Component {
                         {!hasOwnQuotaBanner && (
                           <OrganisationLimit
                             id={AccountStore.getOrganisation()?.id}
+                            isAdmin={!!AccountStore.isAdmin()}
                             organisationPlan={
                               AccountStore.getOrganisation()?.subscription.plan
                             }
