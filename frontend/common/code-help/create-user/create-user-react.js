@@ -41,4 +41,20 @@ export default function HomePage() {
       userId || USER_ID
     }', {${TRAIT_NAME}: 21}); // only causes re-render if the user has overrides / segment overrides for ${FEATURE_NAME} or ${FEATURE_NAME_ALT}
   };
-}`
+}
+
+// Option 3: use the context API for transient traits
+function TransientTraitExample() {
+  const flagsmith = useFlagsmith();
+
+  const setTransientTrait = () => flagsmith.setContext({
+    identity: {
+      identifier: '${userId || USER_ID}',
+      transient: true, // Optional: do not persist this identity.
+      traits: {
+        ${TRAIT_NAME}: { value: 21, transient: true },
+      },
+    },
+  });
+}
+`

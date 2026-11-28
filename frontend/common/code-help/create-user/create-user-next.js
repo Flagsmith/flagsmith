@@ -53,4 +53,19 @@ MyApp.getInitialProps = async () => {
   }', {${TRAIT_NAME}: 21}); // Will hydrate the app with the user's flags
   return { flagsmithState: flagsmith.getState() }
 }
+
+// Option 3: use the context API for transient traits
+function TransientTraitExample() {
+  const flagsmith = useFlagsmith();
+
+  const setTransientTrait = () => flagsmith.setContext({
+    identity: {
+      identifier: '${userId || USER_ID}',
+      transient: true, // Optional: do not persist this identity.
+      traits: {
+        ${TRAIT_NAME}: { value: 21, transient: true },
+      },
+    },
+  });
+}
 `
